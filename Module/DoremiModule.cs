@@ -1,78 +1,103 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Discord;
+﻿using Discord;
 using Discord.Addons.Interactive;
-using Discord.Audio;
 using Discord.Commands;
+using Discord.WebSocket;
+using Newtonsoft.Json.Linq;
 using OjamajoBot.Service;
-
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Victoria;
 using Victoria.Enums;
-using Newtonsoft.Json.Linq;
-using Discord.WebSocket;
 
 namespace OjamajoBot.Module
 {
     class DoremiModule : ModuleBase<SocketCommandContext>
     {
-
         [Command("Help")]
-        public async Task showhelp()
+        public async Task showHelpUsers()
         {
-            await base.ReplyAsync(embed: new EmbedBuilder()
+            await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
-                .WithAuthor("Doremi Bot", "https://cdn.discordapp.com/emojis/651062436866293760.png?v=1")
+                .WithAuthor($"Doremi Bot","https://cdn.discordapp.com/emojis/651062436866293760.png?v=1")
                 .WithTitle("Command List:")
                 .WithDescription($"Pretty Witchy Doremi Chi~ " +
-                $"You can either tell me what to do by mentioning me **<@{Config.Doremi.Id}>** or **doremi** or **do ** and followed with the <whitespace> as the starting command prefix.")
+                $"You can either tell me what to do by mentioning me <@{Config.Doremi.Id}> or **doremi!** or **do!** as the starting command prefix.")
                 .AddField("Basic Commands",
-                "**transform** or **henshin** : I will transform into the ojamajo form.\n " +
-                "**spells <username>,<wishes>** : Transform mentioned <username> with the given <wishes> parameter.\n" +
-                $"**steak**: Yes please, use this commands so I can eat some steak {Config.Emoji.drool}{Config.Emoji.steak}\n" +
-                "**quotes** : I will mention any random quotes.\n" +
+                "**hello** : Hello, I will greet you up\n" +
+                "**change** or **henshin** : I will change into the ojamajo form\n" +
+                "**transform <username> <wishes>** : Transform mentioned <username> into <wishes>\n" +
+                "**wish <wishes>** : Give the user some <wishes>\n" +
+                $"**steak**: Random steak moments will appeared {Config.Emoji.drool}{Config.Emoji.steak}\n" +
+                "**quotes** : I will mention any random quotes\n" +
                 "**random** : I will do anything random.\n" +
                 "**quiz** : I will give you some quiz. Think you can answer them all?\n" +
-                "**magicalstage** or **magical stage** followed with **<wishes>** argument : I will perform magical stage along with the other and make a <wishes>\n" +
-                "**dorememes** or **dorememe** : I will give you some random memes :zany_face:\n")
-                .AddField("Music Commands (Still experimental, there might be bug on some feature)",
-                "**join** : I will enter the voice channel based on where you connected\n " +
-                "**musiclist** or **mulist** : Show the music list\n " +
-                "**musicqueue** or **muq** : Show all the music that's in queue list\n" +
+                "**magicalstage** or **magical stage** **<wishes>**: I will perform magical stage along with the other and make a <wishes> [This requires Hazuki & Aiko Bot]\n" +
+                "**dorememe** or **dorememes** : I will give you some random memes :zany_face:\n" +
+                "**hug** <username> : I will give warm hug for mentioned <username>\n" +
+                "**invite** : I will generate the invitation links for related ojamajo bot")
                 //"**musicrepeat** or **murep** <Off/One/All> : Toggle the Music Repeat State based on the <parameter>\n" +
-                "**play <title>** : Play the music with the given <title> parameter \n" +
-                "**skip** : Play the music with the given <title> parameter \n" +
-                "**stop** : Stop playing the music. This will also clearing the queue list.")
+                .AddField("Musical Commands (On Beta, there might be bug on some feature)",
+                "**join** : I will enter the voice channel based on where you connected\n" +
+                "**musiclist** or **mulist** : Show the doremi music list\n" +
+                "**queue** or **muq** : Show all the music that's currently on queue list\n" +
+                "**youtube** or **yt** <keyword or url> : Play the youtube music either it's from keyword/url\n" +
+                "**play <track nunmber or title>** : Play the music with the given <title> parameter\n" +
+                "**playall** : Play all the music that's available on doremi music list\n" +
+                "**skip** : Play the music with the given <title> parameter\n" +
+                "**seek** <timespan> : Seek the music into the given <timespan>[Format: hh:mm::ss] \n" +
+                "**stop** : Stop playing the music. This will also clear the queue list")
+                .AddField("Moderator Commands [``Manage Channels`` permissions])",
+                "**mod help** : This will display all basic moderator commands list")
                 .Build());
         }
 
-        [Command("transform"), Alias("henshin")]
+        [Command("hello")]
+        public async Task doremiHello()
+        {
+            string tempReply = "";
+            List<string> listRandomRespond = new List<string>() {
+                    $"Hii hii {MentionUtils.MentionUser(Context.User.Id)}! ", 
+                    $"Hello {MentionUtils.MentionUser(Context.User.Id)}! ",
+            };
+
+            int rndIndex = new Random().Next(0, listRandomRespond.Count);
+            tempReply = listRandomRespond[rndIndex]+Config.Doremi.arrRandomActivity[Config.Doremi.indexCurrentActivity,1];
+            
+            await ReplyAsync(tempReply);
+        }
+
+        [Command("change"), Alias("henshin")]
         public async Task transform()
         {
-            await ReplyAsync("Pretty Witchy Doremi Chi~ \n");
+            await ReplyAsync("Pretty Witchy Doremi Chi~\n");
             await base.ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
                 .WithImageUrl("https://media1.tenor.com/images/b99530648de9200b2cfaec83426f5482/tenor.gif")
                 .Build());
         }
 
-        [Command("spells")]
-        public async Task spells([Remainder] string query)
+        [Command("transform")]
+        public async Task spells(IUser iuser,[Remainder] string query)
         {
-            String[] splitted = query.Split(",");
-            splitted[1].TrimStart();
-            //await ReplyAsync("Pirika pirilala poporina peperuto! Transform " + " into " + splitted[1]);
-            await Context.Message.DeleteAsync();
-            await ReplyAsync("Pirika pirilala poporina peperuto! Transform " + splitted[0] + " into " + splitted[1]);
-
+            //await Context.Message.DeleteAsync();
+            await ReplyAsync("Pirika pirilala poporina peperuto! Transform " + iuser.Mention + " into " + query);
             await base.ReplyAsync(embed: new EmbedBuilder()
-                .WithColor(Config.Doremi.EmbedColor)
-                .WithImageUrl("https://i.makeagif.com/media/10-05-2015/rEFQz2.gif")
-                .Build()); 
+            .WithColor(Config.Doremi.EmbedColor)
+            .WithImageUrl("https://i.makeagif.com/media/10-05-2015/rEFQz2.gif")
+            .Build());
+        }
+
+        [Command("wish")]
+        public async Task wish([Remainder] string query)
+        {
+            await ReplyAsync($"Pirika pirilala poporina peperuto! {query}");
+            await base.ReplyAsync(embed: new EmbedBuilder()
+            .WithColor(Config.Doremi.EmbedColor)
+            .WithImageUrl("https://i.makeagif.com/media/10-05-2015/rEFQz2.gif")
+            .Build());
         }
 
         [Command("quotes")]
@@ -80,7 +105,8 @@ namespace OjamajoBot.Module
         {
             String[] arrQuotes = {
                 "I'm the world's most unluckiest pretty girl!",
-                "Happy! Lucky! For all of you!"
+                "Happy! Lucky! For all of you!",
+                "I like Steak very much"
             };
 
             await ReplyAsync(arrQuotes[new Random().Next(0, arrQuotes.Length)]);
@@ -91,13 +117,14 @@ namespace OjamajoBot.Module
         {
             String[,] arrRandom =
             { {"Doremi has give you a smug looking" , "https://66.media.tumblr.com/bd4f75234f1180fa7fd99a5200ac3c8d/tumblr_nbhwuqEY6c1r98a5go1_500.gif"},
-             {"Doremi is very happy to meet you", "https://66.media.tumblr.com/e62f24b9645540f4fff4e6ebe8bd213e/tumblr_pco5qx9Mim1r98a5go1_500.gif"},
+            {$"Doremi is very happy to meet you: {MentionUtils.MentionUser(Context.User.Id)}", "https://66.media.tumblr.com/e62f24b9645540f4fff4e6ebe8bd213e/tumblr_pco5qx9Mim1r98a5go1_500.gif"},
             {"Majo Rika! Majo Rika!", "https://media1.tenor.com/images/2bedf54ca06c5a3b073f3d9349db65b4/tenor.gif"},
             {"Doremi is cheering you up", "https://static.zerochan.net/Harukaze.Doremi.full.2494232.gif"},
-            {"Doremi was looking very happy at you", "https://i.4pcdn.org/s4s/1511988377651.gif"},
+            {$"Doremi was looking very happy at you: {MentionUtils.MentionUser(Context.User.Id)}", "https://i.4pcdn.org/s4s/1511988377651.gif"},
             {"Doremi is giving her best", "https://66.media.tumblr.com/68b432cf50e18a72b661ba952fcf778f/tumblr_pgohlgzfvY1xqvqxzo1_400.gif"},
-            {":persevere: *Crying loudly*","https://espressocomsaudade.files.wordpress.com/2014/07/6.gif"},
-            {":scream:","https://cdn.discordapp.com/attachments/569409307100315651/646751194441842688/unknown.png" } };
+            {":sob: *Crying loudly*","https://espressocomsaudade.files.wordpress.com/2014/07/6.gif"},
+            {":scream:","https://cdn.discordapp.com/attachments/569409307100315651/646751194441842688/unknown.png" },
+            {"Thank you, thank you :sweat_smile:","https://66.media.tumblr.com/b11f9dced4594739776b976ed66920fc/tumblr_inline_mgcb4zEbfV1r4lv3u.gif" } };
 
             Random rnd = new Random();
             int rndIndex = rnd.Next(0, arrRandom.GetLength(0));
@@ -109,7 +136,7 @@ namespace OjamajoBot.Module
                 .Build());
         }
 
-        [Command("dorememes"), Alias("dorememe")]
+        [Command("dorememe"), Alias("dorememes")]
         public async Task givememe()
         {
             String[] arrRandom =
@@ -127,16 +154,14 @@ namespace OjamajoBot.Module
             "https://cdn.discordapp.com/attachments/644383823286763544/663616227914154014/unknown.png",
             "https://media.discordapp.net/attachments/512825478512377877/660677566599790627/DO_THE_SWAG.gif",
             "https://cdn.discordapp.com/attachments/569409307100315651/653670970342506548/unknown.png",
-            "https://media.discordapp.net/attachments/310544560164044801/398230870445785089/DSRxAB9VQAAI5Ja.png"};
-
-
-
-            Random rnd = new Random();
-            int rndIndex = rnd.Next(0, arrRandom.GetLength(0));
+            "https://media.discordapp.net/attachments/310544560164044801/398230870445785089/DSRxAB9VQAAI5Ja.png",
+            "https://i.4pcdn.org/s4s/1537724473581.gif",
+            "https://i.4pcdn.org/s4s/1508866828910.gif",
+            "http://i.4pcdn.org/s4s/1500066705217.gif"};
 
             await base.ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
-                .WithImageUrl(arrRandom[rndIndex])
+                .WithImageUrl(arrRandom[new Random().Next(0, arrRandom.GetLength(0))])
                 .Build());
         }
 
@@ -166,22 +191,49 @@ namespace OjamajoBot.Module
                 .Build());
         }
 
+        [Command("hug")]
+        [RequireBotPermission(ChannelPermission.AddReactions, ErrorMessage = "I don't have permission to add a reaction.")]
+        public async Task HugUser(SocketGuildUser user)
+        {
+            string message = $"Pirika pirilala poporina peperuto! Give a warm hug for {MentionUtils.MentionUser(user.Id)} :hugging:.";
+            var sent = await Context.Channel.SendMessageAsync(message);
+            await sent.AddReactionAsync(new Emoji("\uD83E\uDD17"));
+            //to add custom emote:
+            //if (Emote.TryParse("<:hugging:>", out var emote))
+            //    await sent.AddReactionAsync(emoji);
+
+        }
+
+        [Command("invite")]
+        public async Task invite()
+        {
+            await ReplyAsync(embed: new EmbedBuilder()
+            .WithColor(Config.Doremi.EmbedColor)
+            .WithAuthor("Doremi Bot", "https://cdn.discordapp.com/emojis/651062436866293760.png?v=1")
+            .WithTitle("Bot Invitation Links")
+            .WithDescription($"Pirika pirilala poporina peperuto! Generate the bot links!")
+            .AddField("Doremi Bot", "[Click here to invite Doremi Bot](https://discordapp.com/api/oauth2/authorize?client_id=655668640502251530&permissions=2117532736&scope=bot)")
+            .AddField("Hazuki Bot", "[Click here to invite Hazuki Bot](https://discordapp.com/api/oauth2/authorize?client_id=655307117128974346&permissions=238419008&scope=bot)")
+            .AddField("Aiko Bot", "[Click here to invite Aiko Bot](https://discordapp.com/api/oauth2/authorize?client_id=663612449341046803&permissions=238419008&scope=bot)")
+            .Build());
+        }
+
         //magical stage section
-        [Command("magical stage"),Alias("magicalstage")]
+        [Command("magical stage"), Alias("magicalstage")]
         public async Task magicalStage([Remainder] string query)
         {
-            if (query != null){
+            if (query != null)
+            {
                 Config.Doremi.MagicalStageWishes = query;
                 await ReplyAsync($"<@{Config.Hazuki.Id}> Pirika pirilala, Nobiyaka ni!\n",
                 embed: new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
                 .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/3/3d/Nobiyakanis1.2.png/revision/latest?cb=20190408124752")
                 .Build());
-            } else
-            {
+            } else {
                 await ReplyAsync($"Please enter your wishes.");
             }
-            
+
         }
 
         [Command("Pameruku raruku, Takaraka ni!")]//from aiko
@@ -190,23 +242,142 @@ namespace OjamajoBot.Module
             if (Context.User.Id == Config.Aiko.Id)
             {
                 await ReplyAsync($"<@{Config.Hazuki.Id}> Magical Stage! {Config.Doremi.MagicalStageWishes}\n");
+                Config.Doremi.MagicalStageWishes = "";//erase the magical stage
             }
         }
 
-        //todo/more commands: gacha
+        //todo/more upcoming commands: 10 star voting pinned message, easter egg/hidden commands, set daily message announcement, gacha,
+        //witch seeds to cast a spells
+        //10 stars pinned message 
+        //mini hangman game, virtual maho-dou shop interactive
+    }
 
-        //[Command("buy")]
-        //public async Task Buy(string item)
-        //{
-        //    if (item == "🌰" || item == "💍" || item == "🍊" || item == "🍩" || item == "⛏")
-        //    {
-        //        await ReplyAsync($"{item} purchased!");
-        //    }
-        //    else
-        //    {
-        //        await ReplyAsync("Please enter of of the correct item emojis in order to purchase");
-        //    }
-        //}
+    [Group("mod")]
+    [RequireUserPermission(ChannelPermission.ManageChannels,
+        ErrorMessage = "Oops, You need to have the ``manage channels`` permission to use this command",
+        NotAGuildErrorMessage = "Oops, You need to have the ``manage channels`` permission to use this command")]
+    public class DoremiModerator : ModuleBase<SocketCommandContext>
+    {
+        [Command("Help")]
+        public async Task showHelpModerator()
+        {
+            await ReplyAsync(embed: new EmbedBuilder()
+                .WithColor(Config.Doremi.EmbedColor)
+                .WithAuthor("Doremi Bot", "https://cdn.discordapp.com/emojis/651062436866293760.png?v=1")
+                .WithTitle("Moderator Command List:")
+                .WithDescription($"Require ``Manage Channels`` permission.\n" +
+                $"Channel Moderator Prefix: **<@{Config.Doremi.Id}> mod channels** or **doremi!mod channels** or **do!mod channels**\n" +
+                $"Basic Moderator Prefix: **<@{Config.Doremi.Id}> mod** or **doremi!mod** or **do!mod** followed with the <whitespace>")
+                .AddField("Channel Moderator:",
+                $"**randomevent** <channel_name> : Schedule <@{Config.Doremi.Id}> to do random event message on mentioned <channel_name> every 1 hour. \n" +
+                $"**online** <channel_name> : Will make <@{Config.Doremi.Id}> to announce on <channel_name> whenever the bot goes online again.\n" +
+                $"**remove** <randomevent|online> : Will remove the settings for given parameter: Randomevent or online")
+                .AddField("Basic Moderator:",
+                "**help** : You already execute this command\n" +
+                "**guildid** : This will give you the Guild/Server Id\n" +
+                "**channelid** <channel_name> : This will give you the Channel Id within the optional mentioned <channel_name> parameter\n")
+                .Build());
+        }
+
+        [Command("guildid")]
+        public async Task getGuildId(){
+            await ReplyAsync($"{Context.Guild.Id}");
+        }
+
+        [Command("channelid")]
+        public async Task getCurrentChannelId(){
+            await ReplyAsync($"{Context.Channel.Id}");
+        }
+
+        [Command("channelid")]
+        public async Task getChannelId(IGuildChannel guildChannel){
+            await ReplyAsync($"{guildChannel.Id}");
+        }
+
+    }
+
+    [Group("mod channels")]
+    [RequireUserPermission(ChannelPermission.ManageChannels,
+        ErrorMessage = "Oops, You need to have the ``manage channels`` permission to use this command",
+        NotAGuildErrorMessage = "Oops, You need to have the ``manage channels`` permission to use this command")]
+    public class DoremiChannelsModerator : ModuleBase<SocketCommandContext>
+    {
+
+        [Command("randomEvent")]
+        public async Task assignRandomEvent(IGuildChannel iguild)
+        {
+            Config.Guild.assignId(iguild.GuildId, "id_random_event", iguild.Id.ToString());
+            
+
+            if (Config.Doremi._timerRandomEvent.ContainsKey(iguild.GuildId.ToString()))
+                Config.Doremi._timerRandomEvent[iguild.GuildId.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
+
+            Config.Doremi._timerRandomEvent[$"{iguild.GuildId.ToString()}"] = new Timer(async _ =>
+                {
+                    Random rnd = new Random();
+                    int rndIndex = rnd.Next(0, Config.Doremi.listRandomEvent.Count); //random the list value
+                    Console.WriteLine("Doremi Random Event : " + Config.Doremi.listRandomEvent[rndIndex]);
+
+                    var socketClient = Context.Client;
+                    try{
+                        await socketClient
+                        .GetGuild(iguild.GuildId)
+                        .GetTextChannel(Config.Guild.Id_random_event[iguild.GuildId.ToString()])
+                        .SendMessageAsync(Config.Doremi.listRandomEvent[rndIndex]);
+                    } catch {
+                        Console.WriteLine($"Doremi Random Event Exception: Send message permissions has been missing {iguild.Guild.Name} : {iguild.Name}");
+                    }
+                    
+                },
+                null,
+                TimeSpan.FromSeconds(Config.Doremi.Randomeventinterval), //time to wait before executing the timer for the first time
+                TimeSpan.FromSeconds(Config.Doremi.Randomeventinterval) //time to wait before executing the timer again
+            );
+
+            await ReplyAsync($"**Random Event Channels** has been assigned into: {MentionUtils.MentionChannel(iguild.Id)}");
+        }
+
+        [Command("online")]
+        public async Task assignNotifOnline(IGuildChannel iguild)
+        {
+            Config.Guild.assignId(iguild.GuildId, "id_notif_online", iguild.Id.ToString());
+            await ReplyAsync($"**Bot Online Notification Channels** has been assigned into: {MentionUtils.MentionChannel(iguild.Id)}");
+        }
+
+        [Command("remove")]
+        public async Task assignRandomEvent(string query)
+        {
+            String property = "";
+            Boolean propertyExists = false;
+            ulong channelId = 0;
+            
+            if (query.ToLower() == "randomevent"){
+                property = "Random Event";
+                
+                if (Config.Guild.Id_random_event.ContainsKey(Context.Guild.Id.ToString())){
+                    channelId = Config.Guild.Id_random_event[Context.Guild.Id.ToString()];
+                    propertyExists = true;
+                    Config.Guild.assignId(Context.Guild.Id, "id_random_event", "");
+                    if (Config.Doremi._timerRandomEvent.ContainsKey(Context.Guild.Id.ToString()))
+                        Config.Doremi._timerRandomEvent[Context.Guild.Id.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
+                }
+                
+                
+            } else if (query.ToLower() == "notifonline") {
+                property = "Bot Online Notification";
+
+                if (Config.Guild.Id_notif_online.ContainsKey(Context.Guild.Id.ToString())){
+                    channelId = Config.Guild.Id_notif_online[Context.Guild.Id.ToString()];
+                    propertyExists = true;
+                    Config.Guild.assignId(Context.Guild.Id, "id_notif_online", "");
+                } 
+            }
+
+            if (propertyExists)
+                await ReplyAsync($"**{property} Channels** settings has been removed.");
+            else
+                await ReplyAsync($"**{property} Channels** has no settings yet.");
+        }
     }
 
     public class DoremiMusic : ModuleBase<SocketCommandContext>
@@ -351,6 +522,7 @@ namespace OjamajoBot.Module
 
             try
             {
+                Config.Music.queuedTrack[Context.Guild.Id.ToString()].Clear();
                 await _lavaNode.LeaveAsync(voiceChannel);
                 await ReplyAsync($"I've left {voiceChannel.Name}!");
             }
@@ -404,11 +576,12 @@ namespace OjamajoBot.Module
             var player = _lavaNode.HasPlayer(Context.Guild)
                 ? _lavaNode.GetPlayer(Context.Guild)
                 : await _lavaNode.JoinAsync((Context.User as IVoiceState).VoiceChannel);
-
-            Config.Music.storedLavaTrack.Add(track);
+            
+            Config.Music.queuedTrack[Context.Guild.Id.ToString()].Add(track.Title);
 
             if (player.PlayerState == PlayerState.Playing){
                 player.Queue.Enqueue(track);
+                //Config.Music.storedLavaTrack[Context.Guild.Id.ToString()].Add(track);
                 await ReplyAsync($":arrow_down:  Added to queue: {track.Title}.");
             } else {
                 await player.PlayAsync(track);
@@ -419,7 +592,9 @@ namespace OjamajoBot.Module
         [Command("playall")]
         public async Task PlayAll()
         {
-            await ReplyAsync($"I will play all music on the musiclist");
+            var player = _lavaNode.HasPlayer(Context.Guild)
+                ? _lavaNode.GetPlayer(Context.Guild)
+                : await _lavaNode.JoinAsync((Context.User as IVoiceState).VoiceChannel);
 
             if (!_lavaNode.HasPlayer(Context.Guild))
             {
@@ -427,8 +602,9 @@ namespace OjamajoBot.Module
                 return;
             }
 
+            await ReplyAsync($"I will play all music on the musiclist");
+
             JObject jObj = Config.Music.jobjectfile;
-            var player = _lavaNode.GetPlayer(Context.Guild);
 
             for (int i = 0; i < (jObj.GetValue("musiclist") as JObject).Count; i++)
             {
@@ -438,7 +614,7 @@ namespace OjamajoBot.Module
                 if (searchResponse.LoadStatus == LoadStatus.LoadFailed ||
                 searchResponse.LoadStatus == LoadStatus.NoMatches)
                 {
-                    await ReplyAsync($"I wasn't able to find anything for `{query}`.");
+                    await ReplyAsync($"I can't find anything for `{query}`.");
                     return;
                 }
 
@@ -448,7 +624,8 @@ namespace OjamajoBot.Module
                     {
                         foreach (var track in searchResponse.Tracks)
                         {
-                            Config.Music.storedLavaTrack.Add(track);
+                            //Config.Music.storedLavaTrack[Context.Guild.Id.ToString()].Add(track);
+                            Config.Music.queuedTrack[Context.Guild.Id.ToString()].Add(track.Title);
                             player.Queue.Enqueue(track);
                         }
 
@@ -458,13 +635,14 @@ namespace OjamajoBot.Module
                     {
                         var track = searchResponse.Tracks[0];
                         player.Queue.Enqueue(track);
+                        Config.Music.queuedTrack[Context.Guild.Id.ToString()].Add(track.Title);
                         //await ReplyAsync($"🔈 Enqueued: {track.Title}");
                     }
                 }
                 else
                 {
                     var track = searchResponse.Tracks[0];
-                    Config.Music.storedLavaTrack.Add(track);
+                    //Config.Music.storedLavaTrack[Context.Guild.Id.ToString()].Add(track);
 
                     if (!string.IsNullOrWhiteSpace(searchResponse.Playlist.Name))
                     {
@@ -477,6 +655,7 @@ namespace OjamajoBot.Module
                             }
                             else
                             {
+                                Config.Music.queuedTrack[Context.Guild.Id.ToString()].Add(track.Title);
                                 player.Queue.Enqueue(searchResponse.Tracks[j]);
                             }
                         }
@@ -519,7 +698,7 @@ namespace OjamajoBot.Module
                 if(n <= (jObj.GetValue("musiclist") as JObject).Count){
                     query = jObj.GetValue("musiclist")[n.ToString()]["filename"].ToString();
                 } else {
-                    await ReplyAsync($"I wasn't able to find anything for track number {query}.");
+                    await ReplyAsync($"I wasn't able to find anything for track number {query}. See the available doremi music list on ``doremi!mulist`` commands.");
                     return;
                 }
                 
@@ -539,7 +718,7 @@ namespace OjamajoBot.Module
             if (searchResponse.LoadStatus == LoadStatus.LoadFailed ||
                 searchResponse.LoadStatus == LoadStatus.NoMatches)
             {
-                await ReplyAsync($"I wasn't able to find anything for `{query}`.");
+                await ReplyAsync($"I wasn't able to find anything for `{query}`. See the available doremi music list on ``doremi!mulist`` commands.");
                 return;
             }
 
@@ -551,23 +730,25 @@ namespace OjamajoBot.Module
                     {
                         player.Queue.Enqueue(track);
                         Console.WriteLine("play queue:" + track.Title);
-                        Config.Music.storedLavaTrack.Add(track);
+                        //Config.Music.storedLavaTrack[Context.Guild.Id.ToString()].Add(track);
+                        Config.Music.queuedTrack[Context.Guild.Id.ToString()].Add(track.Title);
                     }
 
-                    await ReplyAsync($"🔈 Enqueued {searchResponse.Tracks.Count} tracks.");
+                    await ReplyAsync($":arrow_down: Enqueued {searchResponse.Tracks.Count} tracks.");
                 }
                 else
                 {
                     var track = searchResponse.Tracks[0];
                     player.Queue.Enqueue(track);
-                    Config.Music.storedLavaTrack.Add(track);
-                    await ReplyAsync($"🔈 Enqueued: {track.Title}");
+                    //Config.Music.storedLavaTrack[Context.Guild.Id.ToString()].Add(track);
+                    Config.Music.queuedTrack[Context.Guild.Id.ToString()].Add(track.Title);
+                    await ReplyAsync($":arrow_down: Enqueued: {track.Title}");
                 }
             }
             else
             {
                 var track = searchResponse.Tracks[0];
-                Config.Music.storedLavaTrack.Add(track);
+                //Config.Music.storedLavaTrack[Context.Guild.Id.ToString()].Add(track);
 
                 if (!string.IsNullOrWhiteSpace(searchResponse.Playlist.Name))
                 {
@@ -577,11 +758,14 @@ namespace OjamajoBot.Module
                         {
                             await player.PlayAsync(track);
                             await ReplyAsync($"🔈 Now Playing: {track.Title}");
+                            //Config.Music.storedLavaTrack[Context.Guild.Id.ToString()].Add(track);
+                            Config.Music.queuedTrack[Context.Guild.Id.ToString()].Add(track.Title);
                         }
                         else
                         {
                             player.Queue.Enqueue(searchResponse.Tracks[i]);
-                            Config.Music.storedLavaTrack.Add(track);
+                            //Config.Music.storedLavaTrack[Context.Guild.Id.ToString()].Add(track);
+                            Config.Music.queuedTrack[Context.Guild.Id.ToString()].Add(searchResponse.Tracks[i].Title);
                         }
                     }
 
@@ -589,6 +773,7 @@ namespace OjamajoBot.Module
                 }
                 else
                 {
+                    Config.Music.queuedTrack[Context.Guild.Id.ToString()].Add(track.Title);
                     await player.PlayAsync(track);
                     await ReplyAsync($"🔈 Now Playing: {track.Title}");
                 }
@@ -687,7 +872,8 @@ namespace OjamajoBot.Module
         [Command("Stop")]
         public async Task StopAsync()
         {
-            Config.Music.storedLavaTrack.Clear();
+            //Config.Music.storedLavaTrack.Clear();
+            Config.Music.queuedTrack[Context.Guild.Id.ToString()].Clear();
             var player = _lavaNode.HasPlayer(Context.Guild)
                 ? _lavaNode.GetPlayer(Context.Guild)
                 : await _lavaNode.JoinAsync((Context.User as IVoiceState).VoiceChannel);
@@ -707,13 +893,6 @@ namespace OjamajoBot.Module
             //{
             //    Config.Music.storedLavaTrack.RemoveAt(0);
             //}
-            
-            var track = player.Track;
-
-            player.Queue.Enqueue(player.Track);
-            await player.SkipAsync();
-            
-            await ReplyAsync($"Music Skipped. Now Playing: {player.Track.Title}");
 
             if (!_lavaNode.TryGetPlayer(Context.Guild, out player))
             {
@@ -726,6 +905,14 @@ namespace OjamajoBot.Module
                 await ReplyAsync("Woaaah there, I can't skip when nothing is playing.");
                 return;
             }
+
+            var track = player.Track;
+
+            player.Queue.Enqueue(player.Track);
+            await player.SkipAsync();
+
+            await ReplyAsync($"Music Skipped. Now Playing: {player.Track.Title}");
+
         }
 
         [Command("Volume")]
@@ -758,24 +945,21 @@ namespace OjamajoBot.Module
                 .WithTitle("Music List:")
                 .WithDescription($"These are the music list that's available for me to play: " +
                 $"You can use the **play** commands followed with the track number or title.\n" +
-                $"Example: **do-play 1** or **do-play ojamajocarnival**")
+                $"Example: **doremi!play 1** or **doremi!play ojamajocarnival**")
                 .AddField("[Track No] Title",
-                "**all** : I will play all the music that are listed below \n " +
                 musiclist)
                 .Build());
         }
 
-        [Command("Musicqueue"), Alias("muq")]
+        [Command("queue"), Alias("muq")]
         public async Task ShowMusicListQueue()
         {
-
-            if (Config.Music.storedLavaTrack.Count >= 1)
+            if (Config.Music.queuedTrack[Context.Guild.Id.ToString()].Count >= 1)
             {
                 String musiclist = "";
-                for (int i = 0; i < Config.Music.storedLavaTrack.Count; i++)
+                for (int i = 0; i < Config.Music.queuedTrack[Context.Guild.Id.ToString()].Count; i++)
                 {
-                    LavaTrack lt = Config.Music.storedLavaTrack[i];
-                    musiclist += $"[**{i + 1}**] **{lt.Title}**\n";
+                    musiclist += $"[**{i + 1}**] **{Config.Music.queuedTrack[Context.Guild.Id.ToString()][i]}**\n";
                 }
 
                 await base.ReplyAsync(embed: new EmbedBuilder()
@@ -838,23 +1022,23 @@ namespace OjamajoBot.Module
 
         //}
 
-        [Command("Musicremove"), Alias("murem")]
-        public async Task RemoveMusicQueue()
-        {
-            String musiclist = "";
-            for (int i = 0; i < Config.Music.storedLavaTrack.Count; i++)
-            {
-                LavaTrack lt = Config.Music.storedLavaTrack[i];
-                musiclist += $"[**{i + 1}**] **{lt.Title}**\n";
-            }
+        //[Command("Musicremove"), Alias("murem")]
+        //public async Task RemoveMusicQueue()
+        //{
+        //    String musiclist = "";
+        //    for (int i = 0; i < Config.Music.storedLavaTrack.Count; i++)
+        //    {
+        //        LavaTrack lt = Config.Music.storedLavaTrack[i];
+        //        musiclist += $"[**{i + 1}**] **{lt.Title}**\n";
+        //    }
 
-            await base.ReplyAsync(embed: new EmbedBuilder()
-                .WithColor(Config.Doremi.EmbedColor)
-                .WithTitle("Current music in queue:")
-                .AddField($"[Track No] Title",
-                musiclist)
-                .Build());
-        }
+        //    await base.ReplyAsync(embed: new EmbedBuilder()
+        //        .WithColor(Config.Doremi.EmbedColor)
+        //        .WithTitle("Current music in queue:")
+        //        .AddField($"[Track No] Title",
+        //        musiclist)
+        //        .Build());
+        //}
 
     }
 
@@ -941,26 +1125,10 @@ namespace OjamajoBot.Module
             }
         }
 
-        [Command("respects"), Alias("F")]
-        [RequireBotPermission(GuildPermission.AddReactions)]
-        public async Task Respects([Remainder] string query)
+        [Command("getChannelName")]
+        public async Task getChannelId()
         {
-            try
-            {
-                //SocketGuildUser user
-                var emoji = new Emoji("\uD83C\uDDEB");
-                string message = $"Press F to pay respects to {query}:";
-                var sent = await Context.Channel.SendMessageAsync(message);
-                await sent.AddReactionAsync(emoji);
-            }
-            catch (Exception e)
-            {
-                await Context.Channel.SendMessageAsync("Please use the valid format");
-            }
-            
-
-            
-
+            await Context.Channel.SendMessageAsync($"{MentionUtils.MentionChannel(Context.Channel.Id)}");
         }
 
         //PagedReplyAsync will send a paginated message to the channel
@@ -971,12 +1139,13 @@ namespace OjamajoBot.Module
         public async Task Test_Paginator()
         {
             PaginatedMessage page = new PaginatedMessage();
-
             var pages = new[] { "Page 1", "Page 2", "Page 3", "aaaaaa", "Page 5" };
 
-            
             await PagedReplyAsync(pages);
         }
 
     }
+        
+
+
 }

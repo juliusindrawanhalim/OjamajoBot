@@ -28,46 +28,70 @@ namespace OjamajoBot.Module
                 .WithAuthor("Aiko Bot", "https://cdn.discordapp.com/emojis/651063151948726273.png?v=1")
                 .WithTitle("Command List:")
                 .WithDescription($"Pretty Witchy Aiko Chi~ " +
-                $"You can either tell me what to do by mentioning me **<@{Config.Aiko.Id}>** or **aiko** or **ai-** and followed with the <whitespace> as the starting command prefix.")
+                $"You can either tell me what to do by mentioning me **<@{Config.Aiko.Id}>** or **aiko!** or **ai!** as the starting command prefix.")
                 .AddField("Basic Commands",
-                "**transform** or **henshin** : I will transform into the ojamajo form.\n" +
-                "**spells <username>,<wishes>** : Transform mentioned <username> with the given <wishes> parameter.\n" +
+                "**hello** : I will greet you up\n" +
+                "**change** or **henshin** : I will change into the ojamajo form\n" +
+                "**transform <username> <wishes>** : Transform mentioned <username> into <wishes>\n" +
+                "**wish <wishes>** : Give the user some <wishes>\n" +
                 "**quotes** : I will mention any random quotes.\n" +
-                "**random** : I will do anything random.\n" +
-                "**foreheadjokes** : Forehead Jokes")
+                "**random** : I will do anything random." 
+                /*"**foreheadjokes** : Forehead Jokes"*/)
                 .Build());
         }
 
-        [Command("transform"), Alias("henshin")]
+        [Command("hello")]
+        public async Task aikoHello()
+        {
+            string tempReply = "";
+            List<string> listRandomRespond = new List<string>() {
+                    $"Yo {MentionUtils.MentionUser(Context.User.Id)}! ",
+                    $"Hello there {MentionUtils.MentionUser(Context.User.Id)}! ",
+            };
+
+            int rndIndex = new Random().Next(0, listRandomRespond.Count);
+            tempReply = listRandomRespond[rndIndex] + Config.Aiko.arrRandomActivity[Config.Aiko.indexCurrentActivity, 1];
+
+            await ReplyAsync(tempReply);
+        }
+
+        [Command("change"), Alias("henshin")]
         public async Task transform()
         {
-            await ReplyAsync("Pretty Witchy Aiko Chi~ \n");
+            await ReplyAsync("Pretty Witchy Aiko Chi~\n");
             await base.ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Aiko.EmbedColor)
                 .WithImageUrl("https://66.media.tumblr.com/13cf3226a3c5b77a2100cd121de61eb7/tumblr_nnf0ckQlnh1usz98wo1_250.gif")
                 .Build());
         }
 
-        [Command("spells")]
-        public async Task spells([Remainder] string query)
+        [Command("transform")]
+        public async Task spells(IUser iuser, [Remainder] string query)
         {
-            String[] splitted = query.Split(",");
-            splitted[1].TrimStart();
-            //await ReplyAsync("Pirika pirilala poporina peperuto! Transform " + " into " + splitted[1]);
-            await Context.Message.DeleteAsync();
-            await ReplyAsync("Pameruku raruku rarirori poppun! Transform " + splitted[0] + " into " + splitted[1]);
-
+            //await Context.Message.DeleteAsync();
+            await ReplyAsync("Pameruku raruku rarirori poppun! Transform " + iuser.Mention + " into " + query);
             await base.ReplyAsync(embed: new EmbedBuilder()
-                .WithColor(Config.Aiko.EmbedColor)
-                .WithImageUrl("https://i.pinimg.com/originals/79/14/40/7914406b1876370c3058d8b8f14de96e.jpg")
-                .Build());
+            .WithColor(Config.Aiko.EmbedColor)
+            .WithImageUrl("https://i.pinimg.com/originals/79/14/40/7914406b1876370c3058d8b8f14de96e.jpg")
+            .Build());
+        }
+
+        [Command("wish")]
+        public async Task wish([Remainder] string query)
+        {
+            await ReplyAsync($"Pameruku raruku rarirori poppun! {query}");
+            await base.ReplyAsync(embed: new EmbedBuilder()
+            .WithColor(Config.Aiko.EmbedColor)
+            .WithImageUrl("https://i.pinimg.com/originals/79/14/40/7914406b1876370c3058d8b8f14de96e.jpg")
+            .Build());
         }
 
         [Command("quotes")]
         public async Task quotes()
         {
             String[] arrQuotes = {
-                "As a woman from Osaka, I can't lose!"
+                "As a woman from Osaka, I can't lose!",
+                "Let's make some delicious takoyaki"
             };
 
             await ReplyAsync(arrQuotes[new Random().Next(0, arrQuotes.Length)]);
@@ -87,10 +111,11 @@ namespace OjamajoBot.Module
         public async Task randomthing()
         {
             String[,] arrRandom =
-            { {"Aiko has given you a big smile looking" , "https://38.media.tumblr.com/224f6ca12018eca4ff34895cce9b7649/tumblr_nds3eyKFLH1r98a5go1_500.gif"},
+            { {"Aiko has given you a big smile" , "https://38.media.tumblr.com/224f6ca12018eca4ff34895cce9b7649/tumblr_nds3eyKFLH1r98a5go1_500.gif"},
              {":v", "https://yt3.ggpht.com/a/AGF-l7-JcB38-lOhu0HzFN5NsWre0wgnl50IeIZq8Q=s900-c-k-c0xffffffff-no-rj-mo"},
             {"Swimming lessons will be canceled!","https://thumbs.gfycat.com/EntireGrizzledFlyinglemur-poster.jpg"},
-            {":ok_hand:","https://media.discordapp.net/attachments/569409307100315651/651188503991812107/1564810493598.jpg?width=829&height=622"} };
+            {":ok_hand:","https://media.discordapp.net/attachments/569409307100315651/651188503991812107/1564810493598.jpg?width=829&height=622"},
+            {"Thank you, thank you :wink:","https://66.media.tumblr.com/f6b42eb806ae7b64fc34e6e8b1a18c3f/tumblr_inline_mgcb5odip41r4lv3u.gif" } };
 
             Random rnd = new Random();
             int rndIndex = rnd.Next(0, arrRandom.GetLength(0));
@@ -102,20 +127,21 @@ namespace OjamajoBot.Module
                 .Build());
         }
 
-        [Command("foreheadjokes")]
-        public async Task sendForeheadJokes()
-        {
-            String[] arrRandom = {
-                "https://cdn.discordapp.com/attachments/569409307100315651/651127198203510824/unknown.png",
-            };
+        //todo/upcoming command:
+        //[Command("foreheadjokes")]
+        //public async Task sendForeheadJokes()
+        //{
+        //    String[] arrRandom = {
+        //        "https://cdn.discordapp.com/attachments/569409307100315651/651127198203510824/unknown.png",
+        //    };
 
-            await ReplyAsync(arrRandom[new Random().Next(0, arrRandom.GetLength(0))],
-                    embed: new EmbedBuilder()
-                    .WithColor(Config.Hazuki.EmbedColor)
-                    .WithImageUrl("https://cdn.discordapp.com/attachments/663232256676069386/663603236099457035/Dabzuki.png")
-                    .Build());
+        //    await ReplyAsync(arrRandom[new Random().Next(0, arrRandom.GetLength(0))],
+        //            embed: new EmbedBuilder()
+        //            .WithColor(Config.Hazuki.EmbedColor)
+        //            .WithImageUrl("https://cdn.discordapp.com/attachments/663232256676069386/663603236099457035/Dabzuki.png")
+        //            .Build());
         
-        }
+        //}
 
         //magical stage section
         [Command("Paipai Ponpoi, Shinyaka ni!")] //magical stage from hazuki
@@ -140,15 +166,13 @@ namespace OjamajoBot.Module
                 .WithColor(Config.Aiko.EmbedColor)
                 .WithImageUrl("https://i.ytimg.com/vi/HyizF7XWfU8/maxresdefault.jpg")
                 .Build());
-
-                Config.Doremi.MagicalStageWishes = "";//erase the magical stage
             }
         }
     }
 
     class AikoRandomEventModule : ModuleBase<SocketCommandContext>
     {
-        List<string> listRespondDefault = new List<string>() { ":sweat_smile: Sorry Doremi chan, I'm having a plan with my dad later on" };
+        List<string> listRespondDefault = new List<string>() {$":sweat_smile: Gommen ne, {MentionUtils.MentionUser(Config.Doremi.Id)} chan, I'm having a plan with my dad later on."};
 
         [Remarks("go to the shop event")]
         [Command("let's go to maho dou")]
@@ -156,7 +180,7 @@ namespace OjamajoBot.Module
         {
             if (Context.User.Id == Config.Doremi.Id)
             {
-                List<string> listRespond = new List<string>() { ":smile: Yosh! let's go to maho dou" };
+                List<string> listRespond = new List<string>() {":smile: Yosh! let's go to maho dou." };
                 for (int i = 0; i < listRespondDefault.Count - 1; i++)
                     listRespond.Add(listRespondDefault[i]);
 
@@ -172,7 +196,7 @@ namespace OjamajoBot.Module
         {
             if (Context.User.Id == Config.Doremi.Id)
             {
-                List<string> listRespond = new List<string>() { ":smile: Sure thing, I hope we can also make takoyaki on your house later on" };
+                List<string> listRespond = new List<string>() { ":smile: Sure thing, I hope we can also make takoyaki on your house later on." };
                 for (int i = 0; i < listRespondDefault.Count - 1; i++)
                     listRespond.Add(listRespondDefault[i]);
 
@@ -185,59 +209,59 @@ namespace OjamajoBot.Module
 
     public class AikoInteractive : InteractiveBase
     {
-        [Command("quiz", RunMode = RunMode.Async)]
-        public async Task Interact_Quiz()
-        {
-            Random rnd = new Random();
-            int rndQuiz = rnd.Next(0, 2);
+        //[Command("quiz", RunMode = RunMode.Async)]
+        //public async Task Interact_Quiz()
+        //{
+        //    Random rnd = new Random();
+        //    int rndQuiz = rnd.Next(0, 2);
 
-            String question, replyCorrect, replyWrong;
-            List<string> answer = new List<string>();
-            String replyTimeout = "Time's up. Sorry but it seems you haven't answered yet.";
+        //    String question, replyCorrect, replyWrong;
+        //    List<string> answer = new List<string>();
+        //    String replyTimeout = "Time's up. Sorry but it seems you haven't answered yet.";
 
-            if (rndQuiz == 0)
-            {
-                question = "What is my favorite food?";
-                answer.Add("takoyaki");
-                replyCorrect = "Yes, that's corret! Takoyaki was one of my favorite food";
-                replyWrong = "Sorry but that's wrong.";
-                replyTimeout = "Time's up. My favorite food is takoyaki.";
-            } else
-            {
-                question = "What is my full name?";
-                answer.Add("aiko senoo"); answer.Add("senoo aiko");
-                replyCorrect = "Yes, that's corret! Aiko Senoo is my full name.";
-                replyWrong = "Sorry but that's wrong.";
-                replyTimeout = "Time's up. Aiko Senoo is my full name.";
-            }
+        //    if (rndQuiz == 0)
+        //    {
+        //        question = "What is my favorite food?";
+        //        answer.Add("takoyaki");
+        //        replyCorrect = "Yes, that's corret! Takoyaki was one of my favorite food";
+        //        replyWrong = "Sorry but that's wrong.";
+        //        replyTimeout = "Time's up. My favorite food is takoyaki.";
+        //    } else
+        //    {
+        //        question = "What is my full name?";
+        //        answer.Add("aiko senoo"); answer.Add("senoo aiko");
+        //        replyCorrect = "Yes, that's corret! Aiko Senoo is my full name.";
+        //        replyWrong = "Sorry but that's wrong.";
+        //        replyTimeout = "Time's up. Aiko Senoo is my full name.";
+        //    }
 
-            //response.Content.ToLower() to get the answer
+        //    //response.Content.ToLower() to get the answer
 
-            await ReplyAsync(question);
-            //var response = await NextMessageAsync();
-            //Boolean wrongLoop = false;
-            Boolean correctAnswer = false;
+        //    await ReplyAsync(question);
+        //    //var response = await NextMessageAsync();
+        //    //Boolean wrongLoop = false;
+        //    Boolean correctAnswer = false;
 
-            while (!correctAnswer)
-            {
-                var response = await NextMessageAsync();
+        //    while (!correctAnswer)
+        //    {
+        //        var response = await NextMessageAsync();
 
-                if (response == null)
-                {
-                    await ReplyAsync(replyTimeout);
-                    return;
-                }
-                else if (answer.Contains(response.Content.ToLower()))
-                {
-                    await ReplyAsync(replyCorrect);
-                    correctAnswer = true;
-                }
-                else
-                {
-                    await ReplyAsync(replyWrong);
-                }
-            }
-        }
+        //        if (response == null)
+        //        {
+        //            await ReplyAsync(replyTimeout);
+        //            return;
+        //        }
+        //        else if (answer.Contains(response.Content.ToLower()))
+        //        {
+        //            await ReplyAsync(replyCorrect);
+        //            correctAnswer = true;
+        //        }
+        //        else
+        //        {
+        //            await ReplyAsync(replyWrong);
+        //        }
+        //    }
+        //}
 
     }
 }

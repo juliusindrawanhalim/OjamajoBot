@@ -48,32 +48,31 @@ namespace OjamajoBot.Bot
             await client.StartAsync();
 
             client.MessageUpdated += MessageUpdated;
+            client.GuildAvailable += GuildAvailable;
 
             //start rotates random activity
             _timerStatus = new Timer(async _ =>
             {
-                List<string> listRandomPlaying = new List<string>() {
-                    "at misora elementary school", "at maho dou", "violin" ,
-                    "with friends", "with Doremi", "with Aiko", "with Masaru Yada"
-                };
-
                 Random rnd = new Random();
-                int rndIndex = rnd.Next(0, listRandomPlaying.Count); //random the list value
-                String updLog = "Updated Hazuki Activity - Playing: " + listRandomPlaying.ElementAtOrDefault(rndIndex);
-                await client.SetGameAsync(listRandomPlaying.ElementAtOrDefault(rndIndex), type: ActivityType.Playing); //set activity to current index position
-                
+                int rndIndex = rnd.Next(0, Config.Hazuki.arrRandomActivity.GetLength(0)); //random the list value
+                if (rndIndex > 0) rndIndex -= 1;
+                String updLog = "Updated Hazuki Activity - Playing: " + Config.Hazuki.arrRandomActivity[rndIndex, 0];
+                Config.Hazuki.indexCurrentActivity = rndIndex;
+                await client.SetGameAsync(Config.Hazuki.arrRandomActivity[rndIndex, 0], type: ActivityType.Playing); //set activity to current index position
+
                 Console.WriteLine(updLog);
             },
             null,
             TimeSpan.FromSeconds(1), //time to wait before executing the timer for the first time (set first status)
-            TimeSpan.FromHours(1) //time to wait before executing the timer again (set new status - repeats indifinitely every 10 seconds)
+            TimeSpan.FromMinutes(10) //time to wait before executing the timer again (set new status - repeats indifinitely every 10 seconds)
             );
             //end block
 
             client.Ready += () =>
             {
-                client.GetGuild(Config.Guild.Id).GetTextChannel(Config.Guild.Id_notif_online)
-                .SendMessageAsync("Pretty Witchy Hazuki Chi~");
+
+                //client.GetGuild(Config.Guild.Id).GetTextChannel(Config.Guild.Id_notif_online)
+                //.SendMessageAsync("Pretty Witchy Hazuki Chi~");
 
                 Console.WriteLine("Hazuki Connected!");
                 return Task.CompletedTask;
@@ -81,9 +80,25 @@ namespace OjamajoBot.Bot
 
 
             //// Block this task until the program is closed.
-            await Task.Delay(10);
+            await Task.Delay(0);
 
         }
+
+        private async Task GuildAvailable(SocketGuild guild)
+        {
+            if (Config.Guild.Id_notif_online.ContainsKey(guild.Id.ToString()))
+            { //announce bot if online
+                try
+                {
+                    await client.GetGuild(guild.Id)
+                    .GetTextChannel(Config.Guild.Id_notif_online[guild.Id.ToString()])
+                    .SendMessageAsync("Pretty Witchy Hazuki Chi~");
+                }
+                catch { }
+
+            }
+        }
+
 
         private async Task MessageUpdated(Cacheable<IMessage, ulong> before,
             SocketMessage after, ISocketMessageChannel channel)
@@ -108,16 +123,31 @@ namespace OjamajoBot.Bot
             //if (message.Author.IsBot) return; //prevent any bot from sending the commands
 
             int argPos = 0;
-            if (message.HasStringPrefix("hazuki ", ref argPos) ||
-                message.HasStringPrefix("ha ", ref argPos) ||
+            if (message.HasStringPrefix("hazuki!", ref argPos) ||
+                message.HasStringPrefix("ha!", ref argPos) ||
                 message.HasMentionPrefix(client.CurrentUser, ref argPos))
             {
                 var context = new SocketCommandContext(client, message);
                 var result = await commands.ExecuteAsync(context, argPos, services);
-                if (!result.IsSuccess)
+                switch (result.Error)
                 {
-                    await message.Channel.SendMessageAsync("Sorry, I can't seem to understand your commands.");
-                    Console.WriteLine(result.ErrorReason);
+                    case CommandError.BadArgCount:
+                        await context.Channel.SendMessageAsync("Oops, looks like you have missing/too much parameter. See ``hazuki!help`` for more info.");
+                        break;
+                    case CommandError.UnknownCommand:
+                        await message.Channel.SendMessageAsync("I'm sorry, I can't seem to understand your commands. See ``hazuki!help`` for more info.",
+                        embed: new EmbedBuilder()
+                        .WithColor(Config.Hazuki.EmbedColor)
+                        .WithImageUrl("https://33.media.tumblr.com/28c2441a5655ecb1bd23df8275f3598f/tumblr_nfkjtbSQZg1r98a5go1_500.gif")
+                        .Build());
+                        Console.WriteLine(result.ErrorReason);
+                        break;
+                    case CommandError.ObjectNotFound:
+                        await message.Channel.SendMessageAsync($"Oops, {result.ErrorReason} See ``hazuki!help`` for more info.");
+                        break;
+                    case CommandError.ParseFailed:
+                        await message.Channel.SendMessageAsync($"Oops, {result.ErrorReason} See ``hazuki!help`` for more info.");
+                        break;
                 }
 
             }

@@ -104,8 +104,9 @@ namespace OjamajoBot.Service
 
             if (!player.Queue.TryDequeue(out var queueable))
             {
+                player.Queue.Enqueue(args.Track);
                 await player.TextChannel.SendMessageAsync("No more tracks to play.");
-                //return;
+                return;
             }
 
             if (!(queueable is LavaTrack track))
