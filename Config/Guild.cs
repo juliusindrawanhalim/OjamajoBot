@@ -12,16 +12,18 @@ namespace Config
     {
         public static void init(ulong id_guild)
         {
+            //check if directory exists
+            if (!Directory.Exists($"attachments/{id_guild.ToString()}"))
+                Directory.CreateDirectory($"attachments/{id_guild.ToString()}");
+                Directory.CreateDirectory($"attachments/{id_guild.ToString()}/contribute");//init contribute folder for submitted meme pictures
+
+            //check if feedback.txt exists/not
+            if(!File.Exists($"attachments/{id_guild.ToString()}/feedback_{id_guild.ToString()}.txt"))
+                File.CreateText($"attachments/{id_guild.ToString()}/feedback_{id_guild.ToString()}.txt");
+
             if (File.Exists($"config/{id_guild}.json"))
             {
                 JObject guildConfig = JObject.Parse(File.ReadAllText($"config/{id_guild}.json"));
-                
-                //id_notif_online
-                if (!guildConfig.ContainsKey("id_notif_online")) 
-                    guildConfig.Add(new JProperty("id_notif_online", ""));
-                
-                if (ulong.TryParse(guildConfig.GetValue("id_notif_online").ToString(),out var result))
-                    Guild.Id_notif_online[$"{id_guild}"] = (ulong)guildConfig.GetValue("id_notif_online");
                 
                 //id_random_event
                 if (!guildConfig.ContainsKey("id_random_event"))
@@ -35,7 +37,6 @@ namespace Config
             } else { //create json file if it's not existed
                 
                 JObject guildConfig = new JObject(
-                    new JProperty("id_notif_online", ""),
                     new JProperty("id_random_event", ""));
 
                 File.WriteAllText($"config/{id_guild}.json", guildConfig.ToString());
@@ -62,7 +63,7 @@ namespace Config
             
         }
 
-        public static IDictionary<string, ulong> Id_notif_online = new Dictionary<string, ulong>();
+        //public static IDictionary<string, ulong> Id_notif_online = new Dictionary<string, ulong>();
         public static IDictionary<string, ulong> Id_random_event = new Dictionary<string, ulong>();
 
         //public IDictionary<string, ulong> Id_notif_online { get; set; }

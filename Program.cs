@@ -13,6 +13,8 @@ namespace OjamajoBot
             new Doremi().RunBotAsync().GetAwaiter().GetResult();
             new Hazuki().RunBotAsync().GetAwaiter().GetResult();
             new Aiko().RunBotAsync().GetAwaiter().GetResult();
+            //new Onpu().RunBotAsync().GetAwaiter().GetResult();
+            //new Momoko().RunBotAsync().GetAwaiter().GetResult();
         }
     }
 }

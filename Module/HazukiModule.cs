@@ -1,52 +1,269 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Discord.WebSocket;
+using Newtonsoft.Json.Linq;
 using OjamajoBot.Service;
 
 namespace OjamajoBot.Module
 {
+    [Name("General")]
     class HazukiModule : ModuleBase<SocketCommandContext>
     {
-        [Command("Help")]
-        public async Task showhelp()
+
+        //start
+        private readonly CommandService _commands;
+        private readonly IServiceProvider _map;
+
+        public HazukiModule(IServiceProvider map, CommandService commands)
         {
-            await base.ReplyAsync(embed: new EmbedBuilder()
-                .WithColor(Config.Hazuki.EmbedColor)
-                .WithAuthor("Hazuki Bot", "https://cdn.discordapp.com/emojis/651062978854125589.png?v=1")
-                .WithTitle("Command List:")
-                .WithDescription($"Pretty Witchy Hazuki Chi~ " +
-                $"You can either tell me what to do by mentioning me <@{Config.Hazuki.Id}> or **hazuki!** or **ha!** as the starting command prefix.")
-                .AddField("Basic Commands",
-                "**hello** : I will greet you up\n" +
-                "**change** or **henshin** : I will change into the ojamajo form\n" +
-                "**transform <username> <wishes>** : Transform mentioned <username> into <wishes>\n" +
-                "**wish <wishes>** : Give the user some <wishes>\n" +
-                "**random** : I will do anything random\n" +
-                $"**dab** or **dabzuki** : I will give you some dab {Config.Emoji.dabzuki}\n"+
-                "**wheezuki** or **laughzuki** : :wind_blowing_face: I will give you some random woosh jokes :cold_face:")
-                .Build());
+            _commands = commands;
+            _map = map;
         }
 
-        [Command("hello")]
-        public async Task hazukiHello()
+        [Name("help"), Command("help"), Summary("Show all Hazuki bot Commands.")]
+        public async Task Help([Remainder]string CategoryOrCommands = "")
         {
-            string tempReply = "";
-            List<string> listRandomRespond = new List<string>() {
-                    $"Hello there {MentionUtils.MentionUser(Context.User.Id)}. ",
-                    $"Hello, {MentionUtils.MentionUser(Context.User.Id)}. ",
-            };
+            EmbedBuilder output = new EmbedBuilder();
+            output.Color = Config.Hazuki.EmbedColor;
 
-            int rndIndex = new Random().Next(0, listRandomRespond.Count);
-            tempReply = listRandomRespond[rndIndex] + Config.Hazuki.arrRandomActivity[Config.Hazuki.indexCurrentActivity, 1];
+            if (CategoryOrCommands == "")
+            {
+                output.WithAuthor(Config.Hazuki.EmbedName, Config.Hazuki.EmbedAvatarUrl);
+                output.Title = $"Command List";
+                output.Description = "Pretty Witchy Hazuki Chi~ You can tell me what to do with " +
+                    $"**{Config.Hazuki.PrefixParent[2]} or {Config.Hazuki.PrefixParent[0]} or {Config.Hazuki.PrefixParent[1]}** as starting prefix.\n" +
+                    $"Use **{Config.Hazuki.PrefixParent[0]}help <category or commands>** for more help details.\n" +
+                    $"Example: **{Config.Hazuki.PrefixParent[0]}help general** or **{Config.Hazuki.PrefixParent[0]}help hello**";
 
-            await ReplyAsync(tempReply);
+                foreach (var mod in _commands.Modules.Where(m => m.Parent == null))
+                {
+                    AddHelp(mod, ref output);
+                }
+                await ReplyAsync("", embed: output.Build());
+                return;
+            }
+            else
+            {
+                var mod = _commands.Modules.FirstOrDefault(m => m.Name.Replace("Module", "").ToLower() == CategoryOrCommands.ToLower());
+                if (mod != null)
+                {
+                    var before = mod.Name;
+                    output.Title = $"{char.ToUpper(before.First()) + before.Substring(1).ToLower()} Commands";
+                    output.Description = $"{mod.Summary}\n" +
+                    (!string.IsNullOrEmpty(mod.Remarks) ? $"({mod.Remarks})\n" : "");
+                    //(mod.Submodules.Any() ? $"Submodules: {mod.Submodules.Select(m => m.Name)}\n" : "") + " ";
+                    AddCommands(mod, ref output);
+                    await ReplyAsync("", embed: output.Build());
+                    return;
+                }
+                else
+                { //search for category/child
+                    int ctrFounded = 0;
+                    var commandsModulesToList = _commands.Modules.ToList();
+                    for (var i = 0; i < commandsModulesToList.Count; i++)
+                    {
+                        for (var j = 0; j < commandsModulesToList[i].Commands.Count; j++)
+                        {
+                            if ((commandsModulesToList[i].Commands[j].Name.ToLower() == CategoryOrCommands.ToLower() ||
+                                commandsModulesToList[i].Commands[j].Aliases.Contains(CategoryOrCommands.ToLower())) &&
+                                commandsModulesToList[i].Summary != "hidden")
+                            {
+                                HelpDetails(ref output,
+                                commandsModulesToList[i].Name,
+                                commandsModulesToList[i].Commands[j].Summary,
+                                GetAliases(commandsModulesToList[i].Commands[j].Aliases),
+                                commandsModulesToList[i].Group,
+                                commandsModulesToList[i].Commands[j].Name,
+                                getParameters(commandsModulesToList[i].Commands[j].Parameters));
+                                ctrFounded++;
+                            }
+                        }
+                    }
+
+                    if (ctrFounded >= 1)
+                    {
+                        output.Description = $"I found {ctrFounded} command(s) with **{CategoryOrCommands}** keyword:";
+                        await ReplyAsync("", embed: output.Build());
+                        return;
+                    }
+                    else
+                    {
+                        await ReplyAsync($"Oops, I can't find any related help that you search for. " +
+                            $"See `{Config.Hazuki.PrefixParent[0]}help <optional category>`for command help.");
+                        return;
+                    }
+
+                }
+            }
+
         }
 
-        [Command("change"), Alias("henshin")]
+        public void HelpDetails(ref EmbedBuilder builder, string category, string summary,
+            string alias, string group, string commands, string parameters)
+        {
+            var completedText = ""; commands = commands.ToLower();
+            if (summary != "") completedText += $"{summary}\n";
+            completedText += $"**Category:** {category.ToLower()}\n";
+            if (alias != "") completedText += $"**Alias:** {alias}\n";
+            if (group != "") commands += " ";
+            completedText += $"**Example:** `{Config.Hazuki.PrefixParent[0]}{group}{commands}";
+            if (parameters != "") completedText += parameters;
+            completedText += "`\n";
+            builder.AddField(commands, completedText);
+        }
+
+        public void AddHelp(ModuleInfo module, ref EmbedBuilder builder)
+        {
+            foreach (var sub in module.Submodules) AddHelp(sub, ref builder);
+
+            if (module.Summary != "hidden")
+                builder.AddField(f =>
+                {
+                    var joinedString = string.Join(", ", module.Submodules.Select(m => m.Name));
+                    if (joinedString == "") { joinedString = "-"; }
+                    f.Name = $"**{char.ToUpper(module.Name.First()) + module.Name.Substring(1).ToLower()}**";
+                    var selectedModuleCommands = module.Commands.Select(x => $"`{x.Name.ToLower()}`");
+                    f.Value = string.Join(", ", selectedModuleCommands);
+                });
+
+        }
+
+        public void AddCommands(ModuleInfo module, ref EmbedBuilder builder)
+        {
+            foreach (var command in module.Commands)
+            {
+                command.CheckPreconditionsAsync(Context, _map).GetAwaiter().GetResult();
+                AddCommand(command, ref builder);
+            }
+        }
+
+        public void getAllCommands(ModuleInfo module, ref EmbedBuilder builder, string commandDetails)
+        {
+            foreach (var command in module.Commands)
+            {
+                command.CheckPreconditionsAsync(Context, _map).GetAwaiter().GetResult();
+                AddCommand(command, ref builder, commandDetails);
+            }
+        }
+
+        public void AddCommand(CommandInfo command, ref EmbedBuilder builder, string commandDetails = "")
+        {
+            if (commandDetails == "" ||
+                (commandDetails != "" &&
+                command.Name == commandDetails))
+            {
+                builder.AddField(f =>
+                {
+                    string alt = "";
+                    if (command.Aliases.Count >= 2)
+                    {
+                        for (var i = 1; i < command.Aliases.Count; i++)
+                        {
+                            alt += $"/{command.Aliases[i].ToLower()}";
+                        }
+                    }
+
+                    f.Name = $"**{command.Name.ToLower()}{alt}**";
+                    f.Value = $"{command.Summary}" +
+                    (!string.IsNullOrEmpty(command.Remarks) ? $"({command.Remarks})" : "") +
+                    "\n" +
+                    $"**Example: **`{GetPrefix(command)}{GetAliases(command)}`";
+
+                });
+            }
+
+        }
+
+        public string GetAliases(CommandInfo command)
+        {
+            StringBuilder output = new StringBuilder();
+            if (!command.Parameters.Any()) return output.ToString();
+            foreach (var param in command.Parameters)
+            {
+                if (param.IsOptional)
+                {
+                    if (param.DefaultValue != null)
+                        output.Append($"[opt {param.Name}:{param.DefaultValue}]");
+                    else
+                        output.Append($"[opt:{param.Name}]");
+                }
+                else if (param.IsMultiple)
+                    output.Append($"|{param.Name}|");
+                else if (param.IsRemainder)
+                    output.Append($"<{param.Name}...>");
+                else
+                    output.Append($"<{param.Name}>");
+            }
+            return output.ToString();
+        }
+
+        public string GetAliases(IReadOnlyList<string> alias)
+        {
+            var output = "";
+            if (alias == null) return output.ToString();
+            for (int i = 1; i < alias.Count; i++)
+            {
+                output += ($" `{alias[i].ToString()}`,");
+            }
+            return output.TrimEnd(',').ToString();
+        }
+
+        public string getParameters(IReadOnlyList<ParameterInfo> parameters)
+        {
+            StringBuilder output = new StringBuilder();
+            if (!parameters.Any()) return output.ToString();
+            foreach (var param in parameters)
+            {
+                if (param.IsOptional)
+                {
+                    if (param.DefaultValue != null)
+                        output.Append($"[opt {param.Name}:{param.DefaultValue}]");
+                    else
+                        output.Append($"[opt:{param.Name}]");
+                }
+                else if (param.IsMultiple)
+                    output.Append($"|{param.Name}|");
+                else if (param.IsRemainder)
+                    output.Append($"<{param.Name}...>");
+                else
+                    output.Append($"<{param.Name}>");
+            }
+            return output.ToString();
+        }
+
+        public string GetPrefix(CommandInfo command)
+        {
+            var output = GetPrefix(command.Module);
+            output += $"{command.Aliases.FirstOrDefault()} ";
+            return output;
+        }
+
+        public string GetPrefix(ModuleInfo module)
+        {
+            string output = "";
+            if (module.Parent != null) output = $"{GetPrefix(module.Parent)}{output}";
+            if (module.Aliases.Any())
+            {
+                output = string.Concat(module.Aliases.FirstOrDefault(), " ");
+            }
+            else
+            {
+                output = Config.Hazuki.PrefixParent[0];
+            }
+            output = Config.Hazuki.PrefixParent[0];
+            return output;
+        }
+
+        //end
+
+        [Command("change"), Alias("henshin"), Summary("Change into the ojamajo form")]
         public async Task transform()
         {
             await ReplyAsync("Pretty Witchy Hazuki Chi~\n");
@@ -56,35 +273,19 @@ namespace OjamajoBot.Module
                 .Build());
         }
 
-        [Command("transform")]
-        public async Task spells(IUser iuser, [Remainder] string query)
-        {
-            //await Context.Message.DeleteAsync();
-            await ReplyAsync("Paipai Ponpoi Puwapuwa Puu! Transform " + iuser.Mention + " into " + query);
-            await base.ReplyAsync(embed: new EmbedBuilder()
-            .WithColor(Config.Hazuki.EmbedColor)
-            .WithImageUrl("https://i.ytimg.com/vi/iOkN602s-JQ/hqdefault.jpg")
-            .Build());
-        }
-
-        [Command("wish")]
-        public async Task wish([Remainder] string query)
-        {
-            await ReplyAsync($"Paipai Ponpoi Puwapuwa Puu! {query}");
-            await base.ReplyAsync(embed: new EmbedBuilder()
-            .WithColor(Config.Hazuki.EmbedColor)
-            .WithImageUrl("https://i.ytimg.com/vi/iOkN602s-JQ/hqdefault.jpg")
-            .Build());
-        }
-
-        [Command("dab"), Alias("dabzuki")]
+        [Command("dabzuki"), Alias("dab"), Summary("I will give you some dab <:Dabzuki:658926367286755331>")]
         public async Task dabzuki()
         {
-            String[] arrRandom =
-            {
+            string[] arrRandom ={
+                $":sunglasses: Keep calm and dab on {Config.Emoji.dabzuki}",
+                $":sunglasses: **D**esire **A**spire **B**elieve **I**nspire  **T**ake fire {Config.Emoji.dabzuki}",
+                $":sunglasses: Just Dab and Let it go! {Config.Emoji.dabzuki}",
+                $":sunglasses: I'm fabulous {Config.Emoji.dabzuki}",
+                $":sunglasses: No Bad Vibes {Config.Emoji.dabzuki}",
+                $":sunglasses: Dab checked \u2705 {Config.Emoji.dabzuki}",
                 $":sunglasses: Let's do the dab with me, everyone! {Config.Emoji.dabzuki}",
-                $":sunglasses: Please dab with me, <@{Context.User.Id}> {Config.Emoji.dabzuki}",
-                $"Don't tell me to do the dab, <@{Context.User.Id}> {Config.Emoji.dabzuki}",
+                $":sunglasses: Please dab with me, {MentionUtils.MentionUser(Context.User.Id)} {Config.Emoji.dabzuki}",
+                $"Don't tell me to do the dab, {MentionUtils.MentionUser(Context.User.Id)} {Config.Emoji.dabzuki}",
                 $":regional_indicator_d:ab, dab and dab {Config.Emoji.dabzuki}",
                 $":regional_indicator_d::regional_indicator_a::regional_indicator_b::regional_indicator_z::regional_indicator_u::regional_indicator_k::regional_indicator_i: in action! {Config.Emoji.dabzuki}"
             };
@@ -95,36 +296,175 @@ namespace OjamajoBot.Module
                     .WithImageUrl("https://cdn.discordapp.com/attachments/663232256676069386/663603236099457035/Dabzuki.png")
                     .Build());
 
-            //await ReplyAsync(arrRandom[rndIndex]);
         }
 
-        [Command("random")]
+        [Command("fairy"), Summary("I will show you my fairy")]
+        public async Task showFairy()
+        {
+            await ReplyAsync("This is my fairy: Rere.",
+            embed: new EmbedBuilder()
+            .WithAuthor(Config.Hazuki.EmbedName, Config.Hazuki.EmbedAvatarUrl)
+            .WithDescription("Rere has fair skin with warm brown eyes and blushed cheeks. Her pale orange hair is shaped into four-points, reminiscent of a bow, and she has two tufts for bangs. " +
+            "Like Hazuki she wears glasses, along with a pale orange dress that has a cream collar. In teen form, her hair points now stick out at each part of her head and she gains a full body. She wears a pale orange dress with the shoulder cut out and a white-collar. A pastel orange top is worn under this, and at the chest is an orange gem. She also wears white booties and a white witch hat with a cream rim.")
+            .WithColor(Config.Hazuki.EmbedColor)
+            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/d/dd/No.077.jpg/revision/latest?cb=20190412122548")
+            .WithFooter("[Ojamajo Witchling Wiki](https://ojamajowitchling.fandom.com/wiki/Rere)")
+            .Build());
+        }
+
+        [Command("hello"), Summary("Hello, I will greet you up")]
+        public async Task hazukiHello()
+        {
+            string tempReply = "";
+            List<string> listRandomRespond = new List<string>() {
+                $"Hello there {MentionUtils.MentionUser(Context.User.Id)}. ",
+                $"Hello, {MentionUtils.MentionUser(Context.User.Id)}. ",
+            };
+
+            int rndIndex = new Random().Next(0, listRandomRespond.Count);
+            tempReply = listRandomRespond[rndIndex] + Config.Hazuki.arrRandomActivity[Config.Hazuki.indexCurrentActivity, 1];
+
+            await ReplyAsync(tempReply);
+            //$"**<opt:>** parameter means is optional"
+        }
+
+        [Command("hugs"), Alias("hug"), Summary("I will give warm hug for you or <username>")]
+        public async Task HugUser(SocketGuildUser username = null)
+        {
+            if (username == null)
+            {
+                string message = $"*hugs back*. That's very nice, thank you for the warm hugs {MentionUtils.MentionUser(Context.User.Id)} :hugging:";
+                await Context.Channel.SendMessageAsync(message);
+            }
+            else
+            {
+                string message = $"Paipai Ponpoi Puwapuwa Puu! Let's hug {MentionUtils.MentionUser(username.Id)} :hugging:";
+                await Context.Channel.SendMessageAsync(message);
+            }
+        }
+
+        [Command("random"), Alias("moments"), Summary("Show any random Hazuki moments")]
         public async Task randomthing()
         {
-            String[,] arrRandom =
-            { {"*chuckling intestifies*" , "http://33.media.tumblr.com/28c2441a5655ecb1bd23df8275f3598f/tumblr_nfkjtbSQZg1r98a5go1_500.gif"},
-            {"*casting magical stage*", "https://i.pinimg.com/originals/64/bf/74/64bf74df2f6e326a30865756933117cd.gif"},
-            {"Happy Hazuki","https://media1.tenor.com/images/0e7fa48b017b6904fa2587729ec2e64d/tenor.gif" },
-            {"Hazuki looks really sad, please cheer her up.","https://thumbs.gfycat.com/ApprehensiveLimpCardinal-size_restricted.gif" },
-            {"*Screaming loudly*","https://i.pinimg.com/originals/71/c4/57/71c45767cfd3febf17cdea7aba96d06f.gif" },
-            {"*Blushing intestifies*","http://i.4pcdn.org/s4s/1518104531115.gif"},
-            {"Thank you, thank you :smiley:","https://66.media.tumblr.com/beb5b047c9b499ed49275928de28a77f/tumblr_inline_mgcb5dAQQ51r4lv3u.gif" } };
+            string[] arrRandom =
+            {"http://33.media.tumblr.com/28c2441a5655ecb1bd23df8275f3598f/tumblr_nfkjtbSQZg1r98a5go1_500.gif",
+            "https://media1.tenor.com/images/0e7fa48b017b6904fa2587729ec2e64d/tenor.gif",
+            "https://thumbs.gfycat.com/ApprehensiveLimpCardinal-size_restricted.gif",
+            "https://i.pinimg.com/originals/71/c4/57/71c45767cfd3febf17cdea7aba96d06f.gif",
+            "http://i.4pcdn.org/s4s/1518104531115.gif",
+            "https://66.media.tumblr.com/beb5b047c9b499ed49275928de28a77f/tumblr_inline_mgcb5dAQQ51r4lv3u.gif",
+            "https://vignette.wikia.nocookie.net/ojamajowitchling/images/3/38/03.29.06.JPG/revision/latest?cb=20151221173944",
+            "https://pbs.twimg.com/media/EOT9pGPXUAAEuLE?format=png&name=small","https://pbs.twimg.com/media/EOEfdIJX4AAHORN?format=png&name=small",
+            "https://pbs.twimg.com/media/EOKFJ_RWAAIfcz8?format=png&name=small","https://pbs.twimg.com/media/EOAlQVlW4AExtlU?format=png&name=small",
+            "https://pbs.twimg.com/media/EN_hqAQX0AA1SJf?format=png&name=small","https://pbs.twimg.com/media/EN-aX9OX4AErhax?format=png&name=small",
+            "https://pbs.twimg.com/media/EN9klu-WsAA9h23?format=png&name=small","https://pbs.twimg.com/media/EN9H27kW4AETemw?format=png&name=small",
+            "https://pbs.twimg.com/media/EN8R0pHWsAAUAhh?format=png&name=small","https://pbs.twimg.com/media/EN7xJLZXUAEVwT5?format=png&name=small",
+            "https://pbs.twimg.com/media/EN7PUhkXUAA5wh_?format=png&name=small","https://pbs.twimg.com/media/EN5-Z4JX4AE_Kvm?format=png&name=small",
+            "https://pbs.twimg.com/media/EN2vN9VX0AAqz8S?format=png&name=small","https://pbs.twimg.com/media/EN2bNuzXUAE5PZV?format=png&name=small",
+            "https://pbs.twimg.com/media/EN1FeXCX4AAARzI?format=png&name=small","https://pbs.twimg.com/media/ENzN6R-XUAA65it?format=png&name=small",
+            "https://pbs.twimg.com/media/ENywQseXkAAZORC?format=png&name=small","https://pbs.twimg.com/media/ENyLtGSX0AAJbyy?format=png&name=small",
+            "https://pbs.twimg.com/media/ENyCSNTWoAAupEh?format=png&name=small","https://pbs.twimg.com/media/ENxdgCqX0AEWDvm?format=png&name=small",
+            "https://pbs.twimg.com/media/ENxCWETX0AETqVT?format=png&name=small","https://pbs.twimg.com/media/ENvwuFNWoAAiX_X?format=png&name=small",
+            "https://pbs.twimg.com/media/ENup42BWoAAALrL?format=png&name=small","https://pbs.twimg.com/media/ENuPOWlX0AYFHPd?format=png&name=small",
+            "https://pbs.twimg.com/media/ENt_lzDX0AAbJQY?format=png&name=small","https://pbs.twimg.com/media/ENsaaANXkAExDIp?format=png&name=small",
+            "https://pbs.twimg.com/media/ENsAMTCUUAUeifE?format=png&name=small","https://pbs.twimg.com/media/ENrYcEpWwAAg3dG?format=png&name=small",
+            "https://pbs.twimg.com/media/ENpRsDsWsAABTxZ?format=png&name=small","https://pbs.twimg.com/media/ENovaWOXkAE3JA0?format=png&name=small",
+            "https://pbs.twimg.com/media/ENmQ_wQUUAAVvlR?format=png&name=small","https://pbs.twimg.com/media/ENksiBwWsAErMhH?format=png&name=small",
+            "https://pbs.twimg.com/media/ENkHxReW4AEESLv?format=png&name=small","https://pbs.twimg.com/media/ENjutHWXkAEkFDX?format=png&name=small",
+            "https://pbs.twimg.com/media/ENjMNHQXkAEkga6?format=png&name=small","https://pbs.twimg.com/media/ENg3eQqWkAEenyz?format=png&name=small",
+            "https://pbs.twimg.com/media/ENgoScqX0AAotuK?format=png&name=small","https://pbs.twimg.com/media/ENgfFwnWsAABofj?format=png&name=small",
+            "https://pbs.twimg.com/media/ENZL4vHXYAMDnS9?format=png&name=small","https://pbs.twimg.com/media/ENY59PZXYAgK8ak?format=png&name=small",
+            "https://pbs.twimg.com/media/ENV1UvEW4AAR0A0?format=png&name=small","https://pbs.twimg.com/media/ENVTRWNXkAEV60U?format=png&name=small",
+            "https://pbs.twimg.com/media/ENVItRGWwAATIr-?format=png&name=small","https://pbs.twimg.com/media/ENTOJASWoAEGzz8?format=png&name=small",
+            "https://pbs.twimg.com/media/ENSkgkIXUAAVHoA?format=png&name=small","https://pbs.twimg.com/media/ENSBjGNXsAEHRoX?format=png&name=small",
+            "https://pbs.twimg.com/media/ENRor7tWoAEGNT2?format=png&name=small","https://pbs.twimg.com/media/ENM6INdXsAASOzP?format=png&name=small",
+            "https://pbs.twimg.com/media/ENKdy17WoAAkANp?format=png&name=small","https://pbs.twimg.com/media/ENJtDOfWsAUx4VR?format=png&name=small",
+            "https://pbs.twimg.com/media/ENGBY_bXkAAHehk?format=png&name=small","https://pbs.twimg.com/media/ENFtKEZWkAAIney?format=png&name=small",
+            "https://pbs.twimg.com/media/ENFI1CjW4AE3QJK?format=png&name=small","https://pbs.twimg.com/media/EM-x3viXkAIN29a?format=png&name=small",
+            "https://pbs.twimg.com/media/EM9r85PXkAAMjx2?format=png&name=small","https://pbs.twimg.com/media/EM73XiIWsAALUYU?format=png&name=small",
+            "https://pbs.twimg.com/media/EM59S_nWoAEUFCr?format=png&name=small","https://pbs.twimg.com/media/EM50Uv0WkAAtCqd?format=png&name=small",
+            "https://pbs.twimg.com/media/EM4h_h3WkAE-6n_?format=png&name=small",
+            };
 
-            Random rnd = new Random();
-            int rndIndex = rnd.Next(0, arrRandom.GetLength(0));
-
-            await ReplyAsync(arrRandom[rndIndex, 0]);
             await base.ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Hazuki.EmbedColor)
-                .WithImageUrl(arrRandom[rndIndex, 1])
+                .WithImageUrl(arrRandom[new Random().Next(0, arrRandom.Length)])
+                .WithFooter("Some images contributed by: https://twitter.com/DoremiRobo, Tumblr")
                 .Build());
         }
 
-        [Command("wheezuki"),Alias("laughzuki")]
-        public async Task randomcoldjokes()
+        [Command("stats"), Alias("bio"), Summary("I will show you my biography info")]
+        public async Task showStats()
         {
-            int randomType = new Random().Next(0, 2);
-            if (randomType == 0)
+            await ReplyAsync("Paipai Ponpoi Puwapuwa Puu! Show my biography info!",
+            embed: new EmbedBuilder()
+            .WithAuthor(Config.Hazuki.EmbedName, Config.Hazuki.EmbedAvatarUrl)
+            .WithDescription("Hazuki Fujiwara (藤原はづき, Fujiwara Hazuki) is one of the main characters and deuteragonist in Ojamajo Doremi. " +
+            "She has been Doremi Harukaze's friend since childhood and became an Apprentice Witch sometime after Doremi, along with Aiko Senoo in order to help keep the secret.")
+            .AddField("Full Name", "藤原 はづき Fujiwara Hazuki", true)
+            .AddField("Gender", "female", true)
+            .AddField("Blood Type", "A", true)
+            .AddField("Birthday", "February 14th, 1991", true)
+            .AddField("Instrument", "Violin", true)
+            .AddField("Favorite Food", "Chiffon Cake", true)
+            .AddField("Debut", "[I'm Doremi! Becoming a Witch Apprentice!](https://ojamajowitchling.fandom.com/wiki/I%27m_Doremi!_Becoming_a_Witch_Apprentice!)", true)
+            .WithColor(Config.Hazuki.EmbedColor)
+            .WithImageUrl("https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcSUFnwRpXhP__njQve5yVKjzr3AhhZSuYpi26lylHbHP64-cK5I")
+            .WithFooter("Source: [Ojamajo Witchling Wiki](https://ojamajowitchling.fandom.com/wiki/Hazuki_Fujiwara)")
+            .Build());
+        }
+
+        [Command("thank you"), Alias("thank you,", "thanks", "arigatou"),Summary("Say thank you to Hazuki Bot")]
+        public async Task thankYou([Remainder] string query = "")
+        {
+            await ReplyAsync($"Your welcome, {MentionUtils.MentionUser(Context.User.Id)}. I'm glad that you're happy with it :smile:");
+        }
+
+        [Command("turn"),Alias("transform"), Summary("Transform <username> into <wishes>")]
+        public async Task spells(IUser username, [Remainder] string wishes)
+        {
+            //await Context.Message.DeleteAsync();
+            await ReplyAsync($"Paipai Ponpoi Puwapuwa Puu! Turn {username.Mention} into {wishes}",
+            embed: new EmbedBuilder()
+            .WithColor(Config.Hazuki.EmbedColor)
+            .WithImageUrl("https://i.ytimg.com/vi/iOkN602s-JQ/hqdefault.jpg")
+            .Build());
+        }
+
+        [Command("wheezuki"), Alias("laughzuki"), Summary("\uD83C\uDF2C I will give you some random woosh jokes \uD83E\uDD76 \n" +
+            "Include the `unfunny` or `woosh` parameter on <jokes_type> to make the jokes very bad.")]
+        public async Task randomcoldjokes(string jokes_type = "sos")
+        {
+            if (jokes_type == "sos")
+            {
+                try
+                {
+                    HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://official-joke-api.appspot.com/jokes/general/random");
+                    HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                    StreamReader reader = new StreamReader(response.GetResponseStream());
+                    string jsonResp = reader.ReadToEnd().ToString();
+                    JArray jarray = JArray.Parse(jsonResp);
+
+                    var setup = jarray[0]["setup"];
+                    var punchline = jarray[0]["punchline"];
+
+                    await ReplyAsync(embed: new EmbedBuilder()
+                    .WithAuthor("SOS Trio", "https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcTWj56dpMHiFcKv0Gz_cBQPZTZRNZoaUskA_OuamYo8pTy4CaoJ")
+                    .WithColor(Config.Hazuki.EmbedColor)
+                    .WithDescription($"{setup}\n{punchline}")
+                    .WithImageUrl("https://cdn.discordapp.com/attachments/644383823286763544/665777255640989749/Wheezuki.png")
+                    .WithFooter("Contributed by: Letter Three")
+                    .Build());
+
+                }
+                catch (Exception e)
+                {
+                    Console.Write(e.ToString());
+                }
+
+                
+            }
+            else if (jokes_type.ToLower() == "unfunny"|| jokes_type.ToLower() == "woosh")
             {
                 string[] arrRandom =
                 {
@@ -147,11 +487,33 @@ namespace OjamajoBot.Module
                     "http://content.invisioncic.com/r266882/monthly_2019_02/knock.jpg.771cc56efd82396a87f4f632343d0dbd.jpg"
                 };
                 await ReplyAsync(embed: new EmbedBuilder()
+                    .WithAuthor("SOS Trio", "https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcTWj56dpMHiFcKv0Gz_cBQPZTZRNZoaUskA_OuamYo8pTy4CaoJ")
                     .WithColor(Config.Hazuki.EmbedColor)
                     .WithImageUrl(arrRandom[new Random().Next(0, arrRandom.GetLength(0))])
                     .Build());
-            } else {
-                string[] arrRandom =
+            }
+            else
+            {
+                await ReplyAsync($"Sorry, I can't seems to understand your `wheezuki` jokes type. See `{Config.Hazuki.PrefixParent[0]}help wheezuki` for more info.");
+            }
+
+            //http://api.icndb.com/jokes/random?firstName=John&amp;lastName=Doe
+        }
+
+        [Command("wish"), Summary("I will grant you a <wishes>")]
+        public async Task wish([Remainder] string wishes)
+        {
+            await ReplyAsync($"Paipai Ponpoi Puwapuwa Puu! {wishes}");
+            await base.ReplyAsync(embed: new EmbedBuilder()
+            .WithColor(Config.Hazuki.EmbedColor)
+            .WithImageUrl("https://i.ytimg.com/vi/iOkN602s-JQ/hqdefault.jpg")
+            .Build());
+        }
+    
+    }
+
+    //RANDOM OLD JOKES:
+    /*string[] arrRandom =
                 {
                     "Q. Why was King Arthur’s army too tired to fight?\nA. It had too many sleepless knights.",
                     "Q. Which country’s capital has the fastest-growing population?\nA. Ireland. Every day it’s Dublin.",
@@ -203,21 +565,18 @@ namespace OjamajoBot.Module
                     "Two muffins were sitting in an oven. One turned to the other and said, “Wow, it’s pretty hot in here.” The other one shouted, “Wow, a talking muffin!”",
                     "I sold my vacuum the other day. All it was doing was collecting dust."
                 };
-                await ReplyAsync(embed: new EmbedBuilder()
-                    .WithColor(Config.Hazuki.EmbedColor)
-                    .WithDescription(arrRandom[new Random().Next(0, arrRandom.GetLength(0))])
-                    .WithImageUrl("https://cdn.discordapp.com/attachments/644383823286763544/665777255640989749/Wheezuki.png")
-                    .Build());
-            }
-        }
+                */
 
+    [Summary("hidden")]
+    public class HazukiMagicalStageModule : ModuleBase
+    {
         //magical stage section
         [Command("Pirika pirilala, Nobiyaka ni!")] //magical stage from doremi
         public async Task magicalStage()
         {
             if (Context.User.Id == Config.Doremi.Id)
             {
-                await ReplyAsync($"<@{Config.Aiko.Id}> Paipai Ponpoi, Shinyaka ni! \n",
+                await ReplyAsync($"{MentionUtils.MentionUser(Config.Aiko.Id)} Paipai Ponpoi, Shinyaka ni! \n",
                     embed: new EmbedBuilder()
                     .WithColor(Config.Hazuki.EmbedColor)
                     .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/4/4b/Shinayakanis1.2.png/revision/latest?cb=20190408124906")
@@ -229,13 +588,11 @@ namespace OjamajoBot.Module
         public async Task magicalStagefinal([Remainder] string query)
         {
             if (Context.User.Id == Config.Doremi.Id)
-            {
-                await ReplyAsync($"<@{Config.Aiko.Id}> Magical Stage! {query}\n");
-            }
+                await ReplyAsync($"{MentionUtils.MentionUser(Config.Aiko.Id)} Magical Stage! {query}\n");
         }
-
     }
 
+    [Summary("hidden")]
     class HazukiRandomEventModule : ModuleBase<SocketCommandContext>
     {
         List<string> listRespondDefault = new List<string>() {
@@ -277,16 +634,7 @@ namespace OjamajoBot.Module
             }
         }
 
-        //[Command("please give me some big steak")]
-        //public async Task eventgivemesteak()
-        //{
-        //    //if (Context.User.Id == Config.Doremi.Id)
-        //    //{
-        //    await ReplyAsync($"Sure thing Doremi chan, let's go to the shop now");
-        //    //}
-        //}
     }
-
 
         //public class HazukiMusic : ModuleBase<SocketCommandContext>
         //{

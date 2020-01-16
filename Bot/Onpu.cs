@@ -16,7 +16,7 @@ using System.Threading;
 
 namespace OjamajoBot.Bot
 {
-    class Aiko
+    class Onpu
     {
         private CommandService commands;
         private IServiceProvider services;
@@ -44,7 +44,7 @@ namespace OjamajoBot.Bot
             client.Log += client_log;
 
             await RegisterCommandsAsync();
-            await client.LoginAsync(TokenType.Bot, Config.Aiko.Token);
+            await client.LoginAsync(TokenType.Bot, Config.Onpu.Token);
             await client.StartAsync();
 
             client.MessageUpdated += MessageUpdated;
@@ -54,11 +54,11 @@ namespace OjamajoBot.Bot
             _timerStatus = new Timer(async _ =>
             {
                 Random rnd = new Random();
-                int rndIndex = rnd.Next(0, Config.Aiko.arrRandomActivity.GetLength(0)); //random the list value
+                int rndIndex = rnd.Next(0, Config.Onpu.arrRandomActivity.GetLength(0)); //random the list value
                 if (rndIndex > 0) rndIndex -= 1;
-                String updLog = "Updated Aiko Activity - Playing: " + Config.Aiko.arrRandomActivity[rndIndex, 0];
-                Config.Aiko.indexCurrentActivity = rndIndex;
-                await client.SetGameAsync(Config.Aiko.arrRandomActivity[rndIndex, 0], type: ActivityType.Playing); //set activity to current index position
+                String updLog = "Updated Onpu Activity - Playing: " + Config.Onpu.arrRandomActivity[rndIndex, 0];
+                Config.Onpu.indexCurrentActivity = rndIndex;
+                await client.SetGameAsync(Config.Onpu.arrRandomActivity[rndIndex, 0], type: ActivityType.Playing); //set activity to current index position
 
                 Console.WriteLine(updLog);
             },
@@ -70,24 +70,14 @@ namespace OjamajoBot.Bot
 
             client.Ready += () =>
             {
-                //client.GetGuild(Config.Guild.Id).GetTextChannel(Config.Guild.Id_notif_online)
-                //.SendMessageAsync("Pretty Witchy Aiko Chi~");
-
-                Console.WriteLine("Aiko Connected!");
+                Console.WriteLine("Onpu Connected!");
                 return Task.CompletedTask;
             };
 
 
             //// Block this task until the program is closed.
             await Task.Delay(-1);
-        }
 
-        private async Task MessageUpdated(Cacheable<IMessage, ulong> before,
-            SocketMessage after, ISocketMessageChannel channel)
-        {
-            // If the message was not in the cache, downloading it will result in getting a copy of `after`.
-            var message = await before.GetOrDownloadAsync();
-            Console.WriteLine($"{message} -> {after}");
         }
 
         //private async Task GuildAvailable(SocketGuild guild)
@@ -98,65 +88,71 @@ namespace OjamajoBot.Bot
         //        {
         //            await client.GetGuild(guild.Id)
         //            .GetTextChannel(Config.Guild.Id_notif_online[guild.Id.ToString()])
-        //            .SendMessageAsync("Pretty Witchy Aiko Chi~");
+        //            .SendMessageAsync("Pretty Witchy Onpu Chi~");
         //        }
         //        catch { }
-
         //    }
         //}
+
+        private async Task MessageUpdated(Cacheable<IMessage, ulong> before,
+            SocketMessage after, ISocketMessageChannel channel)
+        {
+            // If the message was not in the cache, downloading it will result in getting a copy of `after`.
+            var message = await before.GetOrDownloadAsync();
+            Console.WriteLine($"{message} -> {after}");
+        }
 
         public async Task RegisterCommandsAsync()
         {
             client.MessageReceived += HandleCommandAsync;
-            await commands.AddModuleAsync(typeof(AikoModule), services);
-            await commands.AddModuleAsync(typeof(AikoMagicalStageModule), services);
-            await commands.AddModuleAsync(typeof(AikoRandomEventModule), services);
-            //await commands.AddModuleAsync(typeof(AkoMusic), services);
+            await commands.AddModuleAsync(typeof(OnpuModule), services);
+            await commands.AddModuleAsync(typeof(OnpuRandomEventModule), services);
         }
 
         private async Task HandleCommandAsync(SocketMessage arg)
         {
             var message = arg as SocketUserMessage;
-            var context = new SocketCommandContext(client, message);
-            if (message.Author.Id == Config.Aiko.Id) return;
+            if (message.Author.Id == Config.Onpu.Id) return;
             //if (message.Author.IsBot) return; //prevent any bot from sending the commands
 
             int argPos = 0;
-            if (message.HasStringPrefix(Config.Aiko.PrefixParent[0], ref argPos) ||
-                message.HasStringPrefix(Config.Aiko.PrefixParent[1], ref argPos) ||
+            if (message.HasStringPrefix(Config.Onpu.PrefixParent[0], ref argPos) ||
+                message.HasStringPrefix(Config.Onpu.PrefixParent[1], ref argPos) ||
                 message.HasMentionPrefix(client.CurrentUser, ref argPos))
             {
+                var context = new SocketCommandContext(client, message);
                 var result = await commands.ExecuteAsync(context, argPos, services);
                 switch (result.Error)
                 {
                     case CommandError.BadArgCount:
-                        await context.Channel.SendMessageAsync("Gomen ne, looks like you have missing/too much parameter. " +
-                            $"See `{Config.Aiko.PrefixParent[0]}help <commands or category>`for command help.");
+                        await context.Channel.SendMessageAsync("The junior idol Onpu sense that you have missing/too much parameter. " +
+                            $"See `{Config.Onpu.PrefixParent[0]}help <commands or category>`for command help.");
                         break;
                     case CommandError.UnknownCommand:
-                        await message.Channel.SendMessageAsync("Gomen ne, I can't seem to understand your commands. " +
-                            $"See `{Config.Aiko.PrefixParent[0]}help <commands or category>`for command help.",
+                        await message.Channel.SendMessageAsync("The junior idol Onpu can't seems to understand your commands. " +
+                            $"See `{Config.Onpu.PrefixParent[0]}help <commands or category>`for command help.",
                         embed: new EmbedBuilder()
-                        .WithColor(Config.Aiko.EmbedColor)
-                        .WithImageUrl("https://38.media.tumblr.com/224f6ca12018eca4ff34895cce9b7649/tumblr_nds3eyKFLH1r98a5go1_500.gif")
+                        .WithColor(Config.Onpu.EmbedColor)
+                        .WithImageUrl("https://cdn.discordapp.com/attachments/644383823286763544/659083573437136897/dancedance.gif")
                         .Build());
                         Console.WriteLine(result.ErrorReason);
                         break;
                     case CommandError.ObjectNotFound:
-                        await message.Channel.SendMessageAsync($"Gomen ne, {result.ErrorReason} " +
-                            $"See `{Config.Aiko.PrefixParent[0]}help <commands or category>`for command help.");
+                        await message.Channel.SendMessageAsync($"The junior idol Onpu has noticed an error: {result.ErrorReason} " +
+                            $"See `{Config.Onpu.PrefixParent[0]}help <commands or category>`for command help.");
                         break;
                     case CommandError.ParseFailed:
-                        await message.Channel.SendMessageAsync($"Gomen ne, {result.ErrorReason} " +
-                            $"See `{Config.Aiko.PrefixParent[0]}help <commands or category>`for command help.");
+                        await message.Channel.SendMessageAsync($"The junior idol Onpu has noticed an error: {result.ErrorReason} " +
+                            $"See `{Config.Onpu.PrefixParent[0]}help <commands or category>`for command help.");
                         break;
                 }
+
             }
         }
 
         private Task client_log(LogMessage msg)
         {
-            Console.WriteLine("Aiko: " + msg.ToString());
+            Console.WriteLine("Onpu: " + msg.ToString());
             return Task.CompletedTask;
         }
 
