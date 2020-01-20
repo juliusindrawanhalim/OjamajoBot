@@ -13,6 +13,7 @@ using Discord.WebSocket;
 using OjamajoBot.Module;
 using OjamajoBot.Service;
 using System.Threading;
+using Discord.Addons.Interactive;
 
 namespace OjamajoBot.Bot
 {
@@ -38,6 +39,7 @@ namespace OjamajoBot.Bot
             services = new ServiceCollection()
                 .AddSingleton(client)
                 .AddSingleton(commands)
+                .AddSingleton(new InteractiveService(client))
                 .AddSingleton(audioservice)
                 .BuildServiceProvider();
 
@@ -47,16 +49,15 @@ namespace OjamajoBot.Bot
             await client.LoginAsync(TokenType.Bot, Config.Momoko.Token);
             await client.StartAsync();
 
-            client.MessageUpdated += MessageUpdated;
-            //client.GuildAvailable += GuildAvailable;
+            client.JoinedGuild += JoinedGuild;
 
             //start rotates random activity
             _timerStatus = new Timer(async _ =>
             {
                 Random rnd = new Random();
                 int rndIndex = rnd.Next(0, Config.Momoko.arrRandomActivity.GetLength(0)); //random the list value
-                if (rndIndex > 0) rndIndex -= 1;
-                String updLog = "Updated Momoko Activity - Playing: " + Config.Momoko.arrRandomActivity[rndIndex, 0];
+                //if (rndIndex > 0) rndIndex -= 1;
+                string updLog = "Updated Momoko Activity - Playing: " + Config.Momoko.arrRandomActivity[rndIndex, 0];
                 Config.Momoko.indexCurrentActivity = rndIndex;
                 await client.SetGameAsync(Config.Momoko.arrRandomActivity[rndIndex, 0], type: ActivityType.Playing); //set activity to current index position
 
@@ -77,37 +78,26 @@ namespace OjamajoBot.Bot
 
             // Block this task until the program is closed.
             await Task.Delay(-1);
-
         }
 
-        //private async Task GuildAvailable(SocketGuild guild)
-        //{
-        //    if (Config.Guild.Id_notif_online.ContainsKey(guild.Id.ToString()))
-        //    { //announce bot if online
-        //        try
-        //        {
-        //            await client.GetGuild(guild.Id)
-        //            .GetTextChannel(Config.Guild.Id_notif_online[guild.Id.ToString()])
-        //            .SendMessageAsync("Pretty Witchy Momoko Chi~");
-        //        }
-        //        catch { }
-        //    }
-        //}
-
-
-        private async Task MessageUpdated(Cacheable<IMessage, ulong> before,
-            SocketMessage after, ISocketMessageChannel channel)
+        public async Task JoinedGuild(SocketGuild guild)
         {
-            // If the message was not in the cache, downloading it will result in getting a copy of `after`.
-            var message = await before.GetOrDownloadAsync();
-            Console.WriteLine($"{message} -> {after}");
+            var systemChannel = client.GetChannel(guild.SystemChannel.Id) as SocketTextChannel; // Gets the channel to send the message in
+            await systemChannel.SendMessageAsync($"Pretty witchy {MentionUtils.MentionUser(Config.Momoko.Id)} chi~ has arrived to the {guild.Name}. Hello everyone, please to meet you all. Thank you for inviting me up. " +
+                $"You can ask me with `{Config.Momoko.PrefixParent[0]}help` for all commands list.",
+            embed: new EmbedBuilder()
+            .WithColor(Config.Momoko.EmbedColor)
+            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/3/3d/09.07.JPG")
+            .Build());
         }
 
         public async Task RegisterCommandsAsync()
         {
             client.MessageReceived += HandleCommandAsync;
             await commands.AddModuleAsync(typeof(MomokoModule), services);
+            await commands.AddModuleAsync(typeof(MomokoMagicalStageModule), services);
             await commands.AddModuleAsync(typeof(MomokoRandomEventModule), services);
+            await commands.AddModuleAsync(typeof(MomokoBakery), services);
         }
 
         private async Task HandleCommandAsync(SocketMessage arg)
@@ -117,8 +107,8 @@ namespace OjamajoBot.Bot
             //if (message.Author.IsBot) return; //prevent any bot from sending the commands
 
             int argPos = 0;
-            if (message.HasStringPrefix("momoko!", ref argPos) ||
-                message.HasStringPrefix("mo!", ref argPos) ||
+            if (message.HasStringPrefix(Config.Momoko.PrefixParent[0], ref argPos) ||
+                message.HasStringPrefix(Config.Momoko.PrefixParent[1], ref argPos) ||
                 message.HasMentionPrefix(client.CurrentUser, ref argPos))
             {
                 var context = new SocketCommandContext(client, message);
@@ -126,21 +116,25 @@ namespace OjamajoBot.Bot
                 switch (result.Error)
                 {
                     case CommandError.BadArgCount:
-                        await context.Channel.SendMessageAsync("Oops, looks like you have missing/too much parameter. See ``momoko!help`` for more info.");
+                        await context.Channel.SendMessageAsync($"Oops, looks like you have missing/too much parameter. " +
+                            $"See `{Config.Momoko.PrefixParent[0]}help` for command help.");
                         break;
                     case CommandError.UnknownCommand:
-                        await message.Channel.SendMessageAsync("Sorry, I can't seems to understand your commands. See ``momoko!help`` for more info.",
+                        await message.Channel.SendMessageAsync($"Sorry, I can't seems to understand your commands. " +
+                            $"See `{Config.Momoko.PrefixParent[0]}help` for command help.",
                         embed: new EmbedBuilder()
                         .WithColor(Config.Momoko.EmbedColor)
-                        .WithImageUrl("https://33.media.tumblr.com/28c2441a5655ecb1bd23df8275f3598f/tumblr_nfkjtbSQZg1r98a5go1_500.gif")
+                        .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/52/ODN-EP9-025.png")
                         .Build());
                         Console.WriteLine(result.ErrorReason);
                         break;
                     case CommandError.ObjectNotFound:
-                        await message.Channel.SendMessageAsync($"Oops, {result.ErrorReason} See ``momoko!help`` for more info.");
+                        await message.Channel.SendMessageAsync($"Oops, {result.ErrorReason} " +
+                            $"See `{Config.Momoko.PrefixParent[0]}help` for command help.");
                         break;
                     case CommandError.ParseFailed:
-                        await message.Channel.SendMessageAsync($"Oops, {result.ErrorReason} See ``momoko!help`` for more info.");
+                        await message.Channel.SendMessageAsync($"Oops, {result.ErrorReason} " +
+                            $"See `{Config.Momoko.PrefixParent[0]}help` for command help.");
                         break;
                 }
 

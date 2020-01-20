@@ -20,6 +20,7 @@ using Discord.Audio;
 using System.Diagnostics;
 using System.IO;
 using OjamajoBot.Service;
+using Newtonsoft.Json.Linq;
 
 namespace OjamajoBot.Bot
 {
@@ -92,11 +93,10 @@ namespace OjamajoBot.Bot
             {
                 Random rnd = new Random();
                 int rndIndex = rnd.Next(0, Config.Doremi.arrRandomActivity.GetLength(0)); //random the list value
-                if (rndIndex > 0) rndIndex -= 1;
-                String updLog = "Updated Doremi Activity - Playing: " + Config.Doremi.arrRandomActivity[rndIndex, 0];
+                //if (rndIndex > 0) rndIndex -= 1;
+                string updLog = "Updated Doremi Activity - Playing: " + Config.Doremi.arrRandomActivity[rndIndex, 0];
                 Config.Doremi.indexCurrentActivity = rndIndex;
                 await client.SetGameAsync(Config.Doremi.arrRandomActivity[rndIndex,0], type: ActivityType.Playing); //set activity to current index position
-                
                 Console.WriteLine(updLog);
             },
             null,
@@ -109,6 +109,7 @@ namespace OjamajoBot.Bot
             victoriaservice = new VictoriaService(_lavaNode, client);
             client.UserJoined += AnnounceJoinedUser;
             client.UserLeft += AnnounceLeavingUser;
+            client.MessageReceived += MessageReceived;
             client.MessageUpdated += MessageUpdated;
             client.GuildAvailable += GuildAvailable;
             client.JoinedGuild += JoinedGuild;
@@ -209,57 +210,66 @@ namespace OjamajoBot.Bot
         {
             var channel = client.GetChannel(user.Guild.SystemChannel.Id) as SocketTextChannel; // Gets the channel to send the message in
 
-            string[] arrRandomWelcomeMessage = {
-               $"Hii there {user.Mention}, welcome to the {channel.Guild.Name}. We do hope you're enjoying your stay on the group.",
-               $"Hello {user.Mention}, welcome to the {channel.Guild.Name}. We're happy that you join our group.",
-               $"Hello new friends: {user.Mention}, welcome to the {channel.Guild.Name}. " +
-               $"We're expecting you to come and hopefully you're enjoying your stay on the group."
-            };
+            if(user.Id != Config.Hazuki.Id && user.Id != Config.Aiko.Id &&
+                user.Id != Config.Onpu.Id && user.Id!= Config.Momoko.Id) { 
+                string[] arrRandomWelcomeMessage = {
+                    $"Hii there {user.Mention}, welcome to the {channel.Guild.Name}. We hope you enjoy and happy with all of us.",
+                    $"Hello {user.Mention}, welcome to the {channel.Guild.Name}. We're really happy that you join our group.",
+                    $"Hello new friends: {user.Mention}, welcome to the {channel.Guild.Name}. " +
+                    $"We're expecting you to come and hopefully you're enjoying your stay on the group."
+                };
 
-            string[] arrRandomPictures =
-            {"https://66.media.tumblr.com/c8f9c5455355f8e522d52bacb8155ab0/tumblr_mswho8nWx11r98a5go1_400.gif",
-            "https://thumbs.gfycat.com/DamagedGrouchyBarracuda-small.gif",
-            "https://data.whicdn.com/images/39976659/original.gif"};
+                string[] arrRandomPictures =
+                {"https://66.media.tumblr.com/c8f9c5455355f8e522d52bacb8155ab0/tumblr_mswho8nWx11r98a5go1_400.gif",
+                "https://thumbs.gfycat.com/DamagedGrouchyBarracuda-small.gif",
+                "https://data.whicdn.com/images/39976659/original.gif"};
 
-            Random rnd = new Random();
-            int rndIndexWelcomeMessage = rnd.Next(0, arrRandomWelcomeMessage.GetLength(0));
-            int rndIndexRandomPictures = rnd.Next(0, arrRandomPictures.GetLength(0));
+                int rndIndexWelcomeMessage = new Random().Next(0, arrRandomWelcomeMessage.GetLength(0));
+                int rndIndexRandomPictures = new Random().Next(0, arrRandomPictures.GetLength(0));
 
-            await channel.SendMessageAsync(arrRandomWelcomeMessage[rndIndexWelcomeMessage] + 
-                " Please do introduce yourself, also don't forget to follow and read the rule guidelines.",
-                embed: new EmbedBuilder()
-                        .WithColor(Config.Doremi.EmbedColor)
-                        .WithImageUrl(arrRandomPictures[rndIndexRandomPictures])
-                        .Build()); //Welcomes the new user
+                await channel.SendMessageAsync(arrRandomWelcomeMessage[rndIndexWelcomeMessage] +
+                    " Please do introduce yourself, also don't forget to always follow and read the rule guidelines :smile:",
+                    embed: new EmbedBuilder()
+                            .WithColor(Config.Doremi.EmbedColor)
+                            .WithImageUrl(arrRandomPictures[rndIndexRandomPictures])
+                            .Build());
 
-            //sending dm to the joined user
-            var dmchannel = await user.GetOrCreateDMChannelAsync();
-            await dmchannel.SendMessageAsync(arrRandomWelcomeMessage[rndIndexWelcomeMessage] + "\n" +
-                " Please do introduce yourself on the group. Also Don't forget to follow and read the rule guidelines.",
-                embed: new EmbedBuilder()
-                        .WithColor(Config.Doremi.EmbedColor)
-                        .WithImageUrl(arrRandomPictures[rndIndexRandomPictures])
-                        .Build());
+                //sending dm to the joined user
+                var dmchannel = await user.GetOrCreateDMChannelAsync();
+                await dmchannel.SendMessageAsync(arrRandomWelcomeMessage[rndIndexWelcomeMessage] + 
+                    " Please do introduce yourself on the group, also don't forget to always follow and read the rule guidelines :smile:",
+                    embed: new EmbedBuilder()
+                            .WithColor(Config.Doremi.EmbedColor)
+                            .WithImageUrl(arrRandomPictures[rndIndexRandomPictures])
+                            .Build());
+            }
+
+            
         }
 
         public async Task AnnounceLeavingUser(SocketGuildUser user) //Send a leaving user notifications
         {
-            string[] arrRandomLeavingMessage = {
-               $":sob: Oh no, one of our friends: {user.Mention} has leaving the group and we are really sad about it.",
-               $":sob: It's nice to have {user.Mention} on our group. We wish {user.Mention} can stay a bit longer."
-            };
-
-            string[] arrRandomPictures =
-            {"https://media1.tenor.com/images/f51ff7041983283592e13e3e0c3b29b9/tenor.gif"};
-
             var channel = client.GetChannel(user.Guild.SystemChannel.Id) as SocketTextChannel; // Gets the channel to send the message in
 
-            await channel.SendMessageAsync(arrRandomLeavingMessage[new Random().Next(0, arrRandomLeavingMessage.GetLength(0))],
-                embed: new EmbedBuilder()
-                        .WithColor(Config.Doremi.EmbedColor)
-                        .WithImageUrl(arrRandomPictures[new Random().Next(0, arrRandomPictures.GetLength(0))])
-                        .Build()); //Welcomes the new user
+            JObject guildConfig = JObject.Parse(File.ReadAllText($"config/{user.Guild.Id}.json"));
+            if (guildConfig.GetValue("user_leaving_notification").ToString() == "1"){
+                string[] arrRandomLeavingMessage = {
+               $":sob: Oh no, {user.Mention} has leave the {channel.Guild.Name} and we are really sad.",
+               $":sob: It's nice to have {user.Mention} on {channel.Guild.Name}. We wish that you can stay more longer on our groups."
+            };
 
+                string[] arrRandomPictures = {"https://vignette.wikia.nocookie.net/ojamajowitchling/images/d/d7/ODN-EP1-013.png",
+            "https://vignette.wikia.nocookie.net/ojamajowitchling/images/d/d9/04.51.12.JPG"};
+
+                
+                await channel.SendMessageAsync(arrRandomLeavingMessage[new Random().Next(0, arrRandomLeavingMessage.GetLength(0))],
+                    embed: new EmbedBuilder()
+                            .WithColor(Config.Doremi.EmbedColor)
+                            .WithImageUrl(arrRandomPictures[new Random().Next(0, arrRandomPictures.GetLength(0))])
+                            .Build()); //Welcomes the new user
+            }
+
+            
         }
 
         public void HookReactionAdded(BaseSocketClient client) => client.ReactionAdded += HandleReactionAddedAsync;
@@ -312,12 +322,49 @@ namespace OjamajoBot.Bot
             //                        $"to {message.Author}'s message ({message.Id}).");
         }
 
-        private async Task MessageUpdated(Cacheable<IMessage, ulong> before,
+        private Task MessageReceived(SocketMessage message)
+        {
+            // check if the message is a user message as opposed to a system message (e.g. Clyde, pins, etc.)
+            if (!(message is SocketUserMessage userMessage)) return Task.CompletedTask;
+            // check if the message origin is a guild message channel
+            if (!(userMessage.Channel is SocketTextChannel textChannel)) return Task.CompletedTask;
+
+            SocketTextChannel textchannel = (SocketTextChannel)message.Channel;
+            SocketUserMessage usrmsg = (SocketUserMessage) message;
+
+            try
+            {
+                using (StreamWriter sw = (File.Exists($"logs/{textchannel.Guild.Id}/{DateTime.Now.ToString("yyyy_MM_dd")}.txt")) ? File.AppendText($"logs/{textchannel.Guild.Id}/{DateTime.Now.ToString("yyyy_MM_dd")}.txt") : 
+                    File.CreateText($"logs/{textchannel.Guild.Id}/{DateTime.Now.ToString("yyyy_MM_dd")}.txt"))
+                    sw.WriteLine($"[{DateTime.Now.ToString("yyyy/MM/dd HH:mm")}] {usrmsg.Author.Mention}{usrmsg.Author.Username} : {message}");
+            } catch(Exception e) {}
+            
+            return Task.CompletedTask;
+        }
+
+        private Task MessageUpdated(Cacheable<IMessage, ulong> before,
             SocketMessage after, ISocketMessageChannel channel)
         {
+
+            // check if the message is a user message as opposed to a system message (e.g. Clyde, pins, etc.)
+            if (!(after is SocketUserMessage userMessage)) return Task.CompletedTask;
+            // check if the message origin is a guild message channel
+            if (!(after.Channel is SocketTextChannel textChannel)) return Task.CompletedTask;
+
+            SocketTextChannel textchannel = (SocketTextChannel)after.Channel;
+            SocketUserMessage usrmsg = (SocketUserMessage)after;
+
             // If the message was not in the cache, downloading it will result in getting a copy of `after`.
-            var message = await before.GetOrDownloadAsync();
-            Console.WriteLine($"{message} -> {after}");
+            try {
+                var message = before.GetOrDownloadAsync();
+                
+                using (StreamWriter sw = (File.Exists($"logs/{textchannel.Guild.Id}/{DateTime.Now.ToString("yyyy_MM_dd")}.txt")) ? File.AppendText($"logs/{textchannel.Guild.Id}/{DateTime.Now.ToString("yyyy_MM_dd")}.txt") :
+                    File.CreateText($"logs/{textchannel.Guild.Id}/{DateTime.Now.ToString("yyyy_MM_dd")}.txt"))
+                    sw.WriteLine($"[{DateTime.Now.ToString("yyyy/MM/dd HH:mm")}] {usrmsg.Author.Mention}{usrmsg.Author.Username} : [update]{after}");
+            } catch(Exception e) {}
+            return Task.CompletedTask;
+            //using (StreamWriter w = File.AppendText($"attachments/{Context.Guild.Id}/feedback_{Context.Guild.Id}.txt"))
+            //    w.WriteLine($"[{DateTime.Now.ToString("MM/dd/yyyy HH:mm")}]{message}:{feedback_message}");
         }
 
         public async Task RegisterCommandsAsync(){
@@ -331,21 +378,6 @@ namespace OjamajoBot.Bot
             //await commands.AddModuleAsync(typeof(DoremiModeratorChannels), services);
             await commands.AddModuleAsync(typeof(DoremiMagicalStageModule), services);
         }
-
-        //public async Task OnCommandExecutedAsync(Optional<CommandInfo> command, ICommandContext context, IResult result)
-        //{
-        //    switch (result)
-        //    {
-        //        case DoremiModule.MyCustomResult customResult:
-        //            // do something extra with it
-        //            break;
-        //        default:
-        //            if (!string.IsNullOrEmpty(result.ErrorReason))
-        //                await context.Channel.SendMessageAsync(result.ErrorReason);
-        //            break;
-        //    }
-        //}
-
 
         private async Task HandleCommandAsync(SocketMessage arg)
         {
@@ -373,17 +405,17 @@ namespace OjamajoBot.Bot
                     switch (result.Error)
                     {
                         case CommandError.BadArgCount:
-                            await context.Channel.SendMessageAsync($"Moderator Commands: Oops, looks like you have missing/too much parameter. " +
-                                $"See `{Config.Doremi.PrefixParent[0]}help mod <commands or category>` for more info.");
+                            await context.Channel.SendMessageAsync($"Moderator Commands: you have missing/many parameter. " +
+                                $"See `{Config.Doremi.PrefixParent[0]}help mod <commands or category>` for commands help.");
                             break;
                         case CommandError.UnknownCommand:
                             await message.Channel.SendMessageAsync($"Moderator Commands: Sorry, I can't seem to understand your commands. " +
-                               $"See `{Config.Doremi.PrefixParent[0]}help mod <commands or category>` for more info.");
+                               $"See `{Config.Doremi.PrefixParent[0]}help mod <commands or category>` for commands help.");
                             Console.WriteLine(result.ErrorReason);
                             break;
                         case CommandError.ObjectNotFound:
                             await message.Channel.SendMessageAsync($"Moderator Commands: Oops, {result.ErrorReason} " +
-                                $"See `{Config.Doremi.PrefixParent[0]}help mod <commands or category>` for more info.");
+                                $"See `{Config.Doremi.PrefixParent[0]}help mod <commands or category>` for commands help.");
                             break;
                         case CommandError.ParseFailed:
                             await message.Channel.SendMessageAsync(result.ErrorReason);
@@ -397,11 +429,11 @@ namespace OjamajoBot.Bot
                     {
                         case CommandError.BadArgCount:
                             await context.Channel.SendMessageAsync("Oops, looks like you have missing/too much parameter. " +
-                                $"See `{Config.Doremi.PrefixParent[0]}help <commands or category>`for command help.");
+                                $"See `{Config.Doremi.PrefixParent[0]}help <commands or category>`for commands help.");
                             break;
                         case CommandError.UnknownCommand:
                             await message.Channel.SendMessageAsync("Ehh? I can't seem to understand your commands. " +
-                                $"See `{Config.Doremi.PrefixParent[0]}help <commands or category>` for command help.",
+                                $"See `{Config.Doremi.PrefixParent[0]}help <commands or category>` for commands help.",
                             embed: new EmbedBuilder()
                             .WithColor(Config.Doremi.EmbedColor)
                             .WithImageUrl("https://media1.tenor.com/images/3ba7d829ec2fd5300b0f3a16a86a7af8/tenor.gif")
@@ -409,11 +441,11 @@ namespace OjamajoBot.Bot
                             break;
                         case CommandError.ObjectNotFound:
                             await message.Channel.SendMessageAsync($"Oops, {result.ErrorReason} " +
-                                $"See `{Config.Doremi.PrefixParent[0]}help <commands or category>` for command help.");
+                                $"See `{Config.Doremi.PrefixParent[0]}help <commands or category>` for commands help.");
                             break;
                         case CommandError.ParseFailed:
                             await message.Channel.SendMessageAsync($"Oops, {result.ErrorReason} " +
-                                $"See `{Config.Doremi.PrefixParent[0]}help <commands or category>` for command help.");
+                                $"See `{Config.Doremi.PrefixParent[0]}help <commands or category>` for commands help.");
                             break;
                         case CommandError.Exception:
                             // This is what happens instead of the catch block.

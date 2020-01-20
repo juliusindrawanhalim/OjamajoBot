@@ -30,6 +30,20 @@ namespace OjamajoBot.Module
             _map = map;
         }
 
+        //[Command]
+        //public async Task defaultMention()
+        //{
+        //    string tempReply = "";
+        //    List<string> listRandomRespond = new List<string>() {
+        //        $"Hii hii {MentionUtils.MentionUser(Context.User.Id)}! ",
+        //        $"Hello {MentionUtils.MentionUser(Context.User.Id)}! ",
+        //    };
+
+        //    int rndIndex = new Random().Next(0, listRandomRespond.Count);
+        //    tempReply = $"{listRandomRespond[rndIndex]}. I noticed that you're calling for me. Use {Config.Doremi.PrefixParent}help <commands or category> if you need any help with the commands.";
+        //    await ReplyAsync(tempReply);
+        //}
+
         [Name("help"),Command("help"), Summary("Show all Doremi bot Commands.")]
         public async Task Help([Remainder]string CategoryOrCommands = "")
         {
@@ -70,8 +84,7 @@ namespace OjamajoBot.Module
                         {
                             if ((commandsModulesToList[i].Commands[j].Name.ToLower()==CategoryOrCommands.ToLower()||
                                 commandsModulesToList[i].Commands[j].Aliases.Contains(CategoryOrCommands.ToLower()))&&
-                                commandsModulesToList[i].Summary!="hidden")
-                            {
+                                commandsModulesToList[i].Summary!="hidden"){
                                 HelpDetails(ref output,
                                 commandsModulesToList[i].Name,
                                 commandsModulesToList[i].Commands[j].Summary,
@@ -86,29 +99,11 @@ namespace OjamajoBot.Module
 
                     if (ctrFounded>=1){
                         output.Description = $"I found {ctrFounded} command(s) with **{CategoryOrCommands}** keyword:";
-                        await ReplyAsync("", embed: output.Build());
+                        await ReplyAsync(embed: output.Build());
                         return;
                     } else {
-                        await ReplyAsync($"Oops, I can't find any related help that you search for. See `{Config.Doremi.PrefixParent[0]}help` for more help info. ");
-                        return;
-                    }
-                    
-
-                    for (var i = 0;i< commandsModulesToList.Count; i++)
-                    {
-                        //mod = _commands.Modules.FirstOrDefault(m => m.Name.Replace("Module", "").ToLower() ==
-                        //commandsModulesToList[i].Name.Replace("Module", "").ToLower());
-
-                        if (mod != null)
-                        {
-                            Console.WriteLine(mod.Name);
-                            getAllCommands(mod, ref output, CategoryOrCommands);
-                            await ReplyAsync("", embed: output.Build());
-                        } else
-                        {
-                            getAllCommands(mod, ref output, CategoryOrCommands);
-                            await ReplyAsync("empty commands", embed: output.Build());
-                        }
+                        await ReplyAsync($"Oops, I can't find any related help that you search for. " +
+                            $"See `{Config.Doremi.PrefixParent[0]}help <commands or category>` for command help.");
                         return;
                     }
                     
@@ -120,15 +115,19 @@ namespace OjamajoBot.Module
         public void HelpDetails(ref EmbedBuilder builder, string category, string summary, 
             string alias, string group, string commands, string parameters)
         {
-            var completedText = ""; commands = commands.ToLower();
+            
+            var completedText = ""; commands = commands.ToLower(); category = category.ToLower();
             if (summary != "") completedText += $"{summary}\n";
-            completedText += $"**Category:** {category.ToLower()}\n";
+            completedText += $"**Category:** {category}\n";
             if (alias != "") completedText += $"**Alias:** {alias}\n";
-            if (group != "") commands += " ";
+
+            if (!object.ReferenceEquals(group, null)){
+                group = category+" ";
+            }
             completedText += $"**Example:** `{Config.Doremi.PrefixParent[0]}{group}{commands}";
-            if (parameters != "") completedText += parameters;
+            if (parameters != "") completedText += " "+parameters;
             completedText += "`\n";
-            builder.AddField(commands,completedText);
+            builder.AddField(commands, completedText);
         }
 
         public void AddHelp(ModuleInfo module, ref EmbedBuilder builder)
@@ -202,9 +201,9 @@ namespace OjamajoBot.Module
                 if (param.IsOptional)
                 {
                     if (param.DefaultValue != null)
-                        output.Append($"[opt {param.Name}:{param.DefaultValue}]");
+                        output.Append($"[default {param.Name}:{param.DefaultValue}]");
                     else
-                        output.Append($"[opt:{param.Name}]");
+                        output.Append($"[optional:{param.Name}]");
                 }
                 else if (param.IsMultiple)
                     output.Append($"|{param.Name}|");
@@ -236,9 +235,9 @@ namespace OjamajoBot.Module
                 if (param.IsOptional)
                 {
                     if (param.DefaultValue != null)
-                        output.Append($"[opt {param.Name}:{param.DefaultValue}]");
+                        output.Append($"[default {param.Name}:{param.DefaultValue}]");
                     else
-                        output.Append($"[opt:{param.Name}]");
+                        output.Append($"[optional:{param.Name}]");
                 }
                 else if (param.IsMultiple)
                     output.Append($"|{param.Name}|");
@@ -552,144 +551,72 @@ namespace OjamajoBot.Module
         //    await sentWithoutAttached.AddReactionAsync(new Emoji("\u2B50"));
         //}
 
-        [Command("change"), Alias("henshin"), Summary("Change into the ojamajo form")]
-        public async Task transform()
+        [Command("change"), Alias("henshin"), Summary("I will change into the ojamajo form. " +
+            "Fill <form> with: **default/sharp/royal/motto** to make it spesific form.")]
+        public async Task transform(string form = "motto")
         {
-            await ReplyAsync("Pretty Witchy Doremi Chi~\n");
-            await base.ReplyAsync(embed: new EmbedBuilder()
-                .WithColor(Config.Doremi.EmbedColor)
-                .WithImageUrl("https://media1.tenor.com/images/b99530648de9200b2cfaec83426f5482/tenor.gif")
-                .Build());
+            IDictionary<string, string> arrImage = new Dictionary<string, string>();
+            arrImage["default"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/b/bf/Ca-doremi.gif";
+            arrImage["sharp"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/3/3c/Sh-doremi.gif";
+            arrImage["royal"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/5d/Royaldoremi.gif";
+            arrImage["motto"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/7/7d/Mo-doremi.gif";
+
+            if (arrImage.ContainsKey(form)){
+                await ReplyAsync("Pretty Witchy Doremi Chi~\n");
+                await ReplyAsync(embed: new EmbedBuilder()
+                    .WithColor(Config.Doremi.EmbedColor)
+                    .WithImageUrl(arrImage[form])
+                    .Build());
+            } else {
+                await ReplyAsync($"Sorry, I can't found that form. See `{Config.Doremi.PrefixParent[0]} help change` for help details");
+            }
         }
 
-        [Command("dorememe"), Alias("dorememes"), Summary("I will give you some random doremi related memes")]
-        public async Task givedorememe()
+        [Command("dorememe"), Alias("dorememes"), Summary("I will give you some random doremi related memes. " +
+            "You can fill <contributor> with one of the available to make it spesific contributor.\nFill it with `list` to list all contributor.")]
+        public async Task givedorememe([Remainder]string contributor="")
         {
-            string[,] arrRandom =
-            {
-                {"imgflip","https://i.imgflip.com/1h9k61.jpg"},
-                {"tumblr","https://66.media.tumblr.com/4b8ae988116282b0fbb86156006977a7/tumblr_ndl02pfvej1thwu0wo1_1280.png"},
-                {"tumblr","https://66.media.tumblr.com/6143b1c1b6033c4cc068904909b68fbd/tumblr_n91u5yW35z1thwu0wo1_1280.png"},
-                {"tumblr","https://66.media.tumblr.com/df6d13c7abe1970b4bc9726e5c264252/tumblr_n8ypyaubZl1thwu0wo1_1280.png"},
-                {"tumblr","https://66.media.tumblr.com/1c00104523408517270a02f185208ff6/tumblr_n9iqy3L44d1thwu0wo1_1280.png"},
-                {"tumblr","https://66.media.tumblr.com/ffad930ddacf0964646700523e80fb81/tumblr_n906n643rG1thwu0wo1_1280.png"},
-                {"random","https://img1.ak.crunchyroll.com/i/spire4/1cd32824fff0e3be86cbd9f6c5b4cb2b1326942608_full.jpg"},
-                {"tumblr","https://66.media.tumblr.com/9fdbbdc668507fa90c38bae8fa8d9f8a/tumblr_nvu6gqb6NE1thwu0wo1_1280.png"},
-                {"random","https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/e90aeb60-6815-432d-bc4b-ad18ae885aaf/ddeph8m-bf0e2b8c-bc89-4e2f-b27c-f31d00d3c6cb.png/v1/fill/w_742,h_1077,q_70,strp/my_strawberry_shortcake_cast_meme__ojamajo_doremi__by_balloongal101_ddeph8m-pre.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9MTQ4NSIsInBhdGgiOiJcL2ZcL2U5MGFlYjYwLTY4MTUtNDMyZC1iYzRiLWFkMThhZTg4NWFhZlwvZGRlcGg4bS1iZjBlMmI4Yy1iYzg5LTRlMmYtYjI3Yy1mMzFkMDBkM2M2Y2IucG5nIiwid2lkdGgiOiI8PTEwMjQifV1dLCJhdWQiOlsidXJuOnNlcnZpY2U6aW1hZ2Uub3BlcmF0aW9ucyJdfQ.YimkZYTzceBEJT3bYtwr3b0wsHrg2RGNou-a4uuLS6M"},
-                {"ballmemes","https://pics.ballmemes.com/how-every-country-sees-magical-girl-anime-sailor-moon-ojamajo-44565702.png"},
-                {"funnyjunk","https://2eu.funnyjunk.com/pictures/Ojamajo_a17764_528025.jpg"},
-                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/644383823286763544/663616227914154014/unknown.png"},
-                {"Letter Three","https://media.discordapp.net/attachments/512825478512377877/660677566599790627/DO_THE_SWAG.gif"},
-                {"Odd Meat","https://cdn.discordapp.com/attachments/569409307100315651/653670970342506548/unknown.png"},
-                {"Letter Three","https://media.discordapp.net/attachments/310544560164044801/398230870445785089/DSRxAB9VQAAI5Ja.png"},
-                {"Letter Three","https://media.discordapp.net/attachments/314512031313035264/659229196693798912/1551058415141.png?width=396&height=469"},
-                {"BreadRavager","https://cdn.discordapp.com/attachments/643722270447239169/664425825030111243/onpuflube.gif"},
-                {"Ian","https://i.4pcdn.org/s4s/1537724473581.gif"},
-                {"Ian","https://i.4pcdn.org/s4s/1508866828910.gif"},
-                {"Ian","http://i.4pcdn.org/s4s/1500066705217.gif"},
-                {"Odd Meat","https://cdn.discordapp.com/attachments/644383823286763544/655441472426082345/unknown.png"},
-                {"Odd Meat","https://cdn.discordapp.com/attachments/569409307100315651/653669172873527328/unknown.png"},
-                {"Odd Meat","https://cdn.discordapp.com/attachments/644383823286763544/654432214595141693/Magical_more_episode_76-.png"},
-                {"Odd Meat","https://cdn.discordapp.com/attachments/644383823286763544/654812347038302220/unknown.png"},
-                {"Odd Meat","https://cdn.discordapp.com/attachments/644383823286763544/655870644671741972/unknown.png"},
-                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/644383823286763544/656235784038252550/scooby_guest_starring.png"},
-                {"Bunty","https://cdn.discordapp.com/attachments/644383823286763544/656262643199508483/48524296-4A66-41DC-B446-2C4A8DC463C1.png"},
-                {"Poob","https://i.gyazo.com/thumb/1200/e2b3d361d9ef6adeb0dfe22ee005b249-jpg.jpg"},
-                {"Letter Three","https://cdn.discordapp.com/attachments/644383823286763544/658414123893391360/heck.png"},
-                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/644383823286763544/658845873408704535/1575052839549.png"},
-                {"Letter Three","https://cdn.discordapp.com/attachments/644383823286763544/659083573437136897/dancedance.gif"},
-                {"Letter Three","https://media.discordapp.net/attachments/643721778685804544/659927439551627304/Ea04LEnzT8QAAAABJRU5ErkJggg.png"},
-                {"Letter Three","https://cdn.discordapp.com/attachments/644383823286763544/662569497290473512/unknown.png"},
-                {"Letter Three","https://cdn.discordapp.com/attachments/644383823286763544/663599628842958849/7fe43d8bf20a13ade7d15ca7ad29155f.png"},
-                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/644383823286763544/663640113380851712/1578292210398.png"},
-                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/644383823286763544/663650504257044480/hazumasameme.jpg"},
-                {"Letter Three","https://cdn.discordapp.com/attachments/644383823286763544/664315986266292241/dodo_ate_that_cheese.png"},
-                {"Odd Meat","https://cdn.discordapp.com/attachments/569409307100315651/654042450272190474/unknown.png"},
-                {"Letter Three","https://cdn.discordapp.com/attachments/569409307100315651/654092176392847390/unknown.png"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/666231823818555392/IDS_MARIO.jpg"},
-                {"Odd Meat","https://cdn.discordapp.com/attachments/569409307100315651/652209138507579422/unknown.png"},
-                {"https://twitter.com/zenhuxtable | tsuneotsubasa","https://pbs.twimg.com/media/EK_4kDXX0AIXKUE?format=jpg&name=small"},
-                {"Odd Meat","https://cdn.discordapp.com/attachments/569409307100315651/651493956496130068/die_monster.png"},
-                {"Letter Three","https://cdn.discordapp.com/attachments/569409307100315651/651409834713022474/98a979ed-7268-42e4-87e5-c21070d1c672.png"},
-                {"Odd Meat","https://cdn.discordapp.com/attachments/569409307100315651/651389510143311872/4663b1f6-55df-47c5-bb2f-8475b2d39c10.png"},
-                {"Odd Meat","https://cdn.discordapp.com/attachments/569409307100315651/651388603796291589/bcecbd0e-51b9-4f5d-bb68-8a6dbf12d04b.png"},
-                {"Odd Meat","https://cdn.discordapp.com/attachments/569409307100315651/651358920287191063/fe88353b-fb36-4aec-bfd2-abad90703f5b.png"},
-                {"Odd Meat","https://cdn.discordapp.com/attachments/569409307100315651/651189171918209024/first_witch.png"},
-                {"Odd Meat","https://cdn.discordapp.com/attachments/569409307100315651/651182811633680394/nowantaiko.png"},
-                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/569409307100315651/649831768634949644/20191128_222919.jpg"},
-                {"Letter Three","https://media.discordapp.net/attachments/601461955206709248/623365446392872960/unknown.png?width=654&height=468"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/649142334755307520/1504234417684.jpg"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/649142939339063296/1525921390250.gif"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/649141890725314561/NACHO_BURRITO.gif"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/649141957205164033/ebin.jpg"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/649142070325542942/1508258294538.gif"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/649141770617225226/pNmdjAu.png"},
-                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/569409307100315651/648379300587896883/1500832113127_-_Copy.png"},
-                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/569409307100315651/647983130640121862/saturday_is_for_ojamajo_dad.jpg"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/646817816221319178/1503179977121.jpg"},
-                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/569409307100315651/644405526863544322/1567392672079_-_Copy-chip.jpg"},
-                {"Logan Alex Wood","https://cdn.discordapp.com/attachments/569409307100315651/644404591676489729/6tytfgv.png"},
-                {"Logan Alex Wood","https://cdn.discordapp.com/attachments/569409307100315651/644402345504931859/Doremi.Ojamajo.Doremi.07.640x480.8A67C5DB.v2.mkv_snapshot_14.46_18.02.17_21.51.41-0061.jpg"},
-                {"Logan Alex Wood","https://cdn.discordapp.com/attachments/569409307100315651/644402296167596032/Doremi.Ojamajo.Doremi.07.640x480.8A67C5DB.v2.mkv_snapshot_13.14_2017.07.11_08.25.45.png"},
-                {"Letter Three","https://cdn.discordapp.com/attachments/569409307100315651/637455811232268299/unknown.png"},
-                {"Letter Three","https://cdn.discordapp.com/attachments/569409307100315651/634123008771883008/Wheezuki.png"},
-                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/622195390682365952/633855826955599882/unknown.png"},
-                {"Letter Three","https://cdn.discordapp.com/attachments/569409307100315651/632667918064418858/unknown.png"},
-                {"Letter Three","https://cdn.discordapp.com/attachments/569409307100315651/630882364154970112/Doremi_and_Meatwad.png"},
-                {"Letter Three","https://cdn.discordapp.com/attachments/569409307100315651/627039453998874635/Doremi_Yelling_at_Dodo.png"},
-                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/569409307100315651/626865289887219723/20190926_141325.jpg"},
-                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/569409307100315651/621153098257268766/EEFCeaRW4AENLCS.png"},
-                {"Letter Three","https://media.discordapp.net/attachments/399954211816865792/616449423957819392/Screen_Shot_2019-08-28_at_9.31.56_PM.png?width=623&height=468"},
-                {"Letter Three","https://cdn.discordapp.com/attachments/569409307100315651/617512947065028621/49c3845a262649cfc4fd9380ad0f9bf9.png"},
-                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/569409307100315651/617179180139937939/1567101892481.png"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/615741385290678326/1566707190041.jpg"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/615741420736610333/1566707190042.jpg"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/615741454588969002/1566707190043.jpg"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/615741454588969002/1566707190043.jpg"},
-                {"Letter Three","https://cdn.discordapp.com/attachments/569409307100315651/610687504395272195/onno.png"},
-                {"Poob","https://cdn.discordapp.com/attachments/569409307100315651/610664061675241497/80ffda0ff50bba2092f7295b5597414f-png.png"},
-                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/569409307100315651/609965957452136479/doremis_steaki.png"},
-                {"Letter Three","http://media.tumblr.com/tumblr_m4eoeywCjm1r4lv3u.gif"},
-                {"Letter Three","https://media.discordapp.net/attachments/569409307100315651/577797449691824132/1522040700266.jpg?width=403&height=468"},
-                {"Letter Three","https://cdn.discordapp.com/attachments/569409307100315651/598015670009200665/moshed_2017-6-3_0.22.59.gif"},
-                {"Rctgamer3","https://cdn.discordapp.com/attachments/569409307100315651/596251765448507392/unknown.png"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/577797087052300298/1537880631468.gif"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/577797344658194442/1522659324102.jpg"},
-                {"Unknown user","https://cdn.discordapp.com/attachments/569409307100315651/575498217165291523/image0.jpg"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/574408691009454083/doremiboomer.png"},
-                {"Letter Three","https://cdn.discordapp.com/attachments/569409307100315651/574193232838393866/latest.png"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/573123106399584277/1538920066198.jpg"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/573120294055706640/1510611686079.jpg"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/573120068137779200/1501279167144.jpg"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/573118787784802307/1520685800181.png"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/573116001445478400/1541637365326.jpg"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/573116266319970304/its_over.gif"},
-                {"Segawa Onpu","https://cdn.discordapp.com/attachments/569409307100315651/569619410487345162/Onpus_in_black.jpg"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/569618915483713546/1534813397081.gif"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/569619208598454293/1534809043862.gif"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/569619273044066305/1532565451608.gif"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/569618503758249995/1549166072943.png"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/569607758903509023/check_her_out.png"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/569410491794063391/photosynthesis.png"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/569410391214522378/1519780154767.gif"},
-                {"вештица","https://cdn.discordapp.com/attachments/644383823286763544/666315700146667521/4d9a66db2cafa940a3369afbcf5a4706.png"},
-                {"Logan Alex Wood","https://cdn.discordapp.com/attachments/644383823286763544/666949577563177000/image0.png"},
-                {"4chan","https://i.4pcdn.org/s4s/1524983553681.png"},
-                {"4chan","https://i.4pcdn.org/s4s/1537885453707.jpg"},
-                {"4chan","https://i.4pcdn.org/s4s/1537658495445.png"},
-            };
+            string finalUrl = ""; JArray getDataObject = null;
+            contributor = contributor.ToLower();
 
-            int random = new Random().Next(0, arrRandom.GetLength(0));
+            if (contributor == "list"){
+                var key = Config.Doremi.jobjectdorememes.Properties().ToList();
+                string listedContributor = "";
+                for(int i = 0; i < key.Count; i++) listedContributor += $"{key[i].Name}\n";
+                
+                await base.ReplyAsync(embed: new EmbedBuilder()
+                    .WithTitle("Dorememes listed contributor")
+                    .WithDescription("Thank you to all of peoples that contributing dorememes. Here are all listed dorememes contributor:")
+                    .AddField("Contributor in List", listedContributor)
+                    .WithColor(Config.Doremi.EmbedColor)
+                    .Build());
+                return;
+            } else if (contributor == "") {
+                var key = Config.Doremi.jobjectdorememes.Properties().ToList();
+                var randIndex = new Random().Next(0, key.Count);
+                contributor = key[randIndex].Name;
+                getDataObject = (JArray)Config.Doremi.jobjectdorememes[contributor];
+                finalUrl = getDataObject[new Random().Next(0, getDataObject.Count)].ToString();
+            } else {
+                if (Config.Doremi.jobjectdorememes.ContainsKey(contributor)){
+                    getDataObject = (JArray)Config.Doremi.jobjectdorememes[contributor];
+                    finalUrl = getDataObject[new Random().Next(0, getDataObject.Count)].ToString();
+                } else {
+                    await base.ReplyAsync($"Oops, I can't found the specified contributor. " +
+                        $"See `{Config.Doremi.PrefixParent[0]}help dorememe` for commands help.");
+                    return;
+                }
+            }
 
             await base.ReplyAsync(embed: new EmbedBuilder()
-                .WithColor(Config.Doremi.EmbedColor)
-                .WithImageUrl(arrRandom[random, 1])
-                .WithFooter($"Contributed by: {arrRandom[random, 0]}")
-                .Build());
+            .WithColor(Config.Doremi.EmbedColor)
+            .WithImageUrl(finalUrl)
+            .WithFooter("Contributed by: "+contributor)
+            .Build());
 
         }
 
-        [Command("fairy"), Summary("I will show you my fairy")]
+        [Command("fairy"), Summary("I will show you my fairy info")]
         public async Task showFairy()
         {
             await ReplyAsync("Meet one of my fairy, Dodo.",
@@ -706,8 +633,9 @@ namespace OjamajoBot.Module
         [Command("feedback"), Summary("Give feedback for Doremi Bot and other related bots.")]
         public async Task userFeedback([Remainder] string feedback_message)
         {
-            using (StreamWriter w = File.AppendText($"attachments/{Context.Guild.Id}/feedback_{Context.Guild.Id}.txt"))
-                w.WriteLine($"[{DateTime.Now.ToString("MM/dd/yyyy HH:mm")}]{Context.User.Username}:{feedback_message}");
+            using (StreamWriter sw = (File.Exists($"attachments/{Context.Guild.Id}/feedback_{Context.Guild.Id}.txt")) ? File.AppendText($"attachments/{Context.Guild.Id}/feedback_{Context.Guild.Id}.txt") :
+                    File.CreateText($"attachments/{Context.Guild.Id}/feedback_{Context.Guild.Id}.txt"))
+                sw.WriteLine($"[{DateTime.Now.ToString("MM/dd/yyyy HH:mm")}]{Context.User.Mention}{Context.User.Username}:{feedback_message}");
 
             await ReplyAsync($"Thank you for your feedback. Doremi bot and her other friends will be improved soon with your feedback.",
                 embed: new EmbedBuilder()
@@ -751,22 +679,24 @@ namespace OjamajoBot.Module
             .WithAuthor(Config.Doremi.EmbedName, Config.Doremi.EmbedAvatarUrl)
             .WithTitle("Bot Invitation Links")
             .WithDescription($"Pirika pirilala poporina peperuto! Generate the bot links!")
-            .AddField("Doremi Bot", "[Click here to invite Doremi Bot](https://discordapp.com/api/oauth2/authorize?client_id=655668640502251530&permissions=2117532736&scope=bot)")
-            .AddField("Hazuki Bot", "[Click here to invite Hazuki Bot](https://discordapp.com/api/oauth2/authorize?client_id=655307117128974346&permissions=238419008&scope=bot)")
-            .AddField("Aiko Bot", "[Click here to invite Aiko Bot](https://discordapp.com/api/oauth2/authorize?client_id=663612449341046803&permissions=238419008&scope=bot)")
+            .AddField("Doremi Bot", "[Click here to invite Doremi Bot](https://discordapp.com/api/oauth2/authorize?client_id="+Config.Doremi.Id+"&permissions=2117532736&scope=bot)")
+            .AddField("Hazuki Bot", "[Click here to invite Hazuki Bot](https://discordapp.com/api/oauth2/authorize?client_id=" + Config.Hazuki.Id + "&permissions=238419008&scope=bot)")
+            .AddField("Aiko Bot", "[Click here to invite Aiko Bot](https://discordapp.com/api/oauth2/authorize?client_id=" + Config.Aiko.Id + "&permissions=238419008&scope=bot)")
+            .AddField("Onpu Bot", "[Click here to invite Onpu Bot](https://discordapp.com/api/oauth2/authorize?client_id=" + Config.Onpu.Id + "&permissions=238419008&scope=bot)")
+            .AddField("Momoko Bot", "[Click here to invite Momoko Bot](https://discordapp.com/api/oauth2/authorize?client_id=" + Config.Momoko.Id + "&permissions=238419008&scope=bot)")
             .Build());
         }
 
         [Command("magical stage"), Alias("magicalstage"), Summary("I will perform magical stage along with the other and make a <wishes>")]
-        public async Task magicalStage([Remainder] string query)
+        public async Task magicalStage([Remainder] string wishes)
         {
-            if (query != null)
+            if (wishes != null)
             {
-                Config.Doremi.MagicalStageWishes = query;
+                Config.Doremi.MagicalStageWishes = wishes;
                 await ReplyAsync($"{MentionUtils.MentionUser(Config.Hazuki.Id)} Pirika pirilala, Nobiyaka ni!",
                 embed: new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
-                .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/3/3d/Nobiyakanis1.2.png/revision/latest?cb=20190408124752")
+                .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/3/38/MagicalStageMottoDoremi.png")
                 .Build());
             }
             else
@@ -816,79 +746,36 @@ namespace OjamajoBot.Module
             await ReplyAsync(arrQuotes[new Random().Next(0, arrQuotes.Length)]);
         }
 
-        [Command("random"), Alias("moments"), Summary("Show any random Doremi moments")]
-        public async Task randomthing()
+        [Command("random"), Alias("moments"), Summary("Show any random Doremi moments. Fill <moments> with **random/first/sharp/motto/naisho** for spesific moments.")]
+        public async Task randomthing(string moments = "")
         {
-            string[] arrRandom =
-            {"https://66.media.tumblr.com/bd4f75234f1180fa7fd99a5200ac3c8d/tumblr_nbhwuqEY6c1r98a5go1_500.gif",
-            "https://66.media.tumblr.com/e62f24b9645540f4fff4e6ebe8bd213e/tumblr_pco5qx9Mim1r98a5go1_500.gif",
-            "https://media1.tenor.com/images/2bedf54ca06c5a3b073f3d9349db65b4/tenor.gif",
-            "https://static.zerochan.net/Harukaze.Doremi.full.2494232.gif",
-            "https://i.4pcdn.org/s4s/1511988377651.gif",
-            "https://66.media.tumblr.com/68b432cf50e18a72b661ba952fcf778f/tumblr_pgohlgzfvY1xqvqxzo1_400.gif",
-            "https://espressocomsaudade.files.wordpress.com/2014/07/6.gif",
-            "https://cdn.discordapp.com/attachments/569409307100315651/646751194441842688/unknown.png",
-            "https://66.media.tumblr.com/b11f9dced4594739776b976ed66920fc/tumblr_inline_mgcb4zEbfV1r4lv3u.gif",
-            "https://media1.tenor.com/images/c9d91a992a919d4c92e2d5d499f379d2/tenor.gif",
-            "https://pbs.twimg.com/media/EORFh9zX0AAARER?format=png&name=small","https://pbs.twimg.com/media/EOIwxbEXsAAWcdf?format=png&name=small",
-            "https://pbs.twimg.com/media/EOPBUOMXUAA6PNV?format=png&name=small","https://pbs.twimg.com/media/EOHpQh-XkAEFR1I?format=png&name=small",
-            "https://pbs.twimg.com/media/EOGl7_xXUAEqihP?format=png&name=small","https://pbs.twimg.com/media/EOFV7t6WoAAmwor?format=png&name=small",
-            "https://pbs.twimg.com/media/EOEfdIJX4AAHORN?format=png&name=small","https://pbs.twimg.com/media/EOBg0_pX4AQEvrR?format=png&name=small",
-            "https://pbs.twimg.com/media/EOBI5p1WkAMn65j?format=png&name=small","https://pbs.twimg.com/media/EOAvJH5XUAAyso4?format=png&name=small",
-            "https://pbs.twimg.com/media/EOATjeUXsAIo8Kw?format=png&name=small","https://pbs.twimg.com/media/EN_hqAQX0AA1SJf?format=png&name=small",
-            "https://pbs.twimg.com/media/EN_QaD5WoAAVPlJ?format=png&name=small","https://pbs.twimg.com/media/EN-aX9OX4AErhax?format=png&name=small",
-            "https://pbs.twimg.com/media/EN-G2YgX0AAk499?format=png&name=small","https://pbs.twimg.com/media/EN9klu-WsAA9h23?format=png&name=small",
-            "https://pbs.twimg.com/media/EN9H27kW4AETemw?format=png&name=small","https://pbs.twimg.com/media/EN8ZpDJWsAcu-FS?format=png&name=small",
-            "https://pbs.twimg.com/media/EN8R0pHWsAAUAhh?format=png&name=small","https://pbs.twimg.com/media/EN7PUhkXUAA5wh_?format=png&name=small",
-            "https://pbs.twimg.com/media/EN6jLjxW4AIYf_w?format=png&name=small","https://pbs.twimg.com/media/EN5-Z4JX4AE_Kvm?format=png&name=small",
-            "https://pbs.twimg.com/media/EN5AwOaWAAEwvCD?format=png&name=small","https://pbs.twimg.com/media/EN4vgHFUwAELkMA?format=png&name=small",
-            "https://pbs.twimg.com/media/EN4lKurWoAABXZo?format=png&name=small","https://pbs.twimg.com/media/EN3thU4VUAAflQd?format=png&name=small",
-            "https://pbs.twimg.com/media/EN3a5ykX0AAnnfD?format=png&name=small","https://pbs.twimg.com/media/EN3C-VGX0AElYvD?format=png&name=small",
-            "https://pbs.twimg.com/media/EN24osAW4AYXQIr?format=png&name=small","https://pbs.twimg.com/media/EN2vN9VX0AAqz8S?format=png&name=small",
-            "https://pbs.twimg.com/media/EN1teNYU8AIMRyn?format=png&name=small","https://pbs.twimg.com/media/EN1i5okXkAAMpOT?format=png&name=small",
-            "https://pbs.twimg.com/media/EN0wknxX0AANgWz?format=png&name=small","https://pbs.twimg.com/media/EN0pNQvX0AAhYK1?format=png&name=small",
-            "https://pbs.twimg.com/media/EN0GsE3X4AAmW5n?format=png&name=small","https://pbs.twimg.com/media/ENzolqaWsAMaqPd?format=png&name=small",
-            "https://pbs.twimg.com/media/ENzf2FjWoAAa6dr?format=png&name=small","https://pbs.twimg.com/media/ENzN6R-XUAA65it?format=png&name=small",
-            "https://pbs.twimg.com/media/ENywQseXkAAZORC?format=png&name=small","https://pbs.twimg.com/media/ENyCSNTWoAAupEh?format=png&name=small",
-            "https://pbs.twimg.com/media/ENxdgCqX0AEWDvm?format=png&name=small","https://pbs.twimg.com/media/ENwUIldWwAAIDle?format=png&name=small",
-            "https://pbs.twimg.com/media/ENvwuFNWoAAiX_X?format=png&name=small","https://pbs.twimg.com/media/ENux8aVWsAA3mp7?format=png&name=small",
-            "https://pbs.twimg.com/media/ENuPOWlX0AYFHPd?format=png&name=small","https://pbs.twimg.com/media/ENsyGt6WoAAnl1O?format=png&name=small",
-            "https://pbs.twimg.com/media/ENsAMTCUUAUeifE?format=png&name=small","https://pbs.twimg.com/media/ENrYcEpWwAAg3dG?format=png&name=small",
-            "https://pbs.twimg.com/media/ENq-cTzXkAENaO8?format=png&name=small","https://pbs.twimg.com/media/ENqHP3lXYAINSdK?format=png&name=small",
-            "https://pbs.twimg.com/media/ENpRsDsWsAABTxZ?format=png&name=small","https://pbs.twimg.com/media/ENon0itXsAEgp_B?format=png&name=small",
-            "https://pbs.twimg.com/media/ENmhjgMUwAE0uY1?format=png&name=small","https://pbs.twimg.com/media/ENmQ_wQUUAAVvlR?format=png&name=small",
-            "https://pbs.twimg.com/media/ENk83Q1X0AA_E3v?format=png&name=small","https://pbs.twimg.com/media/ENksiBwWsAErMhH?format=png&name=small",
-            "https://pbs.twimg.com/media/ENk1RBsWsAEF_kK?format=png&name=small","https://pbs.twimg.com/media/ENjma7NVUAAq5Fp?format=png&name=small",
-            "https://pbs.twimg.com/media/ENjMNHQXkAEkga6?format=png&name=small","https://pbs.twimg.com/media/ENh4wLNXUAAfKRe?format=png&name=small",
-            "https://pbs.twimg.com/media/ENgoScqX0AAotuK?format=png&name=small","https://pbs.twimg.com/media/ENeVLU_U4AAttL1?format=png&name=small",
-            "https://pbs.twimg.com/media/ENciclUWoAAjVER?format=png&name=small","https://pbs.twimg.com/media/ENb-kokWwAI2Pq0?format=png&name=small",
-            "https://pbs.twimg.com/media/ENa44FCXYAEdfOJ?format=png&name=small","https://pbs.twimg.com/media/ENacmC-W4AAxFOm?format=png&name=small",
-            "https://pbs.twimg.com/media/ENZL4vHXYAMDnS9?format=png&name=small","https://pbs.twimg.com/media/ENZCdxnXYAAO2o_?format=png&name=small",
-            "https://pbs.twimg.com/media/ENY59PZXYAgK8ak?format=png&name=small","https://pbs.twimg.com/media/ENYGp8_XsAI83YN?format=png&name=small",
-            "https://pbs.twimg.com/media/ENW1sxwXUAILM_i?format=png&name=small","https://pbs.twimg.com/media/ENV1UvEW4AAR0A0?format=png&name=small",
-            "https://pbs.twimg.com/media/ENVTRWNXkAEV60U?format=png&name=small","https://pbs.twimg.com/media/ENVItRGWwAATIr-?format=png&name=small",
-            "https://pbs.twimg.com/media/ENTeezSWoAgmvLt?format=png&name=small","https://pbs.twimg.com/media/ENTOJASWoAEGzz8?format=png&name=small",
-            "https://pbs.twimg.com/media/ENSc6XVWwAAsJLL?format=png&name=small","https://pbs.twimg.com/media/ENSU3RfWoAA1eiD?format=png&name=small",
-            "https://pbs.twimg.com/media/ENSBjGNXsAEHRoX?format=png&name=small","https://pbs.twimg.com/media/ENRU6kSW4AEDfSK?format=png&name=small",
-            "https://pbs.twimg.com/media/ENQKro5W4AANaca?format=png&name=small","https://pbs.twimg.com/media/ENPIAq3UcAINjmv?format=png&name=small",
-            "https://pbs.twimg.com/media/ENOU8n-WoAAv_aq?format=png&name=small","https://pbs.twimg.com/media/ENODBRcXYAEMmsf?format=png&name=small",
-            "https://pbs.twimg.com/media/ENNT5iuWwAEvIfd?format=png&name=small","https://pbs.twimg.com/media/ENMTTAQX0AAKGBd?format=png&name=small",
-            "https://pbs.twimg.com/media/ENLf_u-XYAEEMUF?format=png&name=small","https://pbs.twimg.com/media/ENKw4b1W4AEFTw0?format=png&name=small",
-            "https://pbs.twimg.com/media/ENKdy17WoAAkANp?format=png&name=small","https://pbs.twimg.com/media/ENJtDOfWsAUx4VR?format=png&name=small",
-            "https://pbs.twimg.com/media/ENHNwXNWsAAsQcS?format=png&name=small","https://pbs.twimg.com/media/ENF3DALWwAAHOOq?format=png&name=small",
-            "https://pbs.twimg.com/media/ENFtKEZWkAAIney?format=png&name=small","https://pbs.twimg.com/media/ENAkl3vXsAAOqYX?format=png&name=small",
-            "https://pbs.twimg.com/media/EM_WLxdXUAA5SQ5?format=png&name=small","https://pbs.twimg.com/media/EM-fBDYW4AAsaHJ?format=png&name=small",
-            "https://pbs.twimg.com/media/EM-M2n6XkAci9q4?format=png&name=small","https://pbs.twimg.com/media/EM9jqoVWoAE0_vr?format=png&name=small",
-            "https://pbs.twimg.com/media/EM9asouX0AEEg1a?format=png&name=small","https://pbs.twimg.com/media/EM9A7zwWsAITihn?format=png&name=small",
-            "https://pbs.twimg.com/media/EM7-9d4X0AEAIYP?format=png&name=small","https://pbs.twimg.com/media/EM59S_nWoAEUFCr?format=png&name=small",
-            "https://pbs.twimg.com/media/EM4h_h3WkAE-6n_?format=png&name=small",
-            };
+            string finalUrl=""; string footerUrl = "";
+            JArray getDataObject = null; moments = moments.ToLower();
+            if (moments == ""){
+                var key = Config.Doremi.jObjRandomMoments.Properties().ToList();
+                var randIndex = new Random().Next(0, key.Count);
+                moments = key[randIndex].Name;
+                getDataObject = (JArray)Config.Doremi.jObjRandomMoments[moments];
+                finalUrl = getDataObject[new Random().Next(0, getDataObject.Count)].ToString();
+            } else {
+                if (Config.Doremi.jObjRandomMoments.ContainsKey(moments)){
+                    getDataObject = (JArray)Config.Doremi.jObjRandomMoments[moments];
+                    finalUrl = getDataObject[new Random().Next(0, getDataObject.Count)].ToString();
+                } else {
+                    await base.ReplyAsync($"Oops, I can't found the specified moments. " +
+                        $"See `{Config.Doremi.PrefixParent[0]}help random` for commands help.");
+                    return;
+                }
+            }
 
+            footerUrl = finalUrl;
+            if (finalUrl.Contains("wikia")) footerUrl = "https://ojamajowitchling.fandom.com/";
             await base.ReplyAsync(embed: new EmbedBuilder()
-                .WithColor(Config.Doremi.EmbedColor)
-                .WithImageUrl(arrRandom[new Random().Next(0, arrRandom.Length)])
-                .WithFooter("Some images contributed by: https://twitter.com/DoremiRobo, Tumblr")
-                .Build());
+            .WithColor(Config.Doremi.EmbedColor)
+            .WithImageUrl(finalUrl)
+            .WithFooter(footerUrl)
+            .Build());
+
         }
 
         [Command("stats"), Alias("bio"), Summary("I will show you my biography info")]
@@ -983,7 +870,7 @@ namespace OjamajoBot.Module
                 .Build());
         }
 
-        [Command("thank you"), Alias("thank you", "thanks", "arigatou"), Summary("Say thank you to Doremi Bot")]
+        [Command("thank you"), Alias("thanks", "arigatou"), Summary("Say thank you to Doremi Bot")]
         public async Task thankYou([Remainder] string messages = "")
         {
             await ReplyAsync($"Your welcome, {MentionUtils.MentionUser(Context.User.Id)}. I'm glad that you're happy with it :smile:");
@@ -996,17 +883,39 @@ namespace OjamajoBot.Module
             await ReplyAsync($"Pirika pirilala poporina peperuto! Turn {username.Mention} into {wishes}",
             embed: new EmbedBuilder()
             .WithColor(Config.Doremi.EmbedColor)
-            .WithImageUrl("https://i.makeagif.com/media/10-05-2015/rEFQz2.gif")
+            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/98/Dore-spell.gif/revision/latest?cb=20170814182746")
             .Build());
         }
  
+        [Command("witch"), Summary("No, please don't use this command")]
+        public async Task mentionWitch([Remainder] string wishes)
+        {
+            //todo: react with 5 users and it'll be transformed into a witch frog.
+            string[] arrRandom = {
+                "No, please don't say that words in public.",
+                "No, please don't say that words in front of everyone.",
+                "No! I don't wanna become a witch frog T_T",
+                "No! I don't wanna turn into witch frog T_T",
+            };
+
+            string[] arrRandomImages = {
+
+            };
+
+            await ReplyAsync($"{arrRandom[new Random().Next(0,arrRandom.Length-1)]}");
+            await base.ReplyAsync(embed: new EmbedBuilder()
+            .WithColor(Config.Doremi.EmbedColor)
+            .WithImageUrl("https://i.makeagif.com/media/10-05-2015/rEFQz2.gif")
+            .Build());
+        }
+
         [Command("wish"), Summary("I will grant you a <wishes>")]
         public async Task wish([Remainder] string wishes)
         {
             await ReplyAsync($"Pirika pirilala poporina peperuto! {wishes}");
             await base.ReplyAsync(embed: new EmbedBuilder()
             .WithColor(Config.Doremi.EmbedColor)
-            .WithImageUrl("https://i.makeagif.com/media/10-05-2015/rEFQz2.gif")
+            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/98/Dore-spell.gif")
             .Build());
         }
 
@@ -1015,25 +924,25 @@ namespace OjamajoBot.Module
         {
             await base.ReplyAsync(embed: new EmbedBuilder()
             .WithTitle("What's new?")
-            .WithDescription("Pirika pirilala poporina peperuto! Show us what's new on doremi bot and her friends!")
-            .AddField("Summary", 
-            "-Help commands has been updated & categorized with: **@bot!help <commands or category>**\n" +
-            "-**Doremi bot**: `star` commands that will let doremi bot to pin message on 5 star reactions\n" +
-            "-**Aiko bot**: `spooky` commands that you better not use\n" +
+            .WithDescription("Pirika pirilala poporina peperuto! Show us what's new on doremi bot and her other friends!")
+            .AddField("Summary",
+            $"-Onpu & Momoko bot has arrived. You can invite them with `{Config.Doremi.PrefixParent[0]}invite` commands.\n" +
+            $"-Doremi and her other friends has updated into **motto** version.\n" +
             "-Doremi, Hazuki and Aiko Bot commands and functionality has been updated\n" +
-            "-More random image/source for Doremi, Hazuki and Aiko Bot\n" +
-            "-Specified contribution images for some commands\n" +
-            "-Specified error report will be displayed more correctly\n" +
-            "-Status/activity update on Doremi and her other friends")
-            .AddField("Doremi Bot update/new commands:", "`star`,`meme`,`dorememes`,`feedback`" +
-            ",`hug`,`random`")
-            .AddField("Hazuki Bot update/new commands:", "`dabzuki`,`wheezuki`,`hug`,`thank you`,`random`")
-            .AddField("Aiko Bot update/new commands:", "`spooky`,`hug`,`thank you`,`random`")
+            "-Added more random moments image source for Doremi and other related bots.\n" +
+            "-Doremi and her other friends now has individual greeting message.\n" +
+            "-Minor update on command error and help list.\n")
+            .AddField("Doremi bot updated commands","`change`,`dorememes`,`random`")
+            .AddField("Hazuki bot updated commands","`change`,`random`")
+            .AddField("Aiko bot updated commands", "`change`,`random`")
             .WithColor(Config.Doremi.EmbedColor)
-            .WithFooter("Last updated on Jan 16,2019")
+            .WithFooter($"Last updated on {Config.Core.lastUpdate}")
             .Build());
         }
 
+        //change into pet form for doremi & other bot
+        //present: give a random present on reaction unwrapped
+        //present to someone: give a random present on reaction unwrapped
         //todo/more upcoming commands: easter egg/hidden commands, set daily message announcement, gacha,
         //contribute caption for random things
         //user card maker, sing lyrics together with other ojamajo bot, birthday reminder, voting for best ojamajo bot, witch seeds to cast a spells
@@ -1047,101 +956,14 @@ namespace OjamajoBot.Module
         NotAGuildErrorMessage = "Oops, You need to have the `manage channels` permission to use this command")]
     public class DoremiModerator : ModuleBase<SocketCommandContext>
     {
-        [Name("mod channels"),Group("mod"), Summary("Channel moderator commands. Require `manage channels` permission")]
-        public class DoremiModeratorChannels : ModuleBase<SocketCommandContext>
+        [Command("user leave"), Summary("Set the leaving user notifications with **off** or **on**.")]
+        public async Task assignNotifOnline(string settings="off")
         {
-            [Command("random event"), Summary("Schedule Doremi Bot to make random event message on <channel_name> for every 24 hours")]
-            public async Task assignRandomEvent(IGuildChannel iguild)
-            {
-                Config.Guild.assignId(iguild.GuildId, "id_random_event", iguild.Id.ToString());
-
-                if (Config.Doremi._timerRandomEvent.ContainsKey(iguild.GuildId.ToString()))
-                    Config.Doremi._timerRandomEvent[iguild.GuildId.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
-
-                Config.Doremi._timerRandomEvent[$"{iguild.GuildId.ToString()}"] = new Timer(async _ =>
-                {
-                    Random rnd = new Random();
-                    int rndIndex = rnd.Next(0, Config.Doremi.listRandomEvent.Count); //random the list value
-                    Console.WriteLine("Doremi Random Event : " + Config.Doremi.listRandomEvent[rndIndex]);
-
-                    var socketClient = Context.Client;
-                    try
-                    {
-                        await socketClient
-                        .GetGuild(iguild.GuildId)
-                        .GetTextChannel(Config.Guild.Id_random_event[iguild.GuildId.ToString()])
-                        .SendMessageAsync(Config.Doremi.listRandomEvent[rndIndex]);
-                    }
-                    catch
-                    {
-                        Console.WriteLine($"Doremi Random Event Exception: Send message permissions has been missing {iguild.Guild.Name} : {iguild.Name}");
-                    }
-                },
-                    null,
-                    TimeSpan.FromHours(Config.Doremi.Randomeventinterval), //time to wait before executing the timer for the first time
-                    TimeSpan.FromHours(Config.Doremi.Randomeventinterval) //time to wait before executing the timer again
-                );
-
-                await ReplyAsync($"**Random Event Channels** has been assigned into: {MentionUtils.MentionChannel(iguild.Id)}");
-            }
-
-            //[Command("online")]
-            //public async Task assignNotifOnline(IGuildChannel iguild)
-            //{
-            //    Config.Guild.assignId(iguild.GuildId, "id_notif_online", iguild.Id.ToString());
-            //    await ReplyAsync($"**Bot Online Notification Channels** has been assigned into: {MentionUtils.MentionChannel(iguild.Id)}");
-            //}
-
-            [Command("remove settings"), Summary("Remove the random event settings on the assigned channels. Current available settings: `randomEvent`")]
-            public async Task assignRandomEvent(string settings = "randomEvent")
-            {
-                string property = "";
-                Boolean propertyExists = false;
-                ulong channelId = 0;
-
-                if (settings.ToLower() == "randomevent")
-                {
-                    property = "Random Event";
-
-                    if (Config.Guild.Id_random_event.ContainsKey(Context.Guild.Id.ToString()))
-                    {
-                        channelId = Config.Guild.Id_random_event[Context.Guild.Id.ToString()];
-                        propertyExists = true;
-                        Config.Guild.assignId(Context.Guild.Id, "id_random_event", "");
-                        if (Config.Doremi._timerRandomEvent.ContainsKey(Context.Guild.Id.ToString()))
-                            Config.Doremi._timerRandomEvent[Context.Guild.Id.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
-                    }
-
-                }
-
-                if (propertyExists)
-                    await ReplyAsync($"**{property} Channels** settings has been removed.");
-                else
-                    await ReplyAsync($"**{property} Channels** has no settings yet.");
-            }
+            string replacedsettings = settings.Replace("off", "0").Replace("on", "1");
+            Config.Guild.assignId(Context.Guild.Id, "user_leaving_notification", replacedsettings);
+            await ReplyAsync($"**Leaving User Messages** has been turned **{settings}**.");
         }
-
-
-        //[Command("Help")]
-        //public async Task showHelpModerator()
-        //{
-        //    await ReplyAsync(embed: new EmbedBuilder()
-        //        .WithColor(Config.Doremi.EmbedColor)
-        //        .WithAuthor(Config.Doremi.EmbedName, Config.Doremi.EmbedAvatarUrl)
-        //        .WithTitle("Moderator Command List:")
-        //        .WithDescription($"Require ``Manage Channels`` permission.\n" +
-        //        $"Basic Moderator Prefix: **{MentionUtils.MentionUser(Config.Doremi.Id)} mod** or **{Config.Doremi.PrefixParent[0]}mod** or **{Config.Doremi.PrefixParent[0]}mod** followed with the <whitespace>\n" +
-        //        $"Channel Moderator Prefix: **{MentionUtils.MentionUser(Config.Doremi.Id)} mod channels** or **{Config.Doremi.PrefixParent[0]}mod channels** or **{Config.Doremi.PrefixParent[0]}mod channels** followed with the <whitespace>"
-        //        )
-        //        .AddField("Basic Moderator:",
-        //        "**channelid <opt:channel_name>** : Give Channel Id within the optional <channel_name> parameter\n" +
-        //        "**guildid** : Give the Server Id\n" +
-        //        "**help** : You already execute this command")
-        //        .AddField("Channel Moderator:",
-        //        $"**randomevent <channel_name>** : Schedule {MentionUtils.MentionUser(Config.Doremi.Id)} to do random event message on <channel_name> every 24 hours\n" +
-        //        "**remove <randomevent>** : Remove the settings for given parameter: Randomevent")
-        //        .Build());
-        //}
+        //leaving_message
 
         [Command("guildid"), Summary("Give the Server Id")]
         public async Task getGuildId()
@@ -1158,20 +980,98 @@ namespace OjamajoBot.Module
                 await ReplyAsync($"{guildChannel.Id}");
         }
 
-        
+        [Name("mod channels"), Group("channels"), Summary("These commands require `manage channels` permissions.")]
+        public class DoremiModeratorChannels : ModuleBase<SocketCommandContext>
+        {
+            [Command("random event"), Summary("Schedule Doremi Bot to make random event message on <channel_name> for every 24 hours")]
+            public async Task assignRandomEvent(IGuildChannel channels)
+            {
+                Config.Guild.assignId(channels.GuildId, "id_random_event", channels.Id.ToString());
+
+                if (Config.Doremi._timerRandomEvent.ContainsKey(channels.GuildId.ToString()))
+                    Config.Doremi._timerRandomEvent[channels.GuildId.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
+
+                Config.Doremi._timerRandomEvent[$"{channels.GuildId.ToString()}"] = new Timer(async _ =>
+                {
+                    Random rnd = new Random();
+                    int rndIndex = rnd.Next(0, Config.Doremi.listRandomEvent.Count); //random the list value
+                    Console.WriteLine("Doremi Random Event : " + Config.Doremi.listRandomEvent[rndIndex]);
+
+                    var socketClient = Context.Client;
+                    try
+                    {
+                        await socketClient
+                        .GetGuild(channels.GuildId)
+                        .GetTextChannel(Config.Guild.Id_random_event[channels.GuildId.ToString()])
+                        .SendMessageAsync(Config.Doremi.listRandomEvent[rndIndex]);
+                    }
+                    catch
+                    {
+                        Console.WriteLine($"Doremi Random Event Exception: Send message permissions has been missing {channels.Guild.Name} : {channels.Name}");
+                    }
+                },
+                    null,
+                    TimeSpan.FromHours(Config.Doremi.Randomeventinterval), //time to wait before executing the timer for the first time
+                    TimeSpan.FromHours(Config.Doremi.Randomeventinterval) //time to wait before executing the timer again
+                );
+
+                await ReplyAsync($"**Random Event Channels** has been assigned into: {MentionUtils.MentionChannel(channels.Id)}");
+            }
+
+            //[Command("online")]
+            //public async Task assignNotifOnline(IGuildChannel iguild)
+            //{
+            //    Config.Guild.assignId(iguild.GuildId, "id_notif_online", iguild.Id.ToString());
+            //    await ReplyAsync($"**Bot Online Notification Channels** has been assigned into: {MentionUtils.MentionChannel(iguild.Id)}");
+            //}
+
+            [Command("remove settings"), Summary("Remove the random event settings on the assigned channels. " +
+                "Current available settings: `random event`")]
+            public async Task assignRandomEvent([Remainder]string settings = "random event")
+            {
+                string property = "";
+                Boolean propertyExists = false;
+                ulong channelId = 0;
+
+                if (settings.ToLower() == "random event")
+                {
+                    property = "random event";
+
+                    if (Config.Guild.Id_random_event.ContainsKey(Context.Guild.Id.ToString()))
+                    {
+                        channelId = Config.Guild.Id_random_event[Context.Guild.Id.ToString()];
+                        propertyExists = true;
+                        Config.Guild.assignId(Context.Guild.Id, "id_random_event", "");
+                        if (Config.Doremi._timerRandomEvent.ContainsKey(Context.Guild.Id.ToString()))
+                            Config.Doremi._timerRandomEvent[Context.Guild.Id.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
+                    }
+
+                }
+                else
+                {
+                    await ReplyAsync($"Sorry, I can't found that channel settings"); return;
+                }
+
+                if (propertyExists)
+                    await ReplyAsync($"**{property} channels** settings has been removed.");
+                else
+                    await ReplyAsync($"**{property} channels** has no settings yet.");
+            }
+        }
+
     }
 
     [Summary("hidden")]
     public class DoremiMagicalStageModule : ModuleBase
     {
         //magical stage section
-
-        [Command("Pameruku raruku, Takaraka ni!")]//from aiko
+        [Command("Peruton Peton, Sawayaka ni!")]//from aiko
         public async Task magicalStagefinal()
         {
-            if (Context.User.Id == Config.Aiko.Id)
+            if (Context.User.Id == Config.Momoko.Id){
                 await ReplyAsync($"{MentionUtils.MentionUser(Config.Hazuki.Id)} Magical Stage! {Config.Doremi.MagicalStageWishes}\n");
-
+                Config.Doremi.MagicalStageWishes = "";
+            }
         }
 
     }
@@ -1448,11 +1348,11 @@ namespace OjamajoBot.Module
         }
 
         [Command("play"), Summary("Play the music with the given <track number or title> parameter")]
-        public async Task PlayLocal([Remainder] string TrackNumOrTitle)
+        public async Task PlayLocal([Remainder] string TrackNumbersOrTitle)
         {
-            if (string.IsNullOrWhiteSpace(TrackNumOrTitle))
+            if (string.IsNullOrWhiteSpace(TrackNumbersOrTitle))
             {
-                await ReplyAsync("Please provide track numbers or title. Use do!mulist to show all doremi music list.");
+                await ReplyAsync($"Please provide track numbers or title. Use {Config.Doremi.PrefixParent[0]}mulist to show all doremi music list.");
                 return;
             }
 
@@ -1467,12 +1367,12 @@ namespace OjamajoBot.Module
                 : await _lavaNode.JoinAsync((Context.User as IVoiceState).VoiceChannel);
 
             JObject jObj = Config.Music.jobjectfile;
-            if (int.TryParse(TrackNumOrTitle, out int n)) {
+            if (int.TryParse(TrackNumbersOrTitle, out int n)) {
                 
                 if(n <= (jObj.GetValue("musiclist") as JObject).Count){
-                    TrackNumOrTitle = jObj.GetValue("musiclist")[n.ToString()]["filename"].ToString();
+                    TrackNumbersOrTitle = jObj.GetValue("musiclist")[n.ToString()]["filename"].ToString();
                 } else {
-                    await ReplyAsync($"I wasn't able to find anything for track number {TrackNumOrTitle}. See the available doremi music list on ``doremi!mulist`` commands.");
+                    await ReplyAsync($"I can't find anything for track number {TrackNumbersOrTitle}. See the available doremi music list on `{Config.Doremi.PrefixParent[0]}mulist`.");
                     return;
                 }
                 
@@ -1480,19 +1380,19 @@ namespace OjamajoBot.Module
                 for (int i = 0; i < (jObj.GetValue("musiclist") as JObject).Count; i++)
                 {
                     String replacedFilename = jObj.GetValue("musiclist")[(i + 1).ToString()]["filename"].ToString().Replace(".mp3", "").Replace(".ogg", "");
-                    if (replacedFilename == TrackNumOrTitle)
+                    if (replacedFilename == TrackNumbersOrTitle)
                     {
-                        TrackNumOrTitle = jObj.GetValue("musiclist")[(i + 1).ToString()]["filename"].ToString();
+                        TrackNumbersOrTitle = jObj.GetValue("musiclist")[(i + 1).ToString()]["filename"].ToString();
                     }
                     
                 }
             }
 
-            var searchResponse = await _lavaNode.SearchAsync("music/"+TrackNumOrTitle);
+            var searchResponse = await _lavaNode.SearchAsync("music/"+TrackNumbersOrTitle);
             if (searchResponse.LoadStatus == LoadStatus.LoadFailed ||
                 searchResponse.LoadStatus == LoadStatus.NoMatches)
             {
-                await ReplyAsync($"I wasn't able to find anything for `{TrackNumOrTitle}`. See the available doremi music list on ``doremi!mulist`` commands.");
+                await ReplyAsync($"I wasn't able to find anything for `{TrackNumbersOrTitle}`. See the available doremi music list on ``doremi!mulist`` commands.");
                 return;
             }
 
@@ -1840,36 +1740,36 @@ namespace OjamajoBot.Module
             Random rnd = new Random();
             int rndQuiz = rnd.Next(0, 4);
 
-            String question, replyCorrect, replyWrong, replyEmbed;
+            string question, replyCorrect, replyWrong, replyEmbed;
             List<string> answer = new List<string>();
-            String replyTimeout = "Time's up. Sorry but it seems you haven't answered yet.";
+            string replyTimeout = "Time's up. Sorry but it seems you haven't answered yet.";
 
             if (rndQuiz == 1){
                 question = "What is my favorite food?";
                 answer.Add("steak");
                 replyCorrect = "Ding Dong, correct! I love steak very much";
-                replyWrong = "Sorry but that's wrong.";
+                replyWrong = "Sorry but that's wrong. Please retype the correct answer.";
                 replyTimeout = "Time's up. My favorite food is steak.";
                 replyEmbed = "https://66.media.tumblr.com/337aaf42d3fb0992c74f7f9e2a0bf4f6/tumblr_olqtewoJDS1r809wso1_500.png";
             } else if (rndQuiz == 2) {
                 question = "Where do I attend my school?";
                 answer.Add("misora elementary school"); answer.Add("misora elementary"); answer.Add("misora school");
                 replyCorrect = "Ding Dong, correct!";
-                replyWrong = "Sorry but that's wrong.";
+                replyWrong = "Sorry but that's wrong. Please retype the correct answer.";
                 replyTimeout = "Time's up. I went to Misora Elementary School.";
-                replyEmbed = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/d/df/E.JPG/revision/latest?cb=20160108002304";
+                replyEmbed = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/d/df/E.JPG";
             } else if (rndQuiz == 3) {
                 question = "What is my full name?";
-                answer.Add("harukaze doremi"); answer.Add("doremi harukaze");
+                answer.Add("doremi harukaze"); answer.Add("harukaze doremi");
                 replyCorrect = "Ding Dong, correct! Doremi Harukaze is my full name.";
-                replyWrong = "Sorry but that's wrong.";
+                replyWrong = "Sorry but that's wrong. Please retype the correct answer.";
                 replyTimeout = "Time's up. Doremi Harukaze is my full name.";
                 replyEmbed = "https://i.pinimg.com/originals/e7/1c/ce/e71cce7499e4ea9f9520c6143c9672e7.jpg";
             } else {
                 question = "What is my sister name?";
                 answer.Add("pop"); answer.Add("harukaze pop"); answer.Add("pop harukaze");
                 replyCorrect = "Ding Dong, that's correct. Pop Harukaze is my sister name.";
-                replyWrong = "Sorry, wrong answer.";
+                replyWrong = "Sorry, wrong answer. Please retype the correct answer.";
                 replyTimeout = "Time's up. My sister name is Pop Harukaze.";
                 replyEmbed = "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/6e3bcaa4-2e3a-4390-a51a-652dff45c0b6/d6r5yu6-bffc8dba-af11-4af3-856c-d8ce82efaba3.png/v1/fill/w_333,h_250,q_70,strp/pop_harukaze_by_xdnobody_d6r5yu6-250t.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9MzAwIiwicGF0aCI6IlwvZlwvNmUzYmNhYTQtMmUzYS00MzkwLWE1MWEtNjUyZGZmNDVjMGI2XC9kNnI1eXU2LWJmZmM4ZGJhLWFmMTEtNGFmMy04NTZjLWQ4Y2U4MmVmYWJhMy5wbmciLCJ3aWR0aCI6Ijw9NDAwIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmltYWdlLm9wZXJhdGlvbnMiXX0.ZOzOlhlXguuSwk-EKwPjNIWywfRYeWRWKLOBQK4i5HY";
             }
@@ -2194,4 +2094,121 @@ namespace OjamajoBot.Module
     }
     */
 
+    /*backup for dorememes:
+    string[,] arrRandom =
+            {
+                {"imgflip","https://i.imgflip.com/1h9k61.jpg"},
+                {"tumblr","https://66.media.tumblr.com/4b8ae988116282b0fbb86156006977a7/tumblr_ndl02pfvej1thwu0wo1_1280.png"},
+                {"tumblr","https://66.media.tumblr.com/6143b1c1b6033c4cc068904909b68fbd/tumblr_n91u5yW35z1thwu0wo1_1280.png"},
+                {"tumblr","https://66.media.tumblr.com/df6d13c7abe1970b4bc9726e5c264252/tumblr_n8ypyaubZl1thwu0wo1_1280.png"},
+                {"tumblr","https://66.media.tumblr.com/1c00104523408517270a02f185208ff6/tumblr_n9iqy3L44d1thwu0wo1_1280.png"},
+                {"tumblr","https://66.media.tumblr.com/ffad930ddacf0964646700523e80fb81/tumblr_n906n643rG1thwu0wo1_1280.png"},
+                {"random","https://img1.ak.crunchyroll.com/i/spire4/1cd32824fff0e3be86cbd9f6c5b4cb2b1326942608_full.jpg"},
+                {"tumblr","https://66.media.tumblr.com/9fdbbdc668507fa90c38bae8fa8d9f8a/tumblr_nvu6gqb6NE1thwu0wo1_1280.png"},
+                {"random","https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/e90aeb60-6815-432d-bc4b-ad18ae885aaf/ddeph8m-bf0e2b8c-bc89-4e2f-b27c-f31d00d3c6cb.png/v1/fill/w_742,h_1077,q_70,strp/my_strawberry_shortcake_cast_meme__ojamajo_doremi__by_balloongal101_ddeph8m-pre.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9MTQ4NSIsInBhdGgiOiJcL2ZcL2U5MGFlYjYwLTY4MTUtNDMyZC1iYzRiLWFkMThhZTg4NWFhZlwvZGRlcGg4bS1iZjBlMmI4Yy1iYzg5LTRlMmYtYjI3Yy1mMzFkMDBkM2M2Y2IucG5nIiwid2lkdGgiOiI8PTEwMjQifV1dLCJhdWQiOlsidXJuOnNlcnZpY2U6aW1hZ2Uub3BlcmF0aW9ucyJdfQ.YimkZYTzceBEJT3bYtwr3b0wsHrg2RGNou-a4uuLS6M"},
+                {"ballmemes","https://pics.ballmemes.com/how-every-country-sees-magical-girl-anime-sailor-moon-ojamajo-44565702.png"},
+                {"funnyjunk","https://2eu.funnyjunk.com/pictures/Ojamajo_a17764_528025.jpg"},
+                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/644383823286763544/663616227914154014/unknown.png"},
+                {"Letter Three","https://media.discordapp.net/attachments/512825478512377877/660677566599790627/DO_THE_SWAG.gif"},
+                {"Odd Meat","https://cdn.discordapp.com/attachments/569409307100315651/653670970342506548/unknown.png"},
+                {"Letter Three","https://media.discordapp.net/attachments/310544560164044801/398230870445785089/DSRxAB9VQAAI5Ja.png"},
+                {"Letter Three","https://media.discordapp.net/attachments/314512031313035264/659229196693798912/1551058415141.png?width=396&height=469"},
+                {"BreadRavager","https://cdn.discordapp.com/attachments/643722270447239169/664425825030111243/onpuflube.gif"},
+                {"Ian","https://i.4pcdn.org/s4s/1537724473581.gif"},
+                {"Ian","https://i.4pcdn.org/s4s/1508866828910.gif"},
+                {"Ian","http://i.4pcdn.org/s4s/1500066705217.gif"},
+                {"Odd Meat","https://cdn.discordapp.com/attachments/644383823286763544/655441472426082345/unknown.png"},
+                {"Odd Meat","https://cdn.discordapp.com/attachments/569409307100315651/653669172873527328/unknown.png"},
+                {"Odd Meat","https://cdn.discordapp.com/attachments/644383823286763544/654432214595141693/Magical_more_episode_76-.png"},
+                {"Odd Meat","https://cdn.discordapp.com/attachments/644383823286763544/654812347038302220/unknown.png"},
+                {"Odd Meat","https://cdn.discordapp.com/attachments/644383823286763544/655870644671741972/unknown.png"},
+                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/644383823286763544/656235784038252550/scooby_guest_starring.png"},
+                {"Bunty","https://cdn.discordapp.com/attachments/644383823286763544/656262643199508483/48524296-4A66-41DC-B446-2C4A8DC463C1.png"},
+                {"Poob","https://i.gyazo.com/thumb/1200/e2b3d361d9ef6adeb0dfe22ee005b249-jpg.jpg"},
+                {"Letter Three","https://cdn.discordapp.com/attachments/644383823286763544/658414123893391360/heck.png"},
+                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/644383823286763544/658845873408704535/1575052839549.png"},
+                {"Letter Three","https://cdn.discordapp.com/attachments/644383823286763544/659083573437136897/dancedance.gif"},
+                {"Letter Three","https://media.discordapp.net/attachments/643721778685804544/659927439551627304/Ea04LEnzT8QAAAABJRU5ErkJggg.png"},
+                {"Letter Three","https://cdn.discordapp.com/attachments/644383823286763544/662569497290473512/unknown.png"},
+                {"Letter Three","https://cdn.discordapp.com/attachments/644383823286763544/663599628842958849/7fe43d8bf20a13ade7d15ca7ad29155f.png"},
+                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/644383823286763544/663640113380851712/1578292210398.png"},
+                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/644383823286763544/663650504257044480/hazumasameme.jpg"},
+                {"Letter Three","https://cdn.discordapp.com/attachments/644383823286763544/664315986266292241/dodo_ate_that_cheese.png"},
+                {"Odd Meat","https://cdn.discordapp.com/attachments/569409307100315651/654042450272190474/unknown.png"},
+                {"Letter Three","https://cdn.discordapp.com/attachments/569409307100315651/654092176392847390/unknown.png"},
+                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/666231823818555392/IDS_MARIO.jpg"},
+                {"Odd Meat","https://cdn.discordapp.com/attachments/569409307100315651/652209138507579422/unknown.png"},
+                {"https://twitter.com/zenhuxtable | tsuneotsubasa","https://pbs.twimg.com/media/EK_4kDXX0AIXKUE?format=jpg&name=small"},
+                {"Odd Meat","https://cdn.discordapp.com/attachments/569409307100315651/651493956496130068/die_monster.png"},
+                {"Letter Three","https://cdn.discordapp.com/attachments/569409307100315651/651409834713022474/98a979ed-7268-42e4-87e5-c21070d1c672.png"},
+                {"Odd Meat","https://cdn.discordapp.com/attachments/569409307100315651/651389510143311872/4663b1f6-55df-47c5-bb2f-8475b2d39c10.png"},
+                {"Odd Meat","https://cdn.discordapp.com/attachments/569409307100315651/651388603796291589/bcecbd0e-51b9-4f5d-bb68-8a6dbf12d04b.png"},
+                {"Odd Meat","https://cdn.discordapp.com/attachments/569409307100315651/651358920287191063/fe88353b-fb36-4aec-bfd2-abad90703f5b.png"},
+                {"Odd Meat","https://cdn.discordapp.com/attachments/569409307100315651/651189171918209024/first_witch.png"},
+                {"Odd Meat","https://cdn.discordapp.com/attachments/569409307100315651/651182811633680394/nowantaiko.png"},
+                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/569409307100315651/649831768634949644/20191128_222919.jpg"},
+                {"Letter Three","https://media.discordapp.net/attachments/601461955206709248/623365446392872960/unknown.png?width=654&height=468"},
+                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/649142334755307520/1504234417684.jpg"},
+                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/649142939339063296/1525921390250.gif"},
+                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/649141890725314561/NACHO_BURRITO.gif"},
+                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/649141957205164033/ebin.jpg"},
+                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/649142070325542942/1508258294538.gif"},
+                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/649141770617225226/pNmdjAu.png"},
+                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/569409307100315651/648379300587896883/1500832113127_-_Copy.png"},
+                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/569409307100315651/647983130640121862/saturday_is_for_ojamajo_dad.jpg"},
+                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/646817816221319178/1503179977121.jpg"},
+                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/569409307100315651/644405526863544322/1567392672079_-_Copy-chip.jpg"},
+                {"Logan Alex Wood","https://cdn.discordapp.com/attachments/569409307100315651/644404591676489729/6tytfgv.png"},
+                {"Logan Alex Wood","https://cdn.discordapp.com/attachments/569409307100315651/644402345504931859/Doremi.Ojamajo.Doremi.07.640x480.8A67C5DB.v2.mkv_snapshot_14.46_18.02.17_21.51.41-0061.jpg"},
+                {"Logan Alex Wood","https://cdn.discordapp.com/attachments/569409307100315651/644402296167596032/Doremi.Ojamajo.Doremi.07.640x480.8A67C5DB.v2.mkv_snapshot_13.14_2017.07.11_08.25.45.png"},
+                {"Letter Three","https://cdn.discordapp.com/attachments/569409307100315651/637455811232268299/unknown.png"},
+                {"Letter Three","https://cdn.discordapp.com/attachments/569409307100315651/634123008771883008/Wheezuki.png"},
+                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/622195390682365952/633855826955599882/unknown.png"},
+                {"Letter Three","https://cdn.discordapp.com/attachments/569409307100315651/632667918064418858/unknown.png"},
+                {"Letter Three","https://cdn.discordapp.com/attachments/569409307100315651/630882364154970112/Doremi_and_Meatwad.png"},
+                {"Letter Three","https://cdn.discordapp.com/attachments/569409307100315651/627039453998874635/Doremi_Yelling_at_Dodo.png"},
+                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/569409307100315651/626865289887219723/20190926_141325.jpg"},
+                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/569409307100315651/621153098257268766/EEFCeaRW4AENLCS.png"},
+                {"Letter Three","https://media.discordapp.net/attachments/399954211816865792/616449423957819392/Screen_Shot_2019-08-28_at_9.31.56_PM.png?width=623&height=468"},
+                {"Letter Three","https://cdn.discordapp.com/attachments/569409307100315651/617512947065028621/49c3845a262649cfc4fd9380ad0f9bf9.png"},
+                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/569409307100315651/617179180139937939/1567101892481.png"},
+                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/615741385290678326/1566707190041.jpg"},
+                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/615741420736610333/1566707190042.jpg"},
+                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/615741454588969002/1566707190043.jpg"},
+                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/615741454588969002/1566707190043.jpg"},
+                {"Letter Three","https://cdn.discordapp.com/attachments/569409307100315651/610687504395272195/onno.png"},
+                {"Poob","https://cdn.discordapp.com/attachments/569409307100315651/610664061675241497/80ffda0ff50bba2092f7295b5597414f-png.png"},
+                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/569409307100315651/609965957452136479/doremis_steaki.png"},
+                {"Letter Three","http://media.tumblr.com/tumblr_m4eoeywCjm1r4lv3u.gif"},
+                {"Letter Three","https://media.discordapp.net/attachments/569409307100315651/577797449691824132/1522040700266.jpg?width=403&height=468"},
+                {"Letter Three","https://cdn.discordapp.com/attachments/569409307100315651/598015670009200665/moshed_2017-6-3_0.22.59.gif"},
+                {"Rctgamer3","https://cdn.discordapp.com/attachments/569409307100315651/596251765448507392/unknown.png"},
+                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/577797087052300298/1537880631468.gif"},
+                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/577797344658194442/1522659324102.jpg"},
+                {"Unknown user","https://cdn.discordapp.com/attachments/569409307100315651/575498217165291523/image0.jpg"},
+                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/574408691009454083/doremiboomer.png"},
+                {"Letter Three","https://cdn.discordapp.com/attachments/569409307100315651/574193232838393866/latest.png"},
+                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/573123106399584277/1538920066198.jpg"},
+                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/573120294055706640/1510611686079.jpg"},
+                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/573120068137779200/1501279167144.jpg"},
+                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/573118787784802307/1520685800181.png"},
+                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/573116001445478400/1541637365326.jpg"},
+                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/573116266319970304/its_over.gif"},
+                {"Segawa Onpu","https://cdn.discordapp.com/attachments/569409307100315651/569619410487345162/Onpus_in_black.jpg"},
+                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/569618915483713546/1534813397081.gif"},
+                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/569619208598454293/1534809043862.gif"},
+                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/569619273044066305/1532565451608.gif"},
+                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/569618503758249995/1549166072943.png"},
+                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/569607758903509023/check_her_out.png"},
+                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/569410491794063391/photosynthesis.png"},
+                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/569410391214522378/1519780154767.gif"},
+                {"вештица","https://cdn.discordapp.com/attachments/644383823286763544/666315700146667521/4d9a66db2cafa940a3369afbcf5a4706.png"},
+                {"Logan Alex Wood","https://cdn.discordapp.com/attachments/644383823286763544/666949577563177000/image0.png"},
+                {"4chan","https://i.4pcdn.org/s4s/1524983553681.png"},
+                {"4chan","https://i.4pcdn.org/s4s/1537885453707.jpg"},
+                {"4chan","https://i.4pcdn.org/s4s/1537658495445.png"},
+                {"tsuneotsubasa","https://cdn.discordapp.com/attachments/644383823286763544/668033522337972262/20200118_040607.jpg"},
+                {"tsuneotsubasa","https://cdn.discordapp.com/attachments/644383823286763544/668033522602344468/20200118_040542.png"}
+            };
+        */
 }

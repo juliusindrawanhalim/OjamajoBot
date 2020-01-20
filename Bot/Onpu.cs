@@ -47,16 +47,15 @@ namespace OjamajoBot.Bot
             await client.LoginAsync(TokenType.Bot, Config.Onpu.Token);
             await client.StartAsync();
 
-            client.MessageUpdated += MessageUpdated;
-            //client.GuildAvailable += GuildAvailable;
+            client.JoinedGuild += JoinedGuild;
 
             //start rotates random activity
             _timerStatus = new Timer(async _ =>
             {
                 Random rnd = new Random();
                 int rndIndex = rnd.Next(0, Config.Onpu.arrRandomActivity.GetLength(0)); //random the list value
-                if (rndIndex > 0) rndIndex -= 1;
-                String updLog = "Updated Onpu Activity - Playing: " + Config.Onpu.arrRandomActivity[rndIndex, 0];
+                //if (rndIndex > 0) rndIndex -= 1;
+                string updLog = "Updated Onpu Activity - Playing: " + Config.Onpu.arrRandomActivity[rndIndex, 0];
                 Config.Onpu.indexCurrentActivity = rndIndex;
                 await client.SetGameAsync(Config.Onpu.arrRandomActivity[rndIndex, 0], type: ActivityType.Playing); //set activity to current index position
 
@@ -76,37 +75,26 @@ namespace OjamajoBot.Bot
 
 
             //// Block this task until the program is closed.
-            await Task.Delay(-1);
+            await Task.Delay(0);
 
         }
 
-        //private async Task GuildAvailable(SocketGuild guild)
-        //{
-        //    if (Config.Guild.Id_notif_online.ContainsKey(guild.Id.ToString()))
-        //    { //announce bot if online
-        //        try
-        //        {
-        //            await client.GetGuild(guild.Id)
-        //            .GetTextChannel(Config.Guild.Id_notif_online[guild.Id.ToString()])
-        //            .SendMessageAsync("Pretty Witchy Onpu Chi~");
-        //        }
-        //        catch { }
-        //    }
-        //}
-
-        private async Task MessageUpdated(Cacheable<IMessage, ulong> before,
-            SocketMessage after, ISocketMessageChannel channel)
+        public async Task JoinedGuild(SocketGuild guild)
         {
-            // If the message was not in the cache, downloading it will result in getting a copy of `after`.
-            var message = await before.GetOrDownloadAsync();
-            Console.WriteLine($"{message} -> {after}");
+            var systemChannel = client.GetChannel(guild.SystemChannel.Id) as SocketTextChannel; // Gets the channel to send the message in
+            await systemChannel.SendMessageAsync($"Pretty witchy {MentionUtils.MentionUser(Config.Onpu.Id)} chi~ has arrived to the {guild.Name}. Hello, this is Onpu, thank you for inviting me to the group. " +
+                $"As an idol, I will make all of you happy. You can ask me with `{Config.Onpu.PrefixParent[0]}help` for all commands list.",
+            embed: new EmbedBuilder()
+            .WithColor(Config.Onpu.EmbedColor)
+            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/0/01/01.10.JPG")
+            .Build());
         }
 
         public async Task RegisterCommandsAsync()
         {
             client.MessageReceived += HandleCommandAsync;
             await commands.AddModuleAsync(typeof(OnpuModule), services);
-            await commands.AddModuleAsync(typeof(OnpuRandomEventModule), services);
+            await commands.AddModuleAsync(typeof(OnpuMagicalStageModule), services);
         }
 
         private async Task HandleCommandAsync(SocketMessage arg)
@@ -125,25 +113,25 @@ namespace OjamajoBot.Bot
                 switch (result.Error)
                 {
                     case CommandError.BadArgCount:
-                        await context.Channel.SendMessageAsync("The junior idol Onpu sense that you have missing/too much parameter. " +
-                            $"See `{Config.Onpu.PrefixParent[0]}help <commands or category>`for command help.");
+                        await context.Channel.SendMessageAsync("Onpu sense that you have missing/many parameters. " +
+                            $"See `{Config.Onpu.PrefixParent[0]}help <commands or category>` for command help.");
                         break;
                     case CommandError.UnknownCommand:
-                        await message.Channel.SendMessageAsync("The junior idol Onpu can't seems to understand your commands. " +
-                            $"See `{Config.Onpu.PrefixParent[0]}help <commands or category>`for command help.",
+                        await message.Channel.SendMessageAsync("Onpu can't seems to understand your commands. " +
+                            $"See `{Config.Onpu.PrefixParent[0]}help <commands or category>` for command help.",
                         embed: new EmbedBuilder()
                         .WithColor(Config.Onpu.EmbedColor)
-                        .WithImageUrl("https://cdn.discordapp.com/attachments/644383823286763544/659083573437136897/dancedance.gif")
+                        .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/7/7e/ODN-EP11-028.png")
                         .Build());
                         Console.WriteLine(result.ErrorReason);
                         break;
                     case CommandError.ObjectNotFound:
-                        await message.Channel.SendMessageAsync($"The junior idol Onpu has noticed an error: {result.ErrorReason} " +
-                            $"See `{Config.Onpu.PrefixParent[0]}help <commands or category>`for command help.");
+                        await message.Channel.SendMessageAsync($"Onpu has noticed an error: {result.ErrorReason} " +
+                            $"See `{Config.Onpu.PrefixParent[0]}help <commands or category>` for command help.");
                         break;
                     case CommandError.ParseFailed:
-                        await message.Channel.SendMessageAsync($"The junior idol Onpu has noticed an error: {result.ErrorReason} " +
-                            $"See `{Config.Onpu.PrefixParent[0]}help <commands or category>`for command help.");
+                        await message.Channel.SendMessageAsync($"Onpu has noticed an error: {result.ErrorReason} " +
+                            $"See `{Config.Onpu.PrefixParent[0]}help <commands or category> `for command help.");
                         break;
                 }
 

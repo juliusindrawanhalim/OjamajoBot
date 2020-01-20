@@ -47,16 +47,15 @@ namespace OjamajoBot.Bot
             await client.LoginAsync(TokenType.Bot, Config.Hazuki.Token);
             await client.StartAsync();
 
-            client.MessageUpdated += MessageUpdated;
-            //client.GuildAvailable += GuildAvailable;
+            client.JoinedGuild += JoinedGuild;
 
             //start rotates random activity
             _timerStatus = new Timer(async _ =>
             {
                 Random rnd = new Random();
                 int rndIndex = rnd.Next(0, Config.Hazuki.arrRandomActivity.GetLength(0)); //random the list value
-                if (rndIndex > 0) rndIndex -= 1;
-                String updLog = "Updated Hazuki Activity - Playing: " + Config.Hazuki.arrRandomActivity[rndIndex, 0];
+                //if (rndIndex > 0) rndIndex -= 1;
+                string updLog = "Updated Hazuki Activity - Playing: " + Config.Hazuki.arrRandomActivity[rndIndex, 0];
                 Config.Hazuki.indexCurrentActivity = rndIndex;
                 await client.SetGameAsync(Config.Hazuki.arrRandomActivity[rndIndex, 0], type: ActivityType.Playing); //set activity to current index position
 
@@ -84,27 +83,16 @@ namespace OjamajoBot.Bot
 
         }
 
-        //private async Task GuildAvailable(SocketGuild guild)
-        //{
-        //    if (Config.Guild.Id_notif_online.ContainsKey(guild.Id.ToString()))
-        //    { //announce bot if online
-        //        try
-        //        {
-        //            await client.GetGuild(guild.Id)
-        //            .GetTextChannel(Config.Guild.Id_notif_online[guild.Id.ToString()])
-        //            .SendMessageAsync("Pretty Witchy Hazuki Chi~");
-        //        }
-        //        catch { }
-        //    }
-        //}
-
-
-        private async Task MessageUpdated(Cacheable<IMessage, ulong> before,
-            SocketMessage after, ISocketMessageChannel channel)
+        public async Task JoinedGuild(SocketGuild guild)
         {
-            // If the message was not in the cache, downloading it will result in getting a copy of `after`.
-            var message = await before.GetOrDownloadAsync();
-            Console.WriteLine($"{message} -> {after}");
+            var systemChannel = client.GetChannel(guild.SystemChannel.Id) as SocketTextChannel; // Gets the channel to send the message in
+            await systemChannel.SendMessageAsync($"Pretty witchy {MentionUtils.MentionUser(Config.Hazuki.Id)} chi~ has arrived to the {guild.Name}. " +
+                $"Thank you for very much inviting me, I'm very happy to meet you all. " +
+                $"You can ask me with `{Config.Hazuki.PrefixParent[0]}help` for all commands list.",
+            embed: new EmbedBuilder()
+            .WithColor(Config.Hazuki.EmbedColor)
+            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/f/fc/04.01.08.JPG")
+            .Build());
         }
 
         public async Task RegisterCommandsAsync()
@@ -133,11 +121,11 @@ namespace OjamajoBot.Bot
                 {
                     case CommandError.BadArgCount:
                         await context.Channel.SendMessageAsync("I'm sorry, looks like you have missing/too much parameter. " +
-                            $"See `{Config.Hazuki.PrefixParent[0]}help <commands or category>`for command help.");
+                            $"See `{Config.Hazuki.PrefixParent[0]}help <commands or category>`for commands help.");
                         break;
                     case CommandError.UnknownCommand:
                         await message.Channel.SendMessageAsync("I'm sorry, I can't seem to understand your commands. " +
-                            $"See `{Config.Hazuki.PrefixParent[0]}help <commands or category>`for command help.",
+                            $"See `{Config.Hazuki.PrefixParent[0]}help <commands or category>`for commands help.",
                         embed: new EmbedBuilder()
                         .WithColor(Config.Hazuki.EmbedColor)
                         .WithImageUrl("https://33.media.tumblr.com/28c2441a5655ecb1bd23df8275f3598f/tumblr_nfkjtbSQZg1r98a5go1_500.gif")
@@ -146,11 +134,11 @@ namespace OjamajoBot.Bot
                         break;
                     case CommandError.ObjectNotFound:
                         await message.Channel.SendMessageAsync($"Oops, {result.ErrorReason} " +
-                            $"See `{Config.Hazuki.PrefixParent[0]}help <commands or category>`for command help.");
+                            $"See `{Config.Hazuki.PrefixParent[0]}help <commands or category>`for commands help.");
                         break;
                     case CommandError.ParseFailed:
                         await message.Channel.SendMessageAsync($"Oops, {result.ErrorReason} " +
-                            $"See `{Config.Hazuki.PrefixParent[0]}help <commands or category>`for command help.");
+                            $"See `{Config.Hazuki.PrefixParent[0]}help <commands or category>`for commands help.");
                         break;
                 }
 

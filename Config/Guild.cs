@@ -15,11 +15,14 @@ namespace Config
             //check if directory exists
             if (!Directory.Exists($"attachments/{id_guild.ToString()}"))
                 Directory.CreateDirectory($"attachments/{id_guild.ToString()}");
+            if (!Directory.Exists($"attachments/{id_guild.ToString()}/contribute"))
                 Directory.CreateDirectory($"attachments/{id_guild.ToString()}/contribute");//init contribute folder for submitted meme pictures
-
             //check if feedback.txt exists/not
-            if(!File.Exists($"attachments/{id_guild.ToString()}/feedback_{id_guild.ToString()}.txt"))
+            if (!File.Exists($"attachments/{id_guild.ToString()}/feedback_{id_guild.ToString()}.txt"))
                 File.CreateText($"attachments/{id_guild.ToString()}/feedback_{id_guild.ToString()}.txt");
+            //check if logs directory exists/not
+            if (!Directory.Exists($"logs/{id_guild.ToString()}"))
+                Directory.CreateDirectory($"logs/{id_guild.ToString()}");
 
             if (File.Exists($"config/{id_guild}.json"))
             {
@@ -28,7 +31,11 @@ namespace Config
                 //id_random_event
                 if (!guildConfig.ContainsKey("id_random_event"))
                     guildConfig.Add( new JProperty("id_random_event", ""));
-                
+
+                //leaving user message
+                if (!guildConfig.ContainsKey("user_leaving_notification"))
+                    guildConfig.Add(new JProperty("user_leaving_notification", "0"));
+
                 if (ulong.TryParse(guildConfig.GetValue("id_random_event").ToString(), out var resultNotifOnline))
                     Guild.Id_random_event[$"{id_guild}"] = (ulong)guildConfig.GetValue("id_random_event");
 
@@ -37,7 +44,8 @@ namespace Config
             } else { //create json file if it's not existed
                 
                 JObject guildConfig = new JObject(
-                    new JProperty("id_random_event", ""));
+                    new JProperty("id_random_event", ""),
+                    new JProperty("user_leaving_notification", "0"));
 
                 File.WriteAllText($"config/{id_guild}.json", guildConfig.ToString());
             }
@@ -56,12 +64,13 @@ namespace Config
             init(id_guild);//reinit the array
         }
 
-        public static void remove(String id_guild)
+        public static void remove(string id_guild)
         {
             if (File.Exists($"config/{id_guild}.json"))
                 File.Delete($"config/{id_guild}.json");
             
         }
+
 
         //public static IDictionary<string, ulong> Id_notif_online = new Dictionary<string, ulong>();
         public static IDictionary<string, ulong> Id_random_event = new Dictionary<string, ulong>();
