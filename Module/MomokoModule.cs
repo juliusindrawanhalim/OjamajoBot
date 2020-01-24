@@ -378,7 +378,7 @@ namespace OjamajoBot.Module
             .Build());
         }
 
-        [Command("shocked"), Alias("omg", "shock"), Summary("Show any random momoko shocking moments")]
+        [Command("shocked"), Alias("omg", "shock"), Summary("Oh my God!")]
         public async Task shocked()
         {
             string[] arrRandom = {
@@ -389,7 +389,7 @@ namespace OjamajoBot.Module
             string[] arrRandomImg = {
                 "https://i.ibb.co/23Q0TP7/Untitled.png",
                 "https://vignette.wikia.nocookie.net/ojamajowitchling/images/1/1a/Motto-02-momo4.png/revision/latest?cb=20171101134454",
-
+                "https://vignette.wikia.nocookie.net/ojamajowitchling/images/6/69/OjamajoLINE2.26.png"
             };
 
             await ReplyAsync(arrRandom[new Random().Next(0, arrRandom.Length)],
@@ -408,8 +408,9 @@ namespace OjamajoBot.Module
         [Command("traditional"), Alias("traditionify"), Summary("It's <sentences> traditional!")]
         public async Task traditionify([Remainder] string sentences="japanese")
         {
-            string[] arrRandomImages = { "https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/55/ODN-EP13-018.png",
-            "https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/99/ODN-EP13-017.png"};
+            string[] arrRandomImages = {"https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/55/ODN-EP13-018.png",
+            "https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/99/ODN-EP13-017.png",
+            "https://vignette.wikia.nocookie.net/ojamajowitchling/images/c/ca/Linesticker20.png"};
 
             await ReplyAsync($"It's {sentences} traditional!",
             embed: new EmbedBuilder()
@@ -497,71 +498,91 @@ namespace OjamajoBot.Module
         [Command("order", RunMode = RunMode.Async), Summary("I will give you out listed menu and you can try to order it up.")]
         public async Task Interact_Bakery()
         {
-            string[] menu = {
+            if (!Config.Momoko.isRunningBakery.ContainsKey(Context.User.Id.ToString()))
+                Config.Momoko.isRunningBakery.Add(Context.User.Id.ToString(), false);
+
+            if (!Config.Momoko.isRunningBakery[Context.User.Id.ToString()]){
+                Config.Momoko.isRunningBakery[Context.User.Id.ToString()] = true;
+
+                string[] menu = {
                 "apple pie","cake","cookies","croissant","cupcakes","donut",
-                "eclair","pudding"
-            };
-            string concatMenu = ""; foreach (string item in menu) concatMenu += $"**-{item}**\n";
-            concatMenu+=$"Please reply with one of the menu choices, for example: **donut**.\nTo leave/cancel your order, type `cancel`.";
+                "eclair","pudding" };
 
-            string replyTimeout = "I'm sorry, I can't process your order.";
+                string concatMenu = ""; foreach (string item in menu) concatMenu += $"**-{item}**\n";
+                concatMenu += $"Please reply with one of the menu choices, for example: **donut**.\nTo leave/cancel your order, type `cancel`.";
 
-            await ReplyAsync(embed: new EmbedBuilder()
-                .WithAuthor("Sweet house Maho-dou", "https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/9f/Sweet2.jpg")
-                .WithDescription("Hello, welcome to the Sweet house Maho-dou. " +
-                "Your order will be placed within 20 seconds, please wait shortly right after confirming your order. " +
-                "Please order something up from the menu listed below:")
-                .AddField("Menu list",concatMenu)
-                .WithColor(Config.Momoko.EmbedColor)
-                .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/c/cc/ODN-EP11-027.png")
-                .Build());
-            
-            Boolean procedureFinish = false;
+                string replyTimeout = "I'm sorry, I can't process your order.";
 
-            while (!procedureFinish)
-            {
-                var response = await NextMessageAsync(timeout: TimeSpan.FromSeconds(15));
-                string ordered = response.Content.ToLower().ToString();
+                await ReplyAsync(embed: new EmbedBuilder()
+                    .WithAuthor("Sweet house Maho-dou", "https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/9f/Sweet2.jpg")
+                    .WithDescription("Hello, welcome to the Sweet house Maho-dou. " +
+                    "Your order will be placed within 20 seconds, please wait shortly right after confirming your order. " +
+                    "Please order something up from the menu listed below:")
+                    .AddField("Menu list", concatMenu)
+                    .WithColor(Config.Momoko.EmbedColor)
+                    .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/c/cc/ODN-EP11-027.png")
+                    .Build());
 
-                if (response == null){
-                    await ReplyAsync(replyTimeout);
-                    return;
-                } else if (ordered=="cancel") {
-                    await ReplyAsync(embed: new EmbedBuilder()
-                        .WithAuthor("Sweet house Maho-dou", "https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/9f/Sweet2.jpg")
-                        .WithDescription("Oh, it seems you don't want to order anything for now, no worries. " +
-                        "Thank you for stopping by and please come back again soon.")
-                        .WithColor(Config.Momoko.EmbedColor)
-                        .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/c/cc/ODN-EP11-027.png")
-                        .Build());
-                    return;
-                } else if (!menu.Any(ordered.Contains)) {
-                    await ReplyAsync("Sorry, I can't find that menu. Please retype the correct order menu choice.");
-                } else if (menu.Any(ordered.Contains)) {
-                    await ReplyAsync($"Your orders: **{ordered}** will be arrived soon. " +
-                        $"Please wait within 20 seconds while we're going to process it.");
-                    procedureFinish = true;
+                Boolean procedureFinish = false;
 
-                    Config.Momoko.timerProcessBakery[Context.User.Id.ToString()] = new Timer(async _ => await ReplyAsync($"Hello {MentionUtils.MentionUser(Context.User.Id)}, your order: **{ordered}** has arrived. " +
-                        $"Thank you for ordering from our sweet house maho-dou. Please come back next time :smile:",
-                        embed: new EmbedBuilder()
-                        .WithAuthor("Sweet house Maho-dou", "https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/9f/Sweet2.jpg")
-                        .WithColor(Config.Momoko.EmbedColor)
-                        .WithImageUrl(getHtmlResult(ordered))
-                        .Build()),
-                        null, 20000, Timeout.Infinite);
-                    //send thank you image
-                    Config.Momoko.timerProcessBakery[Context.User.Id.ToString()+"ty"] = new Timer(async _ => await ReplyAsync(
-                        embed: new EmbedBuilder()
-                        .WithColor(Config.Momoko.EmbedColor)
-                        .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/9d/Linesticker23.png")
-                        .Build()),
-                        null, 21000, Timeout.Infinite);
+                while (!procedureFinish)
+                {
+                    var response = await NextMessageAsync(timeout: TimeSpan.FromSeconds(15));
+                    string ordered = response.Content.ToLower().ToString();
 
-                    return;
+                    if (response == null)
+                    {
+                        Config.Momoko.isRunningBakery[Context.User.Id.ToString()] = false;
+                        await ReplyAsync(replyTimeout);
+                        return;
+                    }
+                    else if (ordered == "cancel")
+                    {
+                        Config.Momoko.isRunningBakery[Context.User.Id.ToString()] = false;
+                        await ReplyAsync(embed: new EmbedBuilder()
+                            .WithAuthor("Sweet house Maho-dou", "https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/9f/Sweet2.jpg")
+                            .WithDescription("Oh, it seems you don't want to order anything for now, no worries. " +
+                            "Thank you for stopping by and please come back again soon.")
+                            .WithColor(Config.Momoko.EmbedColor)
+                            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/c/cc/ODN-EP11-027.png")
+                            .Build());
+                        return;
+                    }
+                    else if (!menu.Any(ordered.Contains))
+                    {
+                        await ReplyAsync("Sorry, I can't find that menu. Please retype the correct order menu choice.");
+                    }
+                    else if (menu.Any(ordered.Contains))
+                    {
+                        await ReplyAsync($"Your orders: **{ordered}** will be arrived soon. " +
+                            $"Please wait within 20 seconds while we're going to process it.");
+                        procedureFinish = true;
+
+                        Config.Momoko.isRunningBakery[Context.User.Id.ToString()] = false;
+                        Config.Momoko.timerProcessBakery[Context.User.Id.ToString()] = new Timer(async _ => await ReplyAsync($"Hello {MentionUtils.MentionUser(Context.User.Id)}, your order: **{ordered}** has arrived. " +
+                            $"Thank you for ordering from our sweet house maho-dou. Please come back next time :smile:",
+                            embed: new EmbedBuilder()
+                            .WithAuthor("Sweet house Maho-dou", "https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/9f/Sweet2.jpg")
+                            .WithColor(Config.Momoko.EmbedColor)
+                            .WithImageUrl(getHtmlResult(ordered))
+                            .Build()),
+                            null, 20000, Timeout.Infinite);
+                        //send thank you image
+                        Config.Momoko.timerProcessBakery[Context.User.Id.ToString() + "ty"] = new Timer(async _ => await ReplyAsync(
+                              embed: new EmbedBuilder()
+                              .WithColor(Config.Momoko.EmbedColor)
+                              .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/9d/Linesticker23.png")
+                              .Build()),
+                            null, 25000, Timeout.Infinite);
+
+                        return;
+                    }
                 }
-            }
 
+            }
+            else
+                await ReplyAsync($"Sorry, but you still have a running the bakery commands, please finish it first.");
+            
         }
 
         public string getHtmlResult(string order)

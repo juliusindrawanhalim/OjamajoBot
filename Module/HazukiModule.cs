@@ -100,7 +100,6 @@ namespace OjamajoBot.Module
         public void HelpDetails(ref EmbedBuilder builder, string category, string summary,
             string alias, string group, string commands, string parameters)
         {
-
             var completedText = ""; commands = commands.ToLower(); category = category.ToLower();
             if (summary != "") completedText += $"{summary}\n";
             completedText += $"**Category:** {category}\n";

@@ -360,7 +360,7 @@ namespace OjamajoBot.Module
         //}
 
         [Command("autograph"), Summary("I will sign and give you my autograph card signatures.")]
-        public async Task sign([Remainder] string messages=null)
+        public async Task sign()
         {
             string[] arrRandom = {
                 $"**The idol {MentionUtils.MentionUser(Config.Onpu.Id)} has give you a big smiles and her autograph**",
@@ -372,6 +372,7 @@ namespace OjamajoBot.Module
 
             string[] arrFieldDescription = {
                 "I can speak English and Chinese Mandarin",
+                "I don't like peppers."
             };
 
             string[] arrRandomImg = {
@@ -456,7 +457,7 @@ namespace OjamajoBot.Module
             .Build());
         }
 
-        //todo: onpu segawa reaction as signatures, smug commands
+        //todo: smug commands
 
     }
 

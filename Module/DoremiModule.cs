@@ -6,6 +6,7 @@ using Newtonsoft.Json.Linq;
 using OjamajoBot.Service;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -135,15 +136,13 @@ namespace OjamajoBot.Module
             foreach (var sub in module.Submodules) AddHelp(sub, ref builder);
 
             if (module.Summary!="hidden")
-                builder.AddField(f =>
-                {
+                builder.AddField(f => {
                     var joinedString = string.Join(", ", module.Submodules.Select(m => m.Name));
                     if (joinedString == "") { joinedString = "-"; }
                     f.Name = $"**{char.ToUpper(module.Name.First()) + module.Name.Substring(1).ToLower()}**";
                     var selectedModuleCommands = module.Commands.Select(x => $"`{x.Name.ToLower()}`");
                     f.Value = string.Join(", ", selectedModuleCommands);
                 });
-
         }
 
         public void AddCommands(ModuleInfo module, ref EmbedBuilder builder)
@@ -746,7 +745,8 @@ namespace OjamajoBot.Module
             await ReplyAsync(arrQuotes[new Random().Next(0, arrQuotes.Length)]);
         }
 
-        [Command("random"), Alias("moments"), Summary("Show any random Doremi moments. Fill <moments> with **random/first/sharp/motto/naisho** for spesific moments.")]
+        [Command("random"), Alias("moments"), Summary("Show any random Doremi moments. " +
+            "Fill <moments> with **random/first/sharp/motto/naisho** for spesific moments.")]
         public async Task randomthing(string moments = "")
         {
             string finalUrl=""; string footerUrl = "";
@@ -802,7 +802,7 @@ namespace OjamajoBot.Module
 
         [Command("star"), Summary("I will pin this messsages if it has 5 stars reaction")]
         [RequireBotPermission(ChannelPermission.ManageMessages, 
-            ErrorMessage = "Oops, I need ``manage channels`` permission to use this command")]
+            ErrorMessage = "Oops, I need `manage channels` permission to use this command")]
         public async Task starMessages([Remainder] string MessagesOrWithAttachment)
         {
             try
@@ -886,28 +886,6 @@ namespace OjamajoBot.Module
             .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/98/Dore-spell.gif/revision/latest?cb=20170814182746")
             .Build());
         }
- 
-        [Command("witch"), Summary("No, please don't use this command")]
-        public async Task mentionWitch([Remainder] string wishes)
-        {
-            //todo: react with 5 users and it'll be transformed into a witch frog.
-            string[] arrRandom = {
-                "No, please don't say that words in public.",
-                "No, please don't say that words in front of everyone.",
-                "No! I don't wanna become a witch frog T_T",
-                "No! I don't wanna turn into witch frog T_T",
-            };
-
-            string[] arrRandomImages = {
-
-            };
-
-            await ReplyAsync($"{arrRandom[new Random().Next(0,arrRandom.Length-1)]}");
-            await base.ReplyAsync(embed: new EmbedBuilder()
-            .WithColor(Config.Doremi.EmbedColor)
-            .WithImageUrl("https://i.makeagif.com/media/10-05-2015/rEFQz2.gif")
-            .Build());
-        }
 
         [Command("wish"), Summary("I will grant you a <wishes>")]
         public async Task wish([Remainder] string wishes)
@@ -928,26 +906,275 @@ namespace OjamajoBot.Module
             .AddField("Summary",
             $"-Onpu & Momoko bot has arrived. You can invite them with `{Config.Doremi.PrefixParent[0]}invite` commands.\n" +
             $"-Doremi and her other friends has updated into **motto** version.\n" +
-            "-Doremi, Hazuki and Aiko Bot commands and functionality has been updated\n" +
+            $"-Doremi bot can now assign your birthday with `{Config.Doremi.PrefixParent[0]}birthday set commands`.\n" +
+            "-Doremi bot now has wiki category that let you get the [wiki information](https://ojamajowitchling.fandom.com)\n" +
             "-Added more random moments image source for Doremi and other related bots.\n" +
-            "-Doremi and her other friends now has individual greeting message.\n" +
-            "-Minor update on command error and help list.\n")
-            .AddField("Doremi bot updated commands","`change`,`dorememes`,`random`")
-            .AddField("Hazuki bot updated commands","`change`,`random`")
-            .AddField("Aiko bot updated commands", "`change`,`random`")
+            "-Doremi and her other friends now has individual greeting message.\n"+
+            "-Aiko bot: `spooky` commands now has higher chance for you to execute it.\n")
+            .AddField("Doremi bot updated commands", "**wiki category**,**birthday category**,**moderator category**")
+            .AddField("Aiko bot updated commands", "`spooky`")
             .WithColor(Config.Doremi.EmbedColor)
             .WithFooter($"Last updated on {Config.Core.lastUpdate}")
             .Build());
         }
 
+        //event schedule/reminder
+        //vote for best characters
         //change into pet form for doremi & other bot
         //present: give a random present on reaction unwrapped
         //present to someone: give a random present on reaction unwrapped
         //todo/more upcoming commands: easter egg/hidden commands, set daily message announcement, gacha,
         //contribute caption for random things
         //user card maker, sing lyrics together with other ojamajo bot, birthday reminder, voting for best ojamajo bot, witch seeds to cast a spells
-        //10 stars pinned message 
-        //mini hangman game, virtual maho-dou shop interactive
+    }
+
+    [Name("Birthday"), Group("birthday"), Summary("This commands category will give the birthday reminder into the group.")]
+    public class DoremiBirthdayModule : InteractiveBase
+    {
+        [Command("set"), Summary("I will set your birthday date reminder. Format must be: **dd/mm/yyyy** or **dd/mm**. " +
+            "Example: `do!birthday set 31/01/1993`")]
+        public async Task setBirthdayDate(string DateMonthYear){
+            var guildId = Context.Guild.Id;
+            var userId = Context.User.Id;
+
+            DateTime date;
+            if (DateTime.TryParseExact(DateMonthYear, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out date) ||
+                DateTime.TryParseExact(DateMonthYear, "dd/MM", CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+            {
+                var guildJsonFile = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json"));
+                var jobjbirthday = (JObject)guildJsonFile.GetValue("user_birthday");
+                if (!jobjbirthday.ContainsKey(userId.ToString()))
+                    jobjbirthday.Add(new JProperty(userId.ToString(), DateMonthYear));
+                else
+                    jobjbirthday[userId.ToString()] = DateMonthYear;
+
+                await ReplyAsync($"{Config.Emoji.birthdayCake} Ok! Your birthday date has been set into: **{DateMonthYear}**. I will remind everyone on your birthday date.",
+                        embed: new EmbedBuilder()
+                        .WithColor(Config.Doremi.EmbedColor)
+                        .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/0/06/DoremiLineOK.png")
+                        .Build());
+
+                File.WriteAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json", guildJsonFile.ToString());
+            }
+            else
+            {
+                await ReplyAsync("Sorry, you need to give me the correct birthday date format: `dd/mm/yyyy` or `dd/mm`.");
+            }
+        }
+
+        [Command("search"), Summary("Search the birthday date for mentioned <username>. Returned birthday date format will be: `dd/mm`")]
+        public async Task searchBirthdayDate(IUser username)
+        {
+            var guildId = Context.Guild.Id;
+            var userId = username.Id; EmbedBuilder builder = new EmbedBuilder();
+            var guildJsonFile = (JObject)JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json")).GetValue("user_birthday");
+            var jobjbirthday = guildJsonFile.Properties().ToList();
+            for (int i = 0; i < jobjbirthday.Count; i++)
+            {
+                var key = jobjbirthday[i].Name; var val = jobjbirthday[i].Value.ToString();
+                if (userId.ToString() == key){
+                    builder.ThumbnailUrl = username.GetAvatarUrl();
+                    builder.Color = Config.Doremi.EmbedColor;
+                    builder.Description = $"{username.Username} birthday will be celebrated on {val}";
+                    await ReplyAsync(embed: builder.Build());
+                    return;
+                }
+            }
+
+            await ReplyAsync("Sorry, I can't found the birthday date for that user."); return;
+        }
+
+        [Command("show"), Summary("Show all wonderful people that will have birthday on this month.")]
+        public async Task showAllBirthdayDate(){
+            DateTime date; Boolean birthdayExisted = false;
+            var thisMonth = DateTime.Now.ToString("MMMM");
+            EmbedBuilder builder = new EmbedBuilder();
+            var guildId = Context.Guild.Id;
+            
+            var guildJsonFile = (JObject)JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json")).GetValue("user_birthday");
+            var jobjbirthday = guildJsonFile.Properties().ToList();
+            
+            for (int i = 0; i < jobjbirthday.Count; i++){
+                var key = jobjbirthday[i].Name; var val = jobjbirthday[i].Value.ToString();
+                //var birthdayMonth = "";
+                if (DateTime.TryParseExact(val, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out date)||
+                    DateTime.TryParseExact(val, "dd/MM", CultureInfo.InvariantCulture, DateTimeStyles.None, out date)){
+                    if (date.ToString("MM") == DateTime.Now.ToString("MM")){
+                        var username = Context.Guild.GetUser(Convert.ToUInt64(key)).Username;
+                        builder.AddField(username, val, true);
+                        birthdayExisted = true;
+                    }   
+                }
+            }
+
+            if (birthdayExisted){
+                builder.Title = $"{Config.Emoji.birthdayCake} {DateTime.Now.ToString("MMMM")} Birthday List";
+                builder.Description = $"Here are the list of all wonderful people that will have birthday on this month:";
+                builder.Color = Config.Doremi.EmbedColor;
+                await ReplyAsync(embed: builder.Build());
+            } else {
+                await ReplyAsync("We don't have people that will have birthday on this month.");
+            }
+
+        }
+
+        [Command("remove"), Summary("Remove the birthday date reminder settings.")]
+        public async Task removeBirthdayDate(){
+            var guildId = Context.Guild.Id;
+            var userId = Context.User.Id;
+            var guildJsonFile = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json"));
+            var jobjbirthday = (JObject)guildJsonFile.GetValue("user_birthday");
+            if (jobjbirthday.ContainsKey(userId.ToString())){
+                jobjbirthday.Remove(userId.ToString());
+                File.WriteAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json", guildJsonFile.ToString());
+                await ReplyAsync("Ok, your birthday date settings has been removed.",
+                    embed: new EmbedBuilder()
+                    .WithColor(Config.Doremi.EmbedColor)
+                    .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/0/06/DoremiLineOK.png")
+                    .Build());
+            } else {
+                await ReplyAsync("Sorry, it seems you haven't set your birthday date yet.");
+            }
+
+        }
+
+    }
+
+    [Name("Wiki"), Group("wiki"), Summary("This commands category will get the information from [ojamajo witchling wiki](https://ojamajowitchling.fandom.com)")]
+    public class DoremiWiki : InteractiveBase
+    {
+        [Command("episodes", RunMode = RunMode.Async), Alias("episode"), Summary("I will give all episodes list based on the season. " +
+            "Fill the optional <season> parameter with `first`/`sharp`/`motto`/`naisho`/`dokkan` for spesific list.")]
+        public async Task showEpisodesList(string season = "first")
+        {
+            var jParentObject = (JObject)Config.Core.jObjWiki["episodes"];
+            if (jParentObject.ContainsKey(season))
+            {
+                List<string> pageContent = new List<string>();
+                EmbedBuilder builder = new EmbedBuilder()
+                .WithColor(Config.Doremi.EmbedColor);
+
+                try
+                {
+                    string title = $"**{season.First().ToString().ToUpper() + season.Substring(1)} Season Episodes List**\n";
+                    var arrList = (JArray)Config.Core.jObjWiki.GetValue("episodes")[season];
+                    string tempVal = title;
+                    int currentIndex = 0;
+                    for (int i = 0; i < arrList.Count; i++)
+                    {
+                        string replacedUrl = arrList[i].ToString().Replace(" ", "_");
+                        replacedUrl = Config.Core.wikiParentUrl + replacedUrl.ToString().Replace("?", "%3F");
+                        tempVal += $"Ep {i + 1}: [{arrList[i]}]({replacedUrl})\n";
+
+                        if (currentIndex < 14) currentIndex++;
+                        else {
+                            pageContent.Add(tempVal);
+                            currentIndex = 0;
+                            tempVal = title;
+                        }
+
+                        if (i == arrList.Count - 1) pageContent.Add(tempVal);
+
+                    }
+
+                    await PagedReplyAsync(pageContent);
+                }
+                catch (Exception e) { Console.WriteLine("Doremi wiki episodes error:" + e.ToString()); }
+
+            } else {
+                await ReplyAsync($"I'm sorry, but I can't find that season. See `{Config.Doremi.PrefixParent[0]}help wiki episodes` for commands help.");
+            }
+
+        }
+
+        [Command("witches", RunMode = RunMode.Async), Alias("witch"), Summary("I will give all witches characters list. " +
+            "Fill the optional <characters> parameter with the available witches characters name.")]
+        public async Task showCharactersWitches([Remainder]string characters = ""){
+            EmbedBuilder builder = new EmbedBuilder();
+            builder.Color = Config.Doremi.EmbedColor;
+
+            if (characters==""){
+                try {
+                    builder.Title = "Witches Characters List";
+                    var arrList = ((JObject)Config.Core.jObjWiki.GetValue("witches")).Properties().ToList();
+                    for (int i = 0; i < arrList.Count; i++){
+                        builder.AddField(arrList[i].Name, $"[wiki link]({Config.Core.wikiParentUrl + arrList[i].Value["url"]})", true);
+                    }
+                    builder.WithFooter($"I found {arrList.Count} witches characters from ojamajo witchling wiki");
+                    await ReplyAsync(embed: builder.Build());
+                    return;
+                }
+                catch (Exception e){ Console.WriteLine("Doremi wiki witches characters error:" + e.ToString()); }
+            } else {
+                    if (((JObject)Config.Core.jObjWiki.GetValue("witches")).ContainsKey(characters)){
+                        var arrList = Config.Core.jObjWiki.GetValue("witches")[characters];
+                        var arrListDetails = ((JObject)arrList).Properties().ToList();
+                        builder.Title = characters.First().ToString().ToUpper()+ characters.Substring(1) + " Characters Info";
+                        builder.Description = arrList["description"].ToString();
+                        for (int i = 0; i < arrListDetails.Count; i++){
+                            if(arrListDetails[i].Name.ToLower()!="url"&&
+                               arrListDetails[i].Name.ToLower() != "img"&&
+                               arrListDetails[i].Name.ToLower() != "name"&&
+                               arrListDetails[i].Name.ToLower() != "description")
+                            builder.AddField(arrListDetails[i].Name.ToString().First().ToString().ToUpper()+ arrListDetails[i].Name.ToString().Substring(1),
+                                arrListDetails[i].Value.ToString().First().ToString().ToUpper()+ arrListDetails[i].Value.ToString().Substring(1), true);
+                        }
+                        builder.AddField("More info",
+                                $"[Click here]({Config.Core.wikiParentUrl+arrList["url"].ToString()})", true);
+
+                        builder.WithImageUrl(arrList["img"].ToString());
+                        await ReplyAsync(embed: builder.Build());
+                        return;
+                    } else await ReplyAsync("I'm sorry, but I can't find that witches characters. " +
+                        $"See `{Config.Doremi.PrefixParent[0]}wiki witches` to display all witches characters list.");
+            }
+        }
+
+        [Command("wizards", RunMode = RunMode.Async), Alias("wizard"), Summary("I will give all wizards characters list. " +
+            "Fill the optional <characters> parameter with the available wizards characters name.")]
+        public async Task showCharactersWizards([Remainder]string characters = ""){
+            EmbedBuilder builder = new EmbedBuilder();
+            builder.Color = Config.Doremi.EmbedColor;
+
+            if (characters == ""){
+                try{
+                    builder.Title = "Wizards Characters List";
+                    var arrList = ((JObject)Config.Core.jObjWiki.GetValue("wizards")).Properties().ToList();
+                    for (int i = 0; i < arrList.Count; i++)
+                    {
+                        builder.AddField(arrList[i].Name, $"[wiki link]({Config.Core.wikiParentUrl + arrList[i].Value["url"]})", true);
+                    }
+                    builder.WithFooter($"I found {arrList.Count} wizards characters from ojamajo witchling wiki");
+                    await ReplyAsync(embed: builder.Build());
+                    return;
+                }
+                catch (Exception e) { Console.WriteLine("Doremi wiki wizards characters error:" + e.ToString()); }
+            } else {
+                if (((JObject)Config.Core.jObjWiki.GetValue("wizards")).ContainsKey(characters)){
+                    var arrList = Config.Core.jObjWiki.GetValue("wizards")[characters];
+                    var arrListDetails = ((JObject)arrList).Properties().ToList();
+                    builder.Title = characters.First().ToString().ToUpper() + characters.Substring(1) + " Characters Info";
+                    builder.Description = arrList["description"].ToString();
+                    for (int i = 0; i < arrListDetails.Count; i++)
+                    {
+                        if (arrListDetails[i].Name.ToLower() != "url" &&
+                           arrListDetails[i].Name.ToLower() != "img" &&
+                           arrListDetails[i].Name.ToLower() != "name" &&
+                           arrListDetails[i].Name.ToLower() != "description")
+                            builder.AddField(arrListDetails[i].Name.ToString().First().ToString().ToUpper() + arrListDetails[i].Name.ToString().Substring(1),
+                                arrListDetails[i].Value.ToString().First().ToString().ToUpper() + arrListDetails[i].Value.ToString().Substring(1), true);
+                    }
+                    builder.AddField("More info",
+                            $"[Click here]({Config.Core.wikiParentUrl + arrList["url"].ToString()})", true);
+
+                    builder.WithImageUrl(arrList["img"].ToString());
+                    await ReplyAsync(embed: builder.Build());
+                    return;
+                } else await ReplyAsync("I'm sorry, but I can't find that wizards characters. " +
+                  $"See `{Config.Doremi.PrefixParent[0]}wiki wizards` to display all wizards characters list.");
+            }
+        }
+
     }
 
     [Name("mod"), Group("mod"), Summary("Basic moderator commands. Require `manage channels` permission")]
@@ -957,10 +1184,10 @@ namespace OjamajoBot.Module
     public class DoremiModerator : ModuleBase<SocketCommandContext>
     {
         [Command("user leave"), Summary("Set the leaving user notifications with **off** or **on**.")]
-        public async Task assignNotifOnline(string settings="off")
+        public async Task assignUserLeavingNotification(string settings="off")
         {
             string replacedsettings = settings.Replace("off", "0").Replace("on", "1");
-            Config.Guild.assignId(Context.Guild.Id, "user_leaving_notification", replacedsettings);
+            Config.Guild.setPropertyValue(Context.Guild.Id, "user_leaving_notification", replacedsettings);
             await ReplyAsync($"**Leaving User Messages** has been turned **{settings}**.");
         }
         //leaving_message
@@ -983,31 +1210,158 @@ namespace OjamajoBot.Module
         [Name("mod channels"), Group("channels"), Summary("These commands require `manage channels` permissions.")]
         public class DoremiModeratorChannels : ModuleBase<SocketCommandContext>
         {
-            [Command("random event"), Summary("Schedule Doremi Bot to make random event message on <channel_name> for every 24 hours")]
-            public async Task assignRandomEvent(IGuildChannel channels)
+            [Command("birthday"), Summary("Set Doremi Bot to make birthday announcement on <channel_name>.")]
+            public async Task assignBirthdayChannel(SocketGuildChannel channel_name)
             {
-                Config.Guild.assignId(channels.GuildId, "id_random_event", channels.Id.ToString());
+                var guildId = channel_name.Guild.Id;
+                Config.Guild.setPropertyValue(guildId, "id_birthday_announcement", channel_name.Id.ToString());
+                if (Config.Doremi._timerBirthdayAnnouncement.ContainsKey(guildId.ToString()))
+                    Config.Doremi._timerBirthdayAnnouncement[guildId.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
 
-                if (Config.Doremi._timerRandomEvent.ContainsKey(channels.GuildId.ToString()))
-                    Config.Doremi._timerRandomEvent[channels.GuildId.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
-
-                Config.Doremi._timerRandomEvent[$"{channels.GuildId.ToString()}"] = new Timer(async _ =>
+                Config.Doremi._timerBirthdayAnnouncement[$"{guildId.ToString()}"] = new Timer(async _ =>
                 {
-                    Random rnd = new Random();
-                    int rndIndex = rnd.Next(0, Config.Doremi.listRandomEvent.Count); //random the list value
+                    var socketClient = Context.Client;
+                    try
+                    {
+                        DateTime date; Boolean birthdayExisted = false;
+                        //announce hazuki birthday
+                        if (DateTime.Now.ToString("dd") == Config.Hazuki.birthdayDate.ToString("dd") &&
+                        DateTime.Now.ToString("MM") == Config.Hazuki.birthdayDate.ToString("MM"))
+                        {
+                            var calculatedYear = Convert.ToInt32(DateTime.Now.ToString("yyyy")) - Convert.ToInt32(Config.Hazuki.birthdayDate.ToString("yyyy"));
+                            await socketClient
+                            .GetGuild(guildId)
+                            .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guildId, "id_birthday_announcement")))
+                            .SendMessageAsync($"{Config.Emoji.birthdayCake} Happy birthday to you, {MentionUtils.MentionUser(Config.Hazuki.Id)} chan. " +
+                            $"She has turned into {calculatedYear} on this year. Let's give wonderful birthday wishes for her.");
+                            birthdayExisted = true;
+                        }
+
+                        //announce aiko birthday
+                        if (DateTime.Now.ToString("dd") == Config.Aiko.birthdayDate.ToString("dd") &&
+                        DateTime.Now.ToString("MM") == Config.Aiko.birthdayDate.ToString("MM"))
+                        {
+                            var calculatedYear = Convert.ToInt32(DateTime.Now.ToString("yyyy")) - Convert.ToInt32(Config.Aiko.birthdayDate.ToString("yyyy"));
+                            await socketClient
+                            .GetGuild(guildId)
+                            .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guildId, "id_birthday_announcement")))
+                            .SendMessageAsync($"{Config.Emoji.birthdayCake} Happy birthday to our osakan friend: {MentionUtils.MentionUser(Config.Aiko.Id)} chan. " +
+                            $"She has turned into {calculatedYear} on this year. Let's give some takoyaki and wonderful birthday wishes for her.");
+                            birthdayExisted = true;
+                        }
+
+                        //announce onpu birthday
+                        if (DateTime.Now.ToString("dd") == Config.Onpu.birthdayDate.ToString("dd") &&
+                        DateTime.Now.ToString("MM") == Config.Onpu.birthdayDate.ToString("MM"))
+                        {
+                            var calculatedYear = Convert.ToInt32(DateTime.Now.ToString("yyyy")) - Convert.ToInt32(Config.Onpu.birthdayDate.ToString("yyyy"));
+                            await socketClient
+                            .GetGuild(guildId)
+                            .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guildId, "id_birthday_announcement")))
+                            .SendMessageAsync($"{Config.Emoji.birthdayCake} Happy birthday to our wonderful idol friend: {MentionUtils.MentionUser(Config.Onpu.Id)} chan. " +
+                            $"She has turned into {calculatedYear} on this year. Let's give some wonderful birthday wishes for her.");
+                            birthdayExisted = true;
+                        }
+
+                        //announce momoko birthday
+                        if (DateTime.Now.ToString("dd") == Config.Momoko.birthdayDate.ToString("dd") &&
+                        DateTime.Now.ToString("MM") == Config.Momoko.birthdayDate.ToString("MM"))
+                        {
+                            var calculatedYear = Convert.ToInt32(DateTime.Now.ToString("yyyy")) - Convert.ToInt32(Config.Momoko.birthdayDate.ToString("yyyy"));
+                            await socketClient
+                            .GetGuild(guildId)
+                            .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guildId, "id_birthday_announcement")))
+                            .SendMessageAsync($"{Config.Emoji.birthdayCake} Happy birthday to our wonderful friend: {MentionUtils.MentionUser(Config.Momoko.Id)} chan. " +
+                            $"She has turned into {calculatedYear} on this year. Let's give some wonderful birthday wishes for her.");
+                            birthdayExisted = true;
+                        }
+
+                        EmbedBuilder builder = new EmbedBuilder();
+                        var guildJsonFile = (JObject)JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json")).GetValue("user_birthday");
+                        var jobjbirthday = guildJsonFile.Properties().ToList();
+                        for (int i = 0; i < jobjbirthday.Count; i++)
+                        {
+                            string birthdayMessage = "";
+                            var key = jobjbirthday[i].Name; var val = jobjbirthday[i].Value.ToString();
+                            //var birthdayMonth = "";
+                            try{
+                                var user = channel_name.GetUser(Convert.ToUInt64(key));
+                                
+                                if (DateTime.TryParseExact(val, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out date) ||
+                                DateTime.TryParseExact(val, "dd/MM", CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+                                {
+                                    if (date.ToString("dd/MM") == DateTime.Now.ToString("dd/MM"))
+                                    {
+                                        string[] arrRandomedMessage = {
+                                        $"{Config.Emoji.birthdayCake} Everyone, let's give a wonderful birthday wishes for: {user.Mention} ",
+                                        $"{Config.Emoji.birthdayCake} Happy birthday to our wonderful friend: {user.Mention} . " +
+                                        $"Please give some wonderful birthday wishes for {user.Mention}.",
+                                        $"{Config.Emoji.birthdayCake} Everyone, we have important birthday announcement! Please give some wonderful birthday wishes for {user.Mention}."
+                                    };
+                                        birthdayMessage = arrRandomedMessage[new Random().Next(0, arrRandomedMessage.Length)];
+                                        builder.ImageUrl = "https://i.4pcdn.org/s4s/1508005628768.jpg";
+                                        birthdayExisted = true;
+
+                                        await socketClient
+                                        .GetGuild(guildId)
+                                        .GetTextChannel(channel_name.Id)
+                                        .SendMessageAsync(birthdayMessage);
+                                    }
+                                }
+                            }
+                            catch {
+                                //remove the unknown user properties
+                                //guildJsonFile.Property(key).Remove();
+                                //File.WriteAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json", guildJsonFile.ToString());
+                            }
+
+
+                        }
+
+                        if (birthdayExisted)
+                            await socketClient
+                            .GetGuild(guildId)
+                            .GetTextChannel(channel_name.Id)
+                            .SendMessageAsync(embed:builder.Build());
+                    }
+                    catch
+                    {
+                        Console.WriteLine($"Doremi Birthday Announcement Exception: Send message permissions has been missing {channel_name.Guild.Name} : {channel_name.Name}");
+                    }
+                },
+                    null,
+                    TimeSpan.FromSeconds(5), //time to wait before executing the timer for the first time
+                    TimeSpan.FromHours(24) //time to wait before executing the timer again
+                );
+
+                await ReplyAsync($"{Config.Emoji.birthdayCake} **Birthday Announcement Channels** has been assigned into: {MentionUtils.MentionChannel(channel_name.Id)}");
+
+            }
+
+            [Command("random event"), Summary("Schedule Doremi Bot to make random event message on <channel_name> for every 24 hours")]
+            public async Task assignRandomEventChannel(IGuildChannel channel_name)
+            {
+                Config.Guild.setPropertyValue(channel_name.GuildId, "id_random_event", channel_name.Id.ToString());
+
+                if (Config.Doremi._timerRandomEvent.ContainsKey(channel_name.GuildId.ToString()))
+                    Config.Doremi._timerRandomEvent[channel_name.GuildId.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
+
+                Config.Doremi._timerRandomEvent[$"{channel_name.GuildId.ToString()}"] = new Timer(async _ =>
+                {
+                    int rndIndex = new Random().Next(0, Config.Doremi.listRandomEvent.Count); //random the list value
                     Console.WriteLine("Doremi Random Event : " + Config.Doremi.listRandomEvent[rndIndex]);
 
                     var socketClient = Context.Client;
                     try
                     {
                         await socketClient
-                        .GetGuild(channels.GuildId)
-                        .GetTextChannel(Config.Guild.Id_random_event[channels.GuildId.ToString()])
+                        .GetGuild(channel_name.GuildId)
+                        .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(channel_name.GuildId, "id_random_event")))
                         .SendMessageAsync(Config.Doremi.listRandomEvent[rndIndex]);
                     }
                     catch
                     {
-                        Console.WriteLine($"Doremi Random Event Exception: Send message permissions has been missing {channels.Guild.Name} : {channels.Name}");
+                        Console.WriteLine($"Doremi Random Event Exception: Send message permissions has been missing {channel_name.Guild.Name} : {channel_name.Name}");
                     }
                 },
                     null,
@@ -1015,7 +1369,7 @@ namespace OjamajoBot.Module
                     TimeSpan.FromHours(Config.Doremi.Randomeventinterval) //time to wait before executing the timer again
                 );
 
-                await ReplyAsync($"**Random Event Channels** has been assigned into: {MentionUtils.MentionChannel(channels.Id)}");
+                await ReplyAsync($"**Random Event Channels** has been assigned into: {MentionUtils.MentionChannel(channel_name.Id)}");
             }
 
             //[Command("online")]
@@ -1025,34 +1379,40 @@ namespace OjamajoBot.Module
             //    await ReplyAsync($"**Bot Online Notification Channels** has been assigned into: {MentionUtils.MentionChannel(iguild.Id)}");
             //}
 
-            [Command("remove settings"), Summary("Remove the random event settings on the assigned channels. " +
-                "Current available settings: `random event`")]
-            public async Task assignRandomEvent([Remainder]string settings = "random event")
+            [Command("remove settings"), Summary("Remove the settings on the assigned channels. " +
+                "Current available settings: `birthday`/`random event`")]
+            public async Task removeChannelSettings([Remainder]string settings)
             {
-                string property = "";
-                Boolean propertyExists = false;
-                ulong channelId = 0;
+                string property = ""; Boolean propertyValueExisted = false;
+                var guildId = Context.Guild.Id;
+                var guildJsonFile = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json"));
 
-                if (settings.ToLower() == "random event")
+                if (settings.ToLower() == "birthday"){
+                    property = "birthday announcement";
+                    if (Config.Guild.hasPropertyValues(guildId.ToString(), "id_birthday_announcement"))
+                    {
+                        propertyValueExisted = true;
+                        Config.Guild.setPropertyValue(Context.Guild.Id, "id_birthday_announcement", "");
+                        if (Config.Doremi._timerBirthdayAnnouncement.ContainsKey(Context.Guild.Id.ToString()))
+                            Config.Doremi._timerBirthdayAnnouncement[Context.Guild.Id.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
+                    }
+                } else if (settings.ToLower() == "random event")
                 {
                     property = "random event";
-
-                    if (Config.Guild.Id_random_event.ContainsKey(Context.Guild.Id.ToString()))
+                    if (Config.Guild.hasPropertyValues(guildId.ToString(),"id_random_event"))
                     {
-                        channelId = Config.Guild.Id_random_event[Context.Guild.Id.ToString()];
-                        propertyExists = true;
-                        Config.Guild.assignId(Context.Guild.Id, "id_random_event", "");
+                        propertyValueExisted = true;
+                        Config.Guild.setPropertyValue(Context.Guild.Id, "id_random_event", "");
                         if (Config.Doremi._timerRandomEvent.ContainsKey(Context.Guild.Id.ToString()))
                             Config.Doremi._timerRandomEvent[Context.Guild.Id.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
                     }
-
                 }
                 else
                 {
                     await ReplyAsync($"Sorry, I can't found that channel settings"); return;
                 }
 
-                if (propertyExists)
+                if (propertyValueExisted)
                     await ReplyAsync($"**{property} channels** settings has been removed.");
                 else
                     await ReplyAsync($"**{property} channels** has no settings yet.");
@@ -1086,49 +1446,6 @@ namespace OjamajoBot.Module
             _lavaNode = lavanode;
         }
 
-        //[Command("Join")]
-        //public async Task JoinAsync()
-        //{
-        //    //(Context.User as IVoiceState).VoiceChannel
-        //    var user = Context.User as SocketGuildUser;
-        //    if (user.VoiceChannel is null)
-        //    {
-        //        await ReplyAsync("You need to connect to a voice channel.");
-        //        return;
-        //    }
-        //    else
-        //    {
-        //        await _victoriaService.ConnectAsync(user.VoiceChannel, Context.Channel as ITextChannel);
-        //        await ReplyAsync($"now connected to {user.VoiceChannel.Name}");
-        //    }
-        //}
-
-        //[Command("Leave")]
-        //public async Task Leave()
-        //{
-        //    var user = Context.User as SocketGuildUser;
-        //    if (user.VoiceChannel is null)
-        //    {
-        //        await ReplyAsync("Please join the channel the bot is in to make it leave.");
-        //    }
-        //    else
-        //    {
-        //        await _victoriaService.LeaveAsync(user.VoiceChannel);
-        //        await ReplyAsync($"Bot has now left {user.VoiceChannel.Name}");
-        //    }
-        //}
-
-
-           // "**join** : I will join to your connected voice channel (Please join any voice channel first)\n" +
-        //    "**musiclist** or **mulist** : Show the doremi music list\n" +
-        //    "**play <track number or title>** : Play the music with the given <track number or title> parameter\n" +
-        //    "**playall** : Play all the music that's available on doremi music list\n" +
-        //    "**queue** or **muq** : Show all the music that's currently on queue list\n" +
-        //    "**seek <timespan>** : Seek the music into the given <timespan>[hh:mm:ss]\n" +
-        //    "**skip** : Skip the music\n" +
-        //    "**stop** : Stop playing the music. This will also clear the queue list\n" +
-        //    "**youtube** or **yt <keyword or url>** : Play the youtube music either it's from keyword/url")
-
         [Command("Join"), Summary("Join to your connected voice channel (Please join any voice channel first)")]
         public async Task JoinAsync()
         {
@@ -1138,7 +1455,7 @@ namespace OjamajoBot.Module
 
             if (_lavaNode.HasPlayer(Context.Guild))
             {
-                await ReplyAsync("I'm already connected to a voice channel!");
+                await ReplyAsync("I'm already connected to a voice channel.");
                 return;
             }
 
@@ -1170,7 +1487,7 @@ namespace OjamajoBot.Module
 
             if (!_lavaNode.TryGetPlayer(Context.Guild, out var player))
             {
-                await ReplyAsync("I'm not connected to any voice channels.");
+                await ReplyAsync("I'm not connected to any voice channels yet.");
                 return;
             }
 
@@ -1193,7 +1510,7 @@ namespace OjamajoBot.Module
             }
         }
 
-        [Command("Move"), Summary("Move the bots into your new voice channel")]
+        [Command("Move"), Summary("Move doremi bot into your new connected voice channel")]
         public async Task MoveAsync()
         {
             if (!_lavaNode.HasPlayer(Context.Guild))
@@ -1234,7 +1551,7 @@ namespace OjamajoBot.Module
         }
 
         //https://www.youtube.com/watch?v=dQw4w9WgXcQ
-        [Command("youtube"), Alias("yt"), Summary("Play the youtube music either it's from keyword/url")]
+        [Command("youtube"), Alias("yt"), Summary("Play the youtube music. `<KeywordOrUrl>` parameter can be a search keyword or youtube url.")]
         public async Task PlayYoutubeAsync([Remainder] string KeywordOrUrl)
         {
             if (!_lavaNode.HasPlayer(Context.Guild))
@@ -1465,7 +1782,7 @@ namespace OjamajoBot.Module
 
             if (player.PlayerState != PlayerState.Playing)
             {
-                await ReplyAsync("Woaaah there, I'm not playing any tracks.");
+                await ReplyAsync("I'm not playing any tracks yet.");
                 return;
             }
 
@@ -1576,7 +1893,7 @@ namespace OjamajoBot.Module
 
             if (player.PlayerState != PlayerState.Playing)
             {
-                await ReplyAsync("Woaaah there, I can't skip when nothing is playing.");
+                await ReplyAsync("Oops, I can't skip when nothing is playing.");
                 return;
             }
 
@@ -1585,18 +1902,18 @@ namespace OjamajoBot.Module
             player.Queue.Enqueue(player.Track);
             await player.SkipAsync();
 
-            await ReplyAsync($"Music Skipped. Now Playing: {player.Track.Title}");
+            await ReplyAsync($"Ok, music has been skipped. Now Playing: {player.Track.Title}");
 
         }
 
-        [Command("Volume"), Summary("Set the music player volume into <volume>. Max: 200")]
+        [Command("Volume"), Summary("Set the music player volume into given <volume>. Max: 200")]
         public async Task SetVolume([Remainder] ushort volume)
         {
             await _lavaNode.GetPlayer(Context.Guild).UpdateVolumeAsync(volume);
             await ReplyAsync($":sound: Volume set to:{volume}");
         }
 
-        [Command("Musiclist"), Alias("mulist"), Summary("Show all doremi music list")]
+        [Command("Musiclist"), Alias("mulist"), Summary("Show all available doremi music list")]
         public async Task ShowMusicList()
         {
             JObject jObj = Config.Music.jobjectfile;
@@ -1613,7 +1930,7 @@ namespace OjamajoBot.Module
             //    String musiclist = $"[**{i + 1}**] **ojamajocarnival** : Ojamajo Carnival\n";
             //}
 
-            await base.ReplyAsync(embed: new EmbedBuilder()
+            await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
                 .WithAuthor(Config.Doremi.EmbedName, Config.Doremi.EmbedAvatarUrl)
                 .WithTitle("Music List:")
@@ -1716,7 +2033,7 @@ namespace OjamajoBot.Module
 
     }
 
-    [Name("Interactive")]
+    [Name("quiz"), Group("quiz"), Summary("This category contains all quiz interactive commands minigame.")]
     public class DoremiInteractive : InteractiveBase
     {
         // NextMessageAsync will wait for the next message to come in over the gateway, given certain criteria
@@ -1734,7 +2051,99 @@ namespace OjamajoBot.Module
         //}
         //reference: https://github.com/PassiveModding/Discord.Addons.Interactive/blob/master/SocketSampleBot/Module.cs
 
-        [Command("quiz", RunMode = RunMode.Async),Summary("I will give you some quiz about Doremi.")]
+        [Command("color", RunMode = RunMode.Async), Alias("colors"), Summary("Play the color terminology guessing games.")]
+        public async Task Interact_Quiz_Colors()
+        {
+            //Config.Doremi.isRunningQuiz[Context.User.Id.ToString()] = true;
+            if (!Config.Doremi.isRunningQuiz.ContainsKey(Context.User.Id.ToString()))
+                Config.Doremi.isRunningQuiz.Add(Context.User.Id.ToString(), false);
+
+            if (!Config.Doremi.isRunningQuiz[Context.User.Id.ToString()])
+            {
+                Config.Doremi.isRunningQuiz[Context.User.Id.ToString()] = true;
+                int attempt = 5;
+                var arrRandomed = (JArray)Config.Core.jobjectQuiz.GetValue("color");
+                string randomedAnswer = arrRandomed[new Random().Next(0, arrRandomed.Count)].ToString();
+                string replacedAnswer = ""; string[] containedAnswer = { }; List<string> guessedWord = new List<string>();
+                for (int i = 0; i < randomedAnswer.Length; i++)
+                    replacedAnswer += randomedAnswer.Substring(i, 1).Replace(randomedAnswer.Substring(i, 1), "_ ");
+
+                string tempRandomedAnswer = string.Join(" ", randomedAnswer.ToCharArray()) + " "; //with space
+                                                                                                  //Console.WriteLine(randomedAnswer);
+                await ReplyAsync($"Can you guess what color is this?```{replacedAnswer}```");
+
+                while (attempt > 0 && replacedAnswer.Contains("_"))
+                {
+                    Boolean isGuessed = false;
+                    var response = await NextMessageAsync(timeout: TimeSpan.FromSeconds(30));
+                    string loweredResponse = response.Content.ToLower();
+
+                    if (response == null)
+                    {
+                        Config.Doremi.isRunningQuiz[Context.User.Id.ToString()] = false;
+                        await ReplyAsync("Time's up, sorry you're not guessing any words yet.");
+                        return;
+                    }
+                    else if (loweredResponse.Length > 1)
+                        await ReplyAsync($"Sorry, but you can only guess a word each turn.");
+                    else if (loweredResponse == " ")
+                        await ReplyAsync($"Sorry, but you can't enter a whitespace character.");
+                    else if (loweredResponse.Length <= 1)
+                    {
+                        foreach (string x in guessedWord)
+                        {
+                            if (loweredResponse.Contains(x))
+                            {
+                                await ReplyAsync($"You already guessed **{x}**");
+                                isGuessed = true;
+                                return;
+                            }
+                        }
+
+                        guessedWord.Add(loweredResponse);
+
+                        if (!tempRandomedAnswer.Contains(loweredResponse) && !isGuessed)
+                        {
+                            await ReplyAsync($"Sorry, you guess it wrong.");
+                            attempt -= 1;
+                        }
+                        else if (!isGuessed)
+                        {
+                            try
+                            {
+                                StringBuilder sb = new StringBuilder(replacedAnswer);
+                                for (int i = 0; i < replacedAnswer.Length; i++)
+                                {
+                                    if (loweredResponse == tempRandomedAnswer[i].ToString())
+                                    {
+                                        sb[i] = loweredResponse.ToCharArray()[0];
+                                    }
+                                }
+                                replacedAnswer = sb.ToString();
+                            }
+                            catch (Exception e) { Console.WriteLine(e.ToString()); }
+
+                        }
+
+                    }
+
+                    await ReplyAsync($"Guessing attempt(s) left: **{attempt}**```{replacedAnswer}```");
+                }
+
+                if (replacedAnswer.Contains("_"))
+                    await ReplyAsync($"Sorry, you're running out of guessing attempt. The correct answer is : **{randomedAnswer}**");
+                else
+                    await ReplyAsync($"Congratulations, you guess the correct answer: **{randomedAnswer}**");
+
+                Config.Doremi.isRunningQuiz[Context.User.Id.ToString()] = false;
+                return;
+            }
+            else
+                await ReplyAsync($"Sorry, but you still have a running quiz interactive commands, please finish it first.");
+            
+        }
+
+        [Command("doremi", RunMode = RunMode.Async), Summary("I will give you some quiz about Doremi.")]
         public async Task Interact_Quiz()
         {
             Random rnd = new Random();
@@ -1744,28 +2153,35 @@ namespace OjamajoBot.Module
             List<string> answer = new List<string>();
             string replyTimeout = "Time's up. Sorry but it seems you haven't answered yet.";
 
-            if (rndQuiz == 1){
+            if (rndQuiz == 1)
+            {
                 question = "What is my favorite food?";
                 answer.Add("steak");
                 replyCorrect = "Ding Dong, correct! I love steak very much";
                 replyWrong = "Sorry but that's wrong. Please retype the correct answer.";
                 replyTimeout = "Time's up. My favorite food is steak.";
                 replyEmbed = "https://66.media.tumblr.com/337aaf42d3fb0992c74f7f9e2a0bf4f6/tumblr_olqtewoJDS1r809wso1_500.png";
-            } else if (rndQuiz == 2) {
+            }
+            else if (rndQuiz == 2)
+            {
                 question = "Where do I attend my school?";
                 answer.Add("misora elementary school"); answer.Add("misora elementary"); answer.Add("misora school");
                 replyCorrect = "Ding Dong, correct!";
                 replyWrong = "Sorry but that's wrong. Please retype the correct answer.";
                 replyTimeout = "Time's up. I went to Misora Elementary School.";
                 replyEmbed = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/d/df/E.JPG";
-            } else if (rndQuiz == 3) {
+            }
+            else if (rndQuiz == 3)
+            {
                 question = "What is my full name?";
                 answer.Add("doremi harukaze"); answer.Add("harukaze doremi");
                 replyCorrect = "Ding Dong, correct! Doremi Harukaze is my full name.";
                 replyWrong = "Sorry but that's wrong. Please retype the correct answer.";
                 replyTimeout = "Time's up. Doremi Harukaze is my full name.";
                 replyEmbed = "https://i.pinimg.com/originals/e7/1c/ce/e71cce7499e4ea9f9520c6143c9672e7.jpg";
-            } else {
+            }
+            else
+            {
                 question = "What is my sister name?";
                 answer.Add("pop"); answer.Add("harukaze pop"); answer.Add("pop harukaze");
                 replyCorrect = "Ding Dong, that's correct. Pop Harukaze is my sister name.";
@@ -1785,430 +2201,25 @@ namespace OjamajoBot.Module
             {
                 var response = await NextMessageAsync();
 
-                if (response == null){
+                if (response == null)
+                {
                     await ReplyAsync(replyTimeout);
                     return;
-                } else if (answer.Contains(response.Content.ToLower())) {
+                }
+                else if (answer.Contains(response.Content.ToLower()))
+                {
                     await ReplyAsync(replyCorrect, embed: new EmbedBuilder()
                     .WithColor(Config.Doremi.EmbedColor)
                     .WithImageUrl(replyEmbed)
                     .Build());
                     correctAnswer = true;
-                } else {
+                }
+                else
+                {
                     await ReplyAsync(replyWrong);
                 }
             }
         }
 
-        //[Command("quiz episodes", RunMode = RunMode.Async)]
-        //public async Task Interact_Quiz_Episodes()
-        //{
-        //    string[,] arrRandomSeason1 = { 
-        //        {"2","I Become Hazuki-chan","https://vignette.wikia.nocookie.net/ojamajowitchling/images/a/ab/OD-EP2-01.png/revision/latest?cb=20191014181543"},
-        //        {"3","The Transfer Student from Naniwa! Aiko Debuts","https://vignette.wikia.nocookie.net/ojamajowitchling/images/7/76/OD-EP3-01.png/revision/latest?cb=20191020221637"},
-        //        {"4","It's Not Scary if We're All Witches","https://vignette.wikia.nocookie.net/ojamajowitchling/images/b/b5/OD-EP4-01.png/revision/latest?cb=20191021160947"},
-        //        {"5","Grand Opening! Maho-dou","https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/56/OD-EP5-01.png/revision/latest?cb=20191028122639"},
-        //        {"6","A Liar's First Friendship","https://vignette.wikia.nocookie.net/ojamajowitchling/images/a/a2/OD-EP6-01.png/revision/latest?cb=20191103230145"},
-        //        {"8","Go to the Witch World!!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/1/11/OD-EP8-01.png/revision/latest?cb=20191104092436"},
-        //        {"11","Early Bird Marina and a Bouquet From the Heart","https://vignette.wikia.nocookie.net/ojamajowitchling/images/e/e5/OD-EP11-01.png/revision/latest?cb=20191106191355"},
-        //        {"12","A Wish for a Precious Shirt","https://vignette.wikia.nocookie.net/ojamajowitchling/images/6/63/OD-EP12-01.png/revision/latest?cb=20191107002353"},
-        //        {"14","Laugh and Forgive Me!?","https://vignette.wikia.nocookie.net/ojamajowitchling/images/8/8e/OD-EP14-01.png/revision/latest?cb=20191107104808"},
-        //        {"15","Majo Rika Goes to Kindergarten","https://vignette.wikia.nocookie.net/ojamajowitchling/images/e/e9/OD-EP15-01.png/revision/latest?cb=20191107231142"},
-        //        {"16","Fishing for Love","https://vignette.wikia.nocookie.net/ojamajowitchling/images/0/07/OD-EP16-01.png/revision/latest?cb=20191109124447"},
-        //        {"17","Yada-kun is a Delinquent!?","https://vignette.wikia.nocookie.net/ojamajowitchling/images/f/f3/OD-EP17-01.png/revision/latest?cb=20191109135953"},
-        //        {"18","Don't Use That! The Forbidden Magic","https://vignette.wikia.nocookie.net/ojamajowitchling/images/3/34/OD-EP18-01.png/revision/latest?cb=20171021190450"},
-        //        {"19","Hazuki-chan is Kidnapped!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/5d/OD-EP19-01.png/revision/latest?cb=20191113144549"},
-        //        {"20","The Rival Debuts! The Maho-dou is in Big Trouble!!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/3/39/OD-EP20-01.png/revision/latest?cb=20191113182510"},
-        //        {"21","Majoruka's Goods are full of danger!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/1/12/OD-EP21-01.png/revision/latest?cb=20191113215530"},
-        //        {"22","The Road to being a level 6 Witch is Hard","https://vignette.wikia.nocookie.net/ojamajowitchling/images/f/f4/OD-EP22-01.png/revision/latest?cb=20191113223335"},
-        //        {"23","Big Change! The Ojamajo's Test","https://vignette.wikia.nocookie.net/ojamajowitchling/images/4/4d/OD-EP23-01.png/revision/latest?cb=20191116123630"},
-        //        {"24","Majoruka versus level 6 ojamajo!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/1/13/OD-EP24-01.png/revision/latest?cb=20191116140500"},
-        //        {"25","Ojamajo Poppu appears!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/d/dc/OD-EP25-01.png/revision/latest?cb=20191116143237"},
-        //        {"27","Oyajide arrives?!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/e/ee/OD-EP27-01.png/revision/latest?cb=20191116223858"},
-        //        {"28","Love is a Windy Ride over a Plateau","https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/58/OD-EP28-01.png/revision/latest?cb=20191116234149"},
-        //        {"29","The Tap Disappeared at the Festival!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/6/61/OD-EP29-01.png/revision/latest?cb=20191117003019"},
-        //        {"30","I want to meet the ghost!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/f/f2/OD-EP30-01.png/revision/latest?cb=20191117011838"},
-        //        {"31","Present from Mongolia","https://vignette.wikia.nocookie.net/ojamajowitchling/images/e/e4/OD-EP31-01.png/revision/latest?cb=20191117102136"},
-        //        {"32","Overthrow Tamaki! the class election!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/6/68/OD-EP32-01.png/revision/latest?cb=20191117105859"},
-        //        {"33","Panic at the Sports Festival","https://vignette.wikia.nocookie.net/ojamajowitchling/images/6/65/OD-EP33-01.png/revision/latest?cb=20191117171421"},
-        //        {"34","I want to see my Mother!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/8/85/OD-EP34-01.png/revision/latest?cb=20191117174457"},
-        //        {"35","The Transfer student is a Witch Apprentice?!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/0/0a/OD-EP35-01.png/revision/latest?cb=20191117183318"},
-        //        {"36","Level four exam is Dododododo!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/59/OD-EP36-01.png/revision/latest?cb=20191117213655"},
-        //        {"38","Ryota and the Midnight Monster","https://vignette.wikia.nocookie.net/ojamajowitchling/images/e/e3/OD-EP38-01.png/revision/latest?cb=20191118104422"},
-        //        {"41","Father and Son, the Move Towards Victory!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/4/43/OD-EP41-01.png/revision/latest?cb=20171021190911"},
-        //        {"42","The Ojamajo's Fight for Justice!?","https://vignette.wikia.nocookie.net/ojamajowitchling/images/c/c2/OD-EP42-01.png/revision/latest?cb=20191118193414"},
-        //        {"43","Papa, Fireworks, and Tearful Memories","https://vignette.wikia.nocookie.net/ojamajowitchling/images/a/a1/OD-EP43-01.png/revision/latest?cb=20191118200017"},
-        //        {"44","I Want to Be a Female Pro Wrestler!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/0/08/OD-EP44-01.png/revision/latest?cb=20191118205141"},
-        //        {"45","Help Santa!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/96/OD-EP45-01.png/revision/latest?cb=20191118205624"},
-        //        {"46","The Witches' Talent Show","https://vignette.wikia.nocookie.net/ojamajowitchling/images/6/61/OD-EP46-01.png/revision/latest?cb=20191119122536"},
-        //        {"47","Fathers Arranged Marriage Meeting","https://vignette.wikia.nocookie.net/ojamajowitchling/images/0/0c/OD-EP47-01.png/revision/latest?cb=20191119122558"},
-        //        {"48","Onpu's Mail is a Love Letter?","https://vignette.wikia.nocookie.net/ojamajowitchling/images/0/07/OD-EP48-01.png/revision/latest?cb=20191120210149"},
-        //        {"49","I Want to Meet Papa! The Dream Places on the Overnight Express","https://vignette.wikia.nocookie.net/ojamajowitchling/images/b/b9/OD-EP49-01.png/revision/latest?cb=20191120212755"},
-        //        {"50","The Final Witch Apprentice Exam","https://vignette.wikia.nocookie.net/ojamajowitchling/images/c/c3/OD-EP50-01.png/revision/latest?cb=20191120231046"},
-        //        {"51","Goodbye Maho-Dou","https://vignette.wikia.nocookie.net/ojamajowitchling/images/c/ce/OD-EP51-01.png/revision/latest?cb=20191120231059"},
-        //    };
-        //    string[,] arrRandomSeason2 = { 
-        //        {"1","Doremi Becomes a Mom!?","https://vignette.wikia.nocookie.net/ojamajowitchling/images/a/ae/ODS-EP1-001.png/revision/latest?cb=20191122221644"},
-        //        {"2","Raising a Baby is a Lot of Trouble!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/8/83/ODS-EP2-001.png/revision/latest?cb=20191124140100"},   
-        //        {"3","Don't Fall Asleep! Pop's Witch Apprentice Exam","https://vignette.wikia.nocookie.net/ojamajowitchling/images/4/43/ODS-EP3-001.png/revision/latest?cb=20191124212633"},   
-        //        {"4","Doremi Fails as a Mom!?","https://vignette.wikia.nocookie.net/ojamajowitchling/images/7/7e/ODS-EP4-001.png/revision/latest?cb=20191124235204"},   
-        //        {"5","So Long, Oyajiide","https://vignette.wikia.nocookie.net/ojamajowitchling/images/8/8e/ODS-EP5-001.png/revision/latest?cb=20191125102137"},   
-        //        {"6","Lies and Truth in Flower Language","https://vignette.wikia.nocookie.net/ojamajowitchling/images/4/43/ODS-EP6-001.png/revision/latest?cb=20191125213656"},   
-        //        {"7","Hana-chan's Health Examination","https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/5d/ODS-EP7-001.png/revision/latest?cb=20191125221342"},   
-        //        {"8","Across Time, In Search of Onpu's Moms Secret!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/1/12/ODS-EP8-001.png/revision/latest?cb=20191130001508"},   
-        //        {"9","The Search for the Herbs! Maho-dou's Bus Trip","https://vignette.wikia.nocookie.net/ojamajowitchling/images/d/d1/ODS-EP9-001.png/revision/latest?cb=20191201104930"},   
-        //        {"11","Hazuki-chan Learns how to Dance!?","https://vignette.wikia.nocookie.net/ojamajowitchling/images/b/b4/ODS-EP11-001.png/revision/latest?cb=20191201200624"},   
-        //        {"12","The Health Examination's Yellow Cards!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/b/b6/ODS-EP12-001.png/revision/latest?cb=20191202120414"},   
-        //        {"13","Doremi Becomes a Bride?","https://vignette.wikia.nocookie.net/ojamajowitchling/images/8/80/ODS-EP13-001.png/revision/latest?cb=20191204222102"},   
-        //        {"14","Pop's First Love? Her Beloved Jyunichi-Sensei!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/b/b9/ODS-EP14-001.png/revision/latest?cb=20191208134648"},   
-        //        {"15","Mother's Day and the Drawing of Mother","https://vignette.wikia.nocookie.net/ojamajowitchling/images/2/23/ODS-EP15-001.png/revision/latest?cb=20191209133630"},   
-        //        {"18","Dodo Runs Away From Home!!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/e/eb/ODS-EP18-001.png/revision/latest?cb=20191217185517"},   
-        //        {"19","Doremi and Hazuki's Big Fight","https://vignette.wikia.nocookie.net/ojamajowitchling/images/c/cc/ODS-EP19-001.png/revision/latest?cb=20191217220830"},   
-        //        {"21","The Misanthropist Majo Don and The Promise of The Herb","https://vignette.wikia.nocookie.net/ojamajowitchling/images/b/b9/ODS-EP21-001.png/revision/latest?cb=20191221130019"},   
-        //        {"22","The Wizard's Trap - Oyajide Returns","https://vignette.wikia.nocookie.net/ojamajowitchling/images/6/66/ODS-EP22-001.png/revision/latest?cb=20191222224016"},   
-        //        {"23","Using new powers to Rescue Hana-chan!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/0/07/ODS-EP23-001.png/revision/latest?cb=20191223102333"},   
-        //        {"24","Fried Bread Power is Scary!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/3/33/ODS-EP24-001.png/revision/latest?cb=20191229162205"},   
-        //        {"25","The Mysterious Pretty Boy, Akatsuki-kun Appears!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/0/0b/ODS-EP25-001.png/revision/latest?cb=20191230032553"},   
-        //        {"26","Kanae-chan's Diet Plan","https://vignette.wikia.nocookie.net/ojamajowitchling/images/f/fb/ODS-EP26-001.png/revision/latest?cb=20200101191420"},   
-        //        {"28","Health Examination Full of Hidden Dangers","https://vignette.wikia.nocookie.net/ojamajowitchling/images/d/db/ODS-EP28-001.png/revision/latest?cb=20200104231053"},   
-        //        {"29","Everyone Disappears During the Test of Courage!?","https://vignette.wikia.nocookie.net/ojamajowitchling/images/3/32/ODS-EP29-001.png/revision/latest?cb=20200105222029"},   
-        //        {"30","Seki-sensei's Got a Boyfriend!?","https://vignette.wikia.nocookie.net/ojamajowitchling/images/7/77/ODS-EP30-001.png/revision/latest?cb=20200105223509"},   
-        //        {"31","The FLAT 4 Arrive from the Wizard World!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/9b/ODS-EP31-001.png/revision/latest?cb=20200109000219"},   
-        //        {"32","Fly Away! Dodo and the Other Fairies' Big","https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/95/02.32.09.JPG/revision/latest?cb=20160104203250"},   
-        //        {"33","Say Cheese During the Class Trip!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/91/02.33.07.JPG/revision/latest?cb=20160104204330"},   
-        //        {"34","Takoyaki is the Taste of Making Up","https://vignette.wikia.nocookie.net/ojamajowitchling/images/a/a4/02.33.06.JPG/revision/latest?cb=20160104203724"},   
-        //        {"36","Aiko and her Rival! Sports Showdown!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/3/31/02.36.06.JPG/revision/latest?cb=20160104204841"},   
-        //        {"38","Hazuki-chan's a Great Director!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/4/45/02.38.06.JPG/revision/latest?cb=20160104205546"},   
-        //        {"39","A Selfish Child and the Angry Monster","https://vignette.wikia.nocookie.net/ojamajowitchling/images/a/ae/39.07.JPG/revision/latest?cb=20160104205811"},   
-        //        {"40","The Piano Comes to the Harukaze House!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/2/28/02.40.10.JPG/revision/latest?cb=20160104210153"},   
-        //        {"41","Chase after Onpu! The Path to Becoming an Idol!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/3/32/02.41.06.JPG/revision/latest?cb=20160104210830"},   
-        //        {"42","The Witch Who Does Not Cast Magic","https://vignette.wikia.nocookie.net/ojamajowitchling/images/7/7d/42.09.JPG/revision/latest?cb=20160104211048"},   
-        //        {"44","A Happy White Christmas","https://vignette.wikia.nocookie.net/ojamajowitchling/images/e/e9/02.44.05.JPG/revision/latest?cb=20160104211626"},   
-        //        {"45","Ojamajo Era Drama: The Young Girls Show Their Valor!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/9b/02.45.08.JPG/revision/latest?cb=20160104211934"},   
-        //        {"46","The Last Examination - Hana-chan's Mom Will Protect Her!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/f/fe/02.46.09.JPG/revision/latest?cb=20160104212224"},   
-        //        {"47","Give Back Hana-chan! The Great Magic Battle","https://vignette.wikia.nocookie.net/ojamajowitchling/images/1/13/02.47.05.JPG/revision/latest?cb=20160104212503"},   
-        //        {"49","Good Bye, Hana-chan","https://vignette.wikia.nocookie.net/ojamajowitchling/images/8/8f/49.16.JPG/revision/latest?cb=20160104213105"},   
-        //    };
-        //    string[,] arrRandomSeason3 = {
-        //        {"1","Doremi, a Stormy New Semester","https://vignette.wikia.nocookie.net/ojamajowitchling/images/4/44/Motto1-preop.png/revision/latest?cb=20171010213519"},
-        //        {"2","Momoko Cried!? The Secret of the Earring","https://vignette.wikia.nocookie.net/ojamajowitchling/images/c/c7/02.15.JPG/revision/latest?cb=20151216152711"},
-        //        {"3","I Hate You! But I Would Like To Be Your Friend!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/6/68/03.03.06.JPG/revision/latest?cb=20151216220704"},
-        //        {"5","The SOS Trio is Disbanding!?","https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/55/03.05.02.JPG/revision/latest?cb=20151216223354"},
-        //        {"6","Challenge! The First Patissiere Exam","https://vignette.wikia.nocookie.net/ojamajowitchling/images/e/ea/06.10.JPG/revision/latest?cb=20151216231954"},
-        //        {"8","What Are True Friends?","https://vignette.wikia.nocookie.net/ojamajowitchling/images/b/b9/03.08.07.JPG/revision/latest?cb=20151217022824"},
-        //        {"9","Hazuki and Masaru's Treasure","https://vignette.wikia.nocookie.net/ojamajowitchling/images/7/7c/09.02.JPG/revision/latest?cb=20151128023340"},
-        //        {"10","I Don't Want to Become an Adult!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/b/b5/03.10.06.JPG/revision/latest?cb=20151218113031"},
-        //        {"11","The Unstoppable Teacher!!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/e/e4/03.11.06.JPG/revision/latest?cb=20151220124444"},
-        //        {"12","Kotake VS Demon Coach Igarashi","https://vignette.wikia.nocookie.net/ojamajowitchling/images/e/ed/12.07.JPG/revision/latest?cb=20151220150403"},
-        //        {"14","An Up and Down Happy Birthday","https://vignette.wikia.nocookie.net/ojamajowitchling/images/1/1b/14.07.JPG/revision/latest?cb=20151220152430"},
-        //        {"16","Just Being Delicious is Not Enough!?","https://vignette.wikia.nocookie.net/ojamajowitchling/images/7/71/16.07.JPG/revision/latest?cb=20151220154907"},
-        //        {"17","Her Destine Rival!! Harukaze and Tamaki","https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/99/03.17.09.JPG/revision/latest?cb=20151220160308"},
-        //        {"18","Scoop! A Child Idol's Day","https://vignette.wikia.nocookie.net/ojamajowitchling/images/e/ec/18.09.JPG/revision/latest?cb=20151220162822"},
-        //        {"19","Nothing but Fights, Like Father, Like Son","https://vignette.wikia.nocookie.net/ojamajowitchling/images/7/74/03.19.05.JPG/revision/latest?cb=20151221002953"},
-        //        {"21","We're Out of Magical Ingredient","https://vignette.wikia.nocookie.net/ojamajowitchling/images/a/a7/21.11.JPG/revision/latest?cb=20151221005022"},
-        //        {"23","Clams By the Shore","https://vignette.wikia.nocookie.net/ojamajowitchling/images/b/bd/03.23.050.JPG/revision/latest?cb=20151221010658"},
-        //        {"24","Rock and Roll in the Music Club!?","https://vignette.wikia.nocookie.net/ojamajowitchling/images/7/76/03.24.06.JPG/revision/latest?cb=20151221011438"},
-        //        {"25","A Lonely Summer Vacation","https://vignette.wikia.nocookie.net/ojamajowitchling/images/a/ad/03.25.05.JPG/revision/latest?cb=20151221012136"},
-        //        {"26","Deliver Her Feelings! Aiko Goes to Osaka","https://vignette.wikia.nocookie.net/ojamajowitchling/images/a/ae/26.09.JPG/revision/latest?cb=20151221162214"},
-            
-        //    };
-        //}
-
-
-        //PagedReplyAsync will send a paginated message to the channel
-        //You can customize the paginator by creating a PaginatedMessage object
-        //You can customize the criteria for the paginator as well, which defaults to restricting to the source user
-        // This method will not block.
-        //[Command("paginator")]
-        //public async Task Test_Paginator()
-        //{
-        //    PaginatedMessage page = new PaginatedMessage();
-        //    var pages = new[] { "Page 1", "Page 2", "Page 3", "aaaaaa", "Page 5" };
-
-        //    await PagedReplyAsync(pages);
-        //}
-
     }
-
-    /*backup for basic music modules:
-    public class DoremiMusic : ModuleBase<SocketCommandContext>
-    {
-        //resource: https://gist.github.com/Joe4evr/773d3ce6cc10dbea6924d59bbfa3c62a
-        //a modules stops existing when a command is done executing and services exist aslong we did not dispose them
-
-        // Scroll down further for the AudioService.
-        // Like, way down
-        private readonly AudioService _service;
-
-        // Remember to add an instance of the AudioService
-        // to your IServiceCollection when you initialize your bot
-        public DoremiMusic(AudioService service)
-        {
-            _service = service;
-        }
-
-        // You *MUST* mark these commands with 'RunMode.Async'
-        // otherwise the bot will not respond until the Task times out.
-        [Command("join", RunMode = RunMode.Async)]
-        public async Task JoinCmd()
-        {
-            await _service.JoinAudio(Context.Guild, (Context.User as IVoiceState).VoiceChannel);
-        }
-
-        // Remember to add preconditions to your commands,
-        // this is merely the minimal amount necessary.
-        // Adding more commands of your own is also encouraged.
-        [Command("leave", RunMode = RunMode.Async)]
-        public async Task LeaveCmd()
-        {
-            await _service.LeaveAudio(Context.Guild);
-        }
-
-        [Command("play", RunMode = RunMode.Async)]
-        public async Task PlayCmd([Remainder] string song)
-        {
-            await _service.SendAudioAsync(Context.Guild, Context.Channel, "music/" + song + ".mp3");
-        }
-
-        [Command("stop", RunMode = RunMode.Async)]
-        public async Task StopCmd([Remainder] string song)
-        {
-            await _service.SendAudioAsync(Context.Guild, Context.Channel, "music/" + song + ".mp3");
-        }
-
-    }
-    */
-
-    //backup for help modules:
-    /*
-    public class DoremiHelpModule : ModuleBase
-    {
-        private readonly CommandService _commands;
-        private readonly IServiceProvider _map;
-
-        public DoremiHelpModule(IServiceProvider map, CommandService commands)
-        {
-            _commands = commands;
-            _map = map;
-        }
-
-        [Command("help")]
-        [Summary("Lists this bot's commands.")]
-        public async Task Help(string path = "")
-        {
-            EmbedBuilder output = new EmbedBuilder();
-            if (path == "")
-            {
-                output.Title = $"{Config.Doremi.EmbedName} Command List";
-
-                foreach (var mod in _commands.Modules.Where(m => m.Parent == null))
-                {
-                    AddHelp(mod, ref output);
-                }
-
-                output.Footer = new EmbedFooterBuilder
-                {
-                    Text = "Use 'help <category>' to get help with a module."
-                };
-            }
-            else
-            {
-                var mod = _commands.Modules.FirstOrDefault(m => m.Name.Replace("Module", "").ToLower() == path.ToLower());
-                if (mod == null) { await ReplyAsync("No module could be found with that name."); return; }
-
-                output.Title = mod.Name;
-                output.Description = $"{mod.Summary}\n" +
-                (!string.IsNullOrEmpty(mod.Remarks) ? $"({mod.Remarks})\n" : "") +
-                (mod.Aliases.Any() ? $"Prefix(es): {string.Join(",", mod.Aliases)}\n" : "") +
-                (mod.Submodules.Any() ? $"Submodules: {mod.Submodules.Select(m => m.Name)}\n" : "") + " ";
-                AddCommands(mod, ref output);
-            }
-
-            await ReplyAsync("", embed: output.Build());
-        }
-
-        public void AddHelp(ModuleInfo module, ref EmbedBuilder builder)
-        {
-            foreach (var sub in module.Submodules) AddHelp(sub, ref builder);
-            builder.AddField(f =>
-            {
-                f.Name = $"**{module.Name}**";
-                f.Value = $"Submodules: {string.Join(", ", module.Submodules.Select(m => m.Name))}" +
-                $"\n" +
-                $"Commands: {string.Join(", ", module.Commands.Select(x => $"`{x.Name}`"))}";
-            });
-        }
-
-        public void AddCommands(ModuleInfo module, ref EmbedBuilder builder)
-        {
-            foreach (var command in module.Commands)
-            {
-                command.CheckPreconditionsAsync(Context, _map).GetAwaiter().GetResult();
-                AddCommand(command, ref builder);
-            }
-        }
-
-        public void AddCommand(CommandInfo command, ref EmbedBuilder builder)
-        {
-            builder.AddField(f =>
-            {
-                f.Name = $"**{command.Name}**";
-                f.Value = $"{command.Summary}\n" +
-                (!string.IsNullOrEmpty(command.Remarks) ? $"({command.Remarks})\n" : "") +
-                (command.Aliases.Any() ? $"**Aliases:** {string.Join(", ", command.Aliases.Select(x => $"`{x}`"))}\n" : "") +
-                $"**Usage:** `{GetPrefix(command)} {GetAliases(command)}`";
-            });
-        }
-
-        public string GetAliases(CommandInfo command)
-        {
-            StringBuilder output = new StringBuilder();
-            if (!command.Parameters.Any()) return output.ToString();
-            foreach (var param in command.Parameters)
-            {
-                if (param.IsOptional)
-                    output.Append($"[{param.Name} = {param.DefaultValue}] ");
-                else if (param.IsMultiple)
-                    output.Append($"|{param.Name}| ");
-                else if (param.IsRemainder)
-                    output.Append($"...{param.Name} ");
-                else
-                    output.Append($"<{param.Name}> ");
-            }
-            return output.ToString();
-        }
-        public string GetPrefix(CommandInfo command)
-        {
-            var output = GetPrefix(command.Module);
-            output += $"{command.Aliases.FirstOrDefault()} ";
-            return output;
-        }
-        public string GetPrefix(ModuleInfo module)
-        {
-            string output = "";
-            if (module.Parent != null) output = $"{GetPrefix(module.Parent)}{output}";
-            if (module.Aliases.Any())
-                output += string.Concat(module.Aliases.FirstOrDefault(), " ");
-            return output;
-        }
-    }
-    */
-
-    /*backup for dorememes:
-    string[,] arrRandom =
-            {
-                {"imgflip","https://i.imgflip.com/1h9k61.jpg"},
-                {"tumblr","https://66.media.tumblr.com/4b8ae988116282b0fbb86156006977a7/tumblr_ndl02pfvej1thwu0wo1_1280.png"},
-                {"tumblr","https://66.media.tumblr.com/6143b1c1b6033c4cc068904909b68fbd/tumblr_n91u5yW35z1thwu0wo1_1280.png"},
-                {"tumblr","https://66.media.tumblr.com/df6d13c7abe1970b4bc9726e5c264252/tumblr_n8ypyaubZl1thwu0wo1_1280.png"},
-                {"tumblr","https://66.media.tumblr.com/1c00104523408517270a02f185208ff6/tumblr_n9iqy3L44d1thwu0wo1_1280.png"},
-                {"tumblr","https://66.media.tumblr.com/ffad930ddacf0964646700523e80fb81/tumblr_n906n643rG1thwu0wo1_1280.png"},
-                {"random","https://img1.ak.crunchyroll.com/i/spire4/1cd32824fff0e3be86cbd9f6c5b4cb2b1326942608_full.jpg"},
-                {"tumblr","https://66.media.tumblr.com/9fdbbdc668507fa90c38bae8fa8d9f8a/tumblr_nvu6gqb6NE1thwu0wo1_1280.png"},
-                {"random","https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/e90aeb60-6815-432d-bc4b-ad18ae885aaf/ddeph8m-bf0e2b8c-bc89-4e2f-b27c-f31d00d3c6cb.png/v1/fill/w_742,h_1077,q_70,strp/my_strawberry_shortcake_cast_meme__ojamajo_doremi__by_balloongal101_ddeph8m-pre.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9MTQ4NSIsInBhdGgiOiJcL2ZcL2U5MGFlYjYwLTY4MTUtNDMyZC1iYzRiLWFkMThhZTg4NWFhZlwvZGRlcGg4bS1iZjBlMmI4Yy1iYzg5LTRlMmYtYjI3Yy1mMzFkMDBkM2M2Y2IucG5nIiwid2lkdGgiOiI8PTEwMjQifV1dLCJhdWQiOlsidXJuOnNlcnZpY2U6aW1hZ2Uub3BlcmF0aW9ucyJdfQ.YimkZYTzceBEJT3bYtwr3b0wsHrg2RGNou-a4uuLS6M"},
-                {"ballmemes","https://pics.ballmemes.com/how-every-country-sees-magical-girl-anime-sailor-moon-ojamajo-44565702.png"},
-                {"funnyjunk","https://2eu.funnyjunk.com/pictures/Ojamajo_a17764_528025.jpg"},
-                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/644383823286763544/663616227914154014/unknown.png"},
-                {"Letter Three","https://media.discordapp.net/attachments/512825478512377877/660677566599790627/DO_THE_SWAG.gif"},
-                {"Odd Meat","https://cdn.discordapp.com/attachments/569409307100315651/653670970342506548/unknown.png"},
-                {"Letter Three","https://media.discordapp.net/attachments/310544560164044801/398230870445785089/DSRxAB9VQAAI5Ja.png"},
-                {"Letter Three","https://media.discordapp.net/attachments/314512031313035264/659229196693798912/1551058415141.png?width=396&height=469"},
-                {"BreadRavager","https://cdn.discordapp.com/attachments/643722270447239169/664425825030111243/onpuflube.gif"},
-                {"Ian","https://i.4pcdn.org/s4s/1537724473581.gif"},
-                {"Ian","https://i.4pcdn.org/s4s/1508866828910.gif"},
-                {"Ian","http://i.4pcdn.org/s4s/1500066705217.gif"},
-                {"Odd Meat","https://cdn.discordapp.com/attachments/644383823286763544/655441472426082345/unknown.png"},
-                {"Odd Meat","https://cdn.discordapp.com/attachments/569409307100315651/653669172873527328/unknown.png"},
-                {"Odd Meat","https://cdn.discordapp.com/attachments/644383823286763544/654432214595141693/Magical_more_episode_76-.png"},
-                {"Odd Meat","https://cdn.discordapp.com/attachments/644383823286763544/654812347038302220/unknown.png"},
-                {"Odd Meat","https://cdn.discordapp.com/attachments/644383823286763544/655870644671741972/unknown.png"},
-                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/644383823286763544/656235784038252550/scooby_guest_starring.png"},
-                {"Bunty","https://cdn.discordapp.com/attachments/644383823286763544/656262643199508483/48524296-4A66-41DC-B446-2C4A8DC463C1.png"},
-                {"Poob","https://i.gyazo.com/thumb/1200/e2b3d361d9ef6adeb0dfe22ee005b249-jpg.jpg"},
-                {"Letter Three","https://cdn.discordapp.com/attachments/644383823286763544/658414123893391360/heck.png"},
-                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/644383823286763544/658845873408704535/1575052839549.png"},
-                {"Letter Three","https://cdn.discordapp.com/attachments/644383823286763544/659083573437136897/dancedance.gif"},
-                {"Letter Three","https://media.discordapp.net/attachments/643721778685804544/659927439551627304/Ea04LEnzT8QAAAABJRU5ErkJggg.png"},
-                {"Letter Three","https://cdn.discordapp.com/attachments/644383823286763544/662569497290473512/unknown.png"},
-                {"Letter Three","https://cdn.discordapp.com/attachments/644383823286763544/663599628842958849/7fe43d8bf20a13ade7d15ca7ad29155f.png"},
-                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/644383823286763544/663640113380851712/1578292210398.png"},
-                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/644383823286763544/663650504257044480/hazumasameme.jpg"},
-                {"Letter Three","https://cdn.discordapp.com/attachments/644383823286763544/664315986266292241/dodo_ate_that_cheese.png"},
-                {"Odd Meat","https://cdn.discordapp.com/attachments/569409307100315651/654042450272190474/unknown.png"},
-                {"Letter Three","https://cdn.discordapp.com/attachments/569409307100315651/654092176392847390/unknown.png"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/666231823818555392/IDS_MARIO.jpg"},
-                {"Odd Meat","https://cdn.discordapp.com/attachments/569409307100315651/652209138507579422/unknown.png"},
-                {"https://twitter.com/zenhuxtable | tsuneotsubasa","https://pbs.twimg.com/media/EK_4kDXX0AIXKUE?format=jpg&name=small"},
-                {"Odd Meat","https://cdn.discordapp.com/attachments/569409307100315651/651493956496130068/die_monster.png"},
-                {"Letter Three","https://cdn.discordapp.com/attachments/569409307100315651/651409834713022474/98a979ed-7268-42e4-87e5-c21070d1c672.png"},
-                {"Odd Meat","https://cdn.discordapp.com/attachments/569409307100315651/651389510143311872/4663b1f6-55df-47c5-bb2f-8475b2d39c10.png"},
-                {"Odd Meat","https://cdn.discordapp.com/attachments/569409307100315651/651388603796291589/bcecbd0e-51b9-4f5d-bb68-8a6dbf12d04b.png"},
-                {"Odd Meat","https://cdn.discordapp.com/attachments/569409307100315651/651358920287191063/fe88353b-fb36-4aec-bfd2-abad90703f5b.png"},
-                {"Odd Meat","https://cdn.discordapp.com/attachments/569409307100315651/651189171918209024/first_witch.png"},
-                {"Odd Meat","https://cdn.discordapp.com/attachments/569409307100315651/651182811633680394/nowantaiko.png"},
-                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/569409307100315651/649831768634949644/20191128_222919.jpg"},
-                {"Letter Three","https://media.discordapp.net/attachments/601461955206709248/623365446392872960/unknown.png?width=654&height=468"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/649142334755307520/1504234417684.jpg"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/649142939339063296/1525921390250.gif"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/649141890725314561/NACHO_BURRITO.gif"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/649141957205164033/ebin.jpg"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/649142070325542942/1508258294538.gif"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/649141770617225226/pNmdjAu.png"},
-                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/569409307100315651/648379300587896883/1500832113127_-_Copy.png"},
-                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/569409307100315651/647983130640121862/saturday_is_for_ojamajo_dad.jpg"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/646817816221319178/1503179977121.jpg"},
-                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/569409307100315651/644405526863544322/1567392672079_-_Copy-chip.jpg"},
-                {"Logan Alex Wood","https://cdn.discordapp.com/attachments/569409307100315651/644404591676489729/6tytfgv.png"},
-                {"Logan Alex Wood","https://cdn.discordapp.com/attachments/569409307100315651/644402345504931859/Doremi.Ojamajo.Doremi.07.640x480.8A67C5DB.v2.mkv_snapshot_14.46_18.02.17_21.51.41-0061.jpg"},
-                {"Logan Alex Wood","https://cdn.discordapp.com/attachments/569409307100315651/644402296167596032/Doremi.Ojamajo.Doremi.07.640x480.8A67C5DB.v2.mkv_snapshot_13.14_2017.07.11_08.25.45.png"},
-                {"Letter Three","https://cdn.discordapp.com/attachments/569409307100315651/637455811232268299/unknown.png"},
-                {"Letter Three","https://cdn.discordapp.com/attachments/569409307100315651/634123008771883008/Wheezuki.png"},
-                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/622195390682365952/633855826955599882/unknown.png"},
-                {"Letter Three","https://cdn.discordapp.com/attachments/569409307100315651/632667918064418858/unknown.png"},
-                {"Letter Three","https://cdn.discordapp.com/attachments/569409307100315651/630882364154970112/Doremi_and_Meatwad.png"},
-                {"Letter Three","https://cdn.discordapp.com/attachments/569409307100315651/627039453998874635/Doremi_Yelling_at_Dodo.png"},
-                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/569409307100315651/626865289887219723/20190926_141325.jpg"},
-                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/569409307100315651/621153098257268766/EEFCeaRW4AENLCS.png"},
-                {"Letter Three","https://media.discordapp.net/attachments/399954211816865792/616449423957819392/Screen_Shot_2019-08-28_at_9.31.56_PM.png?width=623&height=468"},
-                {"Letter Three","https://cdn.discordapp.com/attachments/569409307100315651/617512947065028621/49c3845a262649cfc4fd9380ad0f9bf9.png"},
-                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/569409307100315651/617179180139937939/1567101892481.png"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/615741385290678326/1566707190041.jpg"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/615741420736610333/1566707190042.jpg"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/615741454588969002/1566707190043.jpg"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/615741454588969002/1566707190043.jpg"},
-                {"Letter Three","https://cdn.discordapp.com/attachments/569409307100315651/610687504395272195/onno.png"},
-                {"Poob","https://cdn.discordapp.com/attachments/569409307100315651/610664061675241497/80ffda0ff50bba2092f7295b5597414f-png.png"},
-                {"Tsuneotsubasa","https://cdn.discordapp.com/attachments/569409307100315651/609965957452136479/doremis_steaki.png"},
-                {"Letter Three","http://media.tumblr.com/tumblr_m4eoeywCjm1r4lv3u.gif"},
-                {"Letter Three","https://media.discordapp.net/attachments/569409307100315651/577797449691824132/1522040700266.jpg?width=403&height=468"},
-                {"Letter Three","https://cdn.discordapp.com/attachments/569409307100315651/598015670009200665/moshed_2017-6-3_0.22.59.gif"},
-                {"Rctgamer3","https://cdn.discordapp.com/attachments/569409307100315651/596251765448507392/unknown.png"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/577797087052300298/1537880631468.gif"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/577797344658194442/1522659324102.jpg"},
-                {"Unknown user","https://cdn.discordapp.com/attachments/569409307100315651/575498217165291523/image0.jpg"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/574408691009454083/doremiboomer.png"},
-                {"Letter Three","https://cdn.discordapp.com/attachments/569409307100315651/574193232838393866/latest.png"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/573123106399584277/1538920066198.jpg"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/573120294055706640/1510611686079.jpg"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/573120068137779200/1501279167144.jpg"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/573118787784802307/1520685800181.png"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/573116001445478400/1541637365326.jpg"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/573116266319970304/its_over.gif"},
-                {"Segawa Onpu","https://cdn.discordapp.com/attachments/569409307100315651/569619410487345162/Onpus_in_black.jpg"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/569618915483713546/1534813397081.gif"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/569619208598454293/1534809043862.gif"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/569619273044066305/1532565451608.gif"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/569618503758249995/1549166072943.png"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/569607758903509023/check_her_out.png"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/569410491794063391/photosynthesis.png"},
-                {"Gutsybird","https://cdn.discordapp.com/attachments/569409307100315651/569410391214522378/1519780154767.gif"},
-                {"вештица","https://cdn.discordapp.com/attachments/644383823286763544/666315700146667521/4d9a66db2cafa940a3369afbcf5a4706.png"},
-                {"Logan Alex Wood","https://cdn.discordapp.com/attachments/644383823286763544/666949577563177000/image0.png"},
-                {"4chan","https://i.4pcdn.org/s4s/1524983553681.png"},
-                {"4chan","https://i.4pcdn.org/s4s/1537885453707.jpg"},
-                {"4chan","https://i.4pcdn.org/s4s/1537658495445.png"},
-                {"tsuneotsubasa","https://cdn.discordapp.com/attachments/644383823286763544/668033522337972262/20200118_040607.jpg"},
-                {"tsuneotsubasa","https://cdn.discordapp.com/attachments/644383823286763544/668033522602344468/20200118_040542.png"}
-            };
-        */
 }

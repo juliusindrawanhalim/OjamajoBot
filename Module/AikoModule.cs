@@ -419,48 +419,78 @@ namespace OjamajoBot.Module
         [Command("spooky"), Alias("exe","creepy","spook"), Summary("Please don't use this commands...")]
         public async Task showSpookyAiko()
         {
-            string[] arrSentences = {
-                "Didn't I tell you already for not using this commands?!",
-                "It's midnight already, you probably should go to sleep with me",
-                "Beware of the Sp00ky Aiko",
-                "Don't look over behind...",
-                "Hello, please don't look at me...",
-                "I'm right behind you...",
-                "Why are you insisting to use this commands?",
-                "Don't worry, I'll be right behind you...",
-                "Do you wanna know how did I get these eyes?",
-                "There is someone... lurking behind you...",
-                "Aiko cannot be found...",
-                "....","Pretty...witchy..aiko...chi...",
-                "Please make me some Takoyaki..."
-            };
+            int randAngryAiko = new Random().Next(0, 11);
+            if (randAngryAiko == 5){
+                string[] arrSentences = {
+                    "Oy! Stop using this command. At least use another nice command for me will ya?!",
+                    "I won't let you use this command again!",
+                    "Oy! Stop using this command!",
+                    "Oy! Stop making fun of the spooky aiko!",
+                    "No!I won't let you use this command!",
+                    "I don't think you'll get spooky aiko this time!",
+                    "You think it was spooky Aiko? You get this one instead!",
+                    "I'm preventing you from getting the spooky Aiko!",
+                    "Oy! At least use another command instead using the spooky aiko one!"
+                };
 
-            string[] arrRandomAuthor = {
-                "4ik00","Aik0","a.i.k.o.e.x.e","too much Ai-k0",
-                "m1ssing A1k0","seno.exe","s3n0.ex3","4k10 s3n0o",
-                "th3 A1k0","Doppel Aiko","4ik0 s3n0","A1k0","witchy.exe",
-                "4170 seno","s3n00 A1k0","a.i.k.o","a i k o","s e n o",
-                "aiko.exe","Sp00kiko","41k0","Takoyaki Girl",
-                "T4k0y4k1","Takoyaki.exe","a.i.k.0.e.x....e","aaaaaaiiiiiikkkkoooo",
-                "aaaiii1ikk00","4ikkkkkkkk0000","Aaiikk00.exe","Blue.exe",
-                "A1k0000","01100001 01101001","A1kk000","Pretty...witchy..aiko...chi..."
-            };
+                await base.ReplyAsync(embed: new EmbedBuilder()
+                    .WithAuthor(Config.Aiko.EmbedName, "https://vignette.wikia.nocookie.net/ojamajowitchling/images/b/b3/Linesticker14.png")
+                    .WithDescription(arrSentences[new Random().Next(0, arrSentences.Length)])
+                    .WithColor(Color.DarkerGrey)
+                    .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/b/b3/Linesticker14.png")
+                    .Build());
+            } else {
+                string[] arrSentences = {
+                    "Didn't I tell you already for not using this commands?!",
+                    "It's midnight already, you probably should go to sleep with me",
+                    "Beware of the Sp00ky Aiko",
+                    "Don't look over behind...",
+                    "Hello, please don't look at me...",
+                    "I'm right behind you...",
+                    "Why are you insisting to use this commands?",
+                    "Don't worry, I'll be right behind you...",
+                    "Do you wanna know how did I get these eyes?",
+                    "There is someone... lurking behind you...",
+                    "Aiko cannot be found...",
+                    "....","Pretty...witchy..aiko...chi...",
+                    "Please make me some Takoyaki...",
+                    "Let's be my friend, will you?"
+                };
 
-            string[,] arrRandom = {
+                string[] arrRandomAuthor = {
+                    "4ik00","Aik0","a.i.k.o.e.x.e","too much Ai-k0",
+                    "m1ssing A1k0","seno.exe","s3n0.ex3","4k10 s3n0o",
+                    "th3 A1k0","Doppel Aiko","4ik0 s3n0","A1k0","witchy.exe",
+                    "4170 seno","s3n00 A1k0","a.i.k.o","a i k o","s e n o",
+                    "aiko.exe","Sp00kiko","41k0","Takoyaki Girl",
+                    "T4k0y4k1","Takoyaki.exe","a.i.k.0.e.x....e","aaaaaaiiiiiikkkkoooo",
+                    "aaaiii1ikk00","4ikkkkkkkk0000","Aaiikk00.exe","Blue.exe",
+                    "A1k0000","01100001 01101001","A1kk000","Pretty...witchy..aiko...chi..."
+                };
+
+                string[,] arrRandom = {
                 {"Odd Meat","https://cdn.discordapp.com/attachments/569409307100315651/653676655294021643/daikon_9.png"},
                 {"Letter Three","https://media.discordapp.net/attachments/653690054912507914/658004378732724234/unknown.png"},
                 {"вештица","https://cdn.discordapp.com/attachments/569409307100315651/654463722940792855/wowspoop.gif"},
-                {"Letter Three","https://media.discordapp.net/attachments/653690054912507914/658004103854817290/Spooky_Aiko.png"}
+                {"Letter Three","https://media.discordapp.net/attachments/653690054912507914/658004103854817290/Spooky_Aiko.png"},
+                {"Letter Three","https://cdn.discordapp.com/attachments/643722270447239169/669150355526778880/unknown.png"},
+                {"Letter Three","https://cdn.discordapp.com/attachments/643722270447239169/669150430940495872/unknown.png"},
+                {"Odd Meat","https://cdn.discordapp.com/attachments/643722270447239169/669225508441161758/spooks_orig.png"},
+                {"Nathan","https://cdn.discordapp.com/attachments/643722270447239169/669597882114113558/20200122_124002.jpg"},
             };
 
-            int randomedResult = new Random().Next(0, arrRandom.GetLength(0));
-            await base.ReplyAsync(embed: new EmbedBuilder()
-                .WithAuthor(arrRandomAuthor[new Random().Next(0, arrRandomAuthor.Length)], arrRandom[randomedResult, 1])
-                .WithDescription(arrSentences[new Random().Next(0,arrSentences.Length)])
-                .WithColor(Color.DarkerGrey)
-                .WithImageUrl(arrRandom[randomedResult, 1])
-                .WithFooter($"Contributed by: {arrRandom[randomedResult, 0]}")
-                .Build());
+                int randomedResult = new Random().Next(0, arrRandom.GetLength(0));
+                await base.ReplyAsync(embed: new EmbedBuilder()
+                    .WithAuthor(arrRandomAuthor[new Random().Next(0, arrRandomAuthor.Length)], arrRandom[randomedResult, 1])
+                    .WithDescription(arrSentences[new Random().Next(0, arrSentences.Length)])
+                    .WithColor(Color.DarkerGrey)
+                    .WithImageUrl(arrRandom[randomedResult, 1])
+                    .WithFooter($"Contributed by: {arrRandom[randomedResult, 0]}")
+                    .Build());
+            }
+            
+
+            
         }
 
         [Command("stats"), Alias("bio"), Summary("I will show you my biography info")]

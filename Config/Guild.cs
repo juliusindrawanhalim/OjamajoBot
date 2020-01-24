@@ -23,57 +23,89 @@ namespace Config
             //check if logs directory exists/not
             if (!Directory.Exists($"logs/{id_guild.ToString()}"))
                 Directory.CreateDirectory($"logs/{id_guild.ToString()}");
+            //check if config guild directory exists/not
+            if (!Directory.Exists($"{Core.headConfigGuildFolder}{id_guild.ToString()}"))
+                Directory.CreateDirectory($"{Core.headConfigGuildFolder}{id_guild.ToString()}");
 
-            if (File.Exists($"config/{id_guild}.json"))
-            {
-                JObject guildConfig = JObject.Parse(File.ReadAllText($"config/{id_guild}.json"));
+            if (File.Exists($"{Core.headConfigGuildFolder}{id_guild}/{id_guild}.json")){
+                JObject guildConfig = JObject.Parse(File.ReadAllText($"{Core.headConfigGuildFolder}{id_guild}/{id_guild}.json"));
                 
                 //id_random_event
                 if (!guildConfig.ContainsKey("id_random_event"))
                     guildConfig.Add( new JProperty("id_random_event", ""));
 
+                //id_birthday_announcement
+                if (!guildConfig.ContainsKey("id_birthday_announcement"))
+                    guildConfig.Add(new JProperty("id_birthday_announcement", ""));
+
                 //leaving user message
                 if (!guildConfig.ContainsKey("user_leaving_notification"))
-                    guildConfig.Add(new JProperty("user_leaving_notification", "0"));
+                    guildConfig.Add(new JProperty("user_leaving_notification", "1"));
 
-                if (ulong.TryParse(guildConfig.GetValue("id_random_event").ToString(), out var resultNotifOnline))
-                    Guild.Id_random_event[$"{id_guild}"] = (ulong)guildConfig.GetValue("id_random_event");
+                //user birthday
+                if (!guildConfig.ContainsKey("user_birthday"))
+                    guildConfig.Add(new JProperty("user_birthday", new JObject()));
 
-                File.WriteAllText($"config/{id_guild}.json", guildConfig.ToString());
+                File.WriteAllText($"{Core.headConfigGuildFolder}{id_guild}/{id_guild}.json", guildConfig.ToString());
 
             } else { //create json file if it's not existed
                 
                 JObject guildConfig = new JObject(
                     new JProperty("id_random_event", ""),
-                    new JProperty("user_leaving_notification", "0"));
+                    new JProperty("id_birthday_announcement", ""),
+                    new JProperty("user_leaving_notification", "0"),
+                    new JProperty("user_birthday", new JObject()));
 
-                File.WriteAllText($"config/{id_guild}.json", guildConfig.ToString());
+                File.WriteAllText($"{Core.headConfigGuildFolder}{id_guild}/{id_guild}.json", guildConfig.ToString());
             }
             
         }
 
-        public static void assignId(ulong id_guild,string property, string value)
+        public static string getPropertyValue(ulong id_guild, string property)
         {
-            var val = JObject.Parse(File.ReadAllText($"config/{id_guild.ToString()}.json"));
+            var val = JObject.Parse(File.ReadAllText($"{Core.headConfigGuildFolder}{id_guild}/{id_guild}.json"));
             JProperty optionProp = val.Property(property);
-            //string option = optionProp.Value.Value<string>();
-
-            optionProp.Value = value.ToString();
-            File.WriteAllText($"config/{id_guild.ToString()}.json", val.ToString());
-
-            init(id_guild);//reinit the array
+            return optionProp.Value.ToString();
         }
 
-        public static void remove(string id_guild)
+        public static void setPropertyValue(ulong id_guild,string property, string value)
         {
-            if (File.Exists($"config/{id_guild}.json"))
-                File.Delete($"config/{id_guild}.json");
-            
+            var val = JObject.Parse(File.ReadAllText($"{Core.headConfigGuildFolder}{id_guild}/{id_guild}.json"));
+            JProperty optionProp = val.Property(property);
+            optionProp.Value = value.ToString();
+            File.WriteAllText($"{Core.headConfigGuildFolder}{id_guild}/{id_guild}.json", val.ToString());
+
+            //init(id_guild);//reinit the array
         }
 
+        public static void removePropertyValue(ulong id_guild, string property, string value)
+        {
+            if (hasPropertyValues(id_guild.ToString(), property)){
+                var val = JObject.Parse(File.ReadAllText($"{Core.headConfigGuildFolder}{id_guild}/{id_guild}.json"));
+                JProperty optionProp = val.Property(property);
+                optionProp.Value = "";
+                File.WriteAllText($"{Core.headConfigGuildFolder}{id_guild}/{id_guild}.json", val.ToString());
+            }
+        }
+
+        public static void removeGuildConfigFile(string id_guild)
+        {
+            if (File.Exists($"{Core.headConfigGuildFolder}{id_guild}/{id_guild}.json"))
+                File.Delete($"{Core.headConfigGuildFolder}{id_guild}/{id_guild}.json");
+        }
+
+        public static Boolean hasPropertyValues(string id_guild, string property){
+            var val = JObject.Parse(File.ReadAllText($"{Core.headConfigGuildFolder}{id_guild}/{id_guild}.json"));
+
+            if (val.ContainsKey(property))
+                if (val[property].ToString()!="")
+                    return true;
+            
+            return false;
+        }
 
         //public static IDictionary<string, ulong> Id_notif_online = new Dictionary<string, ulong>();
-        public static IDictionary<string, ulong> Id_random_event = new Dictionary<string, ulong>();
+        //public static IDictionary<string, ulong> Id_random_event = new Dictionary<string, ulong>();
 
         //public IDictionary<string, ulong> Id_notif_online { get; set; }
         //public static ulong Id_notif_online { get; set; }
