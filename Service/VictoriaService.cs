@@ -118,7 +118,7 @@ namespace OjamajoBot.Service
             await args.Player.PlayAsync(track);
             await args.Player.TextChannel.SendMessageAsync(
                 $"{args.Reason}: {args.Track.Title}\n" +
-                $"Now playing: {track.Title}");
+                $"\u25B6 Now playing: {track.Title}");
         }
 
         //private async Task OnTrackEnded(TrackEndedEventArgs args)

@@ -148,6 +148,15 @@ namespace OjamajoBot.Bot
         public async Task JoinedGuild(SocketGuild guild)
         {
             //Config.Music.storedLavaTrack[guild.Id.ToString()] = new List<LavaTrack>();
+            var systemChannel = client.GetChannel(guild.SystemChannel.Id) as SocketTextChannel; // Gets the channel to send the message in
+            await systemChannel.SendMessageAsync($"Pretty witchy {MentionUtils.MentionUser(Config.Doremi.Id)} chi~ has arrived to the {guild.Name}. " +
+                $"Thank you everyone for inviting me up, I'm very happy to meet you all. " +
+                $"You can ask me with `{Config.Doremi.PrefixParent[0]}help` for all commands list.",
+            embed: new EmbedBuilder()
+            .WithColor(Config.Hazuki.EmbedColor)
+            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/f/fc/04.01.08.JPG")
+            .Build());
+
             Config.Music.queuedTrack[guild.Id.ToString()] = new List<string>();
             Console.WriteLine($"Doremi Bot joined into: {guild.Name}");
             Config.Guild.init(guild.Id);
@@ -489,6 +498,7 @@ namespace OjamajoBot.Bot
             client.MessageReceived += HandleCommandAsync;
             
             await commands.AddModuleAsync(typeof(DoremiModule), services);
+            await commands.AddModuleAsync(typeof(DorememesModule), services);
             await commands.AddModuleAsync(typeof(DoremiBirthdayModule), services);
             await commands.AddModuleAsync(typeof(DoremiVictoriaMusic), services);
             await commands.AddModuleAsync(typeof(DoremiInteractive), services);
@@ -555,7 +565,8 @@ namespace OjamajoBot.Bot
                                 $"See `{Config.Doremi.PrefixParent[0]}help <commands or category>` for commands help.",
                             embed: new EmbedBuilder()
                             .WithColor(Config.Doremi.EmbedColor)
-                            .WithImageUrl("https://media1.tenor.com/images/3ba7d829ec2fd5300b0f3a16a86a7af8/tenor.gif")
+                            //.WithImageUrl("https://media1.tenor.com/images/3ba7d829ec2fd5300b0f3a16a86a7af8/tenor.gif")
+                            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/c/cb/ODN-EP2-012.png")
                             .Build());
                             break;
                         case CommandError.ObjectNotFound:

@@ -443,7 +443,7 @@ namespace OjamajoBot.Module
             await ReplyAsync($"Pururun purun famifami faa! Turn {username.Mention} into {wishes}",
             embed: new EmbedBuilder()
             .WithColor(Config.Onpu.EmbedColor)
-            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/1/10/46.09.JPG")
+            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/8/86/Onpu-spell.gif")
             .Build());
         }
 
@@ -453,7 +453,7 @@ namespace OjamajoBot.Module
             await ReplyAsync($"Pururun purun famifami faa! {wishes}");
             await base.ReplyAsync(embed: new EmbedBuilder()
             .WithColor(Config.Onpu.EmbedColor)
-            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/1/10/46.09.JPG")
+            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/8/86/Onpu-spell.gif")
             .Build());
         }
 

@@ -128,7 +128,8 @@ namespace OjamajoBot.Bot
                             $"See `{Config.Hazuki.PrefixParent[0]}help <commands or category>`for commands help.",
                         embed: new EmbedBuilder()
                         .WithColor(Config.Hazuki.EmbedColor)
-                        .WithImageUrl("https://33.media.tumblr.com/28c2441a5655ecb1bd23df8275f3598f/tumblr_nfkjtbSQZg1r98a5go1_500.gif")
+                        //.WithImageUrl("https://33.media.tumblr.com/28c2441a5655ecb1bd23df8275f3598f/tumblr_nfkjtbSQZg1r98a5go1_500.gif")
+                        .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/8/82/ODN-EP6-078.png")
                         .Build());
                         Console.WriteLine(result.ErrorReason);
                         break;

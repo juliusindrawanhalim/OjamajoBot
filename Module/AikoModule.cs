@@ -416,21 +416,22 @@ namespace OjamajoBot.Module
             .Build());
         }
 
-        [Command("spooky"), Alias("exe","creepy","spook"), Summary("Please don't use this commands...")]
-        public async Task showSpookyAiko()
-        {
+        [Command("spooky", RunMode = RunMode.Async), Alias("exe","creepy","spook"), Summary("Please don't use this commands...")]
+        public async Task showSpookyAiko(){
+            string mentionedUsername = MentionUtils.MentionUser(Context.User.Id);
             int randAngryAiko = new Random().Next(0, 11);
             if (randAngryAiko == 5){
                 string[] arrSentences = {
                     "Oy! Stop using this command. At least use another nice command for me will ya?!",
-                    "I won't let you use this command again!",
+                    "I'm not letting you get the spooky Aiko this time!",
                     "Oy! Stop using this command!",
                     "Oy! Stop making fun of the spooky aiko!",
                     "No!I won't let you use this command!",
                     "I don't think you'll get spooky aiko this time!",
                     "You think it was spooky Aiko? You get this one instead!",
+                    "You think it was spooky Aiko? It was me, the real Aiko!",
                     "I'm preventing you from getting the spooky Aiko!",
-                    "Oy! At least use another command instead using the spooky aiko one!"
+                    "Oy! At least use another nice commands for me, instead using the spooky aiko!"
                 };
 
                 await base.ReplyAsync(embed: new EmbedBuilder()
@@ -439,29 +440,40 @@ namespace OjamajoBot.Module
                     .WithColor(Color.DarkerGrey)
                     .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/b/b3/Linesticker14.png")
                     .Build());
+                return;
             } else {
                 string[] arrSentences = {
-                    "Didn't I tell you already for not using this commands?!",
-                    "It's midnight already, you probably should go to sleep with me",
-                    "Beware of the Sp00ky Aiko",
-                    "Don't look over behind...",
-                    "Hello, please don't look at me...",
-                    "I'm right behind you...",
-                    "Why are you insisting to use this commands?",
-                    "Don't worry, I'll be right behind you...",
-                    "Do you wanna know how did I get these eyes?",
-                    "There is someone... lurking behind you...",
-                    "Aiko cannot be found...",
-                    "....","Pretty...witchy..aiko...chi...",
-                    "Please make me some Takoyaki...",
-                    "Let's be my friend, will you?"
+                    "Didn't I tell you already for not using this commands?!","spuɐɯɯoɔ sᴉɥʇ ƃuᴉsn ʇou ɹoɟ ʎpɐǝɹlɐ noʎ llǝʇ I ʇ,upᴉp",
+                    "It's midnight already, you probably should go to sleep with me","ǝɯ ɥʇᴉʍ dǝǝls oʇ oƃ plnoɥs ʎlqɐqoɹd noʎ 'ʎpɐǝɹlɐ ʇɥƃᴉupᴉɯ s,ʇI",
+                    "Beware of the Spooky Aiko","I’m not Aiko, I’m the Spooky aiko.","oʞᴉ∀ ʎʞoodS ǝɥʇ ɟo ǝɹɐʍǝq","˙oʞᴉɐ ʎʞoodS ǝɥʇ ɯ’I 'oʞᴉ∀ ʇou ɯ’I",
+                    "Did you just steal my takoyaki?","¿ᴉʞɐʎoʞɐʇ ʎɯ lɐǝʇs ʇsnɾ noʎ pᴉp",
+                    "Don't look over behind...","˙˙˙puᴉɥǝq ɹǝʌo ʞool ʇ,uop",
+                    "Hello, please don't look at my face...","˙˙˙ǝɔɐɟ ʎɯ ʇɐ ʞool ʇ,uop ǝsɐǝld 'ollǝH",
+                    "I'm right behind you...","˙˙˙noʎ puᴉɥǝq ʇɥƃᴉɹ ɯ,I",
+                    "Why are you keep using this commands?","¿spuɐɯɯoɔ sᴉɥʇ ƃuᴉsn dǝǝʞ noʎ ǝɹɐ ʎɥM",
+                    $"Don't worry {mentionedUsername}, I'll be right behind you...",$"˙˙˙noʎ puᴉɥǝq ʇɥƃᴉɹ ǝq ll,I ' {mentionedUsername} ʎɹɹoʍ ʇ,uop",
+                    "Do you wanna know how did I get these eyes?","¿sǝʎǝ ǝsǝɥʇ ʇǝƃ I pᴉp ʍoɥ ʍouʞ ɐuuɐʍ noʎ op",
+                    "There is someone... lurking behind you...","˙˙˙noʎ puᴉɥǝq ƃuᴉʞɹnl ˙˙˙ǝuoǝɯos sᴉ ǝɹǝɥ┴",
+                    "I'm sorry, but Aiko cannot be found...","˙˙˙punoɟ ǝq ʇouuɐɔ oʞᴉ∀ ʇnq 'ʎɹɹos ɯ,I",
+                    "....","Pretty...witchy..aiko...chi...","˙˙˙ᴉɥɔ˙˙˙oʞᴉɐ˙˙ʎɥɔʇᴉʍ˙˙˙ʎʇʇǝɹԀ",
+                    $"Please make me some Takoyaki, {mentionedUsername}...",$"˙˙˙{mentionedUsername} 'ᴉʞɐʎoʞɐ┴ ǝɯos ǝɯ ǝʞɐɯ ǝsɐǝlԀ",
+                    "Let's be my friend, will you?","¿noʎ llᴉʍ 'puǝᴉɹɟ ʎɯ ǝq s,ʇǝ˥",
+                    $"Let's play together with me, {mentionedUsername}",$"{mentionedUsername} 'ǝɯ ɥʇᴉʍ ɹǝɥʇǝƃoʇ ʎɐld s,ʇǝ˥",
+                    "Do You Like Spooky Aiko? Well here I am...","˙˙˙ɯɐ I ǝɹǝɥ llǝM ¿oʞᴉ∀ ʎʞoodS ǝʞᴉ˥ no⅄ op",
+                    "Do You Want To Play A Game?","¿ǝɯɐפ ∀ ʎɐlԀ o┴ ʇuɐM no⅄ op",
+                    "Be Afraid, Be Very Afraid.","˙pᴉɐɹɟ∀ ʎɹǝΛ ǝq 'pᴉɐɹɟ∀ ǝq",
+                    "Whatever You Do, Don’t Fall Asleep.","˙dǝǝls∀ llɐℲ ʇ’uop 'op no⅄ ɹǝʌǝʇɐɥM",
+                    "Tasty, tasty, beautiful fear.","˙ɹɐǝɟ lnɟᴉʇnɐǝq 'ʎʇsɐʇ 'ʎʇsɐ┴",
+                    $"I am your number one fan, {mentionedUsername}.",$"{mentionedUsername} 'uɐɟ ǝuo ɹǝqɯnu ɹnoʎ ɯɐ I",
+                    "Hi, I’m Spooky Aiko. Wanna play?", "Here's Spooky Aiko!","¿ʎɐld ɐuuɐM ˙oʞᴉ∀ ʎʞoodS ɯ’I 'ᴉH","¡oʞᴉ∀ ʎʞoodS s,ǝɹǝH",
+                    $"I’m your friend now, {mentionedUsername}.",$"˙ {mentionedUsername} 'ʍou puǝᴉɹɟ ɹnoʎ ɯ’I"
                 };
 
                 string[] arrRandomAuthor = {
                     "4ik00","Aik0","a.i.k.o.e.x.e","too much Ai-k0",
-                    "m1ssing A1k0","seno.exe","s3n0.ex3","4k10 s3n0o",
-                    "th3 A1k0","Doppel Aiko","4ik0 s3n0","A1k0","witchy.exe",
-                    "4170 seno","s3n00 A1k0","a.i.k.o","a i k o","s e n o",
+                    "seno.exe","s3n0.ex3","4k10 s3n0o","the false Aiko",
+                    "th3 A1k0","4ik0 s3n0","A1k0","witchy.exe","spooky.exe",
+                    "41k0 seno","s3n00 A1k0","a.i.k.o","a i k o","s e n o",
                     "aiko.exe","Sp00kiko","41k0","Takoyaki Girl",
                     "T4k0y4k1","Takoyaki.exe","a.i.k.0.e.x....e","aaaaaaiiiiiikkkkoooo",
                     "aaaiii1ikk00","4ikkkkkkkk0000","Aaiikk00.exe","Blue.exe",
@@ -469,27 +481,46 @@ namespace OjamajoBot.Module
                 };
 
                 string[,] arrRandom = {
-                {"Odd Meat","https://cdn.discordapp.com/attachments/569409307100315651/653676655294021643/daikon_9.png"},
-                {"Letter Three","https://media.discordapp.net/attachments/653690054912507914/658004378732724234/unknown.png"},
-                {"вештица","https://cdn.discordapp.com/attachments/569409307100315651/654463722940792855/wowspoop.gif"},
-                {"Letter Three","https://media.discordapp.net/attachments/653690054912507914/658004103854817290/Spooky_Aiko.png"},
-                {"Letter Three","https://cdn.discordapp.com/attachments/643722270447239169/669150355526778880/unknown.png"},
-                {"Letter Three","https://cdn.discordapp.com/attachments/643722270447239169/669150430940495872/unknown.png"},
-                {"Odd Meat","https://cdn.discordapp.com/attachments/643722270447239169/669225508441161758/spooks_orig.png"},
-                {"Nathan","https://cdn.discordapp.com/attachments/643722270447239169/669597882114113558/20200122_124002.jpg"},
-            };
+                    {"Odd Meat","https://cdn.discordapp.com/attachments/569409307100315651/653676655294021643/daikon_9.png"},
+                    {"Letter Three","https://media.discordapp.net/attachments/653690054912507914/658004378732724234/unknown.png"},
+                    {"вештица","https://cdn.discordapp.com/attachments/569409307100315651/654463722940792855/wowspoop.gif"},
+                    {"Letter Three","https://media.discordapp.net/attachments/653690054912507914/658004103854817290/Spooky_Aiko.png"},
+                    {"Letter Three","https://cdn.discordapp.com/attachments/643722270447239169/669150355526778880/unknown.png"},
+                    {"Letter Three","https://cdn.discordapp.com/attachments/643722270447239169/669150430940495872/unknown.png"},
+                    {"Odd Meat","https://cdn.discordapp.com/attachments/643722270447239169/669225508441161758/spooks_orig.png"},
+                    {"Nathan","https://cdn.discordapp.com/attachments/643722270447239169/669597882114113558/20200122_124002.jpg"},
+                };
 
                 int randomedResult = new Random().Next(0, arrRandom.GetLength(0));
-                await base.ReplyAsync(embed: new EmbedBuilder()
+                await ReplyAsync(embed: new EmbedBuilder()
                     .WithAuthor(arrRandomAuthor[new Random().Next(0, arrRandomAuthor.Length)], arrRandom[randomedResult, 1])
                     .WithDescription(arrSentences[new Random().Next(0, arrSentences.Length)])
                     .WithColor(Color.DarkerGrey)
                     .WithImageUrl(arrRandom[randomedResult, 1])
                     .WithFooter($"Contributed by: {arrRandom[randomedResult, 0]}")
                     .Build());
-            }
-            
 
+                int randomCameo = new Random().Next(0, 2);
+                if (randomCameo == 1){
+                    string[,] arrRandomCameo = {
+                        {"Odd Meat","https://cdn.discordapp.com/attachments/643722270447239169/669581419701338132/002.png"},
+                        {"Letter Three","https://cdn.discordapp.com/attachments/643722270447239169/669598054776569856/SPOILER_unknown.png"},
+                        {"Letter Three","https://cdn.discordapp.com/attachments/643722270447239169/669603942090670080/Halloween_Hazuki.png"},
+                        {"Letter Three","https://cdn.discordapp.com/attachments/643722270447239169/669606154946740224/Chop_Harukaze.png"},
+                        {"Odd Meat","https://cdn.discordapp.com/attachments/643722270447239169/669618799762210846/unknown.png"},
+                        {"Odd Meat","https://cdn.discordapp.com/attachments/421584908130189312/622528776747876362/cursed_majo_rika-export.gif"},
+                    };
+
+                    randomedResult = new Random().Next(0, arrRandomCameo.GetLength(0));
+                    await ReplyAsync("Oh, I also bring one of my friend for you...",
+                        embed: new EmbedBuilder()
+                        .WithAuthor("Spooky.exe???companion", arrRandomCameo[randomedResult, 1])
+                        .WithColor(Color.DarkerGrey)
+                        .WithImageUrl(arrRandomCameo[randomedResult, 1])
+                        .WithFooter($"Contributed by: {arrRandomCameo[randomedResult, 0]}")
+                        .Build());
+                }
+            }
             
         }
 

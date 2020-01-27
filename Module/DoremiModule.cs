@@ -6,6 +6,7 @@ using Newtonsoft.Json.Linq;
 using OjamajoBot.Service;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -571,50 +572,6 @@ namespace OjamajoBot.Module
             }
         }
 
-        [Command("dorememe"), Alias("dorememes"), Summary("I will give you some random doremi related memes. " +
-            "You can fill <contributor> with one of the available to make it spesific contributor.\nFill it with `list` to list all contributor.")]
-        public async Task givedorememe([Remainder]string contributor="")
-        {
-            string finalUrl = ""; JArray getDataObject = null;
-            contributor = contributor.ToLower();
-
-            if (contributor == "list"){
-                var key = Config.Doremi.jobjectdorememes.Properties().ToList();
-                string listedContributor = "";
-                for(int i = 0; i < key.Count; i++) listedContributor += $"{key[i].Name}\n";
-                
-                await base.ReplyAsync(embed: new EmbedBuilder()
-                    .WithTitle("Dorememes listed contributor")
-                    .WithDescription("Thank you to all of peoples that contributing dorememes. Here are all listed dorememes contributor:")
-                    .AddField("Contributor in List", listedContributor)
-                    .WithColor(Config.Doremi.EmbedColor)
-                    .Build());
-                return;
-            } else if (contributor == "") {
-                var key = Config.Doremi.jobjectdorememes.Properties().ToList();
-                var randIndex = new Random().Next(0, key.Count);
-                contributor = key[randIndex].Name;
-                getDataObject = (JArray)Config.Doremi.jobjectdorememes[contributor];
-                finalUrl = getDataObject[new Random().Next(0, getDataObject.Count)].ToString();
-            } else {
-                if (Config.Doremi.jobjectdorememes.ContainsKey(contributor)){
-                    getDataObject = (JArray)Config.Doremi.jobjectdorememes[contributor];
-                    finalUrl = getDataObject[new Random().Next(0, getDataObject.Count)].ToString();
-                } else {
-                    await base.ReplyAsync($"Oops, I can't found the specified contributor. " +
-                        $"See `{Config.Doremi.PrefixParent[0]}help dorememe` for commands help.");
-                    return;
-                }
-            }
-
-            await base.ReplyAsync(embed: new EmbedBuilder()
-            .WithColor(Config.Doremi.EmbedColor)
-            .WithImageUrl(finalUrl)
-            .WithFooter("Contributed by: "+contributor)
-            .Build());
-
-        }
-
         [Command("fairy"), Summary("I will show you my fairy info")]
         public async Task showFairy()
         {
@@ -704,18 +661,18 @@ namespace OjamajoBot.Module
             }
         }
 
-        [Command("meme"), Alias("memes"), Summary("I will give you some random memes")]
+        [Command("meme", RunMode = RunMode.Async), Alias("memes"), Summary("I will give you some random memes")]
         public async Task givememe()
         {
             try
             {
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create("http://meme-api.herokuapp.com/gimme/memes/20");
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create("http://meme-api.herokuapp.com/gimme/memes/10");
                 HttpWebResponse response = (HttpWebResponse)request.GetResponse();
                 StreamReader reader = new StreamReader(response.GetResponseStream());
                 string jsonResp = reader.ReadToEnd().ToString();
                 JObject jobject = JObject.Parse(jsonResp);
 
-                int randomIndex = new Random().Next(0, 21);
+                int randomIndex = new Random().Next(0, 11);
                 var description = jobject.GetValue("memes")[randomIndex]["title"];
                 var imgUrl = jobject.GetValue("memes")[randomIndex]["url"];
 
@@ -883,7 +840,7 @@ namespace OjamajoBot.Module
             await ReplyAsync($"Pirika pirilala poporina peperuto! Turn {username.Mention} into {wishes}",
             embed: new EmbedBuilder()
             .WithColor(Config.Doremi.EmbedColor)
-            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/98/Dore-spell.gif/revision/latest?cb=20170814182746")
+            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/98/Dore-spell.gif")
             .Build());
         }
 
@@ -911,7 +868,7 @@ namespace OjamajoBot.Module
             "-Added more random moments image source for Doremi and other related bots.\n" +
             "-Doremi and her other friends now has individual greeting message.\n"+
             "-Aiko bot: `spooky` commands now has higher chance for you to execute it.\n")
-            .AddField("Doremi bot updated commands", "**wiki category**,**birthday category**,**moderator category**")
+            .AddField("Doremi bot updated commands", "**wiki category**,**birthday category**,**moderator category**,`quiz color`")
             .AddField("Aiko bot updated commands", "`spooky`")
             .WithColor(Config.Doremi.EmbedColor)
             .WithFooter($"Last updated on {Config.Core.lastUpdate}")
@@ -1000,9 +957,14 @@ namespace OjamajoBot.Module
                 if (DateTime.TryParseExact(val, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out date)||
                     DateTime.TryParseExact(val, "dd/MM", CultureInfo.InvariantCulture, DateTimeStyles.None, out date)){
                     if (date.ToString("MM") == DateTime.Now.ToString("MM")){
-                        var username = Context.Guild.GetUser(Convert.ToUInt64(key)).Username;
-                        builder.AddField(username, val, true);
-                        birthdayExisted = true;
+                        try
+                        {
+                            var username = Context.Guild.GetUser(Convert.ToUInt64(key)).Username;
+                            builder.AddField(username, val, true);
+                            birthdayExisted = true;
+                        }
+                        catch { }
+                        
                     }   
                 }
             }
@@ -1299,6 +1261,7 @@ namespace OjamajoBot.Module
                                         $"{Config.Emoji.birthdayCake} Everyone, we have important birthday announcement! Please give some wonderful birthday wishes for {user.Mention}."
                                     };
                                         birthdayMessage = arrRandomedMessage[new Random().Next(0, arrRandomedMessage.Length)];
+                                        builder.Color = Config.Doremi.EmbedColor;
                                         builder.ImageUrl = "https://i.4pcdn.org/s4s/1508005628768.jpg";
                                         birthdayExisted = true;
 
@@ -1338,7 +1301,7 @@ namespace OjamajoBot.Module
 
             }
 
-            [Command("random event"), Summary("Schedule Doremi Bot to make random event message on <channel_name> for every 24 hours")]
+            [Command("random event"), Summary("Schedule Doremi Bot to make random event message on <channel_name> for every 24 hours.")]
             public async Task assignRandomEventChannel(IGuildChannel channel_name)
             {
                 Config.Guild.setPropertyValue(channel_name.GuildId, "id_random_event", channel_name.Id.ToString());
@@ -1418,6 +1381,290 @@ namespace OjamajoBot.Module
                     await ReplyAsync($"**{property} channels** has no settings yet.");
             }
         }
+
+    }
+
+    [Name("dorememes"), Group("dorememes"), Summary("Dorememes command category.")]
+    public class DorememesModule : ModuleBase<SocketCommandContext>{
+        [Command("random"), Summary("I will give you some random doremi related memes. " +
+            "You can fill <contributor> with one of the available to make it spesific contributor.\nFill it with `list` to list all contributor.")]
+        public async Task givedorememe([Remainder]string contributor = "")
+        {
+            string finalUrl = ""; JArray getDataObject = null;
+            contributor = contributor.ToLower();
+
+            if (contributor == "list")
+            {
+                var key = Config.Doremi.jobjectdorememes.Properties().ToList();
+                string listedContributor = "";
+                for (int i = 0; i < key.Count; i++) listedContributor += $"{key[i].Name}\n";
+
+                await base.ReplyAsync(embed: new EmbedBuilder()
+                    .WithTitle("Dorememes listed contributor")
+                    .WithDescription("Thank you to all of peoples that contributing dorememes. Here are all listed dorememes contributor:")
+                    .AddField("Contributor in List", listedContributor)
+                    .WithColor(Config.Doremi.EmbedColor)
+                    .Build());
+                return;
+            }
+            else if (contributor == "")
+            {
+                var key = Config.Doremi.jobjectdorememes.Properties().ToList();
+                var randIndex = new Random().Next(0, key.Count);
+                contributor = key[randIndex].Name;
+                getDataObject = (JArray)Config.Doremi.jobjectdorememes[contributor];
+                finalUrl = getDataObject[new Random().Next(0, getDataObject.Count)].ToString();
+            }
+            else
+            {
+                if (Config.Doremi.jobjectdorememes.ContainsKey(contributor))
+                {
+                    getDataObject = (JArray)Config.Doremi.jobjectdorememes[contributor];
+                    finalUrl = getDataObject[new Random().Next(0, getDataObject.Count)].ToString();
+                }
+                else
+                {
+                    await base.ReplyAsync($"Oops, I can't found the specified contributor. " +
+                        $"See `{Config.Doremi.PrefixParent[0]}help dorememe` for commands help.");
+                    return;
+                }
+            }
+
+            await base.ReplyAsync(embed: new EmbedBuilder()
+            .WithColor(Config.Doremi.EmbedColor)
+            .WithImageUrl(finalUrl)
+            .WithFooter("Contributed by: " + contributor)
+            .Build());
+
+        }
+
+        [Command("template list", RunMode = RunMode.Async), Summary("Show all available dorememes generator template.")]
+        public async Task showAllDorememesTemplate(){
+            EmbedBuilder builder = new EmbedBuilder();
+            builder.Color = Config.Doremi.EmbedColor;
+            builder.Title = "Dorememes Generator Template List";
+            builder.Description = "Here are the available dorememes generator template that can be used on `dorememes draw` commands.";
+
+            var guildId = Context.Guild.Id;
+            var guildJsonFile = (JObject)JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}ojamajo_meme_template/list.json")).GetValue("list");
+            var jobjmemelist = guildJsonFile.Properties().ToList();
+            string finalList = "";
+
+            for (int i = 0; i < jobjmemelist.Count; i++){
+                finalList += $"{jobjmemelist[i].Name} : {Path.GetFileNameWithoutExtension(jobjmemelist[i].Value.ToString())}\n";
+            }
+            builder.AddField("[Numbers] : Title",finalList);
+
+            await ReplyAsync(embed: builder.Build());
+        }
+
+        [Command("template show",RunMode = RunMode.Async), Summary("Show the image preview of dorememes template from `dorememes template list` commands.\n" +
+            "You can fill the <choices> parameter with numbers/title.")]
+        public async Task showDorememesImageTemplate([Remainder]string choices){
+            bool isNumeric = choices.All(char.IsDigit);
+
+            var guildId = Context.Guild.Id;
+            var guildJsonFile = (JObject)JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}ojamajo_meme_template/list.json")).GetValue("list");
+            var jobjmemelist = guildJsonFile.Properties().ToList();
+            bool isFounded = false;
+
+            string selectedFile = $"{Config.Core.headConfigFolder}ojamajo_meme_template/";
+
+            for (int i = 0; i < jobjmemelist.Count; i++){
+                var checkedKey = jobjmemelist[i].Name.ToString();
+                var checkedValue = jobjmemelist[i].Value.ToString();
+
+                if ((isNumeric&&choices == checkedKey) ||
+                    (!isNumeric&& choices == Path.GetFileNameWithoutExtension(checkedValue))){
+                    selectedFile += checkedValue;
+                    isFounded = true;
+                    break;
+                }
+            }
+
+            if (isFounded)
+                await Context.Channel.SendFileAsync(selectedFile);
+            else
+                await ReplyAsync("Sorry, I can't find that choices. " +
+                    $"See the available dorememes generator template with `{Config.Doremi.PrefixParent[0]}dorememes template list` command.");
+        }
+
+        [Command("draw", RunMode = RunMode.Async), Summary("Draw dorememes from available dorememes template list.\n" +
+            "Commands parameters will be `<template>;<text>;<optional positions:top/bottom>`.")]
+        public async Task drawFromMemeTemplate([Remainder] string parameter)
+        {
+            string template; string text; string[] splittedParameter;string positions="top";
+
+            if (parameter.Contains(";")){
+                splittedParameter = parameter.Split(";");
+                template = splittedParameter[0];
+                text = splittedParameter[1];
+                if (text.Length >= 40){
+                    await ReplyAsync($"Sorry, that text is too long. Please use shorter text.");
+                    return;
+                }
+                if (2<splittedParameter.Length){
+                    if (splittedParameter[2].ToLower() != "top" || splittedParameter[2].ToLower() != "bottom")
+                        positions = splittedParameter[2].ToLower();
+                    else {
+                        await ReplyAsync($"Sorry, **positions** parameter need to be `top` or `bottom`.");
+                        return;
+                    }
+                }
+            } else {
+                await ReplyAsync($"Sorry, there seems to be wrong with the parameter input.\n" +
+                    $"Example: `{Config.Doremi.PrefixParent[0]}dorememes draw <template>;<text>;<optional positions:top/bottom>`");
+                return;
+            }
+
+            bool isNumeric = template.All(char.IsDigit);
+
+            var guildId = Context.Guild.Id;
+            var guildJsonFile = (JObject)JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}ojamajo_meme_template/list.json")).GetValue("list");
+            var jobjmemelist = guildJsonFile.Properties().ToList();
+            bool isFounded = false;
+
+            string selectedFile = $"{Config.Core.headConfigFolder}ojamajo_meme_template/";
+            string selectedGetFileName = "";//return the file name only with extensions
+
+            IMessage nowProcessing = null;
+
+            for (int i = 0; i < jobjmemelist.Count; i++){
+                var checkedKey = jobjmemelist[i].Name.ToString();
+                var checkedValue = jobjmemelist[i].Value.ToString();
+
+                if ((isNumeric && template == checkedKey) ||
+                    (!isNumeric && template == Path.GetFileNameWithoutExtension(checkedValue))){
+                    selectedGetFileName = checkedValue;
+                    selectedFile += checkedValue;
+                    isFounded = true;
+                    nowProcessing = await ReplyAsync($"\u23F3 Processing the dorememes, please wait for a moment...");
+                    break;
+                }
+            }
+
+            if (!isFounded){
+                await ReplyAsync("Sorry, I can't find that template choices. " +
+                    $"See the available dorememes generator template with `{Config.Doremi.PrefixParent[0]}dorememes template list` command.");
+                return;
+            }
+
+            //end file checking
+
+            //copy the image
+            var sourceDir = selectedFile;
+            var destDir = $"attachments/{guildId}/{Path.GetFileNameWithoutExtension(selectedGetFileName)}_{DateTime.Now.ToString("yyyyMMdd_HHmm")}" + 
+                $"{new Random().Next(0, 10000)}{Path.GetExtension(selectedGetFileName)}";
+            File.Copy(sourceDir, destDir);
+            
+            //process the image
+            
+            //every 23 words reduce the font size
+            Bitmap newBitmap;
+            using (var bitmap = (Bitmap)System.Drawing.Image.FromFile(destDir))//load the image file
+            {
+                using (Graphics graphics = Graphics.FromImage(bitmap))
+                {
+                    //using (Font goodFont = FindFont(graphics, text, bitmap.Size, new Font("Impact", 72)))
+                    using (Font goodFont = ImageEditor.GetAdjustedFont(graphics, text, new Font("Impact", 72), bitmap.Width, 72, 40, true))
+                    {
+                        StringFormat sf = new StringFormat();
+                        sf.LineAlignment = StringAlignment.Center;
+                        sf.Alignment = StringAlignment.Center;
+                        graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+                        if (positions == "top"){
+                            PointF topLocation = new PointF(bitmap.Width / 2, 100f);
+                            graphics.DrawString(text, goodFont, Brushes.White, topLocation, sf);
+                        } else if (positions == "bottom"){
+                            PointF bottomLocation = new PointF(bitmap.Width / 2, bitmap.Height - 150f);
+                            graphics.DrawString(text, goodFont, Brushes.White, bottomLocation, sf);
+                        }
+                        
+                    }
+                }
+                newBitmap = new Bitmap(bitmap);
+            }
+
+            newBitmap.Save(destDir);//save the image file
+            newBitmap.Dispose();
+
+            await Context.Channel.SendFileAsync(destDir);
+            await Context.Channel.DeleteMessageAsync(Convert.ToUInt64(nowProcessing.Id));
+
+            File.Delete(destDir);
+
+        }
+
+        [Command("jojofication", RunMode = RunMode.Async), Summary("Add Jojo image filter into the image.")]
+        public async Task drawJojoficationToBeContinue(string attachment=""){
+
+            try
+            {
+                var attachments = Context.Message.Attachments;
+                WebClient myWebClient = new WebClient();
+
+                string file = attachments.ElementAt(0).Filename;
+                string url = attachments.ElementAt(0).Url;
+                string extension = Path.GetExtension(attachments.ElementAt(0).Filename).ToLower();
+                string randomedFileName = "jojofication_"+DateTime.Now.ToString("yyyyMMdd_HHmm") + new Random().Next(0, 10000) + extension;
+                string completePath = $"attachments/{Context.Guild.Id}/{randomedFileName}";
+                string toBeContinueImagePath = $"{Config.Core.headConfigFolder}ojamajo_meme_template/to be continue.png";
+                string resizedToBeContinueImagePath = $"attachments/{Context.Guild.Id}/to be continue.png";
+
+                if (extension == ".jpg" || extension == ".jpeg" || extension == ".png" || extension == ".gif")
+                {
+                    IMessage nowProcessing = await ReplyAsync($"\u23F3 Processing the dorememes jojofication, please wait for a moment...");
+
+                    //Download the resource and load the bytes into a buffer.
+                    byte[] buffer = myWebClient.DownloadData(url);
+                    Config.Core.ByteArrayToFile($"attachments/{Context.Guild.Id}/{randomedFileName}", buffer);
+
+                    await Context.Message.DeleteAsync();
+
+                    //File.Delete(completePath);
+
+                    //convert to sepia
+                    Bitmap newBitmap;
+                    using (var bitmap = (Bitmap)System.Drawing.Image.FromFile(completePath))  
+                       newBitmap = new Bitmap(ImageEditor.convertSepia(bitmap));
+
+                    //copy & resize to be continue image
+                    Bitmap toBeContinueImage = (Bitmap)System.Drawing.Image.FromFile(toBeContinueImagePath);
+
+                    int resizedHeight = Convert.ToInt32(newBitmap.Height / 3.5);
+
+                    toBeContinueImage = ImageEditor.ResizeImage(toBeContinueImage, Convert.ToInt32(newBitmap.Width / 2.5), resizedHeight);
+                    toBeContinueImage.Save(resizedToBeContinueImagePath);
+                    
+                    //merge the image
+                    newBitmap = ImageEditor.MergeBitmaps(toBeContinueImage, newBitmap);
+
+                    toBeContinueImage.Dispose();
+
+                    newBitmap.Save(completePath);//save the image file
+                    newBitmap.Dispose();
+
+                    var sentAttachment = await Context.Channel.SendFileAsync(completePath);
+                    await Context.Channel.DeleteMessageAsync(Convert.ToUInt64(nowProcessing.Id));
+
+                    File.Delete(resizedToBeContinueImagePath);
+                    File.Delete(completePath);
+
+                } else {
+                    await ReplyAsync($"Oops, sorry I can only process `.jpg/.jpeg/.png/.gif` image format.");
+                    return;
+                }
+
+            }
+            catch(Exception e) { Console.WriteLine(e.ToString()); }
+            
+        }
+
+        // This function checks the room size and your text and appropriate font
+        //  for your text to fit in room
+        // PreferedFont is the Font that you wish to apply
+        // Room is your space in which your text should be in.
+        // LongString is the string which it's bounds is more than room bounds.
 
     }
 
@@ -1599,7 +1846,7 @@ namespace OjamajoBot.Module
 
             for (int i = 0; i < (jObj.GetValue("musiclist") as JObject).Count; i++)
             {
-                String query = jObj.GetValue("musiclist")[(i + 1).ToString()]["filename"].ToString();
+                string query = jObj.GetValue("musiclist")[(i + 1).ToString()]["filename"].ToString();
                 var searchResponse = await _lavaNode.SearchAsync("music/" + query);
 
                 if (searchResponse.LoadStatus == LoadStatus.LoadFailed ||
@@ -1696,7 +1943,7 @@ namespace OjamajoBot.Module
             } else {
                 for (int i = 0; i < (jObj.GetValue("musiclist") as JObject).Count; i++)
                 {
-                    String replacedFilename = jObj.GetValue("musiclist")[(i + 1).ToString()]["filename"].ToString().Replace(".mp3", "").Replace(".ogg", "");
+                    string replacedFilename = jObj.GetValue("musiclist")[(i + 1).ToString()]["filename"].ToString().Replace(".mp3", "").Replace(".ogg", "");
                     if (replacedFilename == TrackNumbersOrTitle)
                     {
                         TrackNumbersOrTitle = jObj.GetValue("musiclist")[(i + 1).ToString()]["filename"].ToString();
@@ -1819,7 +2066,7 @@ namespace OjamajoBot.Module
 
             if (player.PlayerState != PlayerState.Playing)
             {
-                await ReplyAsync("I cannot pause when I'm not playing anything!");
+                await ReplyAsync("I cannot pause when I'm not playing anything.");
                 return;
             }
 
@@ -1845,7 +2092,7 @@ namespace OjamajoBot.Module
 
             if (player.PlayerState != PlayerState.Paused)
             {
-                await ReplyAsync("I cannot resume when I'm not playing anything!");
+                await ReplyAsync("I cannot resume when I'm not playing anything.");
                 return;
             }
 
@@ -1932,11 +2179,10 @@ namespace OjamajoBot.Module
 
             await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
-                .WithAuthor(Config.Doremi.EmbedName, Config.Doremi.EmbedAvatarUrl)
-                .WithTitle("Music List:")
+                .WithTitle("Doremi Music List:")
                 .WithDescription($"These are the music list that's available for me to play: " +
                 $"You can use the **play** commands followed with the track number or title.\n" +
-                $"Example: **doremi!play 1** or **doremi!play ojamajocarnival**")
+                $"Example: **{Config.Doremi.PrefixParent[0]}play 1** or **{Config.Doremi.PrefixParent[0]}play ojamajocarnival**")
                 .AddField("[Num] Title",
                 musiclist)
                 .Build());
@@ -2051,52 +2297,78 @@ namespace OjamajoBot.Module
         //}
         //reference: https://github.com/PassiveModding/Discord.Addons.Interactive/blob/master/SocketSampleBot/Module.cs
 
-        [Command("color", RunMode = RunMode.Async), Alias("colors"), Summary("Play the color terminology guessing games.")]
-        public async Task Interact_Quiz_Colors()
+        [Command("hangman", RunMode = RunMode.Async), Summary("Play the hangman game.\n**Available category:** `random`/`color`/`fruit`/`animal`\n" +
+            "**Available difficulty:**\n" +
+            "**easy:** 30 seconds, 10 lives\n" +
+            "**medium:** 20 seconds, 7 lives\n" +
+            "**hard:** 15 seconds, 5 lives\n")]
+        public async Task Interact_Quiz_Colors(string category="random", string difficulty = "easy")
         {
-            //Config.Doremi.isRunningQuiz[Context.User.Id.ToString()] = true;
+            //check first if category available on quiz.json/not
+            if (category.ToLower()!="random" && !Config.Core.jobjectQuiz.ContainsKey(category.ToLower())){
+                await ReplyAsync($"Sorry, I can't find that category. Available category options: **random**/**color**/**fruit**/**animal**");
+                return;
+            }
+            
+            if(difficulty.ToLower()!="easy"&&difficulty.ToLower() != "medium" && difficulty.ToLower() != "hard"){
+                await ReplyAsync($"Sorry, I can't find that difficulty. Available difficulty options: **easy**/**medium**/**hard**");
+                return;
+            }
+
             if (!Config.Doremi.isRunningQuiz.ContainsKey(Context.User.Id.ToString()))
                 Config.Doremi.isRunningQuiz.Add(Context.User.Id.ToString(), false);
-
+            
             if (!Config.Doremi.isRunningQuiz[Context.User.Id.ToString()])
             {
                 Config.Doremi.isRunningQuiz[Context.User.Id.ToString()] = true;
-                int attempt = 5;
-                var arrRandomed = (JArray)Config.Core.jobjectQuiz.GetValue("color");
+                //default difficulty: easy
+                int lives = 10; var timeoutDuration = 30;//in seconds
+
+                if (difficulty.ToLower() == "medium"){
+                    lives = 7; timeoutDuration = 20;
+                } else if (difficulty.ToLower() == "hard"){
+                    lives = 5; timeoutDuration = 15;
+                }
+                
+                string key = category;//default:random
+
+                if (category.ToLower()=="random"){
+                    //default: random
+                    var jobjquiz = Config.Core.jobjectQuiz.Properties().ToList();
+                    key = jobjquiz[new Random().Next(0, jobjquiz.Count)].Name;
+                }
+
+                var arrRandomed = (JArray)Config.Core.jobjectQuiz.GetValue(key);
                 string randomedAnswer = arrRandomed[new Random().Next(0, arrRandomed.Count)].ToString();
                 string replacedAnswer = ""; string[] containedAnswer = { }; List<string> guessedWord = new List<string>();
                 for (int i = 0; i < randomedAnswer.Length; i++)
                     replacedAnswer += randomedAnswer.Substring(i, 1).Replace(randomedAnswer.Substring(i, 1), "_ ");
 
                 string tempRandomedAnswer = string.Join(" ", randomedAnswer.ToCharArray()) + " "; //with space
-                                                                                                  //Console.WriteLine(randomedAnswer);
-                await ReplyAsync($"Can you guess what color is this?```{replacedAnswer}```");
+                                                                                                    //Console.WriteLine(randomedAnswer);
+                await ReplyAsync($"{Context.User.Username}, \u23F1 You have **{timeoutDuration}** seconds each turn, with **{lives}** \u2764. Type **exit** to exit from the games.\nCan you guess what **{key}** is this?```{replacedAnswer}```");
 
-                while (attempt > 0 && replacedAnswer.Contains("_"))
-                {
+                var response = await NextMessageAsync(timeout:TimeSpan.FromSeconds(timeoutDuration));
+
+                while (lives > 0 && response!=null){
                     Boolean isGuessed = false;
-                    var response = await NextMessageAsync(timeout: TimeSpan.FromSeconds(30));
                     string loweredResponse = response.Content.ToLower();
 
-                    if (response == null)
-                    {
-                        Config.Doremi.isRunningQuiz[Context.User.Id.ToString()] = false;
-                        await ReplyAsync("Time's up, sorry you're not guessing any words yet.");
+                    if (loweredResponse == "exit"){
+                        Config.Doremi.isRunningQuiz.Remove(Context.User.Id.ToString());
+                        await ReplyAsync($"**{Context.User.Username}** has left the game.");
                         return;
                     }
                     else if (loweredResponse.Length > 1)
-                        await ReplyAsync($"Sorry, but you can only guess a word each turn.");
+                        await ReplyAsync($"Sorry **{Context.User.Username}**, but you can only guess a word each turn.");
                     else if (loweredResponse == " ")
-                        await ReplyAsync($"Sorry, but you can't enter a whitespace character.");
-                    else if (loweredResponse.Length <= 1)
-                    {
-                        foreach (string x in guessedWord)
-                        {
-                            if (loweredResponse.Contains(x))
-                            {
-                                await ReplyAsync($"You already guessed **{x}**");
+                        await ReplyAsync($"Sorry **{Context.User.Username}**, but you can't enter a whitespace character.");
+                    else if (loweredResponse.Length <= 1){
+                        foreach (string x in guessedWord){
+                            if (loweredResponse.Contains(x)){
+                                await ReplyAsync($"**{Context.User.Username}**, you already guessed **{x}**");
                                 isGuessed = true;
-                                return;
+                                break;
                             }
                         }
 
@@ -2104,11 +2376,18 @@ namespace OjamajoBot.Module
 
                         if (!tempRandomedAnswer.Contains(loweredResponse) && !isGuessed)
                         {
-                            await ReplyAsync($"Sorry, you guess it wrong.");
-                            attempt -= 1;
-                        }
-                        else if (!isGuessed)
-                        {
+                            lives -= 1;
+                            if (lives > 0){
+                                Config.Doremi.isRunningQuiz.Remove(Context.User.Id.ToString());
+                                await ReplyAsync($"\u274C Sorry **{Context.User.Username}**, you guess it wrong. \u2764: **{lives}** . Category:**{key}**```{replacedAnswer}```");
+                            } else {
+                                lives = 0;
+                                Config.Doremi.isRunningQuiz.Remove(Context.User.Id.ToString());
+                                await ReplyAsync($"\u274C Sorry **{Context.User.Username}**, you're running out of guessing attempt. The correct answer is : **{randomedAnswer}**");
+                                return;
+                            }
+                                
+                        } else if (!isGuessed) {
                             try
                             {
                                 StringBuilder sb = new StringBuilder(replacedAnswer);
@@ -2122,25 +2401,30 @@ namespace OjamajoBot.Module
                                 replacedAnswer = sb.ToString();
                             }
                             catch (Exception e) { Console.WriteLine(e.ToString()); }
-
+                            if(replacedAnswer.Contains("_"))
+                                await ReplyAsync($":white_check_mark: **{Context.User.Username}**. Category:**{key}**\n```{replacedAnswer}```");
+                            else {
+                                Config.Doremi.isRunningQuiz.Remove(Context.User.Id.ToString());
+                                await ReplyAsync($"\uD83D\uDC4F Congratulations **{Context.User.Username}**, you guess the correct answer: **{randomedAnswer}**");
+                                return;
+                            }
                         }
 
                     }
 
-                    await ReplyAsync($"Guessing attempt(s) left: **{attempt}**```{replacedAnswer}```");
-                }
+                response = await NextMessageAsync(timeout: TimeSpan.FromSeconds(timeoutDuration));
 
-                if (replacedAnswer.Contains("_"))
-                    await ReplyAsync($"Sorry, you're running out of guessing attempt. The correct answer is : **{randomedAnswer}**");
-                else
-                    await ReplyAsync($"Congratulations, you guess the correct answer: **{randomedAnswer}**");
+            }
 
-                Config.Doremi.isRunningQuiz[Context.User.Id.ToString()] = false;
+                lives = 0;
+                Config.Doremi.isRunningQuiz.Remove(Context.User.Id.ToString());
+                await ReplyAsync($"\u23F1 Time's up for **{Context.User.Username}** , sorry you're not guessing any words yet. The correct answer is : **{randomedAnswer}**");
                 return;
+
             }
             else
-                await ReplyAsync($"Sorry, but you still have a running quiz interactive commands, please finish it first.");
-            
+                await ReplyAsync($"Sorry **{Context.User.Username}**, you're still running `quiz hangman` interactive commands, please finish it first.");
+
         }
 
         [Command("doremi", RunMode = RunMode.Async), Summary("I will give you some quiz about Doremi.")]

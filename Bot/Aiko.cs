@@ -126,7 +126,8 @@ namespace OjamajoBot.Bot
                             $"See `{Config.Aiko.PrefixParent[0]}help <commands or category>`for command help.",
                         embed: new EmbedBuilder()
                         .WithColor(Config.Aiko.EmbedColor)
-                        .WithImageUrl("https://38.media.tumblr.com/224f6ca12018eca4ff34895cce9b7649/tumblr_nds3eyKFLH1r98a5go1_500.gif")
+                        //.WithImageUrl("https://38.media.tumblr.com/224f6ca12018eca4ff34895cce9b7649/tumblr_nds3eyKFLH1r98a5go1_500.gif")
+                        .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/6/63/ODN-EP3-006.png")
                         .Build());
                         Console.WriteLine(result.ErrorReason);
                         break;

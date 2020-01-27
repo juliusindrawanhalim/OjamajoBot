@@ -312,6 +312,7 @@ namespace OjamajoBot.Module
             string tempReply = "";
             List<string> listRandomRespond = new List<string>() {
                 $"Hello there, {MentionUtils.MentionUser(Context.User.Id)}. ",
+                $"Hey, {MentionUtils.MentionUser(Context.User.Id)}. ",
             };
 
             int rndIndex = new Random().Next(0, listRandomRespond.Count);
@@ -320,7 +321,8 @@ namespace OjamajoBot.Module
             await ReplyAsync(tempReply);
         }
 
-        [Command("random"), Alias("moments"), Summary("Show any random Momoko moments. Fill <moments> with **pre-motto/motto/naisho** for spesific moments.")]
+        [Command("random"), Alias("moments"), Summary("Show any random Momoko moments. " +
+            "Fill <moments> with **pre-motto/motto/naisho** for spesific moments.")]
         public async Task randomthing(string moments = "")
         {
             string finalUrl = ""; string footerUrl = "";
@@ -382,13 +384,13 @@ namespace OjamajoBot.Module
         public async Task shocked()
         {
             string[] arrRandom = {
-                "Oh my God!","Ohhh my God!", "*shocked*", "*gasp*", "Oh my Goodness!",
-                "Ohh my Goooneesss!"
+                "Oh my God!","Ohhh my God!", "*shocked*", "*gasping*", "Oh my Goodness!",
+                "Ohh my Goooneesss!","Oh no!","Oh my GAH!","*le gasp*",":O"
             };
 
             string[] arrRandomImg = {
-                "https://i.ibb.co/23Q0TP7/Untitled.png",
-                "https://vignette.wikia.nocookie.net/ojamajowitchling/images/1/1a/Motto-02-momo4.png/revision/latest?cb=20171101134454",
+                "https://vignette.wikia.nocookie.net/ojamajowitchling/images/d/d3/ODN-EP5-068.png",
+                "https://vignette.wikia.nocookie.net/ojamajowitchling/images/1/1a/Motto-02-momo4.png",
                 "https://vignette.wikia.nocookie.net/ojamajowitchling/images/6/69/OjamajoLINE2.26.png"
             };
 
@@ -426,7 +428,7 @@ namespace OjamajoBot.Module
             await ReplyAsync($"Peruton Peton Pararira Pon! Turn {username.Mention} into {wishes}",
             embed: new EmbedBuilder()
             .WithColor(Config.Momoko.EmbedColor)
-            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/4/4d/26.07.JPG")
+            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/99/Momo-spell.gif")
             .Build());
         }
 
@@ -436,7 +438,7 @@ namespace OjamajoBot.Module
             await ReplyAsync($"Peruton Peton Pararira Pon! {wishes}");
             await base.ReplyAsync(embed: new EmbedBuilder()
             .WithColor(Config.Momoko.EmbedColor)
-            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/4/4d/26.07.JPG")
+            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/99/Momo-spell.gif")
             .Build());
         }
         //upcoming commands: wow
