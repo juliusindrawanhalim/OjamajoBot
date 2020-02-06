@@ -359,7 +359,7 @@ namespace OjamajoBot.Module
             
         //}
 
-        [Command("autograph"), Summary("I will sign and give you my autograph card signatures.")]
+        [Command("sign"), Summary("I will sign and give you my autograph card signatures.")]
         public async Task sign()
         {
             string[] arrRandom = {
@@ -406,7 +406,6 @@ namespace OjamajoBot.Module
             .WithImageUrl(arrRandomImg[new Random().Next(0,arrRandomImg.Length)])
             .WithFooter($"Signed by: Onpu Segawa [{DateTime.Now.ToString("yyyy-MM-dd HH:mm")}]")
             .Build());
-
         }
 
         [Command("stats"), Alias("bio"), Summary("I will show you my biography info")]
@@ -439,7 +438,6 @@ namespace OjamajoBot.Module
         [Command("turn"), Alias("transform"), Summary("Transform <username> into <wishes>")]
         public async Task spells(IUser username, [Remainder] string wishes)
         {
-            //await Context.Message.DeleteAsync();
             await ReplyAsync($"Pururun purun famifami faa! Turn {username.Mention} into {wishes}",
             embed: new EmbedBuilder()
             .WithColor(Config.Onpu.EmbedColor)

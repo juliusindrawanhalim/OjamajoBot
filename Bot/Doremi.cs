@@ -153,8 +153,8 @@ namespace OjamajoBot.Bot
                 $"Thank you everyone for inviting me up, I'm very happy to meet you all. " +
                 $"You can ask me with `{Config.Doremi.PrefixParent[0]}help` for all commands list.",
             embed: new EmbedBuilder()
-            .WithColor(Config.Hazuki.EmbedColor)
-            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/f/fc/04.01.08.JPG")
+            .WithColor(Config.Doremi.EmbedColor)
+            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/c/c3/01.07.JPG")
             .Build());
 
             Config.Music.queuedTrack[guild.Id.ToString()] = new List<string>();
@@ -165,9 +165,6 @@ namespace OjamajoBot.Bot
         public async Task GuildAvailable(SocketGuild guild)
         {
             Config.Guild.init(guild.Id);
-            Config.Music.queuedTrack[guild.Id.ToString()] = new List<string>();
-            //Config.Music.storedLavaTrack[guild.Id.ToString()] = new List<LavaTrack>();
-
             //set birthday announcement timer
             if (Config.Guild.hasPropertyValues(guild.Id.ToString(), "id_birthday_announcement"))
             {
@@ -190,7 +187,7 @@ namespace OjamajoBot.Bot
                     }
 
                     //announce aiko birthday
-                    if (DateTime.Now.ToString("dd") == Config.Aiko.birthdayDate.ToString("dd")&&
+                    if (DateTime.Now.ToString("dd") == Config.Aiko.birthdayDate.ToString("dd") &&
                     DateTime.Now.ToString("MM") == Config.Aiko.birthdayDate.ToString("MM"))
                     {
                         var calculatedYear = Convert.ToInt32(DateTime.Now.ToString("yyyy")) - Convert.ToInt32(Config.Aiko.birthdayDate.ToString("yyyy"));
@@ -245,11 +242,11 @@ namespace OjamajoBot.Bot
                                 {
 
                                     string[] arrRandomedMessage = {
-                                        $"{Config.Emoji.birthdayCake} Everyone, let's give a wonderful birthday wishes for: {MentionUtils.MentionUser(user.Id)} ",
-                                        $"{Config.Emoji.birthdayCake} Happy birthday to our wonderful friend: {MentionUtils.MentionUser(user.Id)} . " +
-                                        $"Please give some wonderful birthday wishes for {MentionUtils.MentionUser(user.Id)}.",
-                                        $"{Config.Emoji.birthdayCake} Everyone, we have important birthday announcement! Please give some wonderful birthday wishes for {MentionUtils.MentionUser(user.Id)}."
-                                    };
+                                    $"{Config.Emoji.birthdayCake} Everyone, let's give a wonderful birthday wishes for: {MentionUtils.MentionUser(user.Id)} ",
+                                    $"{Config.Emoji.birthdayCake} Happy birthday to our wonderful friend: {MentionUtils.MentionUser(user.Id)} . " +
+                                    $"Please give some wonderful birthday wishes for {MentionUtils.MentionUser(user.Id)}.",
+                                    $"{Config.Emoji.birthdayCake} Everyone, we have important birthday announcement! Please give some wonderful birthday wishes for {MentionUtils.MentionUser(user.Id)}."
+                                };
                                     var birthdayMessage = arrRandomedMessage[new Random().Next(0, arrRandomedMessage.Length)];
 
                                     try
@@ -267,14 +264,16 @@ namespace OjamajoBot.Bot
                                 }
                             }
                         }
-                        catch(Exception e) {
+                        catch (Exception e)
+                        {
                             //guildJsonFile.Property(key).Remove();
                             //File.WriteAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json", guildJsonFile.ToString());
                         }
-                        
+
                     }
 
-                    if (birthdayExisted){
+                    if (birthdayExisted)
+                    {
                         EmbedBuilder builder = new EmbedBuilder();
                         builder.ImageUrl = "https://i.4pcdn.org/s4s/1508005628768.jpg";
                         builder.Color = Config.Doremi.EmbedColor;
@@ -293,7 +292,8 @@ namespace OjamajoBot.Bot
             }
 
             //set random event timer
-            if (Config.Guild.hasPropertyValues(guild.Id.ToString(),"id_random_event")){ 
+            if (Config.Guild.hasPropertyValues(guild.Id.ToString(), "id_random_event"))
+            {
                 //start rotates random event
                 Config.Doremi._timerRandomEvent[$"{guild.Id.ToString()}"] = new Timer(async _ =>
                 {
@@ -307,7 +307,9 @@ namespace OjamajoBot.Bot
                         .GetGuild(guild.Id)
                         .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "id_random_event")))
                         .SendMessageAsync(Config.Doremi.listRandomEvent[rndIndex]);
-                    } catch {
+                    }
+                    catch
+                    {
                         Console.WriteLine($"Doremi Random Event Exception: Send message permissions has been missing on {guild.Name}");
                     }
                 },
@@ -319,6 +321,10 @@ namespace OjamajoBot.Bot
 
             //var channel = client.GetChannel(guild.SystemChannel.Id) as SocketTextChannel;
             //await channel.SendMessageAsync(guild.SystemChannel.Id.ToString());
+
+            Config.Guild.init(guild.Id);
+            Config.Music.queuedTrack[guild.Id.ToString()] = new List<string>();
+            //Config.Music.storedLavaTrack[guild.Id.ToString()] = new List<LavaTrack>();
         }
 
         /// <summary>
@@ -333,7 +339,7 @@ namespace OjamajoBot.Bot
             if(user.Id != Config.Hazuki.Id && user.Id != Config.Aiko.Id &&
                 user.Id != Config.Onpu.Id && user.Id!= Config.Momoko.Id) { 
                 string[] arrRandomWelcomeMessage = {
-                    $"Hii there {user.Mention}, welcome to the {channel.Guild.Name}. We hope you enjoy and happy with all of us.",
+                    $"Hi there {user.Mention}, welcome to the {channel.Guild.Name}. We hope you enjoy and happy with all of us.",
                     $"Hello {user.Mention}, welcome to the {channel.Guild.Name}. We're really happy that you join our group.",
                     $"Hello new friends: {user.Mention}, welcome to the {channel.Guild.Name}. " +
                     $"We're expecting you to come and hopefully you're enjoying your stay on the group."
@@ -348,7 +354,7 @@ namespace OjamajoBot.Bot
                 int rndIndexRandomPictures = new Random().Next(0, arrRandomPictures.GetLength(0));
 
                 await channel.SendMessageAsync(arrRandomWelcomeMessage[rndIndexWelcomeMessage] +
-                    " Please do introduce yourself, also don't forget to always follow and read the rule guidelines :smile:",
+                    " Please introduce yourself, also don't forget to always follow and read the rule guidelines :smile:",
                     embed: new EmbedBuilder()
                             .WithColor(Config.Doremi.EmbedColor)
                             .WithImageUrl(arrRandomPictures[rndIndexRandomPictures])
@@ -357,7 +363,7 @@ namespace OjamajoBot.Bot
                 //sending dm to the joined user
                 var dmchannel = await user.GetOrCreateDMChannelAsync();
                 await dmchannel.SendMessageAsync(arrRandomWelcomeMessage[rndIndexWelcomeMessage] + 
-                    " Please do introduce yourself on the group, also don't forget to always follow and read the rule guidelines :smile:",
+                    " Please introduce yourself on the group, also don't forget to always follow and read the rule guidelines :smile:",
                     embed: new EmbedBuilder()
                             .WithColor(Config.Doremi.EmbedColor)
                             .WithImageUrl(arrRandomPictures[rndIndexRandomPictures])
@@ -529,8 +535,7 @@ namespace OjamajoBot.Bot
                 if (message.ToString().Contains($"<@!{Config.Doremi.Id}> mod")  ||
                     message.ToString().Contains($"<@!{Config.Doremi.Id}> mod channels") ||
                     splittedString[1].StartsWith("mod ")||
-                    splittedString[1].StartsWith("mod channels"))
-                { //executed by moderator commands
+                    splittedString[1].StartsWith("mod channels")){ //executed by moderator commands
                     switch (result.Error)
                     {
                         case CommandError.BadArgCount:

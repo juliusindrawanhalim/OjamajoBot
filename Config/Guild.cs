@@ -29,10 +29,10 @@ namespace Config
 
             if (File.Exists($"{Core.headConfigGuildFolder}{id_guild}/{id_guild}.json")){
                 JObject guildConfig = JObject.Parse(File.ReadAllText($"{Core.headConfigGuildFolder}{id_guild}/{id_guild}.json"));
-                
+
                 //id_random_event
                 if (!guildConfig.ContainsKey("id_random_event"))
-                    guildConfig.Add( new JProperty("id_random_event", ""));
+                    guildConfig.Add(new JProperty("id_random_event", ""));
 
                 //id_birthday_announcement
                 if (!guildConfig.ContainsKey("id_birthday_announcement"))
@@ -49,7 +49,7 @@ namespace Config
                 File.WriteAllText($"{Core.headConfigGuildFolder}{id_guild}/{id_guild}.json", guildConfig.ToString());
 
             } else { //create json file if it's not existed
-                
+
                 JObject guildConfig = new JObject(
                     new JProperty("id_random_event", ""),
                     new JProperty("id_birthday_announcement", ""),
@@ -58,7 +58,20 @@ namespace Config
 
                 File.WriteAllText($"{Core.headConfigGuildFolder}{id_guild}/{id_guild}.json", guildConfig.ToString());
             }
-            
+
+            //check if minigame_data.json esists/not
+            if (File.Exists($"{Core.headConfigGuildFolder}{id_guild}/{Core.minigameDataFileName}")){
+                JObject quizConfig = JObject.Parse(File.ReadAllText($"{Core.headConfigGuildFolder}{id_guild}/{Core.minigameDataFileName}"));
+                if (!quizConfig.ContainsKey("score")){
+                    quizConfig.Add(new JProperty("score", new JObject()));
+                    File.WriteAllText($"{Core.headConfigGuildFolder}{id_guild}/{Core.minigameDataFileName}", quizConfig.ToString());
+                }
+            } else {
+                JObject guildConfig = new JObject(
+                    new JProperty("score", new JObject()));
+
+                File.WriteAllText($"{Core.headConfigGuildFolder}{id_guild}/{Core.minigameDataFileName}", guildConfig.ToString());
+            }
         }
 
         public static string getPropertyValue(ulong id_guild, string property)
@@ -90,8 +103,13 @@ namespace Config
 
         public static void removeGuildConfigFile(string id_guild)
         {
-            if (File.Exists($"{Core.headConfigGuildFolder}{id_guild}/{id_guild}.json"))
-                File.Delete($"{Core.headConfigGuildFolder}{id_guild}/{id_guild}.json");
+            //remove guild config folder
+            if (Directory.Exists($"{Core.headConfigGuildFolder}{id_guild}"))
+                Directory.Delete($"{Core.headConfigGuildFolder}{id_guild}");
+
+            //remove attachments
+            if (Directory.Exists($"{Core.attachmentsFolder}{id_guild}"))
+                Directory.Delete($"{Core.attachmentsFolder}{id_guild}");
         }
 
         public static Boolean hasPropertyValues(string id_guild, string property){

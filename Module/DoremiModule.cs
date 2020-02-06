@@ -274,244 +274,6 @@ namespace OjamajoBot.Module
 
         //end
 
-        //[Command("Help")]
-        //public async Task showHelp()
-        //{
-        //    await ReplyAsync(embed: new EmbedBuilder()
-        //    .WithColor(Config.Doremi.EmbedColor)
-        //    .WithAuthor(Config.Doremi.EmbedName, Config.Doremi.EmbedAvatarUrl)
-        //    .WithTitle("Command List:")
-        //    .WithDescription($"Pretty Witchy Doremi Chi~ " +
-        //    $"You can tell me what to do with {MentionUtils.MentionUser(Config.Doremi.Id)} or **doremi!** or **do!** as the starting command prefix. " +
-        //    $"**<opt:>** parameter means is optional")
-        //    .AddField("Basic Commands",
-        //    "**change** or **henshin** : Change into the ojamajo form\n" +
-        //    "**dorememe** or **dorememes <opt:username>** : I will give you some random doremi memes\n" +
-        //    //"**contribute <dorememe or dorememes>** <file> : Submit an image attachment to dorememe commands \n" +
-        //    //"**episode** or **episodes** <season 1/2/3/4/5> <episodes> : I will give you the episodes info & summary\n" +
-        //    "**fairy** : I will show you my fairy\n" +
-        //    //"**feedback <feedback message>** : I will save your <feedback message> and try to improve with it\n"+
-        //    "**hello** : Hello, I will greet you up\n" +
-        //    "**hug <opt:username>** : I will give warm hug for you or <username>\n" +
-        //    "**invite** : Generate the invitation links for related ojamajo bot\n"+
-        //    "**magicalstage** or **magical stage** **<wishes>**: I will perform magical stage along with the other and make a <wishes>\n" +
-        //    "**meme** or **memes** : I will give you some random memes\n" +
-        //    "**quiz** : I will give you some quiz. Think you can answer them all?\n" +
-        //    //"**quiz episodes** : I will give you a quiz about episodes\n" +
-        //    "**quotes** : Mention any random quotes\n" +
-        //    "**random** or **moments** : Show any random Doremi moments\n" +
-        //    "**stats** or **bio** : I will show you my biography info\n" +
-        //    "**star <message or attachment>** : I will pin this messsages on 10 stars reaction\n" +
-        //    $"**steak**: Show any random steak moments {Config.Emoji.drool}{Config.Emoji.steak}\n" +
-        //    "**turn** or **transform <username> <wishes>** : Turn <username> into <wishes>\n" +
-        //    "**wish <wishes>** : I will grant you a <wishes>")
-        //    //"**musicrepeat** or **murep** <Off/One/All> : Toggle the Music Repeat State based on the <parameter>\n" +
-        //    .AddField("Musical Commands [On testing, some bugs might be founded]",
-        //    "**join** : I will join to your connected voice channel (Please join any voice channel first)\n" +
-        //    "**musiclist** or **mulist** : Show the doremi music list\n" +
-        //    "**play <track number or title>** : Play the music with the given <track number or title> parameter\n" +
-        //    "**playall** : Play all the music that's available on doremi music list\n" +
-        //    "**queue** or **muq** : Show all the music that's currently on queue list\n" +
-        //    "**seek <timespan>** : Seek the music into the given <timespan>[hh:mm:ss]\n" +
-        //    "**skip** : Skip the music\n" +
-        //    "**stop** : Stop playing the music. This will also clear the queue list\n" +
-        //    "**youtube** or **yt <keyword or url>** : Play the youtube music either it's from keyword/url")
-        //    .AddField("Moderator Commands [``Manage Channels`` permissions])",
-        //    "**mod help** : This will display all basic moderator commands list")
-        //    .Build());
-        //}
-
-        ///*quiz episodes
-        //[Command("episodes", RunMode = RunMode.Async)]
-        //public async Task showEpisodesInfo()
-        //{
-        //    string[,] arrRandomSeason1 = {
-        //        {"1","I'm Doremi! Becoming a Witch","https://vignette.wikia.nocookie.net/ojamajowitchling/images/2/2e/OD-EP1-31.png/revision/latest?cb=20191013140106"},
-        //        {"2","I Become Hazuki-chan","https://vignette.wikia.nocookie.net/ojamajowitchling/images/a/ab/OD-EP2-01.png/revision/latest?cb=20191014181543"},
-        //        {"3","The Transfer Student from Naniwa! Aiko Debuts","https://vignette.wikia.nocookie.net/ojamajowitchling/images/7/76/OD-EP3-01.png/revision/latest?cb=20191020221637"},
-        //        {"4","It's Not Scary if We're All Witches","https://vignette.wikia.nocookie.net/ojamajowitchling/images/b/b5/OD-EP4-01.png/revision/latest?cb=20191021160947"},
-        //        {"5","Grand Opening! Maho-dou","https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/56/OD-EP5-01.png/revision/latest?cb=20191028122639"},
-        //        {"6","A Liar's First Friendship","https://vignette.wikia.nocookie.net/ojamajowitchling/images/a/a2/OD-EP6-01.png/revision/latest?cb=20191103230145"},
-        //        {"7","Go to the Witch World!!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/1/11/OD-EP8-01.png/revision/latest?cb=20191104092436"},
-        //        {"8","Go to the Witch World!!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/1/11/OD-EP8-01.png/revision/latest?cb=20191104092436"},
-        //        {"11","Early Bird Marina and a Bouquet From the Heart","https://vignette.wikia.nocookie.net/ojamajowitchling/images/e/e5/OD-EP11-01.png/revision/latest?cb=20191106191355"},
-        //        {"12","A Wish for a Precious Shirt","https://vignette.wikia.nocookie.net/ojamajowitchling/images/6/63/OD-EP12-01.png/revision/latest?cb=20191107002353"},
-        //        {"14","Laugh and Forgive Me!?","https://vignette.wikia.nocookie.net/ojamajowitchling/images/8/8e/OD-EP14-01.png/revision/latest?cb=20191107104808"},
-        //        {"15","Majo Rika Goes to Kindergarten","https://vignette.wikia.nocookie.net/ojamajowitchling/images/e/e9/OD-EP15-01.png/revision/latest?cb=20191107231142"},
-        //        {"16","Fishing for Love","https://vignette.wikia.nocookie.net/ojamajowitchling/images/0/07/OD-EP16-01.png/revision/latest?cb=20191109124447"},
-        //        {"17","Yada-kun is a Delinquent!?","https://vignette.wikia.nocookie.net/ojamajowitchling/images/f/f3/OD-EP17-01.png/revision/latest?cb=20191109135953"},
-        //        {"18","Don't Use That! The Forbidden Magic","https://vignette.wikia.nocookie.net/ojamajowitchling/images/3/34/OD-EP18-01.png/revision/latest?cb=20171021190450"},
-        //        {"19","Hazuki-chan is Kidnapped!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/5d/OD-EP19-01.png/revision/latest?cb=20191113144549"},
-        //        {"20","The Rival Debuts! The Maho-dou is in Big Trouble!!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/3/39/OD-EP20-01.png/revision/latest?cb=20191113182510"},
-        //        {"21","Majoruka's Goods are full of danger!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/1/12/OD-EP21-01.png/revision/latest?cb=20191113215530"},
-        //        {"22","The Road to being a level 6 Witch is Hard","https://vignette.wikia.nocookie.net/ojamajowitchling/images/f/f4/OD-EP22-01.png/revision/latest?cb=20191113223335"},
-        //        {"23","Big Change! The Ojamajo's Test","https://vignette.wikia.nocookie.net/ojamajowitchling/images/4/4d/OD-EP23-01.png/revision/latest?cb=20191116123630"},
-        //        {"24","Majoruka versus level 6 ojamajo!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/1/13/OD-EP24-01.png/revision/latest?cb=20191116140500"},
-        //        {"25","Ojamajo Poppu appears!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/d/dc/OD-EP25-01.png/revision/latest?cb=20191116143237"},
-        //        {"27","Oyajide arrives?!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/e/ee/OD-EP27-01.png/revision/latest?cb=20191116223858"},
-        //        {"28","Love is a Windy Ride over a Plateau","https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/58/OD-EP28-01.png/revision/latest?cb=20191116234149"},
-        //        {"29","The Tap Disappeared at the Festival!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/6/61/OD-EP29-01.png/revision/latest?cb=20191117003019"},
-        //        {"30","I want to meet the ghost!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/f/f2/OD-EP30-01.png/revision/latest?cb=20191117011838"},
-        //        {"31","Present from Mongolia","https://vignette.wikia.nocookie.net/ojamajowitchling/images/e/e4/OD-EP31-01.png/revision/latest?cb=20191117102136"},
-        //        {"32","Overthrow Tamaki! the class election!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/6/68/OD-EP32-01.png/revision/latest?cb=20191117105859"},
-        //        {"33","Panic at the Sports Festival","https://vignette.wikia.nocookie.net/ojamajowitchling/images/6/65/OD-EP33-01.png/revision/latest?cb=20191117171421"},
-        //        {"34","I want to see my Mother!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/8/85/OD-EP34-01.png/revision/latest?cb=20191117174457"},
-        //        {"35","The Transfer student is a Witch Apprentice?!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/0/0a/OD-EP35-01.png/revision/latest?cb=20191117183318"},
-        //        {"36","Level four exam is Dododododo!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/59/OD-EP36-01.png/revision/latest?cb=20191117213655"},
-        //        {"38","Ryota and the Midnight Monster","https://vignette.wikia.nocookie.net/ojamajowitchling/images/e/e3/OD-EP38-01.png/revision/latest?cb=20191118104422"},
-        //        {"41","Father and Son, the Move Towards Victory!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/4/43/OD-EP41-01.png/revision/latest?cb=20171021190911"},
-        //        {"42","The Ojamajo's Fight for Justice!?","https://vignette.wikia.nocookie.net/ojamajowitchling/images/c/c2/OD-EP42-01.png/revision/latest?cb=20191118193414"},
-        //        {"43","Papa, Fireworks, and Tearful Memories","https://vignette.wikia.nocookie.net/ojamajowitchling/images/a/a1/OD-EP43-01.png/revision/latest?cb=20191118200017"},
-        //        {"44","I Want to Be a Female Pro Wrestler!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/0/08/OD-EP44-01.png/revision/latest?cb=20191118205141"},
-        //        {"45","Help Santa!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/96/OD-EP45-01.png/revision/latest?cb=20191118205624"},
-        //        {"46","The Witches' Talent Show","https://vignette.wikia.nocookie.net/ojamajowitchling/images/6/61/OD-EP46-01.png/revision/latest?cb=20191119122536"},
-        //        {"47","Fathers Arranged Marriage Meeting","https://vignette.wikia.nocookie.net/ojamajowitchling/images/0/0c/OD-EP47-01.png/revision/latest?cb=20191119122558"},
-        //        {"48","Onpu's Mail is a Love Letter?","https://vignette.wikia.nocookie.net/ojamajowitchling/images/0/07/OD-EP48-01.png/revision/latest?cb=20191120210149"},
-        //        {"49","I Want to Meet Papa! The Dream Places on the Overnight Express","https://vignette.wikia.nocookie.net/ojamajowitchling/images/b/b9/OD-EP49-01.png/revision/latest?cb=20191120212755"},
-        //        {"50","The Final Witch Apprentice Exam","https://vignette.wikia.nocookie.net/ojamajowitchling/images/c/c3/OD-EP50-01.png/revision/latest?cb=20191120231046"},
-        //        {"51","Goodbye Maho-Dou","https://vignette.wikia.nocookie.net/ojamajowitchling/images/c/ce/OD-EP51-01.png/revision/latest?cb=20191120231059"},
-        //    };
-        //    string[,] arrRandomSeason2 = {
-        //        {"1","Doremi Becomes a Mom!?","https://vignette.wikia.nocookie.net/ojamajowitchling/images/a/ae/ODS-EP1-001.png/revision/latest?cb=20191122221644"},
-        //        {"2","Raising a Baby is a Lot of Trouble!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/8/83/ODS-EP2-001.png/revision/latest?cb=20191124140100"},
-        //        {"3","Don't Fall Asleep! Pop's Witch Apprentice Exam","https://vignette.wikia.nocookie.net/ojamajowitchling/images/4/43/ODS-EP3-001.png/revision/latest?cb=20191124212633"},
-        //        {"4","Doremi Fails as a Mom!?","https://vignette.wikia.nocookie.net/ojamajowitchling/images/7/7e/ODS-EP4-001.png/revision/latest?cb=20191124235204"},
-        //        {"5","So Long, Oyajiide","https://vignette.wikia.nocookie.net/ojamajowitchling/images/8/8e/ODS-EP5-001.png/revision/latest?cb=20191125102137"},
-        //        {"6","Lies and Truth in Flower Language","https://vignette.wikia.nocookie.net/ojamajowitchling/images/4/43/ODS-EP6-001.png/revision/latest?cb=20191125213656"},
-        //        {"7","Hana-chan's Health Examination","https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/5d/ODS-EP7-001.png/revision/latest?cb=20191125221342"},
-        //        {"8","Across Time, In Search of Onpu's Moms Secret!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/1/12/ODS-EP8-001.png/revision/latest?cb=20191130001508"},
-        //        {"9","The Search for the Herbs! Maho-dou's Bus Trip","https://vignette.wikia.nocookie.net/ojamajowitchling/images/d/d1/ODS-EP9-001.png/revision/latest?cb=20191201104930"},
-        //        {"11","Hazuki-chan Learns how to Dance!?","https://vignette.wikia.nocookie.net/ojamajowitchling/images/b/b4/ODS-EP11-001.png/revision/latest?cb=20191201200624"},
-        //        {"12","The Health Examination's Yellow Cards!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/b/b6/ODS-EP12-001.png/revision/latest?cb=20191202120414"},
-        //        {"13","Doremi Becomes a Bride?","https://vignette.wikia.nocookie.net/ojamajowitchling/images/8/80/ODS-EP13-001.png/revision/latest?cb=20191204222102"},
-        //        {"14","Pop's First Love? Her Beloved Jyunichi-Sensei!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/b/b9/ODS-EP14-001.png/revision/latest?cb=20191208134648"},
-        //        {"15","Mother's Day and the Drawing of Mother","https://vignette.wikia.nocookie.net/ojamajowitchling/images/2/23/ODS-EP15-001.png/revision/latest?cb=20191209133630"},
-        //        {"18","Dodo Runs Away From Home!!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/e/eb/ODS-EP18-001.png/revision/latest?cb=20191217185517"},
-        //        {"19","Doremi and Hazuki's Big Fight","https://vignette.wikia.nocookie.net/ojamajowitchling/images/c/cc/ODS-EP19-001.png/revision/latest?cb=20191217220830"},
-        //        {"21","The Misanthropist Majo Don and The Promise of The Herb","https://vignette.wikia.nocookie.net/ojamajowitchling/images/b/b9/ODS-EP21-001.png/revision/latest?cb=20191221130019"},
-        //        {"22","The Wizard's Trap - Oyajide Returns","https://vignette.wikia.nocookie.net/ojamajowitchling/images/6/66/ODS-EP22-001.png/revision/latest?cb=20191222224016"},
-        //        {"23","Using new powers to Rescue Hana-chan!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/0/07/ODS-EP23-001.png/revision/latest?cb=20191223102333"},
-        //        {"24","Fried Bread Power is Scary!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/3/33/ODS-EP24-001.png/revision/latest?cb=20191229162205"},
-        //        {"25","The Mysterious Pretty Boy, Akatsuki-kun Appears!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/0/0b/ODS-EP25-001.png/revision/latest?cb=20191230032553"},
-        //        {"26","Kanae-chan's Diet Plan","https://vignette.wikia.nocookie.net/ojamajowitchling/images/f/fb/ODS-EP26-001.png/revision/latest?cb=20200101191420"},
-        //        {"28","Health Examination Full of Hidden Dangers","https://vignette.wikia.nocookie.net/ojamajowitchling/images/d/db/ODS-EP28-001.png/revision/latest?cb=20200104231053"},
-        //        {"29","Everyone Disappears During the Test of Courage!?","https://vignette.wikia.nocookie.net/ojamajowitchling/images/3/32/ODS-EP29-001.png/revision/latest?cb=20200105222029"},
-        //        {"30","Seki-sensei's Got a Boyfriend!?","https://vignette.wikia.nocookie.net/ojamajowitchling/images/7/77/ODS-EP30-001.png/revision/latest?cb=20200105223509"},
-        //        {"31","The FLAT 4 Arrive from the Wizard World!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/9b/ODS-EP31-001.png/revision/latest?cb=20200109000219"},
-        //        {"32","Fly Away! Dodo and the Other Fairies' Big","https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/95/02.32.09.JPG/revision/latest?cb=20160104203250"},
-        //        {"33","Say Cheese During the Class Trip!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/91/02.33.07.JPG/revision/latest?cb=20160104204330"},
-        //        {"34","Takoyaki is the Taste of Making Up","https://vignette.wikia.nocookie.net/ojamajowitchling/images/a/a4/02.33.06.JPG/revision/latest?cb=20160104203724"},
-        //        {"36","Aiko and her Rival! Sports Showdown!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/3/31/02.36.06.JPG/revision/latest?cb=20160104204841"},
-        //        {"38","Hazuki-chan's a Great Director!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/4/45/02.38.06.JPG/revision/latest?cb=20160104205546"},
-        //        {"39","A Selfish Child and the Angry Monster","https://vignette.wikia.nocookie.net/ojamajowitchling/images/a/ae/39.07.JPG/revision/latest?cb=20160104205811"},
-        //        {"40","The Piano Comes to the Harukaze House!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/2/28/02.40.10.JPG/revision/latest?cb=20160104210153"},
-        //        {"41","Chase after Onpu! The Path to Becoming an Idol!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/3/32/02.41.06.JPG/revision/latest?cb=20160104210830"},
-        //        {"42","The Witch Who Does Not Cast Magic","https://vignette.wikia.nocookie.net/ojamajowitchling/images/7/7d/42.09.JPG/revision/latest?cb=20160104211048"},
-        //        {"44","A Happy White Christmas","https://vignette.wikia.nocookie.net/ojamajowitchling/images/e/e9/02.44.05.JPG/revision/latest?cb=20160104211626"},
-        //        {"45","Ojamajo Era Drama: The Young Girls Show Their Valor!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/9b/02.45.08.JPG/revision/latest?cb=20160104211934"},
-        //        {"46","The Last Examination - Hana-chan's Mom Will Protect Her!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/f/fe/02.46.09.JPG/revision/latest?cb=20160104212224"},
-        //        {"47","Give Back Hana-chan! The Great Magic Battle","https://vignette.wikia.nocookie.net/ojamajowitchling/images/1/13/02.47.05.JPG/revision/latest?cb=20160104212503"},
-        //        {"49","Good Bye, Hana-chan","https://vignette.wikia.nocookie.net/ojamajowitchling/images/8/8f/49.16.JPG/revision/latest?cb=20160104213105"},
-        //    };
-        //    string[,] arrRandomSeason3 = {
-        //        {"1","Doremi, a Stormy New Semester","https://vignette.wikia.nocookie.net/ojamajowitchling/images/4/44/Motto1-preop.png/revision/latest?cb=20171010213519"},
-        //        {"2","Momoko Cried!? The Secret of the Earring","https://vignette.wikia.nocookie.net/ojamajowitchling/images/c/c7/02.15.JPG/revision/latest?cb=20151216152711"},
-        //        {"3","I Hate You! But I Would Like To Be Your Friend!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/6/68/03.03.06.JPG/revision/latest?cb=20151216220704"},
-        //        {"5","The SOS Trio is Disbanding!?","https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/55/03.05.02.JPG/revision/latest?cb=20151216223354"},
-        //        {"6","Challenge! The First Patissiere Exam","https://vignette.wikia.nocookie.net/ojamajowitchling/images/e/ea/06.10.JPG/revision/latest?cb=20151216231954"},
-        //        {"8","What Are True Friends?","https://vignette.wikia.nocookie.net/ojamajowitchling/images/b/b9/03.08.07.JPG/revision/latest?cb=20151217022824"},
-        //        {"9","Hazuki and Masaru's Treasure","https://vignette.wikia.nocookie.net/ojamajowitchling/images/7/7c/09.02.JPG/revision/latest?cb=20151128023340"},
-        //        {"10","I Don't Want to Become an Adult!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/b/b5/03.10.06.JPG/revision/latest?cb=20151218113031"},
-        //        {"11","The Unstoppable Teacher!!","https://vignette.wikia.nocookie.net/ojamajowitchling/images/e/e4/03.11.06.JPG/revision/latest?cb=20151220124444"},
-        //        {"12","Kotake VS Demon Coach Igarashi","https://vignette.wikia.nocookie.net/ojamajowitchling/images/e/ed/12.07.JPG/revision/latest?cb=20151220150403"},
-        //        {"14","An Up and Down Happy Birthday","https://vignette.wikia.nocookie.net/ojamajowitchling/images/1/1b/14.07.JPG/revision/latest?cb=20151220152430"},
-        //        {"16","Just Being Delicious is Not Enough!?","https://vignette.wikia.nocookie.net/ojamajowitchling/images/7/71/16.07.JPG/revision/latest?cb=20151220154907"},
-        //        {"17","Her Destine Rival!! Harukaze and Tamaki","https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/99/03.17.09.JPG/revision/latest?cb=20151220160308"},
-        //        {"18","Scoop! A Child Idol's Day","https://vignette.wikia.nocookie.net/ojamajowitchling/images/e/ec/18.09.JPG/revision/latest?cb=20151220162822"},
-        //        {"19","Nothing but Fights, Like Father, Like Son","https://vignette.wikia.nocookie.net/ojamajowitchling/images/7/74/03.19.05.JPG/revision/latest?cb=20151221002953"},
-        //        {"21","We're Out of Magical Ingredient","https://vignette.wikia.nocookie.net/ojamajowitchling/images/a/a7/21.11.JPG/revision/latest?cb=20151221005022"},
-        //        {"23","Clams By the Shore","https://vignette.wikia.nocookie.net/ojamajowitchling/images/b/bd/03.23.050.JPG/revision/latest?cb=20151221010658"},
-        //        {"24","Rock and Roll in the Music Club!?","https://vignette.wikia.nocookie.net/ojamajowitchling/images/7/76/03.24.06.JPG/revision/latest?cb=20151221011438"},
-        //        {"25","A Lonely Summer Vacation","https://vignette.wikia.nocookie.net/ojamajowitchling/images/a/ad/03.25.05.JPG/revision/latest?cb=20151221012136"},
-        //        {"26","Deliver Her Feelings! Aiko Goes to Osaka","https://vignette.wikia.nocookie.net/ojamajowitchling/images/a/ae/26.09.JPG/revision/latest?cb=20151221162214"},
-
-        //    };
-        //}
-        //*/
-
-        //[Command("help")]
-        //public async Task showHelpDetail(string query)
-        //{
-        //    query = query.ToLower();
-        //    switch (query)
-        //    {
-        //        case "A":
-        //            await ReplyAsync();
-        //            break;
-        //    }
-        //    //"**change** or **henshin** : Change into the ojamajo form\n" +
-        //    //"**dorememe** or **dorememes <opt:username>** : I will give you some random doremi memes\n" +
-        //    ////"**contribute <dorememe or dorememes>** <file> : Submit an image attachment to dorememe commands \n" +
-        //    ////"**episode** or **episodes** <season 1/2/3/4/5> <episodes> : I will give you the episodes info & summary\n" +
-        //    //"**fairy** : I will show you my fairy\n" +
-        //    ////"**feedback <feedback message>** : I will save your <feedback message> and try to improve with it\n"+
-        //    //"**hello** : Hello, I will greet you up\n" +
-        //    //"**hug <opt:username>** : I will give warm hug for you or <username>\n" +
-        //    //"**invite** : Generate the invitation links for related ojamajo bot\n" +
-        //    //"**magicalstage** or **magical stage** **<wishes>**: I will perform magical stage along with the other and make a <wishes>\n" +
-        //    //"**meme** or **memes** : I will give you some random memes\n" +
-        //    //"**quiz** : I will give you some quiz. Think you can answer them all?\n" +
-        //    ////"**quiz episodes** : I will give you a quiz about episodes\n" +
-        //    //"**quotes** : Mention any random quotes\n" +
-        //    //"**random** or **moments** : Show any random Doremi moments\n" +
-        //    //"**stats** or **bio** : I will show you my biography info\n" +
-        //    //"**star <message or attachment>** : I will pin this messsages on 10 stars reaction\n" +
-        //    //$"**steak**: Show any random steak moments {Config.Emoji.drool}{Config.Emoji.steak}\n" +
-        //    //"**turn** or **transform <username> <wishes>** : Turn <username> into <wishes>\n" +
-        //    //"**wish <wishes>** : I will grant you a <wishes>")
-        //    ////"**musicrepeat** or **murep** <Off/One/All> : Toggle the Music Repeat State based on the <parameter>\n" +
-        //    //.AddField("Musical Commands [On testing, some bugs might be founded]",
-        //    //"**join** : I will join to your connected voice channel (Please join any voice channel first)\n" +
-        //    //"**musiclist** or **mulist** : Show the doremi music list\n" +
-        //    //"**play <track number or title>** : Play the music with the given <track number or title> parameter\n" +
-        //    //"**playall** : Play all the music that's available on doremi music list\n" +
-        //    //"**queue** or **muq** : Show all the music that's currently on queue list\n" +
-        //    //"**seek <timespan>** : Seek the music into the given <timespan>[hh:mm:ss]\n" +
-        //    //"**skip** : Skip the music\n" +
-        //    //"**stop** : Stop playing the music. This will also clear the queue list\n" +
-        //    //"**youtube** or **yt <keyword or url>** : Play the youtube music either it's from keyword/url")
-        //    //.AddField("Moderator Commands [``Manage Channels`` permissions])",
-        //    //"**mod help** : This will display all basic moderator commands list"
-        //}
-
-        //[Command("help"), Summary("Gives information about a specific command")]
-        //public async Task Help(string command)
-        //{
-
-        //    var result = commandService.Search(Context, command);
-        //    if (!result.IsSuccess)
-        //    {
-        //        await ReplyAsync("Requested command invalid").ConfigureAwait(false);
-        //        return;
-        //    }
-
-        //    var builder = new EmbedBuilder();
-        //    foreach (var match in result.Commands)
-        //    {
-        //        var matchCommand = match.Command;
-
-        //        builder
-        //            .WithTitle($"Command: **{matchCommand.Name}**")
-        //            .WithDescription($":white_small_square:  **Alias:**\t\t\t\t{string.Join(", ", matchCommand.Aliases)}\n"
-        //                              + $":white_small_square:  **Usage:**  \t\t\t{"doremi!"}{matchCommand.Name} "
-        //                              + $"{string.Join(" ", matchCommand.Parameters.Select(p => $"<{p.Name}>"))}\n"
-        //                              + $":white_small_square:  **Description:**\t{matchCommand.Summary}\n")
-        //            .WithColor(new Color(0xD8D45F));
-
-        //        await ReplyAsync("", false, builder.Build()).ConfigureAwait(false);
-        //    }
-        //}
-
         //[Command("contribute"), Summary("I will save your contributed dorememes on 5 😝 reaction.")]
         //public async Task contributeDorememes([Remainder] string MessagesOrWithAttachment)
         //{
@@ -862,13 +624,14 @@ namespace OjamajoBot.Module
             .WithDescription("Pirika pirilala poporina peperuto! Show us what's new on doremi bot and her other friends!")
             .AddField("Summary",
             $"-Onpu & Momoko bot has arrived. You can invite them with `{Config.Doremi.PrefixParent[0]}invite` commands.\n" +
-            $"-Doremi and her other friends has updated into **motto** version.\n" +
+            $"-Doremi and her other friends commands has updated into **motto** version.\n" +
             $"-Doremi bot can now assign your birthday with `{Config.Doremi.PrefixParent[0]}birthday set commands`.\n" +
             "-Doremi bot now has wiki category that let you get the [wiki information](https://ojamajowitchling.fandom.com)\n" +
+            "-Doremi bot minigames command now has score.\n" +
             "-Added more random moments image source for Doremi and other related bots.\n" +
             "-Doremi and her other friends now has individual greeting message.\n"+
             "-Aiko bot: `spooky` commands now has higher chance for you to execute it.\n")
-            .AddField("Doremi bot updated commands", "**wiki category**,**birthday category**,**moderator category**,`quiz color`")
+            .AddField("Doremi bot updated/new commands", "**wiki category**,**birthday category**,**moderator category**,`draw`,`jojofication`,`quiz color`")
             .AddField("Aiko bot updated commands", "`spooky`")
             .WithColor(Config.Doremi.EmbedColor)
             .WithFooter($"Last updated on {Config.Core.lastUpdate}")
@@ -885,7 +648,7 @@ namespace OjamajoBot.Module
         //user card maker, sing lyrics together with other ojamajo bot, birthday reminder, voting for best ojamajo bot, witch seeds to cast a spells
     }
 
-    [Name("Birthday"), Group("birthday"), Summary("This commands category will give the birthday reminder into the group.")]
+    [Name("Birthday"), Group("birthday"), Summary("This commands category related with the birthday reminder.")]
     public class DoremiBirthdayModule : InteractiveBase
     {
         [Command("set"), Summary("I will set your birthday date reminder. Format must be: **dd/mm/yyyy** or **dd/mm**. " +
@@ -905,13 +668,13 @@ namespace OjamajoBot.Module
                 else
                     jobjbirthday[userId.ToString()] = DateMonthYear;
 
+                File.WriteAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json", guildJsonFile.ToString());
+
                 await ReplyAsync($"{Config.Emoji.birthdayCake} Ok! Your birthday date has been set into: **{DateMonthYear}**. I will remind everyone on your birthday date.",
                         embed: new EmbedBuilder()
                         .WithColor(Config.Doremi.EmbedColor)
                         .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/0/06/DoremiLineOK.png")
                         .Build());
-
-                File.WriteAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json", guildJsonFile.ToString());
             }
             else
             {
@@ -975,7 +738,7 @@ namespace OjamajoBot.Module
                 builder.Color = Config.Doremi.EmbedColor;
                 await ReplyAsync(embed: builder.Build());
             } else {
-                await ReplyAsync("We don't have people that will have birthday on this month.");
+                await ReplyAsync("We don't have someone birthday on this month.");
             }
 
         }
@@ -1351,7 +1114,7 @@ namespace OjamajoBot.Module
                 var guildJsonFile = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json"));
 
                 if (settings.ToLower() == "birthday"){
-                    property = "birthday announcement";
+                    property = $"{Config.Emoji.birthdayCake} Birthday Announcement";
                     if (Config.Guild.hasPropertyValues(guildId.ToString(), "id_birthday_announcement"))
                     {
                         propertyValueExisted = true;
@@ -1361,7 +1124,7 @@ namespace OjamajoBot.Module
                     }
                 } else if (settings.ToLower() == "random event")
                 {
-                    property = "random event";
+                    property = "Random Event";
                     if (Config.Guild.hasPropertyValues(guildId.ToString(),"id_random_event"))
                     {
                         propertyValueExisted = true;
@@ -1376,9 +1139,9 @@ namespace OjamajoBot.Module
                 }
 
                 if (propertyValueExisted)
-                    await ReplyAsync($"**{property} channels** settings has been removed.");
+                    await ReplyAsync($"**{property} Channels** settings has been removed.");
                 else
-                    await ReplyAsync($"**{property} channels** has no settings yet.");
+                    await ReplyAsync($"**{property} Channels** has no settings yet.");
             }
         }
 
@@ -1387,7 +1150,7 @@ namespace OjamajoBot.Module
     [Name("dorememes"), Group("dorememes"), Summary("Dorememes command category.")]
     public class DorememesModule : ModuleBase<SocketCommandContext>{
         [Command("random"), Summary("I will give you some random doremi related memes. " +
-            "You can fill <contributor> with one of the available to make it spesific contributor.\nFill it with `list` to list all contributor.")]
+            "You can fill <contributor> with one of the available to make it spesific contributor.\nUse `contributor list` to list all people who have contribute the dorememes.")]
         public async Task givedorememe([Remainder]string contributor = "")
         {
             string finalUrl = ""; JArray getDataObject = null;
@@ -1401,7 +1164,7 @@ namespace OjamajoBot.Module
 
                 await base.ReplyAsync(embed: new EmbedBuilder()
                     .WithTitle("Dorememes listed contributor")
-                    .WithDescription("Thank you to all of peoples that contributing dorememes. Here are all listed dorememes contributor:")
+                    .WithDescription("Thank you to all of these peoples that have contributed the dorememes:")
                     .AddField("Contributor in List", listedContributor)
                     .WithColor(Config.Doremi.EmbedColor)
                     .Build());
@@ -1595,7 +1358,7 @@ namespace OjamajoBot.Module
 
         }
 
-        [Command("jojofication", RunMode = RunMode.Async), Summary("Add Jojo image filter into the image.")]
+        [Command("jojo", RunMode = RunMode.Async), Summary("Add Jojo image filter to the image.")]
         public async Task drawJojoficationToBeContinue(string attachment=""){
 
             try
@@ -1619,7 +1382,7 @@ namespace OjamajoBot.Module
                     byte[] buffer = myWebClient.DownloadData(url);
                     Config.Core.ByteArrayToFile($"attachments/{Context.Guild.Id}/{randomedFileName}", buffer);
 
-                    await Context.Message.DeleteAsync();
+                    //await Context.Message.DeleteAsync();
 
                     //File.Delete(completePath);
 
@@ -2279,9 +2042,9 @@ namespace OjamajoBot.Module
 
     }
 
-    [Name("quiz"), Group("quiz"), Summary("This category contains all quiz interactive commands minigame.")]
+    [Name("minigame"), Group("minigame"), Summary("This category contains all minigame interactive commands.")]
     public class DoremiInteractive : InteractiveBase
-    {
+    { 
         // NextMessageAsync will wait for the next message to come in over the gateway, given certain criteria
         // By default, this will be limited to messages from the source user in the source channel
         // This method will block the gateway, so it should be ran in async mode.
@@ -2296,17 +2059,67 @@ namespace OjamajoBot.Module
         //        await ReplyAsync("You did not reply before the timeout");
         //}
         //reference: https://github.com/PassiveModding/Discord.Addons.Interactive/blob/master/SocketSampleBot/Module.cs
+        [Command("score"), Summary("Show your current minigame score points.")]
+        public async Task Show_Quiz_Score(){//show the player score
+            var guildId = Context.Guild.Id;
+            var userId = Context.User.Id;
+            var quizJsonFile = (JObject)JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.minigameDataFileName}")).GetValue("score");
+            int score = 0;
+            if (quizJsonFile.ContainsKey(userId.ToString()))
+                score = (int)quizJsonFile.GetValue(userId.ToString());
+            await ReplyAsync($"\uD83C\uDFC6 Your minigame score points are: **{score}**");
+            return;
+        }
 
-        [Command("hangman", RunMode = RunMode.Async), Summary("Play the hangman game.\n**Available category:** `random`/`color`/`fruit`/`animal`\n" +
+        [Command("leaderboard"), Summary("Show the top 10 player score points for minigame leaderboard.")]
+        public async Task Show_Minigame_Leaderboard(){//show top 10 player score
+            var guildId = Context.Guild.Id;
+            var userId = Context.User.Id;
+
+            var quizJsonFile = (JObject)JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.minigameDataFileName}")).GetValue("score");
+
+            string finalText = "";
+            EmbedBuilder builder = new EmbedBuilder();
+            builder.Title = "\uD83C\uDFC6 Minigame Leaderboard";
+            
+            builder.Color = Config.Doremi.EmbedColor;
+
+            if (quizJsonFile.Count >= 1){
+                builder.Description = "Here are the top 10 player score points for minigame leaderboard:";
+                
+                var convertedToList = quizJsonFile.Properties().OrderByDescending(p => (int)p.Value).ToList();
+                int ctrExists = 0;
+                for (int i = 0; i < quizJsonFile.Count; i++)
+                {
+                    SocketGuildUser userExists = Context.Guild.GetUser(Convert.ToUInt64(convertedToList[i].Name));
+                    if (userExists != null)
+                    {
+                        finalText += $"{i + 1}. {MentionUtils.MentionUser(Convert.ToUInt64(convertedToList[i].Name))} : {convertedToList[i].Value} \n";
+                        ctrExists++;
+                    }
+                    if (ctrExists >= 9) break;
+                }
+                builder.AddField("[Rank]. Name & Score", finalText);
+            }
+            else
+            {
+                builder.Description = "Currently there's no minigame leaderboard yet.";
+            }
+
+            await ReplyAsync(embed: builder.Build());
+
+        }
+
+        [Command("hangman", RunMode = RunMode.Async), Summary("Play the hangman game with the available category.\n**Available category:** `random`/`characters`/`color`/`fruit`/`animal`\n" +
             "**Available difficulty:**\n" +
-            "**easy:** 30 seconds, 10 lives\n" +
-            "**medium:** 20 seconds, 7 lives\n" +
-            "**hard:** 15 seconds, 5 lives\n")]
-        public async Task Interact_Quiz_Colors(string category="random", string difficulty = "easy")
+            "**easy:** 30 seconds, 10 lives, score+50\n" +
+            "**medium:** 20 seconds, 7 lives, score+100\n" +
+            "**hard:** 15 seconds, 5 lives, score+200\n")]
+        public async Task Interact_Quiz_Hangman(string category="random", string difficulty = "easy")
         {
             //check first if category available on quiz.json/not
             if (category.ToLower()!="random" && !Config.Core.jobjectQuiz.ContainsKey(category.ToLower())){
-                await ReplyAsync($"Sorry, I can't find that category. Available category options: **random**/**color**/**fruit**/**animal**");
+                await ReplyAsync($"Sorry, I can't find that category. Available category options: **random**/**characters**/**color**/**fruit**/**animal**");
                 return;
             }
             
@@ -2315,19 +2128,20 @@ namespace OjamajoBot.Module
                 return;
             }
 
-            if (!Config.Doremi.isRunningQuiz.ContainsKey(Context.User.Id.ToString()))
-                Config.Doremi.isRunningQuiz.Add(Context.User.Id.ToString(), false);
+            if (!Config.Doremi.isRunningMinigame.ContainsKey(Context.User.Id.ToString()))
+                Config.Doremi.isRunningMinigame.Add(Context.User.Id.ToString(), false);
             
-            if (!Config.Doremi.isRunningQuiz[Context.User.Id.ToString()])
+            if (!Config.Doremi.isRunningMinigame[Context.User.Id.ToString()])
             {
-                Config.Doremi.isRunningQuiz[Context.User.Id.ToString()] = true;
+                Config.Doremi.isRunningMinigame[Context.User.Id.ToString()] = true;
                 //default difficulty: easy
                 int lives = 10; var timeoutDuration = 30;//in seconds
+                int scoreValue = 50;//default score
 
                 if (difficulty.ToLower() == "medium"){
-                    lives = 7; timeoutDuration = 20;
+                    lives = 7; timeoutDuration = 20; scoreValue = 100;
                 } else if (difficulty.ToLower() == "hard"){
-                    lives = 5; timeoutDuration = 15;
+                    lives = 5; timeoutDuration = 15; scoreValue = 200;
                 }
                 
                 string key = category;//default:random
@@ -2342,11 +2156,29 @@ namespace OjamajoBot.Module
                 string randomedAnswer = arrRandomed[new Random().Next(0, arrRandomed.Count)].ToString();
                 string replacedAnswer = ""; string[] containedAnswer = { }; List<string> guessedWord = new List<string>();
                 for (int i = 0; i < randomedAnswer.Length; i++)
-                    replacedAnswer += randomedAnswer.Substring(i, 1).Replace(randomedAnswer.Substring(i, 1), "_ ");
+                {
+                    if (randomedAnswer.Substring(i, 1) != " "){
+                        replacedAnswer += randomedAnswer.Substring(i, 1).Replace(randomedAnswer.Substring(i, 1), "_ ");
+                    } else if(randomedAnswer.Substring(i, 1) == " ")
+                    {
+                        replacedAnswer += "  ";
+                    }
+                    
+                }
+                    
 
                 string tempRandomedAnswer = string.Join(" ", randomedAnswer.ToCharArray()) + " "; //with space
-                                                                                                    //Console.WriteLine(randomedAnswer);
-                await ReplyAsync($"{Context.User.Username}, \u23F1 You have **{timeoutDuration}** seconds each turn, with **{lives}** \u2764. Type **exit** to exit from the games.\nCan you guess what **{key}** is this?```{replacedAnswer}```");
+                                                                                                  //Console.WriteLine(randomedAnswer);
+
+                string questionsFormat = $"Can you guess what **{key}** is this?```{replacedAnswer}```";
+
+                if (category.ToLower() == "characters"){
+                    questionsFormat = $"Guess one of the ojamajo doremi characters name:```{replacedAnswer}```";
+                }
+
+                await ReplyAsync($"{Context.User.Username}, \u23F1 You have **{timeoutDuration}** seconds each turn, with **{lives}** \u2764. " +
+                    $"Type **exit** to exit from the games.\n" +
+                    questionsFormat);
 
                 var response = await NextMessageAsync(timeout:TimeSpan.FromSeconds(timeoutDuration));
 
@@ -2355,8 +2187,8 @@ namespace OjamajoBot.Module
                     string loweredResponse = response.Content.ToLower();
 
                     if (loweredResponse == "exit"){
-                        Config.Doremi.isRunningQuiz.Remove(Context.User.Id.ToString());
-                        await ReplyAsync($"**{Context.User.Username}** has left the game.");
+                        Config.Doremi.isRunningMinigame.Remove(Context.User.Id.ToString());
+                        await ReplyAsync($"**{Context.User.Username}** has left the hangman minigame.");
                         return;
                     }
                     else if (loweredResponse.Length > 1)
@@ -2378,11 +2210,11 @@ namespace OjamajoBot.Module
                         {
                             lives -= 1;
                             if (lives > 0){
-                                Config.Doremi.isRunningQuiz.Remove(Context.User.Id.ToString());
+                                Config.Doremi.isRunningMinigame.Remove(Context.User.Id.ToString());
                                 await ReplyAsync($"\u274C Sorry **{Context.User.Username}**, you guess it wrong. \u2764: **{lives}** . Category:**{key}**```{replacedAnswer}```");
                             } else {
                                 lives = 0;
-                                Config.Doremi.isRunningQuiz.Remove(Context.User.Id.ToString());
+                                Config.Doremi.isRunningMinigame.Remove(Context.User.Id.ToString());
                                 await ReplyAsync($"\u274C Sorry **{Context.User.Username}**, you're running out of guessing attempt. The correct answer is : **{randomedAnswer}**");
                                 return;
                             }
@@ -2404,8 +2236,15 @@ namespace OjamajoBot.Module
                             if(replacedAnswer.Contains("_"))
                                 await ReplyAsync($":white_check_mark: **{Context.User.Username}**. Category:**{key}**\n```{replacedAnswer}```");
                             else {
-                                Config.Doremi.isRunningQuiz.Remove(Context.User.Id.ToString());
-                                await ReplyAsync($"\uD83D\uDC4F Congratulations **{Context.User.Username}**, you guess the correct answer: **{randomedAnswer}**");
+                                Config.Doremi.isRunningMinigame.Remove(Context.User.Id.ToString());
+
+                                await ReplyAsync($"\uD83D\uDC4F Congratulations **{Context.User.Username}**, you guess the correct answer: **{randomedAnswer}**. Your **score+{scoreValue}**");
+
+                                var guildId = Context.Guild.Id;
+                                var userId = Context.User.Id;
+
+                                //save the data
+                                updateScore(guildId.ToString(), userId.ToString(), scoreValue);
                                 return;
                             }
                         }
@@ -2417,17 +2256,17 @@ namespace OjamajoBot.Module
             }
 
                 lives = 0;
-                Config.Doremi.isRunningQuiz.Remove(Context.User.Id.ToString());
-                await ReplyAsync($"\u23F1 Time's up for **{Context.User.Username}** , sorry you're not guessing any words yet. The correct answer is : **{randomedAnswer}**");
+                Config.Doremi.isRunningMinigame.Remove(Context.User.Id.ToString());
+                await ReplyAsync($"\u23F1 Time's up **{Context.User.Username}**. The correct answer is : **{randomedAnswer}**.");
                 return;
 
             }
             else
-                await ReplyAsync($"Sorry **{Context.User.Username}**, you're still running `quiz hangman` interactive commands, please finish it first.");
+                await ReplyAsync($"Sorry **{Context.User.Username}**, you're still running the **minigame** interactive commands, please finish it first.");
 
         }
 
-        [Command("doremi", RunMode = RunMode.Async), Summary("I will give you some quiz about Doremi.")]
+        [Command("dorequiz", RunMode = RunMode.Async), Summary("I will give you some quiz about Doremi.")]
         public async Task Interact_Quiz()
         {
             Random rnd = new Random();
@@ -2492,10 +2331,19 @@ namespace OjamajoBot.Module
                 }
                 else if (answer.Contains(response.Content.ToLower()))
                 {
+                    int scoreValue = 20;
+                    var guildId = Context.Guild.Id;
+                    var userId = Context.User.Id;
+
+                    //save the data
+                    updateScore(guildId.ToString(), userId.ToString(), scoreValue);
+
+                    replyCorrect += $". Your **score+{scoreValue}**";
                     await ReplyAsync(replyCorrect, embed: new EmbedBuilder()
                     .WithColor(Config.Doremi.EmbedColor)
                     .WithImageUrl(replyEmbed)
                     .Build());
+
                     correctAnswer = true;
                 }
                 else
@@ -2505,5 +2353,95 @@ namespace OjamajoBot.Module
             }
         }
 
+        [Command("numbers", RunMode = RunMode.Async), Alias("number","dice"), Summary("Guess if the number is lower/higher than the one I give.")]
+        public async Task Interact_Minigame_Guess_Numbers()
+        {
+            int scoreValue = 50;
+            int timeoutDuration = 15;
+            int randomNumbers = new Random().Next(6, 11);
+            if (!Config.Doremi.isRunningMinigame.ContainsKey(Context.User.Id.ToString()))
+                Config.Doremi.isRunningMinigame.Add(Context.User.Id.ToString(), false);
+
+            if (!Config.Doremi.isRunningMinigame[Context.User.Id.ToString()]){
+                Boolean isPlaying = true;
+                await ReplyAsync($"{Context.User.Username}, \uD83C\uDFB2 Number **{randomNumbers}** out of **12** has been selected.\n" +
+                    $"\u23F1 You have **{timeoutDuration}** seconds to guess if the next number will be **lower** or **higher** or **same**. " +
+                    $"Type **exit** to exit from the minigame.");
+
+                var response = await NextMessageAsync(timeout: TimeSpan.FromSeconds(timeoutDuration));
+
+                while (isPlaying&&response!=null){
+                    string loweredResponse = response.Content.ToLower();
+
+                    if (loweredResponse == "exit"){
+                        Config.Doremi.isRunningMinigame.Remove(Context.User.Id.ToString());
+                        await ReplyAsync($"**{Context.User.Username}** has left the numbers minigame.");
+                        return;
+                    } else if (loweredResponse == "same" || loweredResponse == "lower"|| loweredResponse == "higher"){
+                        int nextRandomNumbers = new Random().Next(1, 13);
+                        string responseResult = "";
+                        Boolean isCorrect = true;//default
+
+                        if (randomNumbers == nextRandomNumbers && loweredResponse == "same"){
+                            responseResult = $"\uD83D\uDC4F Congratulations, your guess was **correct**. You got **{scoreValue}** score points.";
+                        } else if (nextRandomNumbers < randomNumbers && loweredResponse == "lower") {
+                            responseResult = $"\uD83D\uDC4F Congratulations, your guess was **correct**. You got **{scoreValue}** score points.";
+                        } else if (nextRandomNumbers > randomNumbers && loweredResponse == "higher"){
+                            responseResult = $"\uD83D\uDC4F Congratulations, your guess was **correct**. You got **{scoreValue}** score points.";
+                        } else {
+                            responseResult = "\u274C Sorry, your guess was **wrong**.";
+                            isCorrect = false;
+                        }
+                        await ReplyAsync($"\uD83C\uDFB2 First number was:**{randomNumbers}**, the next selected number was: **{nextRandomNumbers}** and you guess it: **{loweredResponse}**.\n{responseResult}");
+
+                        if (isCorrect){
+                            var guildId = Context.Guild.Id;
+                            var userId = Context.User.Id;
+                            //save the data
+                            updateScore(guildId.ToString(), userId.ToString(), scoreValue);
+                        }
+                        return;
+                    } else if (loweredResponse != "same" || loweredResponse != "lower" || loweredResponse != "higher"){
+                        await ReplyAsync("Sorry, please answer it with **lower** or **higher** or **same**.");
+                        response = await NextMessageAsync(timeout: TimeSpan.FromSeconds(timeoutDuration));
+                    }
+                }
+
+                Config.Doremi.isRunningMinigame.Remove(Context.User.Id.ToString());
+                await ReplyAsync($"\u23F1 Time's up, **{Context.User.Username}**.");
+                return;
+            } else
+                await ReplyAsync($"Sorry **{Context.User.Username}**, you're still running the **minigame** interactive commands, please finish it first.");
+        }
+
+         public void updateScore(string guildId,string userId,int scoreValue)
+        {
+            //save the data
+            var quizJsonFile = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.minigameDataFileName}"));
+            var jobjscore = (JObject)quizJsonFile.GetValue("score");
+
+            if (!jobjscore.ContainsKey(userId.ToString()))
+            {
+                jobjscore.Add(new JProperty(userId.ToString(), scoreValue.ToString()));
+            }
+            else
+            {
+                int tempScore = Convert.ToInt32(jobjscore[userId.ToString()]) + scoreValue;
+                jobjscore[userId.ToString()] = tempScore.ToString();
+            }
+
+            File.WriteAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.minigameDataFileName}", quizJsonFile.ToString());
+
+        }
+
     }
+
+
+
+    [Name("pureleine"), Group("pureleine"), Summary("This category contains all pureleine interactive commands minigame.")]
+    public class DoremiPureleineInteractive : InteractiveBase{
+        //register, capture, spawn, leaderboard
+
+    }
+
 }

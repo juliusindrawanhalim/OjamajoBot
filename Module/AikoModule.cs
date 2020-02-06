@@ -449,6 +449,7 @@ namespace OjamajoBot.Module
                     "Did you just steal my takoyaki?","¿ᴉʞɐʎoʞɐʇ ʎɯ lɐǝʇs ʇsnɾ noʎ pᴉp",
                     "Don't look over behind...","˙˙˙puᴉɥǝq ɹǝʌo ʞool ʇ,uop",
                     "Hello, please don't look at my face...","˙˙˙ǝɔɐɟ ʎɯ ʇɐ ʞool ʇ,uop ǝsɐǝld 'ollǝH",
+                    "Pretty witchy exe chi","ᴉɥɔ ǝxǝ ʎɥɔʇᴉʍ ʎʇʇǝɹԀ",
                     "I'm right behind you...","˙˙˙noʎ puᴉɥǝq ʇɥƃᴉɹ ɯ,I",
                     "Why are you keep using this commands?","¿spuɐɯɯoɔ sᴉɥʇ ƃuᴉsn dǝǝʞ noʎ ǝɹɐ ʎɥM",
                     $"Don't worry {mentionedUsername}, I'll be right behind you...",$"˙˙˙noʎ puᴉɥǝq ʇɥƃᴉɹ ǝq ll,I ' {mentionedUsername} ʎɹɹoʍ ʇ,uop",
@@ -470,14 +471,14 @@ namespace OjamajoBot.Module
                 };
 
                 string[] arrRandomAuthor = {
-                    "4ik00","Aik0","a.i.k.o.e.x.e","too much Ai-k0",
-                    "seno.exe","s3n0.ex3","4k10 s3n0o","the false Aiko",
-                    "th3 A1k0","4ik0 s3n0","A1k0","witchy.exe","spooky.exe",
-                    "41k0 seno","s3n00 A1k0","a.i.k.o","a i k o","s e n o",
-                    "aiko.exe","Sp00kiko","41k0","Takoyaki Girl",
-                    "T4k0y4k1","Takoyaki.exe","a.i.k.0.e.x....e","aaaaaaiiiiiikkkkoooo",
-                    "aaaiii1ikk00","4ikkkkkkkk0000","Aaiikk00.exe","Blue.exe",
-                    "A1k0000","01100001 01101001","A1kk000","Pretty...witchy..aiko...chi..."
+                    "4ik00","Aik0","a.i.k.o.e.x.e","aiko.exe",
+                    "senoo.exe","s3n00.ex3","4k10 s3n0o","the spooky Aiko",
+                    "th3 A1k0","4ik0 s3n00","A1k0","witchy.exe","spooky.exe",
+                    "41k0.seno","s3n00 A1k0","a.i.k.o","a i k o","s e n o o",
+                    "aiko.exe","Sp00kiyaki","41k0","Takoyaki Girl.exe","",
+                    "T4k0y4k1","Takoyaki.exe","a.i.k.0.e.x..e","aaaiiikkkoo",
+                    "aaaiii1ikk00","4ikkk0000","Aaiikk00.exe","Blue.exe","",
+                    "A1k0000","01100001 01101001","A1kk000","Pretty...witchy.exe"
                 };
 
                 string[,] arrRandom = {
@@ -500,26 +501,25 @@ namespace OjamajoBot.Module
                     .WithFooter($"Contributed by: {arrRandom[randomedResult, 0]}")
                     .Build());
 
-                int randomCameo = new Random().Next(0, 2);
-                if (randomCameo == 1){
-                    string[,] arrRandomCameo = {
-                        {"Odd Meat","https://cdn.discordapp.com/attachments/643722270447239169/669581419701338132/002.png"},
-                        {"Letter Three","https://cdn.discordapp.com/attachments/643722270447239169/669598054776569856/SPOILER_unknown.png"},
-                        {"Letter Three","https://cdn.discordapp.com/attachments/643722270447239169/669603942090670080/Halloween_Hazuki.png"},
-                        {"Letter Three","https://cdn.discordapp.com/attachments/643722270447239169/669606154946740224/Chop_Harukaze.png"},
-                        {"Odd Meat","https://cdn.discordapp.com/attachments/643722270447239169/669618799762210846/unknown.png"},
-                        {"Odd Meat","https://cdn.discordapp.com/attachments/421584908130189312/622528776747876362/cursed_majo_rika-export.gif"},
-                    };
+                string[,] arrRandomCameo = {
+                    {"Odd Meat","https://cdn.discordapp.com/attachments/643722270447239169/669581419701338132/002.png"},
+                    {"Letter Three","https://cdn.discordapp.com/attachments/643722270447239169/669598054776569856/SPOILER_unknown.png"},
+                    {"Letter Three","https://cdn.discordapp.com/attachments/643722270447239169/669603942090670080/Halloween_Hazuki.png"},
+                    {"Letter Three","https://cdn.discordapp.com/attachments/643722270447239169/669606154946740224/Chop_Harukaze.png"},
+                    {"Odd Meat","https://cdn.discordapp.com/attachments/643722270447239169/669618799762210846/unknown.png"},
+                    {"Odd Meat","https://cdn.discordapp.com/attachments/421584908130189312/622528776747876362/cursed_majo_rika-export.gif"},
+                    {"вештица","https://cdn.discordapp.com/attachments/643722270447239169/674417584325787676/creepyrika3.gif"}
+                };
 
-                    randomedResult = new Random().Next(0, arrRandomCameo.GetLength(0));
-                    await ReplyAsync("Oh, I also bring one of my friend for you...",
-                        embed: new EmbedBuilder()
-                        .WithAuthor("Spooky.exe???companion", arrRandomCameo[randomedResult, 1])
-                        .WithColor(Color.DarkerGrey)
-                        .WithImageUrl(arrRandomCameo[randomedResult, 1])
-                        .WithFooter($"Contributed by: {arrRandomCameo[randomedResult, 0]}")
-                        .Build());
-                }
+                randomedResult = new Random().Next(0, arrRandomCameo.GetLength(0));
+                await ReplyAsync("Also, meet one of my finest creation...",
+                    embed: new EmbedBuilder()
+                    .WithAuthor("Spooky.exe???companion", arrRandomCameo[randomedResult, 1])
+                    .WithColor(Color.DarkerGrey)
+                    .WithImageUrl(arrRandomCameo[randomedResult, 1])
+                    .WithFooter($"Contributed by: {arrRandomCameo[randomedResult, 0]}")
+                    .Build());
+                
             }
             
         }

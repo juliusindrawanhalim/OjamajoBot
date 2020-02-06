@@ -410,7 +410,8 @@ namespace OjamajoBot.Module
         [Command("traditional"), Alias("traditionify"), Summary("It's <sentences> traditional!")]
         public async Task traditionify([Remainder] string sentences="japanese")
         {
-            string[] arrRandomImages = {"https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/55/ODN-EP13-018.png",
+            string[] arrRandomImages = {
+            "https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/55/ODN-EP13-018.png",
             "https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/99/ODN-EP13-017.png",
             "https://vignette.wikia.nocookie.net/ojamajowitchling/images/c/ca/Linesticker20.png"};
 
@@ -497,7 +498,7 @@ namespace OjamajoBot.Module
         //}
         //reference: https://github.com/PassiveModding/Discord.Addons.Interactive/blob/master/SocketSampleBot/Module.cs
 
-        [Command("order", RunMode = RunMode.Async), Summary("I will give you out listed menu and you can try to order it up.")]
+        [Command("order", RunMode = RunMode.Async), Summary("I will give you the available listed menu and you can try to order it up.")]
         public async Task Interact_Bakery()
         {
             if (!Config.Momoko.isRunningBakery.ContainsKey(Context.User.Id.ToString()))
@@ -507,17 +508,17 @@ namespace OjamajoBot.Module
                 Config.Momoko.isRunningBakery[Context.User.Id.ToString()] = true;
 
                 string[] menu = {
-                "apple pie","cake","cookies","croissant","cupcakes","donut",
-                "eclair","pudding" };
+                "apple pie","cake","cookies","chocolate","croissant","cupcakes","donut",
+                "eclair","gingerbread","pancake","pudding","waffle","scones" };
 
                 string concatMenu = ""; foreach (string item in menu) concatMenu += $"**-{item}**\n";
-                concatMenu += $"Please reply with one of the menu choices, for example: **donut**.\nTo leave/cancel your order, type `cancel`.";
+                concatMenu += $"Please reply with one of the menu choices, for example: **donut**.\nTo leave or cancel your order, type `cancel`.";
 
                 string replyTimeout = "I'm sorry, I can't process your order.";
 
                 await ReplyAsync(embed: new EmbedBuilder()
                     .WithAuthor("Sweet house Maho-dou", "https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/9f/Sweet2.jpg")
-                    .WithDescription("Hello, welcome to the Sweet house Maho-dou. " +
+                    .WithDescription("Hello, welcome to the sweet house Maho-dou. " +
                     "Your order will be placed within 20 seconds, please wait shortly right after confirming your order. " +
                     "Please order something up from the menu listed below:")
                     .AddField("Menu list", concatMenu)
@@ -529,7 +530,7 @@ namespace OjamajoBot.Module
 
                 while (!procedureFinish)
                 {
-                    var response = await NextMessageAsync(timeout: TimeSpan.FromSeconds(15));
+                    var response = await NextMessageAsync(timeout: TimeSpan.FromSeconds(30));
                     string ordered = response.Content.ToLower().ToString();
 
                     if (response == null)
@@ -606,8 +607,6 @@ namespace OjamajoBot.Module
                 Console.WriteLine(e.ToString());
                 return e.ToString();
             }
-            
-            
         }
 
     }

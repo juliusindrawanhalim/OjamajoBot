@@ -17,9 +17,11 @@ namespace Config
         public static JObject jobjectconfig; public static JObject jobjectQuiz;
         public static JObject jobjectRandomMoments;
         public static string headConfigFolder = "config/";
+        public static string attachmentsFolder = "attachments/";
         public static string headConfigGuildFolder = $"{headConfigFolder}guild/";
         public static string headLogsFolder = "logs/";
-        public static string lastUpdate = "Jan 24,2020";
+        public static string minigameDataFileName = "minigame_data.json";
+        public static string lastUpdate = "Feb 5,2020";
         public static JObject jObjWiki;
         public static string wikiParentUrl = "https://ojamajowitchling.fandom.com/wiki/";
 
@@ -117,7 +119,7 @@ namespace Config
 
     public class Doremi
     {
-        //public static ulong Id = 666567167910871060;//beta
+        //public static ulong Id = 673223105237352488;//beta
         public static ulong Id = 655668640502251530;//original
         public static string Token { get; set; }
         public static double Randomeventinterval { get; set; }
@@ -126,7 +128,7 @@ namespace Config
         public static string MagicalStageWishes { get; set; }
         public static string[] PrefixParent = {"do!","doremi!",MentionUtils.MentionUser(Id)};
 
-        public static IDictionary<string, Boolean> isRunningQuiz = new Dictionary<string, Boolean>();
+        public static IDictionary<string, Boolean> isRunningMinigame = new Dictionary<string, Boolean>();
 
         public static JObject jObjRandomMoments;
         public static JObject jobjectdorememes;
