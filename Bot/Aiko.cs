@@ -21,7 +21,7 @@ namespace OjamajoBot.Bot
         private CommandService commands;
         private IServiceProvider services;
 
-        private DiscordSocketClient client;
+        public static DiscordSocketClient client;
 
         private AudioService audioservice;
 
@@ -48,6 +48,7 @@ namespace OjamajoBot.Bot
             await client.StartAsync();
 
             client.JoinedGuild += JoinedGuild;
+            client.GuildAvailable += GuildAvailable;
 
             //start rotates random activity
             _timerStatus = new Timer(async _ =>
@@ -91,6 +92,38 @@ namespace OjamajoBot.Bot
             .WithColor(Config.Aiko.EmbedColor)
             .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/2/28/01.09.JPG")
             .Build());
+        }
+
+        public async Task GuildAvailable(SocketGuild guild)
+        {
+            //set hazuki birthday announcement timer
+            if (Config.Guild.hasPropertyValues(guild.Id.ToString(), "id_birthday_announcement"))
+            {
+                Config.Aiko._timerBirthdayAnnouncement[guild.Id.ToString()] = new Timer(async _ =>
+                {
+                    //announce doremi birthday
+                    if (DateTime.Now.ToString("dd") == Config.Doremi.birthdayDate.ToString("dd") &&
+                    DateTime.Now.ToString("MM") == Config.Doremi.birthdayDate.ToString("MM") &&
+                    (Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour &&
+                    Int32.Parse(DateTime.Now.ToString("HH")) <= Config.Core.maxGlobalTimeHour))
+                    {
+                        var calculatedYear = Convert.ToInt32(DateTime.Now.ToString("yyyy")) - Convert.ToInt32(Config.Doremi.birthdayDate.ToString("yyyy"));
+                        await client
+                        .GetGuild(guild.Id)
+                        .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "id_birthday_announcement")))
+                        .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday, {MentionUtils.MentionUser(Config.Doremi.Id)} chan. " +
+                        $"She has turned into {calculatedYear} on this year. Let's give some big steak and wonderful birthday wishes for her.",
+                        embed: new EmbedBuilder()
+                        .WithColor(Config.Aiko.EmbedColor)
+                        .WithImageUrl(Config.Doremi.DoremiBirthdayCakeImgSrc)
+                        .Build());
+                    }
+                },
+                null,
+                TimeSpan.FromSeconds(10), //time to wait before executing the timer for the first time
+                TimeSpan.FromHours(24) //time to wait before executing the timer again
+                );
+            }
         }
 
         public async Task RegisterCommandsAsync()

@@ -175,52 +175,60 @@ namespace OjamajoBot.Bot
 
                     //announce hazuki birthday
                     if (DateTime.Now.ToString("dd") == Config.Hazuki.birthdayDate.ToString("dd") &&
-                    DateTime.Now.ToString("MM") == Config.Hazuki.birthdayDate.ToString("MM"))
+                    DateTime.Now.ToString("MM") == Config.Hazuki.birthdayDate.ToString("MM") &&
+                    (Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour &&
+                    Int32.Parse(DateTime.Now.ToString("HH")) <= Config.Core.maxGlobalTimeHour))
                     {
                         var calculatedYear = Convert.ToInt32(DateTime.Now.ToString("yyyy")) - Convert.ToInt32(Config.Hazuki.birthdayDate.ToString("yyyy"));
                         await client
                         .GetGuild(guild.Id)
                         .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "id_birthday_announcement")))
-                        .SendMessageAsync($"{Config.Emoji.birthdayCake} Happy birthday to you, {MentionUtils.MentionUser(Config.Hazuki.Id)} chan. " +
+                        .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday to you, {MentionUtils.MentionUser(Config.Hazuki.Id)} chan. " +
                         $"She has turned into {calculatedYear} on this year. Let's give wonderful birthday wishes for her.");
                         birthdayExisted = true;
                     }
 
                     //announce aiko birthday
                     if (DateTime.Now.ToString("dd") == Config.Aiko.birthdayDate.ToString("dd") &&
-                    DateTime.Now.ToString("MM") == Config.Aiko.birthdayDate.ToString("MM"))
+                    DateTime.Now.ToString("MM") == Config.Aiko.birthdayDate.ToString("MM") &&
+                    (Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour &&
+                    Int32.Parse(DateTime.Now.ToString("HH")) <= Config.Core.maxGlobalTimeHour))
                     {
                         var calculatedYear = Convert.ToInt32(DateTime.Now.ToString("yyyy")) - Convert.ToInt32(Config.Aiko.birthdayDate.ToString("yyyy"));
                         await client
                         .GetGuild(guild.Id)
                         .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "id_birthday_announcement")))
-                        .SendMessageAsync($"{Config.Emoji.birthdayCake} Happy birthday to our osakan friend: {MentionUtils.MentionUser(Config.Aiko.Id)} chan. " +
+                        .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday to our osakan friend: {MentionUtils.MentionUser(Config.Aiko.Id)} chan. " +
                         $"She has turned into {calculatedYear} on this year. Let's give some takoyaki and wonderful birthday wishes for her.");
                         birthdayExisted = true;
                     }
 
                     //announce onpu birthday
                     if (DateTime.Now.ToString("dd") == Config.Onpu.birthdayDate.ToString("dd") &&
-                    DateTime.Now.ToString("MM") == Config.Onpu.birthdayDate.ToString("MM"))
+                    DateTime.Now.ToString("MM") == Config.Onpu.birthdayDate.ToString("MM") &&
+                    (Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour &&
+                    Int32.Parse(DateTime.Now.ToString("HH")) <= Config.Core.maxGlobalTimeHour))
                     {
                         var calculatedYear = Convert.ToInt32(DateTime.Now.ToString("yyyy")) - Convert.ToInt32(Config.Onpu.birthdayDate.ToString("yyyy"));
                         await client
                         .GetGuild(guild.Id)
                         .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "id_birthday_announcement")))
-                        .SendMessageAsync($"{Config.Emoji.birthdayCake} Happy birthday to our wonderful idol friend: {MentionUtils.MentionUser(Config.Onpu.Id)} chan. " +
+                        .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday to our wonderful idol friend: {MentionUtils.MentionUser(Config.Onpu.Id)} chan. " +
                         $"She has turned into {calculatedYear} on this year. Let's give some wonderful birthday wishes for her.");
                         birthdayExisted = true;
                     }
 
                     //announce momoko birthday
                     if (DateTime.Now.ToString("dd") == Config.Momoko.birthdayDate.ToString("dd") &&
-                    DateTime.Now.ToString("MM") == Config.Momoko.birthdayDate.ToString("MM"))
+                    DateTime.Now.ToString("MM") == Config.Momoko.birthdayDate.ToString("MM") &&
+                    (Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour &&
+                    Int32.Parse(DateTime.Now.ToString("HH")) <= Config.Core.maxGlobalTimeHour))
                     {
                         var calculatedYear = Convert.ToInt32(DateTime.Now.ToString("yyyy")) - Convert.ToInt32(Config.Momoko.birthdayDate.ToString("yyyy"));
                         await client
                         .GetGuild(guild.Id)
                         .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "id_birthday_announcement")))
-                        .SendMessageAsync($"{Config.Emoji.birthdayCake} Happy birthday to our wonderful friend: {MentionUtils.MentionUser(Config.Momoko.Id)} chan. " +
+                        .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday to our wonderful friend: {MentionUtils.MentionUser(Config.Momoko.Id)} chan. " +
                         $"She has turned into {calculatedYear} on this year. Let's give some wonderful birthday wishes for her.");
                         birthdayExisted = true;
                     }
@@ -235,8 +243,10 @@ namespace OjamajoBot.Bot
                         {
                             var user = guild.GetUser(Convert.ToUInt64(key));
 
-                            if (DateTime.TryParseExact(val, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out date) ||
-                                DateTime.TryParseExact(val, "dd/MM", CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+                            if ((DateTime.TryParseExact(val, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out date) ||
+                                DateTime.TryParseExact(val, "dd/MM", CultureInfo.InvariantCulture, DateTimeStyles.None, out date))&&
+                                (Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour &&
+                                Int32.Parse(DateTime.Now.ToString("HH")) <= Config.Core.maxGlobalTimeHour))
                             {
                                 if (date.ToString("dd/MM") == DateTime.Now.ToString("dd/MM"))
                                 {
@@ -244,7 +254,7 @@ namespace OjamajoBot.Bot
                                     string[] arrRandomedMessage = {
                                     $"{Config.Emoji.birthdayCake} Everyone, let's give a wonderful birthday wishes for: {MentionUtils.MentionUser(user.Id)} ",
                                     $"{Config.Emoji.birthdayCake} Happy birthday to our wonderful friend: {MentionUtils.MentionUser(user.Id)} . " +
-                                    $"Please give some wonderful birthday wishes for {MentionUtils.MentionUser(user.Id)}.",
+                                    $"Please give the wonderful birthday wishes for {MentionUtils.MentionUser(user.Id)}.",
                                     $"{Config.Emoji.birthdayCake} Everyone, we have important birthday announcement! Please give some wonderful birthday wishes for {MentionUtils.MentionUser(user.Id)}."
                                 };
                                     var birthdayMessage = arrRandomedMessage[new Random().Next(0, arrRandomedMessage.Length)];

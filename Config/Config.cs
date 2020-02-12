@@ -21,9 +21,11 @@ namespace Config
         public static string headConfigGuildFolder = $"{headConfigFolder}guild/";
         public static string headLogsFolder = "logs/";
         public static string minigameDataFileName = "minigame_data.json";
-        public static string lastUpdate = "Feb 5,2020";
+        public static string lastUpdate = "Feb 12,2020";
         public static JObject jObjWiki;
         public static string wikiParentUrl = "https://ojamajowitchling.fandom.com/wiki/";
+        public static int minGlobalTimeHour = 12;
+        public static int maxGlobalTimeHour = 15;
 
         public Core()
         {
@@ -125,8 +127,10 @@ namespace Config
         public static double Randomeventinterval { get; set; }
         public static Color EmbedColor = Color.Red;
         public static DateTime birthdayDate = DateTime.ParseExact("30/07/1990", "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None);
+        
         public static string MagicalStageWishes { get; set; }
         public static string[] PrefixParent = {"do!","doremi!",MentionUtils.MentionUser(Id)};
+        public static string DoremiBirthdayCakeImgSrc = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/a/a5/-Doremi-.Motto.Ojamajo.Doremi.25.-7C457374-.avi_snapshot_19.25_-2020.02.12_10.34.20-.jpg";
 
         public static IDictionary<string, Boolean> isRunningMinigame = new Dictionary<string, Boolean>();
 
@@ -182,6 +186,10 @@ namespace Config
         public static DateTime birthdayDate = DateTime.ParseExact("14/02/1991", "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None);
         public static string[] PrefixParent = { "ha!", "hazuki!", MentionUtils.MentionUser(Id) };
         public static JObject jObjRandomMoments;
+
+        public static IDictionary<string, Timer> _timerRandomEvent = new Dictionary<string, Timer>();
+        public static IDictionary<string, Timer> _timerBirthdayAnnouncement = new Dictionary<string, Timer>();//birthday reminder timer
+
         public static string[,] arrRandomActivity = {
             {$"at misora elementary school {Emoji.school}" , "I'm still at school right now."},
             {"at sweet house maho dou","I'm working on maho-dou right now. Please come visit the shop any time."},
@@ -214,6 +222,9 @@ namespace Config
         public static string[] PrefixParent = { "ai!", "aiko!", MentionUtils.MentionUser(Id) };
         public static JObject jObjRandomMoments;
 
+        public static IDictionary<string, Timer> _timerRandomEvent = new Dictionary<string, Timer>();
+        public static IDictionary<string, Timer> _timerBirthdayAnnouncement = new Dictionary<string, Timer>();//birthday reminder timer
+
         public static string[,] arrRandomActivity = {
             {$"at misora elementary school {Emoji.school}","I'm still at school right now."},
             {"at sweet house maho dou","I'm working on maho-dou right now. Please come to the shop any time"},
@@ -245,9 +256,11 @@ namespace Config
         public static double Randomeventinterval { get; set; }
         public static Color EmbedColor = Color.Purple;
         public static DateTime birthdayDate = DateTime.ParseExact("03/03/1991", "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None);
-        
         public static string[] PrefixParent = { "on!", "onpu!", MentionUtils.MentionUser(Id) };
         public static JObject jObjRandomMoments;
+
+        public static IDictionary<string, Timer> _timerRandomEvent = new Dictionary<string, Timer>();
+        public static IDictionary<string, Timer> _timerBirthdayAnnouncement = new Dictionary<string, Timer>();//birthday reminder timer
 
         public static string[,] arrRandomActivity = {
             {$"at misora elementary school {Emoji.school}" , "I'm still at school right now."},
@@ -279,6 +292,9 @@ namespace Config
         
         public static string[] PrefixParent = { "mo!", "momoko!", MentionUtils.MentionUser(Id) };
         public static JObject jObjRandomMoments;
+
+        public static IDictionary<string, Timer> _timerRandomEvent = new Dictionary<string, Timer>();
+        public static IDictionary<string, Timer> _timerBirthdayAnnouncement = new Dictionary<string, Timer>();//birthday reminder timer
 
         public static string[,] arrRandomActivity = {
             {$"at misora elementary school{Emoji.school}" , "I'm still at school right now."},
@@ -313,6 +329,7 @@ namespace Config
         public static string guitar = "\uD83C\uDFB8";
         public static string clap = "\uD83D\uDC4F";
         public static string birthdayCake = "\uD83C\uDF82";
+        public static string partyPopper = "\uD83C\uDF89";
     }
 
     public static class Music
