@@ -92,13 +92,61 @@ namespace OjamajoBot.Bot
             //start rotates activity
             _timerStatus = new Timer(async _ =>
             {
-                Random rnd = new Random();
-                int rndIndex = rnd.Next(0, Config.Doremi.arrRandomActivity.GetLength(0)); //random the list value
-                //if (rndIndex > 0) rndIndex -= 1;
-                string updLog = "Updated Doremi Activity - Playing: " + Config.Doremi.arrRandomActivity[rndIndex, 0];
-                Config.Doremi.indexCurrentActivity = rndIndex;
-                await client.SetGameAsync(Config.Doremi.arrRandomActivity[rndIndex,0], type: ActivityType.Playing); //set activity to current index position
-                Console.WriteLine(updLog);
+                Boolean birthdayExisted = false;
+
+                //override if there's bot birthday
+                if (DateTime.Now.ToString("dd") == Config.Doremi.birthdayDate.ToString("dd") &&
+                DateTime.Now.ToString("MM") == Config.Doremi.birthdayDate.ToString("MM") &&
+                Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour){
+                    await client.SetGameAsync($"with Doremi birthday {Config.Emoji.birthdayCake}", type: ActivityType.Playing); //set activity to current index position
+                    birthdayExisted = true;
+                }
+
+                //announce hazuki birthday
+                if (DateTime.Now.ToString("dd") == Config.Hazuki.birthdayDate.ToString("dd") &&
+                DateTime.Now.ToString("MM") == Config.Hazuki.birthdayDate.ToString("MM") &&
+                Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour)
+                {
+                    await client.SetGameAsync($"with Hazuki birthday {Config.Emoji.birthdayCake}", type: ActivityType.Playing); //set activity to current index position
+                    birthdayExisted = true;
+                }
+
+                //announce aiko birthday
+                if (DateTime.Now.ToString("dd") == Config.Aiko.birthdayDate.ToString("dd") &&
+                DateTime.Now.ToString("MM") == Config.Aiko.birthdayDate.ToString("MM") &&
+                Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour)
+                {
+                    await client.SetGameAsync($"with Aiko birthday {Config.Emoji.birthdayCake}", type: ActivityType.Playing); //set activity to current index position
+                    birthdayExisted = true;
+                }
+
+                //announce onpu birthday
+                if (DateTime.Now.ToString("dd") == Config.Onpu.birthdayDate.ToString("dd") &&
+                DateTime.Now.ToString("MM") == Config.Onpu.birthdayDate.ToString("MM") &&
+                Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour){
+                    await client.SetGameAsync($"with Onpu birthday {Config.Emoji.birthdayCake}", type: ActivityType.Playing); //set activity to current index position
+                    birthdayExisted = true;
+                }
+
+                //announce momoko birthday
+                if (DateTime.Now.ToString("dd") == Config.Momoko.birthdayDate.ToString("dd") &&
+                DateTime.Now.ToString("MM") == Config.Momoko.birthdayDate.ToString("MM") &&
+                Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour){
+                    await client.SetGameAsync($"with Momoko birthday {Config.Emoji.birthdayCake}", type: ActivityType.Playing); //set activity to current index position
+                    birthdayExisted = true;
+                }
+
+                if (!birthdayExisted){
+                    Random rnd = new Random();
+                    int rndIndex = rnd.Next(0, Config.Doremi.arrRandomActivity.GetLength(0)); //random the list value
+                                                                                              //if (rndIndex > 0) rndIndex -= 1;
+                    string updLog = "Updated Doremi Activity - Playing: " + Config.Doremi.arrRandomActivity[rndIndex, 0];
+                    Config.Doremi.indexCurrentActivity = rndIndex;
+                    await client.SetGameAsync(Config.Doremi.arrRandomActivity[rndIndex, 0], type: ActivityType.Playing); //set activity to current index position
+                    Console.WriteLine(updLog);
+                }
+
+                
             },
             null,
             TimeSpan.FromSeconds(1), //time to wait before executing the timer for the first time (set first status)
