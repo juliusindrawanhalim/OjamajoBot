@@ -314,14 +314,15 @@ namespace OjamajoBot.Module
         //}
 
         [Command("change"), Alias("henshin"), Summary("I will change into the ojamajo form. " +
-            "Fill <form> with: **default/sharp/royal/motto** to make it spesific form.")]
-        public async Task transform(string form = "motto")
+            "Fill <form> with: **default/sharp/royal/motto/dokkan** to make it spesific form.")]
+        public async Task transform(string form = "dokkan")
         {
             IDictionary<string, string> arrImage = new Dictionary<string, string>();
             arrImage["default"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/b/bf/Ca-doremi.gif";
             arrImage["sharp"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/3/3c/Sh-doremi.gif";
             arrImage["royal"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/5d/Royaldoremi.gif";
             arrImage["motto"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/7/7d/Mo-doremi.gif";
+            arrImage["dokkan"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/c/c4/Doremi-dokk.gif";
 
             if (arrImage.ContainsKey(form)){
                 await ReplyAsync("Pretty Witchy Doremi Chi~\n");
@@ -343,7 +344,7 @@ namespace OjamajoBot.Module
             .WithDescription("Dodo has fair skin and big mulberry eyes and blushed cheeks. She has pink antennae and short straightened bangs, and she has hair worn in large buns. Her dress is salmon-pink with a pale pink collar." +
             "In teen form, her hair buns grow smaller and she gains a full body.She wears a light pink dress with the shoulder cut out and a white collar.A salmon - pink top is worn under this, and at the chest is a pink gem.She also wears white booties and a white witch hat with a pale pink rim.")
             .WithColor(Config.Doremi.EmbedColor)
-            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/e/e2/No.076.jpg/revision/latest?cb=20190704114558")
+            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/e/e2/No.076.jpg")
             .WithFooter("[Ojamajo Witchling Wiki](https://ojamajowitchling.fandom.com/wiki/Dodo)")
             .Build());
         }
@@ -360,6 +361,33 @@ namespace OjamajoBot.Module
                 .WithColor(Config.Doremi.EmbedColor)
                 .WithImageUrl("https://66.media.tumblr.com/c8f9c5455355f8e522d52bacb8155ab0/tumblr_mswho8nWx11r98a5go1_400.gif")
                 .Build());
+        }
+
+        [Command("happy birthday"), Summary("Give Doremi some wonderful birthday wishes. This commands only available on her birthday.")]
+        public async Task doremiBirthday(string wishes = "")
+        {
+            string[] arrResponse = new string[] { $":smile: Oh, you actually remembered my birthday. Thank you, {Context.User.Mention}.",
+                $":smile: Thank you {Context.User.Mention}, for the wonderful birthday wishes."};
+            string[] arrResponseImg = new string[]{
+                "https://vignette.wikia.nocookie.net/ojamajowitchling/images/b/b8/ODN-EP12-004.png",
+                "https://vignette.wikia.nocookie.net/ojamajowitchling/images/3/30/ODN-EP2-017.png"
+            };
+
+            if (DateTime.Now.ToString("dd") == Config.Doremi.birthdayDate.ToString("dd") &&
+                DateTime.Now.ToString("MM") == Config.Doremi.birthdayDate.ToString("MM") &&
+                Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour){
+                await ReplyAsync(arrResponse[new Random().Next(0, arrResponse.Length)],
+                embed: new EmbedBuilder()
+                .WithColor(Config.Doremi.EmbedColor)
+                .WithImageUrl(arrResponseImg[new Random().Next(0,arrResponseImg.Length)])
+                .Build());
+            } else {
+                await ReplyAsync("I'm sorry, but it's not my birthday yet.",
+                embed: new EmbedBuilder()
+                .WithColor(Config.Doremi.EmbedColor)
+                .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/6/6e/Hanabou2.jpg")
+                .Build());
+            }
         }
 
         [Command("hello"), Summary("Hello, I will greet you up")]
@@ -397,11 +425,12 @@ namespace OjamajoBot.Module
             .WithAuthor(Config.Doremi.EmbedName, Config.Doremi.EmbedAvatarUrl)
             .WithTitle("Bot Invitation Links")
             .WithDescription($"Pirika pirilala poporina peperuto! Generate the bot links!")
-            .AddField("Doremi Bot", "[Click here to invite Doremi Bot](https://discordapp.com/api/oauth2/authorize?client_id="+Config.Doremi.Id+"&permissions=2117532736&scope=bot)")
-            .AddField("Hazuki Bot", "[Click here to invite Hazuki Bot](https://discordapp.com/api/oauth2/authorize?client_id=" + Config.Hazuki.Id + "&permissions=238419008&scope=bot)")
-            .AddField("Aiko Bot", "[Click here to invite Aiko Bot](https://discordapp.com/api/oauth2/authorize?client_id=" + Config.Aiko.Id + "&permissions=238419008&scope=bot)")
-            .AddField("Onpu Bot", "[Click here to invite Onpu Bot](https://discordapp.com/api/oauth2/authorize?client_id=" + Config.Onpu.Id + "&permissions=238419008&scope=bot)")
-            .AddField("Momoko Bot", "[Click here to invite Momoko Bot](https://discordapp.com/api/oauth2/authorize?client_id=" + Config.Momoko.Id + "&permissions=238419008&scope=bot)")
+            .AddField("Doremi Bot", "[Click here to invite Doremi Bot](https://discordapp.com/api/oauth2/authorize?client_id="+Config.Doremi.Id+"&permissions=2117532736&scope=bot)",true)
+            .AddField("Hazuki Bot", "[Click here to invite Hazuki Bot](https://discordapp.com/api/oauth2/authorize?client_id=" + Config.Hazuki.Id + "&permissions=238419008&scope=bot)", true)
+            .AddField("Aiko Bot", "[Click here to invite Aiko Bot](https://discordapp.com/api/oauth2/authorize?client_id=" + Config.Aiko.Id + "&permissions=238419008&scope=bot)", true)
+            .AddField("Onpu Bot", "[Click here to invite Onpu Bot](https://discordapp.com/api/oauth2/authorize?client_id=" + Config.Onpu.Id + "&permissions=238419008&scope=bot)", true)
+            .AddField("Momoko Bot", "[Click here to invite Momoko Bot](https://discordapp.com/api/oauth2/authorize?client_id=" + Config.Momoko.Id + "&permissions=238419008&scope=bot)", true)
+            .AddField("Pop Bot", "[Click here to invite Pop Bot](https://discordapp.com/api/oauth2/authorize?client_id=" + Config.Pop.Id + "&permissions=238419008&scope=bot)", true)
             .Build());
         }
 
@@ -465,7 +494,7 @@ namespace OjamajoBot.Module
         }
 
         [Command("random"), Alias("moments"), Summary("Show any random Doremi moments. " +
-            "Fill <moments> with **random/first/sharp/motto/naisho** for spesific moments.")]
+            "Fill <moments> with **random/first/sharp/motto/naisho/dokkan** for spesific moments.")]
         public async Task randomthing(string moments = "")
         {
             string finalUrl=""; string footerUrl = "";
@@ -624,15 +653,9 @@ namespace OjamajoBot.Module
             .WithDescription("Pirika pirilala poporina peperuto! Show us what's new on doremi bot and her other friends!")
             .AddField("Summary",
             $"-Onpu & Momoko bot has arrived. You can invite them with `{Config.Doremi.PrefixParent[0]}invite` commands.\n" +
-            $"-Doremi and her other friends commands has updated into **motto** version.\n" +
-            $"-Doremi bot can now assign your birthday with `{Config.Doremi.PrefixParent[0]}birthday set commands`.\n" +
-            "-Doremi bot now has wiki category that let you get the [wiki information](https://ojamajowitchling.fandom.com)\n" +
-            "-Doremi bot minigames command now has score.\n" +
-            "-Added more random moments image source for Doremi and other related bots.\n" +
-            "-Doremi and her other friends now has individual greeting message.\n"+
-            "-Aiko bot: `spooky` commands now has higher chance for you to execute it.\n")
-            .AddField("Doremi bot updated/new commands", "**wiki category**,**birthday category**,**moderator category**,`draw`,`jojofication`,`quiz color`")
-            .AddField("Aiko bot updated commands", "`spooky`")
+            $"-Doremi and her other friends commands has updated into **dokkan** version.\n" +
+            "-Doremi and her other bot now has individual greeting message.\n"+
+            "-Doremi and her other bot now has birthday commands that you can wish them on.")
             .WithColor(Config.Doremi.EmbedColor)
             .WithFooter($"Last updated on {Config.Core.lastUpdate}")
             .Build());
@@ -1091,7 +1114,6 @@ namespace OjamajoBot.Module
                     (Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour &&
                     Int32.Parse(DateTime.Now.ToString("HH")) <= Config.Core.maxGlobalTimeHour))
                     {
-                        
                         await Bot.Hazuki.client
                         .GetGuild(guildId)
                         .GetTextChannel(channel_name.Id)
@@ -2562,5 +2584,8 @@ namespace OjamajoBot.Module
         //register, capture, spawn, leaderboard
 
     }
+
+    //calculate how many days has been on the server
+    //
 
 }

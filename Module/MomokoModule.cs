@@ -147,15 +147,6 @@ namespace OjamajoBot.Module
             }
         }
 
-        public void getAllCommands(ModuleInfo module, ref EmbedBuilder builder, string commandDetails)
-        {
-            foreach (var command in module.Commands)
-            {
-                command.CheckPreconditionsAsync(Context, _map).GetAwaiter().GetResult();
-                AddCommand(command, ref builder, commandDetails);
-            }
-        }
-
         public void AddCommand(CommandInfo command, ref EmbedBuilder builder, string commandDetails = "")
         {
             if (commandDetails == "" ||
@@ -274,12 +265,13 @@ namespace OjamajoBot.Module
         //}
 
         [Command("change"), Alias("henshin"), Summary("I will change into the ojamajo form. " +
-            "Fill <form> with: **default/motto** to make it spesific form.")]
-        public async Task transform(string form = "motto")
+            "Fill <form> with: **default/motto/dokkan** to make it spesific form.")]
+        public async Task transform(string form = "dokkan")
         {
             IDictionary<string, string> arrImage = new Dictionary<string, string>();
             arrImage["default"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/57/Mo-momo.gif";
             arrImage["motto"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/57/Mo-momo.gif";
+            arrImage["dokkan"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/93/Momo-dokk.gif";
 
             if (arrImage.ContainsKey(form)){
                 await ReplyAsync("Pretty Witchy Momoko Chi~\n");
@@ -301,9 +293,39 @@ namespace OjamajoBot.Module
             .WithDescription("Nini is fair skinned with peach blushed cheeks and rounded green eyes. Her light chartreuse hair resembles Momoko's, and on the corner of her head is a lilac star clip. She wears a chartreuse dress with creamy yellow collar." +
             "In teen form the only change to her hair is that her bangs are spread out.She gains a developed body and now wears a pastel gold dress with the shoulder cut out and a white collar, where a gold gem rests.A gold top is worn under this, and she gains white booties and a white witch hat with pastel yellow rim.")
             .WithColor(Config.Momoko.EmbedColor)
-            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/e/e4/No.080.jpg/revision/latest?cb=20190701055501")
+            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/e/e4/No.080.jpg")
             .WithFooter("[Ojamajo Witchling Wiki](https://ojamajowitchling.fandom.com/wiki/Nini)")
             .Build());
+        }
+
+        [Command("happy birthday"), Summary("Give Momoko some wonderful birthday wishes. This commands only available on her birthday.")]
+        public async Task onpuBirthday(string wishes = "")
+        {
+            string[] arrResponse = new string[] { $":smile: Thank you {Context.User.Mention} for the wonderful birthday wishes.",
+                $":smile: Thank you {Context.User.Mention}, for giving me the wonderful birthday wishes."};
+            string[] arrResponseImg = new string[]{
+                "https://vignette.wikia.nocookie.net/ojamajowitchling/images/2/29/14.04.JPG",
+                "https://vignette.wikia.nocookie.net/ojamajowitchling/images/a/a2/ODN-EP2-092.png"
+            };
+
+            if (DateTime.Now.ToString("dd") == Config.Momoko.birthdayDate.ToString("dd") &&
+                DateTime.Now.ToString("MM") == Config.Momoko.birthdayDate.ToString("MM") &&
+                Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour)
+            {
+                await ReplyAsync(arrResponse[new Random().Next(0, arrResponse.Length)],
+                embed: new EmbedBuilder()
+                .WithColor(Config.Momoko.EmbedColor)
+                .WithImageUrl(arrResponseImg[new Random().Next(0, arrResponseImg.Length)])
+                .Build());
+            }
+            else
+            {
+                await ReplyAsync("I'm sorry, but it's not my birthday yet.",
+                embed: new EmbedBuilder()
+                .WithColor(Config.Momoko.EmbedColor)
+                .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/52/ODN-EP9-025.png")
+                .Build());
+            }
         }
 
         [Command("hello"), Summary("Hello, I will greet you up")]
@@ -322,7 +344,7 @@ namespace OjamajoBot.Module
         }
 
         [Command("random"), Alias("moments"), Summary("Show any random Momoko moments. " +
-            "Fill <moments> with **pre-motto/motto/naisho** for spesific moments.")]
+            "Fill <moments> with **pre-motto/motto/naisho/dokkan** for spesific moments.")]
         public async Task randomthing(string moments = "")
         {
             string finalUrl = ""; string footerUrl = "";

@@ -21,7 +21,7 @@ namespace Config
         public static string headConfigGuildFolder = $"{headConfigFolder}guild/";
         public static string headLogsFolder = "logs/";
         public static string minigameDataFileName = "minigame_data.json";
-        public static string lastUpdate = "Feb 12,2020";
+        public static string lastUpdate = "Feb 14,2020";
         public static JObject jObjWiki;
         public static string wikiParentUrl = "https://ojamajowitchling.fandom.com/wiki/";
         public static int minGlobalTimeHour = 12;
@@ -89,6 +89,16 @@ namespace Config
                     Momoko.Token = jobjectconfig.GetValue(_parent)["token"].ToString();
                     Momoko.Randomeventinterval = (double)jobjectconfig.GetValue(_parent)["randomeventinterval"];
                     Momoko.jObjRandomMoments = (JObject)jobjectRandomMoments.GetValue(_parent);
+                }
+                catch { Console.WriteLine("Error: Momoko configuration array is not properly formatted"); Console.ReadLine(); }
+
+                //init pop config
+                try
+                {
+                    string _parent = "pop";
+                    Pop.Token = jobjectconfig.GetValue(_parent)["token"].ToString();
+                    Pop.Randomeventinterval = (double)jobjectconfig.GetValue(_parent)["randomeventinterval"];
+                    Pop.jObjRandomMoments = (JObject)jobjectRandomMoments.GetValue(_parent);
                 }
                 catch { Console.WriteLine("Error: Momoko configuration array is not properly formatted"); Console.ReadLine(); }
 
@@ -164,7 +174,7 @@ namespace Config
             {"with Kotake","Psst, I'm trying to disturb kotake right now :smirk:"},
             {"with Pop","I'm playing with Pop now. She needs my help with some piano lesson."},
             {"at House",$"I'm at my house right now. I hope my mom will make a steak for dinner {Emoji.steak}"},
-            {"at witch's world","I'm at the witch's world right now."},
+            {$"at witch's world {Emoji.broom}","I'm at the witch's world right now."},
             {"with homework \uD83D\uDCDA","I'm doing my homework right now"},
             {"with Momoko",$"I'm playing with {MentionUtils.MentionUser(Momoko.Id)} right now."},
             {"with Onpu",$"I'm playing with {MentionUtils.MentionUser(Onpu.Id)} right now."},
@@ -199,7 +209,7 @@ namespace Config
             {$"violin {Emoji.violin}","I'm playing with my violin instrument now. Wanna hear me to play some music?"},
             {"with Masaru","I'm playing with my Masaru right now. We're usually playing music together on the afternoon \uD83D\uDE0A"},
             {"at House",$"I'm at my house right now. I have violin lesson to attend after this."},
-            {"at witch's world","I'm at the witch's world right now."},
+            {$"at witch's world {Emoji.broom}","I'm at the witch's world right now."},
             {"with homework \uD83D\uDCDA","I'm doing my homework right now."},
             {"with Momoko",$"I'm playing with {MentionUtils.MentionUser(Momoko.Id)} right now."},
             {"with Onpu",$"I'm playing with {MentionUtils.MentionUser(Onpu.Id)} right now."},
@@ -235,7 +245,7 @@ namespace Config
             {"with Doremi",$"I'm playing with {MentionUtils.MentionUser(Doremi.Id)} right now. We're probably gonna make steak for her."},
             {"with Nobuko","I'm playing with Nobuko right now. Currently the latest Detective Boy Tatekawa series was pretty cool."},
             {"harmonica","I'm playing with my harmonica instrument now. Wanna hear me to play some music?"},
-            {"at witch's world","I'm at the witch's world right now."},
+            {$"at witch's world {Emoji.broom}","I'm at the witch's world right now."},
             {"with sweet potatoes","Sweet potatoes is one of my favorite foods, I just love to eat it so much."},
             {"with homework \uD83D\uDCDA","I'm doing my homework right now."},
             {"with Momoko",$"I'm playing with {MentionUtils.MentionUser(Momoko.Id)} right now."},
@@ -271,6 +281,7 @@ namespace Config
             {"with Momoko",$"I'm playing with {MentionUtils.MentionUser(Momoko.Id)} right now."},
             {"at tv studio","I'm working on the studio right now. Feel free to come and watch me on some drama performances."},
             {"at radio station","I'm currently broadcasting at radio station right now. Stay tune for more daily info."},
+            {$"at witch's world {Emoji.broom}","I'm at the witch's world right now."},
             {"flute","I'm playing with my flute instrument now. Wanna hear me to play some music?"},
             {"with homework \uD83D\uDCDA","I'm doing my homework right now."},
             {"with Roro",$"I'm playing with my fairy: Roro right now."}
@@ -297,13 +308,14 @@ namespace Config
         public static IDictionary<string, Timer> _timerBirthdayAnnouncement = new Dictionary<string, Timer>();//birthday reminder timer
 
         public static string[,] arrRandomActivity = {
-            {$"at misora elementary school{Emoji.school}" , "I'm still at school right now."},
+            {$"at misora elementary school {Emoji.school}" , "I'm still at school right now."},
             {"at sweet house maho dou","I'm working on maho-dou right now. Please come to the shop any time"},
             {"with Hazuki",$"I'm playing with {MentionUtils.MentionUser(Hazuki.Id)} right now. She's a really nice and kind friend for you to meet."},
             {"with Doremi",$"I'm playing with {MentionUtils.MentionUser(Doremi.Id)} right now. We're probably gonna make steak for her."},
             {"with Aiko",$"I'm playing with {MentionUtils.MentionUser(Aiko.Id)} right now. She's a nice girl that loves to eat takoyaki very much."},
             {"with Onpu",$"I'm playing with {MentionUtils.MentionUser(Onpu.Id)} right now."},
-            {$"guitar{Emoji.guitar}","I'm playing with my guitar instrument now. Wanna hear me to play some music?"},
+            {$"at witch's world {Emoji.broom}","I'm at the witch's world right now."},
+            {$"guitar {Emoji.guitar}","I'm playing with my guitar instrument now. Wanna hear me to play some music?"},
             {"with homework \uD83D\uDCDA","I'm doing my homework right now."},
             {"with Nini",$"I'm playing with my fairy: Nini right now."}
         };
@@ -313,6 +325,30 @@ namespace Config
         public static string EmbedAvatarUrl = "https://cdn.discordapp.com/emojis/651063629403127808.png?v=1";
         public static IDictionary<string, Timer> timerProcessBakery = new Dictionary<string, Timer>();
         public static IDictionary<string, Boolean> isRunningBakery = new Dictionary<string, Boolean>();
+    }
+
+    public class Pop
+    {
+        public static ulong Id = 677042851426861056;//original
+        public static string Token { get; set; }
+        public static double Randomeventinterval { get; set; }
+        public static Color EmbedColor = new Color(185, 70, 75);
+        public static DateTime birthdayDate = DateTime.ParseExact("09/09/1994", "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None);
+
+        public static string[] PrefixParent = { "pop!", MentionUtils.MentionUser(Id) };
+        public static JObject jObjRandomMoments;
+
+        public static string[,] arrRandomActivity = {
+            {$"at misora elementary school {Emoji.school}" , "I'm still at school right now."},
+            {"at sweet house maho dou","I'm working on maho-dou right now. Please come to the shop any time"},
+            {$"piano {Emoji.piano}","I'm playing piano right now. Do you want to hear me playing the piano?"},
+            {"with homework \uD83D\uDCDA","I'm doing my homework right now."},
+            {"with Fafa",$"I'm playing with my fairy: Fafa right now."}
+        };
+        public static int indexCurrentActivity { get; set; }
+
+        public static string EmbedName = "Pop Bot";
+        public static string EmbedAvatarUrl = "https://cdn.discordapp.com/emojis/651063629403127808.png?v=1";
     }
 
     public static class Emoji
@@ -330,6 +366,7 @@ namespace Config
         public static string clap = "\uD83D\uDC4F";
         public static string birthdayCake = "\uD83C\uDF82";
         public static string partyPopper = "\uD83C\uDF89";
+        public static string broom = "\uD83E\uDDF9";
     }
 
     public static class Music

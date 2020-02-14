@@ -272,14 +272,15 @@ namespace OjamajoBot.Module
         //}
 
         [Command("change"), Alias("henshin"), Summary("I will change into the ojamajo form. " +
-            "Fill <form> with: **default/sharp/royal/motto** to make it spesific form.")]
-        public async Task transform(string form = "motto")
+            "Fill <form> with: **default/sharp/royal/motto/dokkan** to make it spesific form.")]
+        public async Task transform(string form = "dokkan")
         {
             IDictionary<string, string> arrImage = new Dictionary<string, string>();
             arrImage["default"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/3/3e/Sh-onpu.gif";
             arrImage["sharp"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/3/3e/Sh-onpu.gif";
             arrImage["royal"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/f/f0/Royalonpu.gif";
             arrImage["motto"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/e/e1/Mo-onpu.gif";
+            arrImage["dokkan"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/3/3c/Onpu-dokk.gif";
 
             if (arrImage.ContainsKey(form)){
                 await base.ReplyAsync("Pretty Witchy Onpu Chi~",
@@ -302,9 +303,37 @@ namespace OjamajoBot.Module
             .WithDescription("Roro has fair skin with pink blushed cheeks and Onpu's eyes. Her light purple hair frames her face and she has a thick strand sticking up on the left to resemble Onpu's side-tail. She wears a light purple dress with a lilac collar.\n" +
             "In teen form, the only change to her hair is that her side - tail now sticks down, rather than curling up.She gains a developed body and now wears a lilac dress with the shoulder cut out and a white - collar, where a purple gem rests.A lilac top is worn under this, and she gains white booties and a white witch hat with a lilac rim.")
             .WithColor(Config.Onpu.EmbedColor)
-            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/8/84/No.079.jpg/revision/latest?cb=20190429130114")
+            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/8/84/No.079.jpg")
             .WithFooter("[Ojamajo Witchling Wiki](https://ojamajowitchling.fandom.com/wiki/Roro)")
             .Build());
+        }
+
+        [Command("happy birthday"), Summary("Give Onpu some wonderful birthday wishes. This commands only available on her birthday.")]
+        public async Task onpuBirthday(string wishes = "")
+        {
+            string[] arrResponse = new string[] { $":smile: Thank you {Context.User.Mention} for the wonderful birthday wishes.",
+                $":smile: Thank you {Context.User.Mention}, for giving me the wonderful birthday wishes."};
+            string[] arrResponseImg = new string[]{
+                "https://vignette.wikia.nocookie.net/ojamajowitchling/images/2/2f/ODN-EP3-039.png",
+                "https://vignette.wikia.nocookie.net/ojamajowitchling/images/7/7e/04.04.11.JPG"
+            };
+
+            if (DateTime.Now.ToString("dd") == Config.Onpu.birthdayDate.ToString("dd") &&
+                DateTime.Now.ToString("MM") == Config.Onpu.birthdayDate.ToString("MM") &&
+                Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour)
+            {
+                await ReplyAsync(arrResponse[new Random().Next(0, arrResponse.Length)],
+                embed: new EmbedBuilder()
+                .WithColor(Config.Onpu.EmbedColor)
+                .WithImageUrl(arrResponseImg[new Random().Next(0, arrResponseImg.Length)])
+                .Build());
+            } else {
+                await ReplyAsync("I'm sorry, but it's not my birthday yet.",
+                embed: new EmbedBuilder()
+                .WithColor(Config.Onpu.EmbedColor)
+                .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/0/05/ODN-EP8-100.png")
+                .Build());
+            }
         }
 
         [Command("hello"), Summary("Hello, I will greet you up")]
@@ -322,7 +351,7 @@ namespace OjamajoBot.Module
         }
 
         [Command("random"), Alias("moments"), Summary("Show any random Onpu moments. " +
-            "Fill <moments> with **random/sharp/motto/naisho** for spesific moments.")]
+            "Fill <moments> with **random/sharp/motto/naisho/dokkan** for spesific moments.")]
         public async Task randomthing(string moments = "")
         {
             string finalUrl = ""; string footerUrl = "";

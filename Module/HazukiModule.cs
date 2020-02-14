@@ -274,14 +274,15 @@ namespace OjamajoBot.Module
         //}
 
         [Command("change"), Alias("henshin"), Summary("I will change into the ojamajo form. " +
-            "Fill <form> with: **default/sharp/royal/motto** to make it spesific form.")]
-        public async Task transform(string form = "motto")
+            "Fill <form> with: **default/sharp/royal/motto/dokkan** to make it spesific form.")]
+        public async Task transform(string form = "dokkan")
         {
             IDictionary<string, string> arrImage = new Dictionary<string, string>();
             arrImage["default"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/6/63/Ca-hazuki.gif";
             arrImage["sharp"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/c/cc/Sh-hazuki.gif";
             arrImage["royal"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/7/7d/Royalhazuki.gif";
             arrImage["motto"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/4/4d/Mo-hazuki.gif";
+            arrImage["dokkan"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/1/19/Hazuki-dokk.gif";
 
             if (arrImage.ContainsKey(form)){
                 await ReplyAsync("Pretty Witchy Hazuki Chi~\n");
@@ -330,22 +331,49 @@ namespace OjamajoBot.Module
             .WithDescription("Rere has fair skin with warm brown eyes and blushed cheeks. Her pale orange hair is shaped into four-points, reminiscent of a bow, and she has two tufts for bangs. " +
             "Like Hazuki she wears glasses, along with a pale orange dress that has a cream collar. In teen form, her hair points now stick out at each part of her head and she gains a full body. She wears a pale orange dress with the shoulder cut out and a white-collar. A pastel orange top is worn under this, and at the chest is an orange gem. She also wears white booties and a white witch hat with a cream rim.")
             .WithColor(Config.Hazuki.EmbedColor)
-            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/d/dd/No.077.jpg/revision/latest?cb=20190412122548")
+            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/d/dd/No.077.jpg")
             .WithFooter("[Ojamajo Witchling Wiki](https://ojamajowitchling.fandom.com/wiki/Rere)")
             .Build());
+        }
+
+        [Command("happy birthday"),Summary("Give Hazuki some wonderful birthday wishes. This commands only available on her birthday.")]
+        public async Task hazukiBirthday(string wishes="")
+        {
+
+            string[] arrResponse = new string[] { $":blush: Thank you for your wonderful birthday wishes, {Context.User.Mention}.",
+                $":blush: Thank you {Context.User.Mention}, for the wonderful birthday wishes."};
+            string[] arrResponseImg = new string[]{
+                "https://vignette.wikia.nocookie.net/ojamajowitchling/images/f/fe/15.03.JPG",
+                "https://vignette.wikia.nocookie.net/ojamajowitchling/images/8/85/OD-EP10-35.png"
+            };
+
+            if (DateTime.Now.ToString("dd") == Config.Hazuki.birthdayDate.ToString("dd") &&
+                DateTime.Now.ToString("MM") == Config.Hazuki.birthdayDate.ToString("MM") &&
+                Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour){
+                await ReplyAsync(arrResponse[new Random().Next(0, arrResponse.Length)],
+                embed: new EmbedBuilder()
+                .WithColor(Config.Hazuki.EmbedColor)
+                .WithImageUrl(arrResponseImg[new Random().Next(0, arrResponseImg.Length)])
+                .Build());
+            } else {
+                await ReplyAsync("I'm sorry, but it's not my birthday yet.",
+                embed: new EmbedBuilder()
+                .WithColor(Config.Hazuki.EmbedColor)
+                .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/2/20/OD-EP16-05.png")
+                .Build());
+            }
         }
 
         [Command("hello"), Summary("Hello, I will greet you up")]
         public async Task hazukiHello()
         {
-            string tempReply = "";
             List<string> listRandomRespond = new List<string>() {
                 $"Hello there {MentionUtils.MentionUser(Context.User.Id)}. ",
                 $"Hello, {MentionUtils.MentionUser(Context.User.Id)}. ",
             };
 
             int rndIndex = new Random().Next(0, listRandomRespond.Count);
-            tempReply = listRandomRespond[rndIndex] + Config.Hazuki.arrRandomActivity[Config.Hazuki.indexCurrentActivity, 1];
+            string tempReply = listRandomRespond[rndIndex] + Config.Hazuki.arrRandomActivity[Config.Hazuki.indexCurrentActivity, 1];
 
             await ReplyAsync(tempReply);
         }
@@ -365,7 +393,8 @@ namespace OjamajoBot.Module
             }
         }
 
-        [Command("random"), Alias("moments"), Summary("Show any random Hazuki moments. Fill <moments> with **random/first/sharp/motto/naisho** for spesific moments.")]
+        [Command("random"), Alias("moments"), Summary("Show any random Hazuki moments. " +
+            "Fill <moments> with **random/first/sharp/motto/naisho/dokkan** for spesific moments.")]
         public async Task randomthing(string moments = "")
         {
             string finalUrl = ""; string footerUrl = "";

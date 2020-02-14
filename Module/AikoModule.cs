@@ -284,14 +284,15 @@ namespace OjamajoBot.Module
         //}
 
         [Command("change"), Alias("henshin"), Summary("I will change into the ojamajo form. " +
-            "Fill <form> with: **default/sharp/royal/motto** to make it spesific form.")]
-        public async Task transform(string form = "motto")
+            "Fill <form> with: **default/sharp/royal/motto/dokkan** to make it spesific form.")]
+        public async Task transform(string form = "dokkan")
         {
             IDictionary<string, string> arrImage = new Dictionary<string, string>();
             arrImage["default"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/d/d1/Ca-aiko.gif";
             arrImage["sharp"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/7/74/Sh-aiko.gif";
             arrImage["royal"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/c/c6/Royalaiko.gif";
             arrImage["motto"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/a/ac/Mo-aiko.gif";
+            arrImage["dokkan"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/5f/Aiko-dokk.gif";
 
             if (arrImage.ContainsKey(form)) {
                 await ReplyAsync("Pretty Witchy Aiko Chi~\n");
@@ -315,7 +316,7 @@ namespace OjamajoBot.Module
             .WithDescription("Mimi has fair skin and sharp blue eyes and blushed cheeks. She has light blue hair that sticks up on each side of her head in tube-like shapes, with her bangs brushed to the left. " +
             "She wears a baby blue dress with a pale blue collar. In teen form, her hair stays the same and she gains a white witch hat with pale blue rim. She gains a full body and wears a pale blue dress with the shoulder cut out and a white-collar, where a blue gem rests. A baby blue top is worn under this, and she gains white booties.")
             .WithColor(Config.Aiko.EmbedColor)
-            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/e/e5/No.078.jpg/revision/latest?cb=20190414080440")
+            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/e/e5/No.078.jpg")
             .WithFooter("[Ojamajo Witchling Wiki](https://ojamajowitchling.fandom.com/wiki/Mimi)")
             .Build());
         }
@@ -336,6 +337,33 @@ namespace OjamajoBot.Module
                     .WithImageUrl("https://cdn.discordapp.com/attachments/569409307100315651/651127198203510824/unknown.png")
                     .WithFooter("Contributed by: Letter Three")
                     .Build());
+        }
+
+        [Command("happy birthday"), Summary("Give Aiko some wonderful birthday wishes. This commands only available on her birthday.")]
+        public async Task aikoBirthday(string wishes = "")
+        {
+            string[] arrResponse = new string[] { $":smile: Thank you for your wonderful birthday wishes, {Context.User.Mention}.",
+                $":smile: Thank you {Context.User.Mention}, for the wonderful birthday wishes."};
+            string[] arrResponseImg = new string[]{
+                "https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/94/ODN-EP10-097.png",
+                "https://vignette.wikia.nocookie.net/ojamajowitchling/images/e/e9/10.04.JPG"
+            };
+
+            if (DateTime.Now.ToString("dd") == Config.Aiko.birthdayDate.ToString("dd") &&
+                DateTime.Now.ToString("MM") == Config.Aiko.birthdayDate.ToString("MM") &&
+                Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour){
+                await ReplyAsync(arrResponse[new Random().Next(0, arrResponse.Length)],
+                embed: new EmbedBuilder()
+                .WithColor(Config.Aiko.EmbedColor)
+                .WithImageUrl(arrResponseImg[new Random().Next(0, arrResponseImg.Length)])
+                .Build());
+            } else {
+                await ReplyAsync("Gomen ne, but it's not my birthday yet.",
+                embed: new EmbedBuilder()
+                .WithColor(Config.Aiko.EmbedColor)
+                .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/1/1d/ODN-EP3-005.png")
+                .Build());
+            }
         }
 
         [Command("hello"), Alias("yo"), Summary("Yo, I will greet you up")]
@@ -379,7 +407,8 @@ namespace OjamajoBot.Module
             await ReplyAsync(arrQuotes[new Random().Next(0, arrQuotes.Length)]);
         }
 
-        [Command("random"), Alias("moments"), Summary("Show any random Aiko moments. Fill <moments> with **random/first/sharp/motto/naisho** for spesific moments.")]
+        [Command("random"), Alias("moments"), Summary("Show any random Aiko moments. " +
+            "Fill <moments> with **random/first/sharp/motto/naisho/dokkan** for spesific moments.")]
         public async Task randomthing(string moments = "")
         {
             string finalUrl = ""; string footerUrl = "";
