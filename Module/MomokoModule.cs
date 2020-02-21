@@ -343,6 +343,21 @@ namespace OjamajoBot.Module
             await ReplyAsync(tempReply);
         }
 
+        [Command("hugs"), Alias("hug"), Summary("I will give warm hug for you or <username>")]
+        public async Task HugUser(SocketGuildUser username = null)
+        {
+            if (username == null)
+            {
+                string message = $"*hugs back*. Thank you for the warm hugs {MentionUtils.MentionUser(Context.User.Id)} :hugging:";
+                await Context.Channel.SendMessageAsync(message);
+            }
+            else
+            {
+                string message = $"Let's give a warm hugs for {MentionUtils.MentionUser(username.Id)} :hugging:";
+                await Context.Channel.SendMessageAsync(message);
+            }
+        }
+
         [Command("random"), Alias("moments"), Summary("Show any random Momoko moments. " +
             "Fill <moments> with **pre-motto/motto/naisho/dokkan** for spesific moments.")]
         public async Task randomthing(string moments = "")

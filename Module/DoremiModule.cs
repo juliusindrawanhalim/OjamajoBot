@@ -412,7 +412,7 @@ namespace OjamajoBot.Module
                 string message = $"*hugs back*. That's very nice, thank you for the warm hugs {MentionUtils.MentionUser(Context.User.Id)} :hugging:";
                 await Context.Channel.SendMessageAsync(message);
             } else {
-                string message = $"Pirika pirilala poporina peperuto! Give a warm hugs for {MentionUtils.MentionUser(username.Id)} :hugging:";
+                string message = $"Let's give a warm hugs for {MentionUtils.MentionUser(username.Id)} :hugging:";
                 await Context.Channel.SendMessageAsync(message);
             }
         }
@@ -425,12 +425,12 @@ namespace OjamajoBot.Module
             .WithAuthor(Config.Doremi.EmbedName, Config.Doremi.EmbedAvatarUrl)
             .WithTitle("Bot Invitation Links")
             .WithDescription($"Pirika pirilala poporina peperuto! Generate the bot links!")
-            .AddField("Doremi Bot", "[Click here to invite Doremi Bot](https://discordapp.com/api/oauth2/authorize?client_id="+Config.Doremi.Id+"&permissions=2117532736&scope=bot)",true)
-            .AddField("Hazuki Bot", "[Click here to invite Hazuki Bot](https://discordapp.com/api/oauth2/authorize?client_id=" + Config.Hazuki.Id + "&permissions=238419008&scope=bot)", true)
-            .AddField("Aiko Bot", "[Click here to invite Aiko Bot](https://discordapp.com/api/oauth2/authorize?client_id=" + Config.Aiko.Id + "&permissions=238419008&scope=bot)", true)
-            .AddField("Onpu Bot", "[Click here to invite Onpu Bot](https://discordapp.com/api/oauth2/authorize?client_id=" + Config.Onpu.Id + "&permissions=238419008&scope=bot)", true)
-            .AddField("Momoko Bot", "[Click here to invite Momoko Bot](https://discordapp.com/api/oauth2/authorize?client_id=" + Config.Momoko.Id + "&permissions=238419008&scope=bot)", true)
-            .AddField("Pop Bot", "[Click here to invite Pop Bot](https://discordapp.com/api/oauth2/authorize?client_id=" + Config.Pop.Id + "&permissions=238419008&scope=bot)", true)
+            .AddField("Doremi Bot", "[Invite Doremi Bot](https://discordapp.com/api/oauth2/authorize?client_id=" + Config.Doremi.Id+"&permissions=2117532736&scope=bot)",true)
+            .AddField("Hazuki Bot", "[Invite Hazuki Bot](https://discordapp.com/api/oauth2/authorize?client_id=" + Config.Hazuki.Id + "&permissions=238419008&scope=bot)", true)
+            .AddField("Aiko Bot", "[Invite Aiko Bot](https://discordapp.com/api/oauth2/authorize?client_id=" + Config.Aiko.Id + "&permissions=238419008&scope=bot)", true)
+            .AddField("Onpu Bot", "[Invite Onpu Bot](https://discordapp.com/api/oauth2/authorize?client_id=" + Config.Onpu.Id + "&permissions=238419008&scope=bot)", true)
+            .AddField("Momoko Bot", "[Invite Momoko Bot](https://discordapp.com/api/oauth2/authorize?client_id=" + Config.Momoko.Id + "&permissions=238419008&scope=bot)", true)
+            .AddField("Pop Bot", "[Invite Pop Bot](https://discordapp.com/api/oauth2/authorize?client_id=" + Config.Pop.Id + "&permissions=238419008&scope=bot)", true)
             .Build());
         }
 
@@ -638,8 +638,8 @@ namespace OjamajoBot.Module
         [Command("wish"), Summary("I will grant you a <wishes>")]
         public async Task wish([Remainder] string wishes)
         {
-            await ReplyAsync($"Pirika pirilala poporina peperuto! {wishes}");
-            await base.ReplyAsync(embed: new EmbedBuilder()
+            await ReplyAsync($"Pirika pirilala poporina peperuto! {wishes}",
+            embed: new EmbedBuilder()
             .WithColor(Config.Doremi.EmbedColor)
             .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/98/Dore-spell.gif")
             .Build());
@@ -652,7 +652,7 @@ namespace OjamajoBot.Module
             .WithTitle("What's new?")
             .WithDescription("Pirika pirilala poporina peperuto! Show us what's new on doremi bot and her other friends!")
             .AddField("Summary",
-            $"-Onpu & Momoko bot has arrived. You can invite them with `{Config.Doremi.PrefixParent[0]}invite` commands.\n" +
+            $"-New Onpu Commands that makes her bigger size: mushroom/grow/giant/powerup\n" +
             $"-Doremi and her other friends commands has updated into **dokkan** version.\n" +
             "-Doremi and her other bot now has individual greeting message.\n"+
             "-Doremi and her other bot now has birthday commands that you can wish them on.")
@@ -987,12 +987,11 @@ namespace OjamajoBot.Module
                         (Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour &&
                         Int32.Parse(DateTime.Now.ToString("HH")) <= Config.Core.maxGlobalTimeHour))
                         {
-                            var calculatedYear = Convert.ToInt32(DateTime.Now.ToString("yyyy")) - Convert.ToInt32(Config.Hazuki.birthdayDate.ToString("yyyy"));
                             await socketClient
                             .GetGuild(guildId)
                             .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guildId, "id_birthday_announcement")))
                             .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday to you, {MentionUtils.MentionUser(Config.Hazuki.Id)} chan. " +
-                            $"She has turned into {calculatedYear} on this year. Let's give wonderful birthday wishes for her.");
+                            $"She has turned into {Config.Hazuki.birthdayCalculatedYear} on this year. Let's give wonderful birthday wishes for her.");
                             birthdayExisted = true;
                         }
 
@@ -1002,12 +1001,11 @@ namespace OjamajoBot.Module
                         (Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour &&
                         Int32.Parse(DateTime.Now.ToString("HH")) <= Config.Core.maxGlobalTimeHour))
                         {
-                            var calculatedYear = Convert.ToInt32(DateTime.Now.ToString("yyyy")) - Convert.ToInt32(Config.Aiko.birthdayDate.ToString("yyyy"));
                             await socketClient
                             .GetGuild(guildId)
                             .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guildId, "id_birthday_announcement")))
                             .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday to our osakan friend: {MentionUtils.MentionUser(Config.Aiko.Id)} chan. " +
-                            $"She has turned into {calculatedYear} on this year. Let's give some takoyaki and wonderful birthday wishes for her.");
+                            $"She has turned into {Config.Aiko.birthdayCalculatedYear} on this year. Let's give some takoyaki and wonderful birthday wishes for her.");
                             birthdayExisted = true;
                         }
 
@@ -1017,12 +1015,11 @@ namespace OjamajoBot.Module
                         (Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour &&
                         Int32.Parse(DateTime.Now.ToString("HH")) <= Config.Core.maxGlobalTimeHour))
                         {
-                            var calculatedYear = Convert.ToInt32(DateTime.Now.ToString("yyyy")) - Convert.ToInt32(Config.Onpu.birthdayDate.ToString("yyyy"));
                             await socketClient
                             .GetGuild(guildId)
                             .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guildId, "id_birthday_announcement")))
                             .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday to our wonderful idol friend: {MentionUtils.MentionUser(Config.Onpu.Id)} chan. " +
-                            $"She has turned into {calculatedYear} on this year. Let's give some wonderful birthday wishes for her.");
+                            $"She has turned into {Config.Onpu.birthdayCalculatedYear} on this year. Let's give some wonderful birthday wishes for her.");
                             birthdayExisted = true;
                         }
 
@@ -1032,12 +1029,11 @@ namespace OjamajoBot.Module
                         (Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour &&
                         Int32.Parse(DateTime.Now.ToString("HH")) <= Config.Core.maxGlobalTimeHour))
                         {
-                            var calculatedYear = Convert.ToInt32(DateTime.Now.ToString("yyyy")) - Convert.ToInt32(Config.Momoko.birthdayDate.ToString("yyyy"));
                             await socketClient
                             .GetGuild(guildId)
                             .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guildId, "id_birthday_announcement")))
                             .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday to our wonderful friend: {MentionUtils.MentionUser(Config.Momoko.Id)} chan. " +
-                            $"She has turned into {calculatedYear} on this year. Let's give some wonderful birthday wishes for her.");
+                            $"She has turned into {Config.Momoko.birthdayCalculatedYear} on this year. Let's give some wonderful birthday wishes for her.");
                             birthdayExisted = true;
                         }
 
@@ -1103,8 +1099,6 @@ namespace OjamajoBot.Module
                     TimeSpan.FromHours(24) //time to wait before executing the timer again
                 );
 
-                var calculatedDoremiYear = Convert.ToInt32(DateTime.Now.ToString("yyyy")) - Convert.ToInt32(Config.Doremi.birthdayDate.ToString("yyyy"));
-
                 //Hazuki: set Doremi birthday announcement
                 Config.Hazuki._timerBirthdayAnnouncement[guildId.ToString()] = new Timer(async _ =>
                 {
@@ -1118,7 +1112,7 @@ namespace OjamajoBot.Module
                         .GetGuild(guildId)
                         .GetTextChannel(channel_name.Id)
                         .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday, {MentionUtils.MentionUser(Config.Doremi.Id)} chan. " +
-                        $"She has turned into {calculatedDoremiYear} on this year. Let's give some big steak and wonderful birthday wishes for her.");
+                        $"She has turned into {Config.Doremi.birthdayCalculatedYear} on this year. Let's give some big steak and wonderful birthday wishes for her.");
                     }
                 },
                null,
@@ -1139,7 +1133,7 @@ namespace OjamajoBot.Module
                         .GetGuild(guildId)
                         .GetTextChannel(channel_name.Id)
                         .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday, {MentionUtils.MentionUser(Config.Doremi.Id)} chan. " +
-                        $"She has turned into {calculatedDoremiYear} on this year. Let's give some big steak and wonderful birthday wishes for her.",
+                        $"She has turned into {Config.Doremi.birthdayCalculatedYear} on this year. Let's give some big steak and wonderful birthday wishes for her.",
                         embed: new EmbedBuilder()
                         .WithColor(Config.Aiko.EmbedColor)
                         .WithImageUrl(Config.Doremi.DoremiBirthdayCakeImgSrc)
@@ -1164,7 +1158,7 @@ namespace OjamajoBot.Module
                         .GetGuild(guildId)
                         .GetTextChannel(channel_name.Id)
                         .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday, {MentionUtils.MentionUser(Config.Doremi.Id)} chan. " +
-                        $"She has turned into {calculatedDoremiYear} on this year. Let's give some big steak and wonderful birthday wishes for her.");
+                        $"She has turned into {Config.Doremi.birthdayCalculatedYear} on this year. Let's give some big steak and wonderful birthday wishes for her.");
                     }
                 },
                null,
@@ -1185,7 +1179,7 @@ namespace OjamajoBot.Module
                         .GetGuild(guildId)
                         .GetTextChannel(channel_name.Id)
                         .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday, {MentionUtils.MentionUser(Config.Doremi.Id)} chan. " +
-                        $"She has turned into {calculatedDoremiYear} on this year. Let's give some big steak and wonderful birthday wishes for her.");
+                        $"She has turned into {Config.Doremi.birthdayCalculatedYear} on this year. Let's give some big steak and wonderful birthday wishes for her.");
                     }
                 },
                null,
@@ -2576,8 +2570,6 @@ namespace OjamajoBot.Module
         }
 
     }
-
-
 
     [Name("pureleine"), Group("pureleine"), Summary("This category contains all pureleine interactive commands minigame.")]
     public class DoremiPureleineInteractive : InteractiveBase{

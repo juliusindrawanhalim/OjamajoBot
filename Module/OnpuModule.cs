@@ -308,6 +308,20 @@ namespace OjamajoBot.Module
             .Build());
         }
 
+        [Command("mushroom"),Alias("grow","giant","powerup"), Summary("Make Onpu to take the mushroom power up.")]
+        public async Task onpuGrow()
+        {
+            string completePath = $"config/mushroom_onpu/";
+            await ReplyAsync($"**Onpu has grown bigger and bigger from the mushroom power up.**");
+            await Context.Channel.SendFileAsync($"{completePath}mario_mushroom.png");
+            await ReplyAsync($"{Config.Emoji.onpuyay}");
+            await Context.Channel.SendFileAsync($"{completePath}onpusmol.png");
+            await Context.Channel.SendFileAsync($"{completePath}onpumedium.png");
+            await Context.Channel.SendFileAsync($"{completePath}onpubig.png");
+            await Context.Channel.SendFileAsync($"{completePath}onpuxtrabig.png");
+            
+        }
+
         [Command("happy birthday"), Summary("Give Onpu some wonderful birthday wishes. This commands only available on her birthday.")]
         public async Task onpuBirthday(string wishes = "")
         {
@@ -348,6 +362,21 @@ namespace OjamajoBot.Module
             tempReply = listRandomRespond[rndIndex] + Config.Onpu.arrRandomActivity[Config.Onpu.indexCurrentActivity, 1];
 
             await ReplyAsync(tempReply);
+        }
+
+        [Command("hugs"), Alias("hug"), Summary("I will give warm hug for you or <username>")]
+        public async Task HugUser(SocketGuildUser username = null)
+        {
+            if (username == null)
+            {
+                string message = $"*hugs back*. Thank you for the friendly hugs, {MentionUtils.MentionUser(Context.User.Id)} :hugging:";
+                await Context.Channel.SendMessageAsync(message);
+            }
+            else
+            {
+                string message = $"Let's give a warm hugs for {MentionUtils.MentionUser(username.Id)} :hugging:";
+                await Context.Channel.SendMessageAsync(message);
+            }
         }
 
         [Command("random"), Alias("moments"), Summary("Show any random Onpu moments. " +

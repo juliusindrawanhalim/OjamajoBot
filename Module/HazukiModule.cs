@@ -1,15 +1,14 @@
-﻿using System;
+﻿using Discord;
+using Discord.Commands;
+using Discord.WebSocket;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using Discord;
-using Discord.Commands;
-using Discord.WebSocket;
-using Newtonsoft.Json.Linq;
-using OjamajoBot.Service;
 
 namespace OjamajoBot.Module
 {
@@ -48,9 +47,12 @@ namespace OjamajoBot.Module
                 }
                 await ReplyAsync("", embed: output.Build());
                 return;
-            } else {
+            }
+            else
+            {
                 var mod = _commands.Modules.FirstOrDefault(m => m.Name.Replace("Module", "").ToLower() == CategoryOrCommands.ToLower());
-                if (mod != null) {
+                if (mod != null)
+                {
                     var before = mod.Name;
                     output.Title = $"{char.ToUpper(before.First()) + before.Substring(1).ToLower()} Commands";
                     output.Description = $"{mod.Summary}\n" +
@@ -59,7 +61,9 @@ namespace OjamajoBot.Module
                     AddCommands(mod, ref output);
                     await ReplyAsync("", embed: output.Build());
                     return;
-                } else { //search for category/child
+                }
+                else
+                { //search for category/child
                     int ctrFounded = 0;
                     var commandsModulesToList = _commands.Modules.ToList();
                     for (var i = 0; i < commandsModulesToList.Count; i++)
@@ -82,11 +86,14 @@ namespace OjamajoBot.Module
                         }
                     }
 
-                    if (ctrFounded >= 1){
+                    if (ctrFounded >= 1)
+                    {
                         output.Description = $"I found {ctrFounded} command(s) with **{CategoryOrCommands}** keyword:";
                         await ReplyAsync(embed: output.Build());
                         return;
-                    } else {
+                    }
+                    else
+                    {
                         await ReplyAsync($"Sorry, I can't find any related help that you search for. " +
                             $"See `{Config.Hazuki.PrefixParent[0]}help <commands or category>` for command help.");
                         return;
@@ -284,17 +291,20 @@ namespace OjamajoBot.Module
             arrImage["motto"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/4/4d/Mo-hazuki.gif";
             arrImage["dokkan"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/1/19/Hazuki-dokk.gif";
 
-            if (arrImage.ContainsKey(form)){
-                await ReplyAsync("Pretty Witchy Hazuki Chi~\n");
-                await base.ReplyAsync(embed: new EmbedBuilder()
-                    .WithColor(Config.Hazuki.EmbedColor)
-                    .WithImageUrl(arrImage[form])
-                    .Build());
-            } else {
+            if (arrImage.ContainsKey(form))
+            {
+                await ReplyAsync("Pretty Witchy Hazuki Chi~",
+                embed: new EmbedBuilder()
+                .WithColor(Config.Hazuki.EmbedColor)
+                .WithImageUrl(arrImage[form])
+                .Build());
+            }
+            else
+            {
                 await ReplyAsync("I'm sorry, but I can't found that form.");
             }
 
-            
+
         }
 
         [Command("dabzuki"), Alias("dab"), Summary("I will give you some dab <:Dabzuki:658926367286755331>")]
@@ -336,8 +346,8 @@ namespace OjamajoBot.Module
             .Build());
         }
 
-        [Command("happy birthday"),Summary("Give Hazuki some wonderful birthday wishes. This commands only available on her birthday.")]
-        public async Task hazukiBirthday(string wishes="")
+        [Command("happy birthday"), Summary("Give Hazuki some wonderful birthday wishes. This commands only available on her birthday.")]
+        public async Task hazukiBirthday(string wishes = "")
         {
 
             string[] arrResponse = new string[] { $":blush: Thank you for your wonderful birthday wishes, {Context.User.Mention}.",
@@ -349,13 +359,16 @@ namespace OjamajoBot.Module
 
             if (DateTime.Now.ToString("dd") == Config.Hazuki.birthdayDate.ToString("dd") &&
                 DateTime.Now.ToString("MM") == Config.Hazuki.birthdayDate.ToString("MM") &&
-                Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour){
+                Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour)
+            {
                 await ReplyAsync(arrResponse[new Random().Next(0, arrResponse.Length)],
                 embed: new EmbedBuilder()
                 .WithColor(Config.Hazuki.EmbedColor)
                 .WithImageUrl(arrResponseImg[new Random().Next(0, arrResponseImg.Length)])
                 .Build());
-            } else {
+            }
+            else
+            {
                 await ReplyAsync("I'm sorry, but it's not my birthday yet.",
                 embed: new EmbedBuilder()
                 .WithColor(Config.Hazuki.EmbedColor)
@@ -383,12 +396,12 @@ namespace OjamajoBot.Module
         {
             if (username == null)
             {
-                string message = $"*hugs back*. That's very nice, thank you for the warm hugs {MentionUtils.MentionUser(Context.User.Id)} :hugging:";
+                string message = $"*hugs back*. Thank you for the warm hugs {MentionUtils.MentionUser(Context.User.Id)} :hugging:";
                 await Context.Channel.SendMessageAsync(message);
             }
             else
             {
-                string message = $"Paipai Ponpoi Puwapuwa Puu! Let's hug {MentionUtils.MentionUser(username.Id)} :hugging:";
+                string message = $"Let's give a warm hugs for {MentionUtils.MentionUser(username.Id)} :hugging:";
                 await Context.Channel.SendMessageAsync(message);
             }
         }
@@ -406,7 +419,9 @@ namespace OjamajoBot.Module
                 moments = key[randIndex].Name;
                 getDataObject = (JArray)Config.Hazuki.jObjRandomMoments[moments];
                 finalUrl = getDataObject[new Random().Next(0, getDataObject.Count)].ToString();
-            } else {
+            }
+            else
+            {
                 if (Config.Hazuki.jObjRandomMoments.ContainsKey(moments))
                 {
                     getDataObject = (JArray)Config.Hazuki.jObjRandomMoments[moments];
@@ -414,7 +429,7 @@ namespace OjamajoBot.Module
                 }
                 else
                 {
-                    await base.ReplyAsync($"Oops, I can't found the specified moments. " +
+                    await ReplyAsync($"Oops, I can't found the specified moments. " +
                         $"See `{Config.Hazuki.PrefixParent[0]}help random` for commands help.");
                     return;
                 }
@@ -450,13 +465,13 @@ namespace OjamajoBot.Module
             .Build());
         }
 
-        [Command("thank you"), Alias("thanks", "arigatou"),Summary("Say thank you to Hazuki Bot")]
+        [Command("thank you"), Alias("thanks", "arigatou"), Summary("Say thank you to Hazuki Bot")]
         public async Task thankYou([Remainder] string query = "")
         {
             await ReplyAsync($"Your welcome, {MentionUtils.MentionUser(Context.User.Id)}. I'm glad that you're happy with it :smile:");
         }
 
-        [Command("turn"),Alias("transform"), Summary("Transform <username> into <wishes>")]
+        [Command("turn"), Alias("transform"), Summary("Transform <username> into <wishes>")]
         public async Task spells(IUser username, [Remainder] string wishes)
         {
             //await Context.Message.DeleteAsync();
@@ -498,9 +513,9 @@ namespace OjamajoBot.Module
                     Console.Write(e.ToString());
                 }
 
-                
+
             }
-            else if (jokes_type.ToLower() == "unfunny"|| jokes_type.ToLower() == "woosh")
+            else if (jokes_type.ToLower() == "unfunny" || jokes_type.ToLower() == "woosh")
             {
                 string[] arrRandom =
                 {
@@ -539,13 +554,13 @@ namespace OjamajoBot.Module
         [Command("wish"), Summary("I will grant you a <wishes>")]
         public async Task wish([Remainder] string wishes)
         {
-            await ReplyAsync($"Paipai Ponpoi Puwapuwa Puu! {wishes}");
-            await base.ReplyAsync(embed: new EmbedBuilder()
+            await base.ReplyAsync($"Paipai Ponpoi Puwapuwa Puu! {wishes}",
+            embed: new EmbedBuilder()
             .WithColor(Config.Hazuki.EmbedColor)
             .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/b/bc/Hazu-spell.gif")
             .Build());
         }
-    
+
     }
 
     //RANDOM OLD JOKES:
@@ -642,7 +657,7 @@ namespace OjamajoBot.Module
         {
             if (Context.User.Id == Config.Doremi.Id)
             {
-                List<string> listRespond = new List<string>() {$":smile: Sure thing {MentionUtils.MentionUser(Config.Doremi.Id)}-chan, let's go to the shop." };
+                List<string> listRespond = new List<string>() { $":smile: Sure thing {MentionUtils.MentionUser(Config.Doremi.Id)}-chan, let's go to the shop." };
 
                 for (int i = 0; i < listRespondDefault.Count - 1; i++)
                     listRespond.Add(listRespondDefault[i]);
@@ -659,7 +674,7 @@ namespace OjamajoBot.Module
         {
             if (Context.User.Id == Config.Doremi.Id)
             {
-                List<string> listRespond = new List<string>() {$":smile: Sure {MentionUtils.MentionUser(Config.Doremi.Id)}-chan, let's go to your house." };
+                List<string> listRespond = new List<string>() { $":smile: Sure {MentionUtils.MentionUser(Config.Doremi.Id)}-chan, let's go to your house." };
 
                 for (int i = 0; i < listRespondDefault.Count - 1; i++)
                     listRespond.Add(listRespondDefault[i]);
@@ -672,43 +687,43 @@ namespace OjamajoBot.Module
 
     }
 
-        //public class HazukiMusic : ModuleBase<SocketCommandContext>
-        //{
-        //    //a modules stops existing when a command is done executing and services exist aslong we did not dispose them
+    //public class HazukiMusic : ModuleBase<SocketCommandContext>
+    //{
+    //    //a modules stops existing when a command is done executing and services exist aslong we did not dispose them
 
-        //    // Scroll down further for the AudioService.
-        //    // Like, way down
-        //    private readonly AudioService _service;
+    //    // Scroll down further for the AudioService.
+    //    // Like, way down
+    //    private readonly AudioService _service;
 
-        //    // Remember to add an instance of the AudioService
-        //    // to your IServiceCollection when you initialize your bot
-        //    public HazukiMusic(AudioService service)
-        //    {
-        //        _service = service;
-        //    }
+    //    // Remember to add an instance of the AudioService
+    //    // to your IServiceCollection when you initialize your bot
+    //    public HazukiMusic(AudioService service)
+    //    {
+    //        _service = service;
+    //    }
 
-        //    // You *MUST* mark these commands with 'RunMode.Async'
-        //    // otherwise the bot will not respond until the Task times out.
-        //    [Command("join", RunMode = RunMode.Async)]
-        //    public async Task JoinCmd()
-        //    {
-        //        await _service.JoinAudio(Context.Guild, (Context.User as IVoiceState).VoiceChannel);
-        //    }
+    //    // You *MUST* mark these commands with 'RunMode.Async'
+    //    // otherwise the bot will not respond until the Task times out.
+    //    [Command("join", RunMode = RunMode.Async)]
+    //    public async Task JoinCmd()
+    //    {
+    //        await _service.JoinAudio(Context.Guild, (Context.User as IVoiceState).VoiceChannel);
+    //    }
 
-        //    // Remember to add preconditions to your commands,
-        //    // this is merely the minimal amount necessary.
-        //    // Adding more commands of your own is also encouraged.
-        //    [Command("leave", RunMode = RunMode.Async)]
-        //    public async Task LeaveCmd()
-        //    {
-        //        await _service.LeaveAudio(Context.Guild);
-        //    }
+    //    // Remember to add preconditions to your commands,
+    //    // this is merely the minimal amount necessary.
+    //    // Adding more commands of your own is also encouraged.
+    //    [Command("leave", RunMode = RunMode.Async)]
+    //    public async Task LeaveCmd()
+    //    {
+    //        await _service.LeaveAudio(Context.Guild);
+    //    }
 
-        //    [Command("play", RunMode = RunMode.Async)]
-        //    public async Task PlayCmd([Remainder] string song)
-        //    {
-        //        await _service.SendAudioAsync(Context.Guild, Context.Channel, "music/" + song + ".mp3");
-        //    }
+    //    [Command("play", RunMode = RunMode.Async)]
+    //    public async Task PlayCmd([Remainder] string song)
+    //    {
+    //        await _service.SendAudioAsync(Context.Guild, Context.Channel, "music/" + song + ".mp3");
+    //    }
 
-        //}
-    }
+    //}
+}

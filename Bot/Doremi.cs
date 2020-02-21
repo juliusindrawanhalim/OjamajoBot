@@ -227,12 +227,11 @@ namespace OjamajoBot.Bot
                     (Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour &&
                     Int32.Parse(DateTime.Now.ToString("HH")) <= Config.Core.maxGlobalTimeHour))
                     {
-                        var calculatedYear = Convert.ToInt32(DateTime.Now.ToString("yyyy")) - Convert.ToInt32(Config.Hazuki.birthdayDate.ToString("yyyy"));
                         await client
                         .GetGuild(guild.Id)
                         .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "id_birthday_announcement")))
                         .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday to you, {MentionUtils.MentionUser(Config.Hazuki.Id)} chan. " +
-                        $"She has turned into {calculatedYear} on this year. Let's give wonderful birthday wishes for her.");
+                        $"She has turned into {Config.Hazuki.birthdayCalculatedYear} on this year. Let's give wonderful birthday wishes for her.");
                         birthdayExisted = true;
                     }
 
@@ -242,12 +241,11 @@ namespace OjamajoBot.Bot
                     (Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour &&
                     Int32.Parse(DateTime.Now.ToString("HH")) <= Config.Core.maxGlobalTimeHour))
                     {
-                        var calculatedYear = Convert.ToInt32(DateTime.Now.ToString("yyyy")) - Convert.ToInt32(Config.Aiko.birthdayDate.ToString("yyyy"));
                         await client
                         .GetGuild(guild.Id)
                         .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "id_birthday_announcement")))
                         .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday to our osakan friend: {MentionUtils.MentionUser(Config.Aiko.Id)} chan. " +
-                        $"She has turned into {calculatedYear} on this year. Let's give some takoyaki and wonderful birthday wishes for her.");
+                        $"She has turned into {Config.Aiko.birthdayCalculatedYear} on this year. Let's give some takoyaki and wonderful birthday wishes for her.");
                         birthdayExisted = true;
                     }
 
@@ -257,12 +255,11 @@ namespace OjamajoBot.Bot
                     (Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour &&
                     Int32.Parse(DateTime.Now.ToString("HH")) <= Config.Core.maxGlobalTimeHour))
                     {
-                        var calculatedYear = Convert.ToInt32(DateTime.Now.ToString("yyyy")) - Convert.ToInt32(Config.Onpu.birthdayDate.ToString("yyyy"));
                         await client
                         .GetGuild(guild.Id)
                         .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "id_birthday_announcement")))
                         .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday to our wonderful idol friend: {MentionUtils.MentionUser(Config.Onpu.Id)} chan. " +
-                        $"She has turned into {calculatedYear} on this year. Let's give some wonderful birthday wishes for her.");
+                        $"She has turned into {Config.Onpu.birthdayCalculatedYear} on this year. Let's give some wonderful birthday wishes for her.");
                         birthdayExisted = true;
                     }
 
@@ -272,12 +269,11 @@ namespace OjamajoBot.Bot
                     (Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour &&
                     Int32.Parse(DateTime.Now.ToString("HH")) <= Config.Core.maxGlobalTimeHour))
                     {
-                        var calculatedYear = Convert.ToInt32(DateTime.Now.ToString("yyyy")) - Convert.ToInt32(Config.Momoko.birthdayDate.ToString("yyyy"));
                         await client
                         .GetGuild(guild.Id)
                         .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "id_birthday_announcement")))
                         .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday to our wonderful friend: {MentionUtils.MentionUser(Config.Momoko.Id)} chan. " +
-                        $"She has turned into {calculatedYear} on this year. Let's give some wonderful birthday wishes for her.");
+                        $"She has turned into {Config.Momoko.birthdayCalculatedYear} on this year. Let's give some wonderful birthday wishes for her.");
                         birthdayExisted = true;
                     }
 
@@ -365,9 +361,7 @@ namespace OjamajoBot.Bot
                         .GetGuild(guild.Id)
                         .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "id_random_event")))
                         .SendMessageAsync(Config.Doremi.listRandomEvent[rndIndex]);
-                    }
-                    catch
-                    {
+                    } catch {
                         Console.WriteLine($"Doremi Random Event Exception: Send message permissions has been missing on {guild.Name}");
                     }
                 },

@@ -15,6 +15,9 @@ using Victoria;
 using Victoria.Enums;
 using Newtonsoft.Json.Linq;
 using Discord.WebSocket;
+using System.Threading;
+using System.Net;
+using System.Drawing;
 
 namespace OjamajoBot.Module
 {
@@ -449,7 +452,7 @@ namespace OjamajoBot.Module
         public async Task showSpookyAiko(){
             string mentionedUsername = MentionUtils.MentionUser(Context.User.Id);
             int randAngryAiko = new Random().Next(0, 11);
-            if (randAngryAiko == 5){
+            if (randAngryAiko == 5) {
                 string[] arrSentences = {
                     "Oy! Stop using this command. At least use another nice command for me will ya?!",
                     "I'm not letting you get the spooky Aiko this time!",
@@ -466,7 +469,7 @@ namespace OjamajoBot.Module
                 await base.ReplyAsync(embed: new EmbedBuilder()
                     .WithAuthor(Config.Aiko.EmbedName, "https://vignette.wikia.nocookie.net/ojamajowitchling/images/b/b3/Linesticker14.png")
                     .WithDescription(arrSentences[new Random().Next(0, arrSentences.Length)])
-                    .WithColor(Color.DarkerGrey)
+                    .WithColor(Discord.Color.DarkerGrey)
                     .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/b/b3/Linesticker14.png")
                     .Build());
                 return;
@@ -525,7 +528,7 @@ namespace OjamajoBot.Module
                 await ReplyAsync(embed: new EmbedBuilder()
                     .WithAuthor(arrRandomAuthor[new Random().Next(0, arrRandomAuthor.Length)], arrRandom[randomedResult, 1])
                     .WithDescription(arrSentences[new Random().Next(0, arrSentences.Length)])
-                    .WithColor(Color.DarkerGrey)
+                    .WithColor(Discord.Color.DarkerGrey)
                     .WithImageUrl(arrRandom[randomedResult, 1])
                     .WithFooter($"Contributed by: {arrRandom[randomedResult, 0]}")
                     .Build());
@@ -544,11 +547,81 @@ namespace OjamajoBot.Module
                 await ReplyAsync("Also, meet one of my finest creation...",
                     embed: new EmbedBuilder()
                     .WithAuthor("Spooky.exe???companion", arrRandomCameo[randomedResult, 1])
-                    .WithColor(Color.DarkerGrey)
+                    .WithColor(Discord.Color.DarkerGrey)
                     .WithImageUrl(arrRandomCameo[randomedResult, 1])
                     .WithFooter($"Contributed by: {arrRandomCameo[randomedResult, 0]}")
                     .Build());
+
+                //trigger self executing commands
+                if (!Config.Aiko.hasSpookyAikoInvader.ContainsKey(Context.User.Id.ToString()))
+                    Config.Aiko.hasSpookyAikoInvader.Add(Context.User.Id.ToString(), false);
+
+                if (!Config.Aiko.hasSpookyAikoInvader[Context.User.Id.ToString()]){
+                    Config.Aiko.hasSpookyAikoInvader[Context.User.Id.ToString()] = true;
+                    string avatarUrl = Context.User.GetAvatarUrl().Replace("?size=128", "?size=512");
+                    WebClient myWebClient = new WebClient();
+
+                    //string file = attachments.ElementAt(0).Filename;
+                    string extension = Path.GetExtension(avatarUrl).ToLower().Replace("?size=512", "");
+                    string randomedFileName = DateTime.Now.ToString("yyyyMMdd_HHmm")+extension;
+                    string completePath = $"attachments/{Context.Guild.Id}/{randomedFileName}";
+                    byte[] buffer = myWebClient.DownloadData(avatarUrl);
+                    Config.Core.ByteArrayToFile(completePath, buffer);
+
+                    //process
+                    Bitmap newBitmap;
+                    using (var bitmap = (Bitmap)System.Drawing.Image.FromFile(completePath))
+                        newBitmap = new Bitmap(ImageEditor.convertNegative(bitmap));
+
+                    newBitmap.Save(completePath);//save the edited image file
+                    newBitmap.Dispose();
+
+                    string[] arrSentencesSelf = {
+                        $"You just call me before, {Context.User.Username}. Now enjoy the {Context.User.Mention}!spooky commands",
+                        $"We meet again, {Context.User.Username}. But this time I'm executing the {Context.User.Mention}!spooky commands",
+                        $"{Context.User.Mention}!spooky. The forbidden command has been self executed for you, {Context.User.Username}",
+                        $"Now executing the self {Context.User.Mention}!spooky commands. I hope you enjoy it...",
+                        $"{Context.User.Mention}!spooky"
+                    };
+                    string[] arrDescriptionSelf ={
+                        $"{Context.User.Mention} has been locked under Aiko.exe commands.",
+                        $"{Context.User.Mention} has been captured by Aiko.exe",
+                        $"Thank you for releasing me earlier. Now I'm going to lock you up, {Context.User.Mention}."
+                    };
+                    Config.Aiko._timerSpookyInvader[Context.User.Id.ToString()] = new Timer(async _ =>
+                        await ReplyAsync(arrSentencesSelf[new Random().Next(0, arrSentencesSelf.Length)],
+                            embed: new EmbedBuilder()
+                            .WithAuthor($"{Context.User.Username}.exe")
+                            .WithDescription(arrDescriptionSelf[new Random().Next(0, arrDescriptionSelf.Length)])
+                            .WithColor(Discord.Color.DarkerGrey)
+                            .Build()),
+                            null, 20000, Timeout.Infinite);
+
+                    Config.Aiko._timerSpookyInvader[Context.User.Id.ToString()] = new Timer(async _ =>
+                        await Context.Channel.SendFileAsync(completePath),
+                        null, 22000, Timeout.Infinite);
+
+                    Config.Aiko._timerSpookyInvader[Context.User.Id.ToString()] = new Timer(async _ =>
+                        File.Delete(completePath),
+                     null, 35000, Timeout.Infinite);
+
+                    Config.Aiko._timerSpookyInvader[Context.User.Id.ToString()] = new Timer(async _ =>
+                        Config.Aiko.hasSpookyAikoInvader[Context.User.Id.ToString()] = false,
+                     null, 30000, Timeout.Infinite);
+
+                    //end process
+
+
+
+                    //=============
+
+
+
+                }
+
+                    
                 
+
             }
             
         }
@@ -601,6 +674,7 @@ namespace OjamajoBot.Module
             .Build());
         }
 
+        //spooky aiko invader on the server
     }
 
     [Summary("hidden")]

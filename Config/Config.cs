@@ -21,7 +21,7 @@ namespace Config
         public static string headConfigGuildFolder = $"{headConfigFolder}guild/";
         public static string headLogsFolder = "logs/";
         public static string minigameDataFileName = "minigame_data.json";
-        public static string lastUpdate = "Feb 14,2020";
+        public static string lastUpdate = "Feb 20,2020";
         public static JObject jObjWiki;
         public static string wikiParentUrl = "https://ojamajowitchling.fandom.com/wiki/";
         public static int minGlobalTimeHour = 12;
@@ -137,7 +137,8 @@ namespace Config
         public static double Randomeventinterval { get; set; }
         public static Color EmbedColor = Color.Red;
         public static DateTime birthdayDate = DateTime.ParseExact("30/07/1990", "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None);
-        
+        public static int birthdayCalculatedYear = Convert.ToInt32(DateTime.Now.ToString("yyyy")) - Convert.ToInt32(birthdayDate.ToString("yyyy"));
+
         public static string MagicalStageWishes { get; set; }
         public static string[] PrefixParent = {"do!","doremi!",MentionUtils.MentionUser(Id)};
         public static string DoremiBirthdayCakeImgSrc = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/a/a5/-Doremi-.Motto.Ojamajo.Doremi.25.-7C457374-.avi_snapshot_19.25_-2020.02.12_10.34.20-.jpg";
@@ -194,6 +195,7 @@ namespace Config
         public static double Randomeventinterval { get; set; }
         public static Color EmbedColor = Color.Orange;
         public static DateTime birthdayDate = DateTime.ParseExact("14/02/1991", "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None);
+        public static int birthdayCalculatedYear = Convert.ToInt32(DateTime.Now.ToString("yyyy")) - Convert.ToInt32(birthdayDate.ToString("yyyy"));
         public static string[] PrefixParent = { "ha!", "hazuki!", MentionUtils.MentionUser(Id) };
         public static JObject jObjRandomMoments;
 
@@ -229,11 +231,15 @@ namespace Config
         public static double Randomeventinterval { get; set; }
         public static Color EmbedColor = Color.Blue;
         public static DateTime birthdayDate = DateTime.ParseExact("14/11/1990", "dd/MM/yyyy" ,CultureInfo.InvariantCulture, DateTimeStyles.None);
+        public static int birthdayCalculatedYear = Convert.ToInt32(DateTime.Now.ToString("yyyy")) - Convert.ToInt32(birthdayDate.ToString("yyyy"));
         public static string[] PrefixParent = { "ai!", "aiko!", MentionUtils.MentionUser(Id) };
         public static JObject jObjRandomMoments;
 
         public static IDictionary<string, Timer> _timerRandomEvent = new Dictionary<string, Timer>();
         public static IDictionary<string, Timer> _timerBirthdayAnnouncement = new Dictionary<string, Timer>();//birthday reminder timer
+
+        public static IDictionary<string, Boolean> hasSpookyAikoInvader = new Dictionary<string, Boolean>();
+        public static IDictionary<string, Timer> _timerSpookyInvader = new Dictionary<string, Timer>();//spooky aiko self executing timer
 
         public static string[,] arrRandomActivity = {
             {$"at misora elementary school {Emoji.school}","I'm still at school right now."},
@@ -266,6 +272,7 @@ namespace Config
         public static double Randomeventinterval { get; set; }
         public static Color EmbedColor = Color.Purple;
         public static DateTime birthdayDate = DateTime.ParseExact("03/03/1991", "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None);
+        public static int birthdayCalculatedYear = Convert.ToInt32(DateTime.Now.ToString("yyyy")) - Convert.ToInt32(birthdayDate.ToString("yyyy"));
         public static string[] PrefixParent = { "on!", "onpu!", MentionUtils.MentionUser(Id) };
         public static JObject jObjRandomMoments;
 
@@ -300,7 +307,8 @@ namespace Config
         public static double Randomeventinterval { get; set; }
         public static Color EmbedColor = new Color(234, 211, 57);
         public static DateTime birthdayDate = DateTime.ParseExact("06/05/1990", "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None);
-        
+        public static int birthdayCalculatedYear = Convert.ToInt32(DateTime.Now.ToString("yyyy")) - Convert.ToInt32(birthdayDate.ToString("yyyy"));
+
         public static string[] PrefixParent = { "mo!", "momoko!", MentionUtils.MentionUser(Id) };
         public static JObject jObjRandomMoments;
 
@@ -334,6 +342,7 @@ namespace Config
         public static double Randomeventinterval { get; set; }
         public static Color EmbedColor = new Color(185, 70, 75);
         public static DateTime birthdayDate = DateTime.ParseExact("09/09/1994", "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None);
+        public static int birthdayCalculatedYear = Convert.ToInt32(DateTime.Now.ToString("yyyy")) - Convert.ToInt32(birthdayDate.ToString("yyyy"));
 
         public static string[] PrefixParent = { "pop!", MentionUtils.MentionUser(Id) };
         public static JObject jObjRandomMoments;
@@ -357,6 +366,7 @@ namespace Config
         public static string hazuki = "<:Hazuki:651062978854125589>";
         public static string onpu = "<:Onpu:651063415514857492>";
         public static string dabzuki = "<:Dabzuki:658926367286755331>";
+        public static string onpuyay = "<:onpu_yay:679228197123915776>";
         public static string drool = "\uD83E\uDD24";
         public static string steak = "\uD83E\uDD69";
         public static string school = "\uD83C\uDFEB";
