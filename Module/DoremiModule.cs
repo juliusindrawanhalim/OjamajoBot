@@ -940,6 +940,46 @@ namespace OjamajoBot.Module
         }
         //leaving_message
 
+        //set doremi role id
+        [Command("doremi role id"), Summary("Set the default doremi role Id for default mentionable command prefix.")]
+        public async Task setDefaultDoremiRoleId(string roleId)
+        {
+            Config.Guild.setPropertyValue(Context.Guild.Id, "doremi_role_id", roleId);
+            await ReplyAsync($"**Doremi Role Id** has been updated successfully.");
+        }
+
+        //set hazuki role id
+        [Command("hazuki role id"), Summary("Set the default hazuki role Id for default mentionable command prefix.")]
+        public async Task setDefaultHazukiRoleId(string roleId)
+        {
+            Config.Guild.setPropertyValue(Context.Guild.Id, "hazuki_role_id", roleId);
+            await ReplyAsync($"**Hazuki Role Id** has been updated successfully.");
+        }
+
+        //set aiko role id
+        [Command("aiko role id"), Summary("Set the default aiko role Id for default mentionable command prefix.")]
+        public async Task setDefaultAikoRoleId(string roleId)
+        {
+            Config.Guild.setPropertyValue(Context.Guild.Id, "aiko_role_id", roleId);
+            await ReplyAsync($"**Aiko Role Id** has been updated successfully.");
+        }
+
+        //set onpu role id
+        [Command("onpu role id"), Summary("Set the default onpu role Id for default mentionable command prefix.")]
+        public async Task setDefaultOnpuRoleId(string roleId)
+        {
+            Config.Guild.setPropertyValue(Context.Guild.Id, "onpu_role_id", roleId);
+            await ReplyAsync($"**Onpu Role Id** has been updated successfully.");
+        }
+
+        //set momoko role id
+        [Command("momoko role id"), Summary("Set the default momoko role Id for default mentionable command prefix.")]
+        public async Task setDefaultMomokoRoleId(string roleId)
+        {
+            Config.Guild.setPropertyValue(Context.Guild.Id, "momoko_role_id", roleId);
+            await ReplyAsync($"**Momoko Role Id** has been updated successfully.");
+        }
+
         [Command("guildid"), Summary("Give the Server Id")]
         public async Task getGuildId()
         {

@@ -191,35 +191,40 @@ namespace OjamajoBot.Bot
             var context = new SocketCommandContext(client, message);
             if (message.Author.Id == Config.Aiko.Id) return;
             //if (message.Author.IsBot) return; //prevent any bot from sending the commands
-
             int argPos = 0;
-            if (message.HasStringPrefix(Config.Aiko.PrefixParent[0], ref argPos) ||
+            if (Config.Guild.getPropertyValue(context.Guild.Id, "aiko_role_id") != "" &&
+                message.HasStringPrefix($"<@&{Config.Guild.getPropertyValue(context.Guild.Id, "aiko_role_id")}>", ref argPos)){
+                await message.Channel.SendMessageAsync($"Gomen ne {context.User.Username}, it seems you're calling me with the role prefix. " +
+                "Please use the non role prefix.",
+                embed: new EmbedBuilder()
+                .WithAuthor(Config.Aiko.EmbedNameError)
+                .WithColor(Config.Aiko.EmbedColor)
+                .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/55/ODN-EP11-084.png")
+                .Build());
+            } else if (message.HasStringPrefix(Config.Aiko.PrefixParent[0], ref argPos) ||
                 message.HasStringPrefix(Config.Aiko.PrefixParent[1], ref argPos) ||
-                message.HasMentionPrefix(client.CurrentUser, ref argPos))
-            {
+                message.HasMentionPrefix(client.CurrentUser, ref argPos)){
                 var result = await commands.ExecuteAsync(context, argPos, services);
                 switch (result.Error)
                 {
                     case CommandError.BadArgCount:
-                        await context.Channel.SendMessageAsync("Gomen ne, looks like you have missing/too much parameter. " +
-                            $"See `{Config.Aiko.PrefixParent[0]}help <commands or category>`for command help.");
+                        await context.Channel.SendMessageAsync();
                         break;
                     case CommandError.UnknownCommand:
-                        await message.Channel.SendMessageAsync("Gomen ne, I can't seem to understand your commands. " +
-                            $"See `{Config.Aiko.PrefixParent[0]}help <commands or category>`for command help.",
+                        await message.Channel.SendMessageAsync($"Gomen ne {context.User.Username}, I can't seem to understand your commands. " +
+                                $"See `{Config.Aiko.PrefixParent[0]}help <commands or category>`for command help.",
                         embed: new EmbedBuilder()
+                        .WithAuthor(Config.Aiko.EmbedNameError)
                         .WithColor(Config.Aiko.EmbedColor)
-                        //.WithImageUrl("https://38.media.tumblr.com/224f6ca12018eca4ff34895cce9b7649/tumblr_nds3eyKFLH1r98a5go1_500.gif")
                         .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/6/63/ODN-EP3-006.png")
                         .Build());
-                        Console.WriteLine(result.ErrorReason);
                         break;
                     case CommandError.ObjectNotFound:
-                        await message.Channel.SendMessageAsync($"Gomen ne, {result.ErrorReason} " +
+                        await message.Channel.SendMessageAsync($"Gomen ne {context.User.Username}, {result.ErrorReason} " +
                             $"See `{Config.Aiko.PrefixParent[0]}help <commands or category>`for command help.");
                         break;
                     case CommandError.ParseFailed:
-                        await message.Channel.SendMessageAsync($"Gomen ne, {result.ErrorReason} " +
+                        await message.Channel.SendMessageAsync($"Gomen ne {context.User.Username}, {result.ErrorReason} " +
                             $"See `{Config.Aiko.PrefixParent[0]}help <commands or category>`for command help.");
                         break;
                 }

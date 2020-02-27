@@ -161,7 +161,6 @@ namespace OjamajoBot.Bot
                         .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday, {MentionUtils.MentionUser(Config.Doremi.Id)} chan. " +
                         $"She has turned into {Config.Doremi.birthdayCalculatedYear} on this year. Let's give some big steak and wonderful birthday wishes for her.");
                     }
-
                 },
                 null,
                 TimeSpan.FromSeconds(10), //time to wait before executing the timer for the first time
@@ -182,37 +181,46 @@ namespace OjamajoBot.Bot
         private async Task HandleCommandAsync(SocketMessage arg)
         {
             var message = arg as SocketUserMessage;
+            var context = new SocketCommandContext(client, message);
             if (message.Author.Id == Config.Momoko.Id) return;
             //if (message.Author.IsBot) return; //prevent any bot from sending the commands
-
             int argPos = 0;
-            if (message.HasStringPrefix(Config.Momoko.PrefixParent[0], ref argPos) ||
+
+            if (Config.Guild.getPropertyValue(context.Guild.Id, "momoko_role_id") != "" &&
+            message.HasStringPrefix($"<@&{Config.Guild.getPropertyValue(context.Guild.Id, "momoko_role_id")}>", ref argPos)){
+                await message.Channel.SendMessageAsync($"I'm sorry {context.User.Username}, it seems you're calling me with the role prefix. " +
+                "Please try to use the non role prefix.",
+                embed: new EmbedBuilder()
+                .WithAuthor(Config.Momoko.EmbedNameError)
+                .WithColor(Config.Momoko.EmbedColor)
+                .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/55/ODN-EP11-084.png")
+                .Build());
+            } else if(message.HasStringPrefix(Config.Momoko.PrefixParent[0], ref argPos) ||
                 message.HasStringPrefix(Config.Momoko.PrefixParent[1], ref argPos) ||
-                message.HasMentionPrefix(client.CurrentUser, ref argPos))
-            {
-                var context = new SocketCommandContext(client, message);
+                message.HasMentionPrefix(client.CurrentUser, ref argPos)){
                 var result = await commands.ExecuteAsync(context, argPos, services);
                 switch (result.Error)
                 {
                     case CommandError.BadArgCount:
-                        await context.Channel.SendMessageAsync($"Oops, looks like you have missing/too much parameter. " +
-                            $"See `{Config.Momoko.PrefixParent[0]}help` for command help.");
+                        await context.Channel.SendMessageAsync($"I'm sorry {context.User.Username}, looks like you have missing/too much parameter. " +
+                            $"Please see `{Config.Momoko.PrefixParent[0]}help` for command help.");
                         break;
                     case CommandError.UnknownCommand:
-                        await message.Channel.SendMessageAsync($"Sorry, I can't seems to understand your commands. " +
-                            $"See `{Config.Momoko.PrefixParent[0]}help` for command help.",
+                        await message.Channel.SendMessageAsync($"I'm sorry {context.User.Username}, but I can't seems to understand your commands. " +
+                            $"Please see `{Config.Momoko.PrefixParent[0]}help` for command help.",
                         embed: new EmbedBuilder()
+                        .WithAuthor(Config.Momoko.EmbedNameError)
                         .WithColor(Config.Momoko.EmbedColor)
                         .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/52/ODN-EP9-025.png")
                         .Build());
                         Console.WriteLine(result.ErrorReason);
                         break;
                     case CommandError.ObjectNotFound:
-                        await message.Channel.SendMessageAsync($"Oops, {result.ErrorReason} " +
+                        await message.Channel.SendMessageAsync($"I'm sorry {context.User.Username}, {result.ErrorReason} " +
                             $"See `{Config.Momoko.PrefixParent[0]}help` for command help.");
                         break;
                     case CommandError.ParseFailed:
-                        await message.Channel.SendMessageAsync($"Oops, {result.ErrorReason} " +
+                        await message.Channel.SendMessageAsync($"I'm sorry {context.User.Username}, {result.ErrorReason} " +
                             $"See `{Config.Momoko.PrefixParent[0]}help` for command help.");
                         break;
                 }

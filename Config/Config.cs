@@ -21,7 +21,7 @@ namespace Config
         public static string headConfigGuildFolder = $"{headConfigFolder}guild/";
         public static string headLogsFolder = "logs/";
         public static string minigameDataFileName = "minigame_data.json";
-        public static string lastUpdate = "Feb 20,2020";
+        public static string lastUpdate = "Feb 26,2020";
         public static JObject jObjWiki;
         public static string wikiParentUrl = "https://ojamajowitchling.fandom.com/wiki/";
         public static int minGlobalTimeHour = 12;
@@ -184,6 +184,7 @@ namespace Config
         public static int indexCurrentActivity { get; set; }
 
         public static string EmbedName = "Doremi Bot";
+        public static string EmbedNameError = "Doremi 404";
         public static string EmbedAvatarUrl = "https://cdn.discordapp.com/emojis/651062436866293760.png?v=1";
     }
 
@@ -220,6 +221,7 @@ namespace Config
         public static int indexCurrentActivity { get; set; }
 
         public static string EmbedName = "Hazuki Bot";
+        public static string EmbedNameError = "Hazuki 404";
         public static string EmbedAvatarUrl = "https://cdn.discordapp.com/emojis/651062978854125589.png?v=1";
     }
 
@@ -261,6 +263,7 @@ namespace Config
         public static int indexCurrentActivity { get; set; }
 
         public static string EmbedName = "Aiko Bot";
+        public static string EmbedNameError = "Aiko 404";
         public static string EmbedAvatarUrl = "https://cdn.discordapp.com/emojis/651063151948726273.png?v=1";
     }
 
@@ -296,6 +299,7 @@ namespace Config
         public static int indexCurrentActivity { get; set; }
 
         public static string EmbedName = "Onpu Bot";
+        public static string EmbedNameError = "Onpu 404";
         public static string EmbedAvatarUrl = "https://cdn.discordapp.com/emojis/651063415514857492.png?v=1";
     }
 
@@ -330,6 +334,7 @@ namespace Config
         public static int indexCurrentActivity { get; set; }
 
         public static string EmbedName = "Momoko Bot";
+        public static string EmbedNameError = "Momoko 404";
         public static string EmbedAvatarUrl = "https://cdn.discordapp.com/emojis/651063629403127808.png?v=1";
         public static IDictionary<string, Timer> timerProcessBakery = new Dictionary<string, Timer>();
         public static IDictionary<string, Boolean> isRunningBakery = new Dictionary<string, Boolean>();
@@ -357,6 +362,7 @@ namespace Config
         public static int indexCurrentActivity { get; set; }
 
         public static string EmbedName = "Pop Bot";
+        public static string EmbedNameError = "Pop 404";
         public static string EmbedAvatarUrl = "https://cdn.discordapp.com/emojis/651063629403127808.png?v=1";
     }
 

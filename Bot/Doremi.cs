@@ -574,74 +574,54 @@ namespace OjamajoBot.Bot
             if (message.Author.Id == Config.Doremi.Id) return;
             //if (message.Author.IsBot) return; //prevent any bot from sending the commands
 
+            //for copied and pasted if mentioned
             int argPos = 0;
-
-            if (message.HasStringPrefix(Config.Doremi.PrefixParent[0], ref argPos) ||
+            if (Config.Guild.getPropertyValue(context.Guild.Id, "doremi_role_id") != ""&&
+                message.HasStringPrefix($"<@&{Config.Guild.getPropertyValue(context.Guild.Id, "doremi_role_id")}>", ref argPos))
+            {
+                await message.Channel.SendMessageAsync($"Sorry {context.User.Username}, it seems you're calling me with the role prefix. " +
+                            "Please use the non role prefix.",
+                embed: new EmbedBuilder()
+                .WithAuthor(Config.Doremi.EmbedNameError)
+                .WithColor(Config.Doremi.EmbedColor)
+                .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/d/d2/ODN-EP1-011.png")
+                .Build());
+            } else if (message.HasStringPrefix(Config.Doremi.PrefixParent[0], ref argPos) ||
                 message.HasStringPrefix(Config.Doremi.PrefixParent[1], ref argPos) ||
                 message.HasMentionPrefix(client.CurrentUser, ref argPos))
             {
                 var result = await commands.ExecuteAsync(context, argPos, services);
-                string[] splittedString = context.Message.Content.Split("!");
-                //var removedFirstPrefix = string.Join("!",context.Message.Content.Split().Skip(1));
-
-                if (message.ToString().Contains($"<@!{Config.Doremi.Id}> mod")  ||
-                    message.ToString().Contains($"<@!{Config.Doremi.Id}> mod channels") ||
-                    splittedString[1].StartsWith("mod ")||
-                    splittedString[1].StartsWith("mod channels")){ //executed by moderator commands
-                    switch (result.Error)
-                    {
-                        case CommandError.BadArgCount:
-                            await context.Channel.SendMessageAsync($"Moderator Commands: you have missing/many parameter. " +
-                                $"See `{Config.Doremi.PrefixParent[0]}help mod <commands or category>` for commands help.");
-                            break;
-                        case CommandError.UnknownCommand:
-                            await message.Channel.SendMessageAsync($"Moderator Commands: Sorry, I can't seem to understand your commands. " +
-                               $"See `{Config.Doremi.PrefixParent[0]}help mod <commands or category>` for commands help.");
-                            Console.WriteLine(result.ErrorReason);
-                            break;
-                        case CommandError.ObjectNotFound:
-                            await message.Channel.SendMessageAsync($"Moderator Commands: Oops, {result.ErrorReason} " +
-                                $"See `{Config.Doremi.PrefixParent[0]}help mod <commands or category>` for commands help.");
-                            break;
-                        case CommandError.ParseFailed:
-                            await message.Channel.SendMessageAsync(result.ErrorReason);
-                            break;
-                        case CommandError.UnmetPrecondition:
-                            await message.Channel.SendMessageAsync(result.ErrorReason);
-                            break;
-                    }
-                } else {
-                    switch (result.Error)
-                    {
-                        case CommandError.BadArgCount:
-                            await context.Channel.SendMessageAsync("Oops, looks like you have missing/too much parameter. " +
-                                $"See `{Config.Doremi.PrefixParent[0]}help <commands or category>`for commands help.");
-                            break;
-                        case CommandError.UnknownCommand:
-                            await message.Channel.SendMessageAsync("Ehh? I can't seem to understand your commands. " +
-                                $"See `{Config.Doremi.PrefixParent[0]}help <commands or category>` for commands help.",
+                
+                switch (result.Error)
+                {
+                    case CommandError.BadArgCount:
+                        await context.Channel.SendMessageAsync("Oops, looks like you have missing/too much parameter. " +
+                            $"See `{Config.Doremi.PrefixParent[0]}help <commands or category>` for commands help.");
+                        break;
+                    case CommandError.UnknownCommand:
+                        await message.Channel.SendMessageAsync("Sorry, I can't find that commands. " +
+                            $"See `{Config.Doremi.PrefixParent[0]}help <commands or category>` for commands help.",
                             embed: new EmbedBuilder()
+                            .WithAuthor(Config.Doremi.EmbedNameError)
                             .WithColor(Config.Doremi.EmbedColor)
-                            //.WithImageUrl("https://media1.tenor.com/images/3ba7d829ec2fd5300b0f3a16a86a7af8/tenor.gif")
-                            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/c/cb/ODN-EP2-012.png")
+                            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/c/ca/ODN-EP11-041.png")
                             .Build());
-                            break;
-                        case CommandError.ObjectNotFound:
-                            await message.Channel.SendMessageAsync($"Oops, {result.ErrorReason} " +
-                                $"See `{Config.Doremi.PrefixParent[0]}help <commands or category>` for commands help.");
-                            break;
-                        case CommandError.ParseFailed:
-                            await message.Channel.SendMessageAsync($"Oops, {result.ErrorReason} " +
-                                $"See `{Config.Doremi.PrefixParent[0]}help <commands or category>` for commands help.");
-                            break;
-                        case CommandError.Exception:
-                            // This is what happens instead of the catch block.
-                            //await message.Channel.SendMessageAsync($"Sorry, I can't seem to understand your commands. See ``doremi help`` for more info.");
-                            Console.WriteLine(result.ErrorReason);
-                            break;
-                    }
+                        break;
+                    case CommandError.ObjectNotFound:
+                        await message.Channel.SendMessageAsync($"Oops, {result.ErrorReason} " +
+                            $"See `{Config.Doremi.PrefixParent[0]}help <commands or category>` for commands help.");
+                        break;
+                    case CommandError.ParseFailed:
+                        await message.Channel.SendMessageAsync($"Oops, {result.ErrorReason} " +
+                            $"See `{Config.Doremi.PrefixParent[0]}help <commands or category>` for commands help.");
+                        break;
+                    case CommandError.Exception:
+                        // This is what happens instead of the catch block.
+                        //await message.Channel.SendMessageAsync($"Sorry, I can't seem to understand your commands. See ``doremi help`` for more info.");
+                        Console.WriteLine(result.ErrorReason);
+                        break;
                 }
-
+                
                 return;
             }
         }

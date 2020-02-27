@@ -179,15 +179,23 @@ namespace OjamajoBot.Bot
         private async Task HandleCommandAsync(SocketMessage arg)
         {
             var message = arg as SocketUserMessage;
+            var context = new SocketCommandContext(client, message);
             if (message.Author.Id == Config.Onpu.Id) return;
             //if (message.Author.IsBot) return; //prevent any bot from sending the commands
 
             int argPos = 0;
-            if (message.HasStringPrefix(Config.Onpu.PrefixParent[0], ref argPos) ||
+            if (Config.Guild.getPropertyValue(context.Guild.Id, "onpu_role_id") != "" &&
+            message.HasStringPrefix($"<@&{Config.Guild.getPropertyValue(context.Guild.Id, "onpu_role_id")}>", ref argPos)){
+                await message.Channel.SendMessageAsync($"Sorry {context.User.Username}, it seems you're calling me with the role prefix. " +
+                "Please try to use the non role prefix.",
+                embed: new EmbedBuilder()
+                .WithAuthor(Config.Onpu.EmbedNameError)
+                .WithColor(Config.Onpu.EmbedColor)
+                .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/55/ODN-EP11-084.png")
+                .Build());
+            } else if (message.HasStringPrefix(Config.Onpu.PrefixParent[0], ref argPos) ||
                 message.HasStringPrefix(Config.Onpu.PrefixParent[1], ref argPos) ||
-                message.HasMentionPrefix(client.CurrentUser, ref argPos))
-            {
-                var context = new SocketCommandContext(client, message);
+                message.HasMentionPrefix(client.CurrentUser, ref argPos)) {
                 var result = await commands.ExecuteAsync(context, argPos, services);
                 switch (result.Error)
                 {
@@ -199,10 +207,10 @@ namespace OjamajoBot.Bot
                         await message.Channel.SendMessageAsync("Onpu can't seems to understand your commands. " +
                             $"See `{Config.Onpu.PrefixParent[0]}help <commands or category>` for command help.",
                         embed: new EmbedBuilder()
+                        .WithAuthor(Config.Onpu.EmbedNameError)
                         .WithColor(Config.Onpu.EmbedColor)
                         .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/7/7e/ODN-EP11-028.png")
                         .Build());
-                        Console.WriteLine(result.ErrorReason);
                         break;
                     case CommandError.ObjectNotFound:
                         await message.Channel.SendMessageAsync($"Onpu has noticed an error: {result.ErrorReason} " +

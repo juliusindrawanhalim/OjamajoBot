@@ -46,6 +46,26 @@ namespace Config
                 if (!guildConfig.ContainsKey("user_birthday"))
                     guildConfig.Add(new JProperty("user_birthday", new JObject()));
 
+                //doremi_role_id
+                if (!guildConfig.ContainsKey("doremi_role_id"))
+                    guildConfig.Add(new JProperty("doremi_role_id", ""));
+
+                //hazuki_role_id
+                if (!guildConfig.ContainsKey("hazuki_role_id"))
+                    guildConfig.Add(new JProperty("hazuki_role_id", ""));
+
+                //aiko_role_id
+                if (!guildConfig.ContainsKey("aiko_role_id"))
+                    guildConfig.Add(new JProperty("aiko_role_id", ""));
+
+                //onpu_role_id
+                if (!guildConfig.ContainsKey("onpu_role_id"))
+                    guildConfig.Add(new JProperty("onpu_role_id", ""));
+
+                //momoko_role_id
+                if (!guildConfig.ContainsKey("momoko_role_id"))
+                    guildConfig.Add(new JProperty("momoko_role_id", ""));
+
                 File.WriteAllText($"{Core.headConfigGuildFolder}{id_guild}/{id_guild}.json", guildConfig.ToString());
 
             } else { //create json file if it's not existed
@@ -54,6 +74,11 @@ namespace Config
                     new JProperty("id_random_event", ""),
                     new JProperty("id_birthday_announcement", ""),
                     new JProperty("user_leaving_notification", "0"),
+                    new JProperty("doremi_role_id", ""),
+                    new JProperty("hazuki_role_id", ""),
+                    new JProperty("aiko_role_id", ""),
+                    new JProperty("onpu_role_id", ""),
+                    new JProperty("momoko_role_id", ""),
                     new JProperty("user_birthday", new JObject()));
 
                 File.WriteAllText($"{Core.headConfigGuildFolder}{id_guild}/{id_guild}.json", guildConfig.ToString());

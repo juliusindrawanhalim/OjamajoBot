@@ -188,33 +188,40 @@ namespace OjamajoBot.Bot
             //if (message.Author.IsBot) return; //prevent any bot from sending the commands
 
             int argPos = 0;
-            if (message.HasStringPrefix(Config.Hazuki.PrefixParent[0], ref argPos) ||
+            if (Config.Guild.getPropertyValue(context.Guild.Id, "hazuki_role_id") != "" &&
+                message.HasStringPrefix($"<@&{Config.Guild.getPropertyValue(context.Guild.Id, "hazuki_role_id")}>", ref argPos)){
+                await message.Channel.SendMessageAsync($"I'm sorry {context.User.Username}, it seems you're calling me with the role prefix. " +
+                            "Please use the non role prefix.",
+                    embed: new EmbedBuilder()
+                    .WithAuthor(Config.Hazuki.EmbedNameError)
+                    .WithColor(Config.Hazuki.EmbedColor)
+                    .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/8/82/ODN-EP6-078.png")
+                    .Build());
+            } else if (message.HasStringPrefix(Config.Hazuki.PrefixParent[0], ref argPos) ||
                 message.HasStringPrefix(Config.Hazuki.PrefixParent[1], ref argPos) ||
                 message.HasMentionPrefix(client.CurrentUser, ref argPos)){
-                
                 var result = await commands.ExecuteAsync(context, argPos, services);
                 switch (result.Error)
                 {
                     case CommandError.BadArgCount:
-                        await context.Channel.SendMessageAsync("I'm sorry, looks like you have missing/too much parameter. " +
+                        await context.Channel.SendMessageAsync($"I'm sorry {context.User.Username}, looks like you have missing/too much parameter. " +
                             $"See `{Config.Hazuki.PrefixParent[0]}help <commands or category>`for commands help.");
                         break;
                     case CommandError.UnknownCommand:
-                        await message.Channel.SendMessageAsync("I'm sorry, I can't seem to understand your commands. " +
+                        await message.Channel.SendMessageAsync($"I'm sorry {context.User.Username}, I can't seem to understand your commands. " +
                             $"See `{Config.Hazuki.PrefixParent[0]}help <commands or category>`for commands help.",
-                        embed: new EmbedBuilder()
-                        .WithColor(Config.Hazuki.EmbedColor)
-                        //.WithImageUrl("https://33.media.tumblr.com/28c2441a5655ecb1bd23df8275f3598f/tumblr_nfkjtbSQZg1r98a5go1_500.gif")
-                        .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/8/82/ODN-EP6-078.png")
-                        .Build());
-                        Console.WriteLine(result.ErrorReason);
+                            embed: new EmbedBuilder()
+                            .WithColor(Config.Hazuki.EmbedColor)
+                            //.WithImageUrl("https://33.media.tumblr.com/28c2441a5655ecb1bd23df8275f3598f/tumblr_nfkjtbSQZg1r98a5go1_500.gif")
+                            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/8/82/ODN-EP6-078.png")
+                            .Build());
                         break;
                     case CommandError.ObjectNotFound:
-                        await message.Channel.SendMessageAsync($"Oops, {result.ErrorReason} " +
+                        await message.Channel.SendMessageAsync($"Sorry {context.User.Username}, {result.ErrorReason} " +
                             $"See `{Config.Hazuki.PrefixParent[0]}help <commands or category>`for commands help.");
                         break;
                     case CommandError.ParseFailed:
-                        await message.Channel.SendMessageAsync($"Oops, {result.ErrorReason} " +
+                        await message.Channel.SendMessageAsync($"Sorry {context.User.Username}, {result.ErrorReason} " +
                             $"See `{Config.Hazuki.PrefixParent[0]}help <commands or category>`for commands help.");
                         break;
                 }
