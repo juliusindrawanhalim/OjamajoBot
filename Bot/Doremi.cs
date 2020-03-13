@@ -218,8 +218,7 @@ namespace OjamajoBot.Bot
             {
                 Config.Doremi._timerBirthdayAnnouncement[guild.Id.ToString()] = new Timer(async _ =>
                 {
-                    var guildId = guild.Id;
-                    DateTime date; Boolean birthdayExisted = false;
+                    var guildId = guild.Id; DateTime date; Boolean birthdayExisted = false;
 
                     //announce hazuki birthday
                     if (DateTime.Now.ToString("dd") == Config.Hazuki.birthdayDate.ToString("dd") &&
@@ -317,9 +316,7 @@ namespace OjamajoBot.Bot
                                     birthdayExisted = true;
                                 }
                             }
-                        }
-                        catch (Exception e)
-                        {
+                        } catch {
                             //guildJsonFile.Property(key).Remove();
                             //File.WriteAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json", guildJsonFile.ToString());
                         }
@@ -521,7 +518,7 @@ namespace OjamajoBot.Bot
                 using (StreamWriter sw = (File.Exists($"logs/{textchannel.Guild.Id}/{DateTime.Now.ToString("yyyy_MM_dd")}.txt")) ? File.AppendText($"logs/{textchannel.Guild.Id}/{DateTime.Now.ToString("yyyy_MM_dd")}.txt") : 
                     File.CreateText($"logs/{textchannel.Guild.Id}/{DateTime.Now.ToString("yyyy_MM_dd")}.txt"))
                     sw.WriteLine($"[{DateTime.Now.ToString("yyyy/MM/dd HH:mm")}] {usrmsg.Author.Mention}{usrmsg.Author.Username} : {message}");
-            } catch(Exception e) {}
+            } catch {}
             
             return Task.CompletedTask;
         }
@@ -545,7 +542,7 @@ namespace OjamajoBot.Bot
                 using (StreamWriter sw = (File.Exists($"logs/{textchannel.Guild.Id}/{DateTime.Now.ToString("yyyy_MM_dd")}.txt")) ? File.AppendText($"logs/{textchannel.Guild.Id}/{DateTime.Now.ToString("yyyy_MM_dd")}.txt") :
                     File.CreateText($"logs/{textchannel.Guild.Id}/{DateTime.Now.ToString("yyyy_MM_dd")}.txt"))
                     sw.WriteLine($"[{DateTime.Now.ToString("yyyy/MM/dd HH:mm")}] {usrmsg.Author.Mention}{usrmsg.Author.Username} : [update]{after}");
-            } catch(Exception e) {}
+            } catch {}
             return Task.CompletedTask;
             //using (StreamWriter w = File.AppendText($"attachments/{Context.Guild.Id}/feedback_{Context.Guild.Id}.txt"))
             //    w.WriteLine($"[{DateTime.Now.ToString("MM/dd/yyyy HH:mm")}]{message}:{feedback_message}");

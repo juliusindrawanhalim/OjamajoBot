@@ -35,7 +35,7 @@ namespace OjamajoBot.Module
         //[Command]
         //public async Task defaultMention()
         //{
-        //    string tempReply = "";
+        //    string tempReply = "";w
         //    List<string> listRandomRespond = new List<string>() {
         //        $"Hii hii {MentionUtils.MentionUser(Context.User.Id)}! ",
         //        $"Hello {MentionUtils.MentionUser(Context.User.Id)}! ",
@@ -364,7 +364,7 @@ namespace OjamajoBot.Module
         }
 
         [Command("happy birthday"), Summary("Give Doremi some wonderful birthday wishes. This commands only available on her birthday.")]
-        public async Task doremiBirthday(string wishes = "")
+        public async Task doremiBirthday([Remainder] string wishes = "")
         {
             string[] arrResponse = new string[] { $":smile: Oh, you actually remembered my birthday. Thank you, {Context.User.Mention}.",
                 $":smile: Thank you {Context.User.Mention}, for the wonderful birthday wishes."};
@@ -474,7 +474,7 @@ namespace OjamajoBot.Module
                 .Build());
 
             }
-            catch (Exception e)
+            catch
             {
                 //Console.Write(e.ToString());
             }
@@ -583,7 +583,7 @@ namespace OjamajoBot.Module
                 //    return;
                 //}
             }
-            catch (Exception e)
+            catch 
             {
                 //Console.WriteLine(e.ToString());
             }
@@ -636,7 +636,7 @@ namespace OjamajoBot.Module
         }
 
         [Command("wish"), Summary("I will grant you a <wishes>")]
-        public async Task wish([Remainder] string wishes)
+        public async Task Wish([Remainder] string wishes)
         {
             await ReplyAsync($"Pirika pirilala poporina peperuto! {wishes}",
             embed: new EmbedBuilder()
@@ -730,7 +730,6 @@ namespace OjamajoBot.Module
         [Command("show"), Summary("Show all wonderful people that will have birthday on this month.")]
         public async Task showAllBirthdayDate(){
             DateTime date; Boolean birthdayExisted = false;
-            var thisMonth = DateTime.Now.ToString("MMMM");
             EmbedBuilder builder = new EmbedBuilder();
             var guildId = Context.Guild.Id;
             
@@ -926,18 +925,32 @@ namespace OjamajoBot.Module
     }
 
     [Name("mod"), Group("mod"), Summary("Basic moderator commands. Require `manage channels` permission")]
-    [RequireUserPermission(ChannelPermission.ManageChannels,
-        ErrorMessage = "Oops, You need to have the `manage channels` permission to use this command",
-        NotAGuildErrorMessage = "Oops, You need to have the `manage channels` permission to use this command")]
+    [RequireBotPermission(GuildPermission.ManageChannels,
+        ErrorMessage = "It seems I don't have need to have the `manage channels` permission :(",
+        NotAGuildErrorMessage = "It seems I don't have need to have the `manage channels` permission :(")]
+    [RequireBotPermission(GuildPermission.ManageRoles,
+        ErrorMessage = "It seems I don't have need to have the `manage roles` permission :(",
+        NotAGuildErrorMessage = "It seems I don't have need to have the `manage roles` permission :(")]
+    [RequireUserPermission(GuildPermission.ManageChannels,
+        ErrorMessage = "Sorry, you need the `manage channels` permission",
+        NotAGuildErrorMessage = "Sorry, you need the `manage channels` permission")]
+    [RequireUserPermission(GuildPermission.ManageRoles,
+        ErrorMessage = "Sorry, you need the `manage roles` permission",
+        NotAGuildErrorMessage = "Sorry, you need the `manage roles` permission") ]
     public class DoremiModerator : ModuleBase<SocketCommandContext>
     {
         [Command("user leave"), Summary("Set the leaving user notifications with **off** or **on**.")]
-        public async Task assignUserLeavingNotification(string settings)
-        {
+        public async Task assignUserLeavingNotification(string settings){
             string replacedsettings = settings.Replace("off", "0").Replace("on", "1");
             Config.Guild.setPropertyValue(Context.Guild.Id, "user_leaving_notification", replacedsettings);
             await ReplyAsync($"**Leaving User Messages** has been turned **{settings}**.");
         }
+
+        //[Command("role"), Summary("Set the role that can be set/assignable to anyone. This require the `manage role` permission.")]
+        //public async Task configureAssignableRole(string role,SocketGuild guild){
+            
+        //}
+
         //leaving_message
 
         //set doremi role id

@@ -21,7 +21,7 @@ namespace Config
         public static string headConfigGuildFolder = $"{headConfigFolder}guild/";
         public static string headLogsFolder = "logs/";
         public static string minigameDataFileName = "minigame_data.json";
-        public static string lastUpdate = "Feb 26,2020";
+        public static string lastUpdate = "March 30,2020";
         public static JObject jObjWiki;
         public static string wikiParentUrl = "https://ojamajowitchling.fandom.com/wiki/";
         public static int minGlobalTimeHour = 12;

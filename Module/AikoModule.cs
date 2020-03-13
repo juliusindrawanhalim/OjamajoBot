@@ -331,7 +331,8 @@ namespace OjamajoBot.Module
                 "This is not my final form!", "Pameruku raruku rarirori poppun! Turn me make me bigger!",
                 "Meet the gigantamax Aiko!","Aiko has been gigantamax-ed!",
                 "Gigantamax Aiko ready for action!", "Muahaha! I have been gigantamax-ed!",
-                "A wishing star has shined upon Aiko's forehead.\nAiko has been gigantamax-ed"
+                "A wishing star has shined upon Aiko's forehead.\nAiko has been gigantamax-ed",
+                "Shiny Forehead Aiko has appeared!"
             };
 
             await ReplyAsync(embed: new EmbedBuilder()
@@ -344,7 +345,7 @@ namespace OjamajoBot.Module
         }
 
         [Command("happy birthday"), Summary("Give Aiko some wonderful birthday wishes. This commands only available on her birthday.")]
-        public async Task aikoBirthday(string wishes = "")
+        public async Task aikoBirthday([Remainder] string wishes = "")
         {
             string[] arrResponse = new string[] { $":smile: Thank you for your wonderful birthday wishes, {Context.User.Mention}.",
                 $":smile: Thank you {Context.User.Mention}, for the wonderful birthday wishes."};
@@ -373,14 +374,13 @@ namespace OjamajoBot.Module
         [Command("hello"), Summary("Yo, I will greet you up")]
         public async Task aikoHello()
         {
-            string tempReply = "";
             List<string> listRandomRespond = new List<string>() {
                 $"Yo {MentionUtils.MentionUser(Context.User.Id)}! ",
                 $"Hi {MentionUtils.MentionUser(Context.User.Id)}! ",
             };
 
             int rndIndex = new Random().Next(0, listRandomRespond.Count);
-            tempReply = listRandomRespond[rndIndex] + Config.Aiko.arrRandomActivity[Config.Aiko.indexCurrentActivity, 1];
+            string tempReply = listRandomRespond[rndIndex] + Config.Aiko.arrRandomActivity[Config.Aiko.indexCurrentActivity, 1];
 
             await ReplyAsync(tempReply);
         }
@@ -542,9 +542,19 @@ namespace OjamajoBot.Module
                     {"Letter Three","https://cdn.discordapp.com/attachments/643722270447239169/669606154946740224/Chop_Harukaze.png"},
                     {"Odd Meat","https://cdn.discordapp.com/attachments/643722270447239169/669618799762210846/unknown.png"},
                     {"Odd Meat","https://cdn.discordapp.com/attachments/421584908130189312/622528776747876362/cursed_majo_rika-export.gif"},
-                    {"вештица","https://cdn.discordapp.com/attachments/643722270447239169/674417584325787676/creepyrika3.gif"}
+                    {"вештица","https://cdn.discordapp.com/attachments/643722270447239169/674417584325787676/creepyrika3.gif"},
+                    {"Odd Meat","https://cdn.discordapp.com/attachments/644383823286763544/683436748960694308/gronpu.png"},
+                    {"Odd Meat","https://cdn.discordapp.com/attachments/644383823286763544/683462806687055894/bluberraiko.png"},
+                    {"Odd Meat","https://cdn.discordapp.com/attachments/644383823286763544/680524562357944403/cursed_80cgt3.gif"},
+                    {"Nathan","https://cdn.discordapp.com/attachments/643722270447239169/679391488005767188/20200218_131725.jpg" },
+                    {"Letter Three","https://cdn.discordapp.com/attachments/643722270447239169/687159873682669722/unknown.png"}
                 };
 
+                string[] arrRandomTextCameo = {
+                    "Also, meet one of my finest creation...",
+                    "Spooky aiko companion has arrived",
+                    "Hello from spooky aiko??? companion"
+                };
 
                 int randomedResultCameo = new Random().Next(0, arrRandomCameo.GetLength(0));
                 await ReplyAsync("Also, meet one of my finest creation...",
@@ -555,7 +565,7 @@ namespace OjamajoBot.Module
                     .WithFooter($"Contributed by: {arrRandomCameo[randomedResultCameo, 0]}")
                     .Build());
 
-                if (new Random().Next(0, 10) == 5){
+                if (new Random().Next(0, 2) == 1){
                     //trigger self executing commands
                     if (!Config.Aiko.hasSpookyAikoInvader.ContainsKey(Context.User.Id.ToString()))
                         Config.Aiko.hasSpookyAikoInvader.Add(Context.User.Id.ToString(), false);

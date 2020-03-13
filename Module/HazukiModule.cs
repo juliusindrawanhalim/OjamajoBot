@@ -347,9 +347,8 @@ namespace OjamajoBot.Module
         }
 
         [Command("happy birthday"), Summary("Give Hazuki some wonderful birthday wishes. This commands only available on her birthday.")]
-        public async Task hazukiBirthday(string wishes = "")
+        public async Task hazukiBirthday([Remainder]string wishes = "")
         {
-
             string[] arrResponse = new string[] { $":blush: Thank you for your wonderful birthday wishes, {Context.User.Mention}.",
                 $":blush: Thank you {Context.User.Mention}, for the wonderful birthday wishes."};
             string[] arrResponseImg = new string[]{
@@ -552,7 +551,7 @@ namespace OjamajoBot.Module
         }
 
         [Command("wish"), Summary("I will grant you a <wishes>")]
-        public async Task wish([Remainder] string wishes)
+        public async Task Wish([Remainder] string wishes)
         {
             await base.ReplyAsync($"Paipai Ponpoi Puwapuwa Puu! {wishes}",
             embed: new EmbedBuilder()

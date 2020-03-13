@@ -323,7 +323,7 @@ namespace OjamajoBot.Module
         }
 
         [Command("happy birthday"), Summary("Give Onpu some wonderful birthday wishes. This commands only available on her birthday.")]
-        public async Task onpuBirthday(string wishes = "")
+        public async Task onpuBirthday([Remainder]string wishes = "")
         {
             string[] arrResponse = new string[] { $":smile: Thank you {Context.User.Mention} for the wonderful birthday wishes.",
                 $":smile: Thank you {Context.User.Mention}, for giving me the wonderful birthday wishes."};

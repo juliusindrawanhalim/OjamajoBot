@@ -287,14 +287,13 @@ namespace OjamajoBot.Module
         [Command("hello"), Summary("Hello, I will greet you up")]
         public async Task popHello()
         {
-            string tempReply = "";
             List<string> listRandomRespond = new List<string>() {
                 $"Hello there, {MentionUtils.MentionUser(Context.User.Id)}. ",
                 $"Hey, {MentionUtils.MentionUser(Context.User.Id)}. ",
             };
 
             int rndIndex = new Random().Next(0, listRandomRespond.Count);
-            tempReply = listRandomRespond[rndIndex] + Config.Pop.arrRandomActivity[Config.Pop.indexCurrentActivity, 1];
+            string tempReply = listRandomRespond[rndIndex] + Config.Pop.arrRandomActivity[Config.Pop.indexCurrentActivity, 1];
 
             await ReplyAsync(tempReply);
         }
@@ -376,7 +375,7 @@ namespace OjamajoBot.Module
         }
 
         [Command("wish"), Summary("I will grant you a <wishes>")]
-        public async Task wish([Remainder] string wishes)
+        public async Task Wish([Remainder] string wishes)
         {
             await ReplyAsync($"Pipitto Puritto Puritan Peperuto! {wishes}");
             await base.ReplyAsync(embed: new EmbedBuilder()
