@@ -176,6 +176,7 @@ namespace OjamajoBot.Bot
             await commands.AddModuleAsync(typeof(MomokoMagicalStageModule), services);
             await commands.AddModuleAsync(typeof(MomokoRandomEventModule), services);
             await commands.AddModuleAsync(typeof(MomokoBakery), services);
+            await commands.AddModuleAsync(typeof(MomokoMinigameInteractive), services);
         }
 
         private async Task HandleCommandAsync(SocketMessage arg)

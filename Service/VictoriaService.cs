@@ -67,32 +67,6 @@ namespace OjamajoBot.Service
         }
 
         /// Handling track end event for auto play. (original)
-        //private async Task OnTrackEnded(TrackEndedEventArgs args)
-        //{
-
-        //    if (!args.Reason.ShouldPlayNext())
-        //        return;
-
-        //    var player = args.Player;
-
-        //    if (!player.Queue.TryDequeue(out var queueable))
-        //    {
-        //        await player.TextChannel.SendMessageAsync("No more tracks to play.");
-        //        return;
-        //    }   
-
-        //    if (!(queueable is LavaTrack track))
-        //    {
-        //        await player.TextChannel.SendMessageAsync("Next item in queue is not a track.");
-        //        return;
-        //    }
-
-        //    await args.Player.PlayAsync(track);
-        //    await args.Player.TextChannel.SendMessageAsync(
-        //        $"{args.Reason}: {args.Track.Title}\n" +
-        //        $"Now playing: {track.Title}");
-        //}
-
         private async Task OnTrackEnded(TrackEndedEventArgs args)
         {
 
@@ -100,11 +74,9 @@ namespace OjamajoBot.Service
                 return;
 
             var player = args.Player;
-            player.Queue.Enqueue(args.Track);
 
             if (!player.Queue.TryDequeue(out var queueable))
             {
-                player.Queue.Enqueue(args.Track);
                 await player.TextChannel.SendMessageAsync("No more tracks to play.");
                 return;
             }
@@ -118,8 +90,38 @@ namespace OjamajoBot.Service
             await args.Player.PlayAsync(track);
             await args.Player.TextChannel.SendMessageAsync(
                 $"{args.Reason}: {args.Track.Title}\n" +
-                $"\u25B6 Now playing: {track.Title}");
+                $"Now playing: {track.Title}");
         }
+
+        //backup
+        //private async Task OnTrackEnded(TrackEndedEventArgs args)
+        //{
+
+        //    if (!args.Reason.ShouldPlayNext())
+        //        return;
+
+        //    var player = args.Player;
+        //    player.Queue.Enqueue(args.Track);
+
+        //    if (!player.Queue.TryDequeue(out var queueable))
+        //    {
+        //        player.Queue.Enqueue(args.Track);
+        //        await player.TextChannel.SendMessageAsync("No more tracks to play.");
+        //        return;
+        //    }
+
+        //    if (!(queueable is LavaTrack track))
+        //    {
+        //        await player.TextChannel.SendMessageAsync("Next item in queue is not a track.");
+        //        return;
+        //    }
+
+        //    await args.Player.PlayAsync(track);
+        //    await args.Player.TextChannel.SendMessageAsync(
+        //        $"{args.Reason}: {args.Track.Title}\n" +
+        //        $"\u25B6 Now playing: {track.Title}");
+        //}
+        //end backup
 
         //private async Task OnTrackEnded(TrackEndedEventArgs args)
         //{

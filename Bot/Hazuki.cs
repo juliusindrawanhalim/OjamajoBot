@@ -13,6 +13,7 @@ using Discord.WebSocket;
 using OjamajoBot.Module;
 using OjamajoBot.Service;
 using System.Threading;
+using Discord.Addons.Interactive;
 
 namespace OjamajoBot.Bot
 {
@@ -38,6 +39,7 @@ namespace OjamajoBot.Bot
             services = new ServiceCollection()
                 .AddSingleton(client)
                 .AddSingleton(commands)
+                .AddSingleton(new InteractiveService(client))
                 .AddSingleton(audioservice)
                 .BuildServiceProvider();
 
@@ -177,6 +179,7 @@ namespace OjamajoBot.Bot
             await commands.AddModuleAsync(typeof(HazukiModule), services);
             await commands.AddModuleAsync(typeof(HazukiMagicalStageModule), services);
             await commands.AddModuleAsync(typeof(HazukiRandomEventModule), services);
+            await commands.AddModuleAsync(typeof(HazukiMinigameInteractive), services);
             //await commands.AddModuleAsync(typeof(HazukiMusic), services);
         }
 

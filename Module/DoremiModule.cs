@@ -6,6 +6,7 @@ using Newtonsoft.Json.Linq;
 using OjamajoBot.Service;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -325,11 +326,10 @@ namespace OjamajoBot.Module
             arrImage["dokkan"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/c/c4/Doremi-dokk.gif";
 
             if (arrImage.ContainsKey(form)){
-                await ReplyAsync("Pretty Witchy Doremi Chi~\n");
-                await ReplyAsync(embed: new EmbedBuilder()
-                    .WithColor(Config.Doremi.EmbedColor)
-                    .WithImageUrl(arrImage[form])
-                    .Build());
+                await ReplyAsync("Pretty Witchy Doremi Chi~\n", embed: new EmbedBuilder()
+                .WithColor(Config.Doremi.EmbedColor)
+                .WithImageUrl(arrImage[form])
+                .Build());
             } else {
                 await ReplyAsync($"Sorry, I can't found that form. See `{Config.Doremi.PrefixParent[0]} help change` for help details");
             }
@@ -452,6 +452,58 @@ namespace OjamajoBot.Module
             }
         }
 
+        [Command("dorememes"), Summary("I will give you some random doremi related memes. " +
+            "You can fill <contributor> with one of the available to make it spesific contributor.\nUse `list` as parameter to list all people who have contribute the dorememes.")]
+        public async Task givedorememe([Remainder]string contributor = "")
+        {
+            string finalUrl = ""; JArray getDataObject = null;
+            contributor = contributor.ToLower();
+
+            if (contributor == "list")
+            {
+                var key = Config.Doremi.jobjectdorememes.Properties().ToList();
+                string listedContributor = "";
+                for (int i = 0; i < key.Count; i++) listedContributor += $"{key[i].Name}\n";
+
+                await base.ReplyAsync(embed: new EmbedBuilder()
+                    .WithTitle("Dorememes listed contributor")
+                    .WithDescription("Thank you to all of these peoples that have contributed the dorememes:")
+                    .AddField("Contributor in List", listedContributor)
+                    .WithColor(Config.Doremi.EmbedColor)
+                    .Build());
+                return;
+            }
+            else if (contributor == "")
+            {
+                var key = Config.Doremi.jobjectdorememes.Properties().ToList();
+                var randIndex = new Random().Next(0, key.Count);
+                contributor = key[randIndex].Name;
+                getDataObject = (JArray)Config.Doremi.jobjectdorememes[contributor];
+                finalUrl = getDataObject[new Random().Next(0, getDataObject.Count)].ToString();
+            }
+            else
+            {
+                if (Config.Doremi.jobjectdorememes.ContainsKey(contributor))
+                {
+                    getDataObject = (JArray)Config.Doremi.jobjectdorememes[contributor];
+                    finalUrl = getDataObject[new Random().Next(0, getDataObject.Count)].ToString();
+                }
+                else
+                {
+                    await base.ReplyAsync($"Oops, I can't found the specified contributor. " +
+                        $"See `{Config.Doremi.PrefixParent[0]}help dorememe` for commands help.");
+                    return;
+                }
+            }
+
+            await base.ReplyAsync(embed: new EmbedBuilder()
+            .WithColor(Config.Doremi.EmbedColor)
+            .WithImageUrl(finalUrl)
+            .WithFooter("Contributed by: " + contributor)
+            .Build());
+
+        }
+
         [Command("meme", RunMode = RunMode.Async), Alias("memes"), Summary("I will give you some random memes")]
         public async Task givememe()
         {
@@ -500,11 +552,25 @@ namespace OjamajoBot.Module
             string finalUrl=""; string footerUrl = "";
             JArray getDataObject = null; moments = moments.ToLower();
             if (moments == ""){
-                var key = Config.Doremi.jObjRandomMoments.Properties().ToList();
-                var randIndex = new Random().Next(0, key.Count);
-                moments = key[randIndex].Name;
-                getDataObject = (JArray)Config.Doremi.jObjRandomMoments[moments];
-                finalUrl = getDataObject[new Random().Next(0, getDataObject.Count)].ToString();
+                int randomType = new Random().Next(0, 5);
+                if (randomType != 3)
+                {
+                    int randomMix = new Random().Next(0, 2); string path;
+                    if (randomMix == 0)
+                        path = "config/randomMoments/doremi";
+                    else
+                        path = "config/randomMoments/doremi/mix";
+
+                    string randomPathFile = GlobalFunctions.getRandomFile(path, new string[] { ".png", ".jpg", ".gif", ".webm" });
+                    await Context.Channel.SendFileAsync($"{randomPathFile}");
+                    return;
+                } else {
+                    var key = Config.Doremi.jObjRandomMoments.Properties().ToList();
+                    var randIndex = new Random().Next(0, key.Count);
+                    moments = key[randIndex].Name;
+                    getDataObject = (JArray)Config.Doremi.jObjRandomMoments[moments];
+                    finalUrl = getDataObject[new Random().Next(0, getDataObject.Count)].ToString();
+                }   
             } else {
                 if (Config.Doremi.jObjRandomMoments.ContainsKey(moments)){
                     getDataObject = (JArray)Config.Doremi.jObjRandomMoments[moments];
@@ -652,10 +718,9 @@ namespace OjamajoBot.Module
             .WithTitle("What's new?")
             .WithDescription("Pirika pirilala poporina peperuto! Show us what's new on doremi bot and her other friends!")
             .AddField("Summary",
-            $"-New Onpu Commands that makes her bigger size: mushroom/grow/giant/powerup\n" +
-            $"-Doremi and her other friends commands has updated into **dokkan** version.\n" +
-            "-Doremi and her other bot now has individual greeting message.\n"+
-            "-Doremi and her other bot now has birthday commands that you can wish them on.")
+            $"-Added colored version of wheezuki\n" +
+            $"-Added more random moments pictures for Doremi and other ojamajo bot\n" +
+            $"-Bug fix & updated commands for music category")
             .WithColor(Config.Doremi.EmbedColor)
             .WithFooter($"Last updated on {Config.Core.lastUpdate}")
             .Build());
@@ -1335,59 +1400,8 @@ namespace OjamajoBot.Module
 
     }
 
-    [Name("dorememes"), Group("dorememes"), Summary("Dorememes command category.")]
+    [Name("memesdraw"), Group("memesdraw"), Summary("Memes Draw Category.")]
     public class DorememesModule : ModuleBase<SocketCommandContext>{
-        [Command("random"), Summary("I will give you some random doremi related memes. " +
-            "You can fill <contributor> with one of the available to make it spesific contributor.\nUse `contributor list` to list all people who have contribute the dorememes.")]
-        public async Task givedorememe([Remainder]string contributor = "")
-        {
-            string finalUrl = ""; JArray getDataObject = null;
-            contributor = contributor.ToLower();
-
-            if (contributor == "list")
-            {
-                var key = Config.Doremi.jobjectdorememes.Properties().ToList();
-                string listedContributor = "";
-                for (int i = 0; i < key.Count; i++) listedContributor += $"{key[i].Name}\n";
-
-                await base.ReplyAsync(embed: new EmbedBuilder()
-                    .WithTitle("Dorememes listed contributor")
-                    .WithDescription("Thank you to all of these peoples that have contributed the dorememes:")
-                    .AddField("Contributor in List", listedContributor)
-                    .WithColor(Config.Doremi.EmbedColor)
-                    .Build());
-                return;
-            }
-            else if (contributor == "")
-            {
-                var key = Config.Doremi.jobjectdorememes.Properties().ToList();
-                var randIndex = new Random().Next(0, key.Count);
-                contributor = key[randIndex].Name;
-                getDataObject = (JArray)Config.Doremi.jobjectdorememes[contributor];
-                finalUrl = getDataObject[new Random().Next(0, getDataObject.Count)].ToString();
-            }
-            else
-            {
-                if (Config.Doremi.jobjectdorememes.ContainsKey(contributor))
-                {
-                    getDataObject = (JArray)Config.Doremi.jobjectdorememes[contributor];
-                    finalUrl = getDataObject[new Random().Next(0, getDataObject.Count)].ToString();
-                }
-                else
-                {
-                    await base.ReplyAsync($"Oops, I can't found the specified contributor. " +
-                        $"See `{Config.Doremi.PrefixParent[0]}help dorememe` for commands help.");
-                    return;
-                }
-            }
-
-            await base.ReplyAsync(embed: new EmbedBuilder()
-            .WithColor(Config.Doremi.EmbedColor)
-            .WithImageUrl(finalUrl)
-            .WithFooter("Contributed by: " + contributor)
-            .Build());
-
-        }
 
         [Command("template list", RunMode = RunMode.Async), Summary("Show all available dorememes generator template.")]
         public async Task showAllDorememesTemplate(){
@@ -1749,7 +1763,7 @@ namespace OjamajoBot.Module
         }
 
         //https://www.youtube.com/watch?v=dQw4w9WgXcQ
-        [Command("youtube"), Alias("yt"), Summary("Play the youtube music. `<KeywordOrUrl>` parameter can be a search keyword or youtube url.")]
+        [Command("play"), Alias("yt"), Summary("Play the youtube music. `<KeywordOrUrl>` parameter can be a search keyword or youtube url.")]
         public async Task PlayYoutubeAsync([Remainder] string KeywordOrUrl)
         {
             if (!_lavaNode.HasPlayer(Context.Guild))
@@ -1757,9 +1771,16 @@ namespace OjamajoBot.Module
                 await ReplyAsync("I'm not connected to a voice channel.");
                 return;
             }
-
+            
             var search = await _lavaNode.SearchYouTubeAsync(KeywordOrUrl);
             var track = search.Tracks.FirstOrDefault();
+
+            //check maximum video/music must be under 5 minutes
+            if (track.Duration.TotalMinutes>=8)
+            {
+                await ReplyAsync($"Sorry, that music is above 5 minutes. Please use the shorter one.");
+                return;
+            }
 
             var player = _lavaNode.HasPlayer(Context.Guild)
                 ? _lavaNode.GetPlayer(Context.Guild)
@@ -1777,7 +1798,7 @@ namespace OjamajoBot.Module
             }
         }
 
-        [Command("playall"), Summary("Play all the music that's available on doremi music list")]
+        [Command("radio playall"), Alias("radio all"), Summary("Play all the music that's available on doremi music list")]
         public async Task PlayAll()
         {
 
@@ -1862,7 +1883,7 @@ namespace OjamajoBot.Module
 
         }
 
-        [Command("play"), Summary("Play the music with the given <track number or title> parameter")]
+        [Command("radio"), Summary("Play the music with the given <track number or title> parameter")]
         public async Task PlayLocal([Remainder] string TrackNumbersOrTitle)
         {
             if (string.IsNullOrWhiteSpace(TrackNumbersOrTitle))
@@ -2132,8 +2153,8 @@ namespace OjamajoBot.Module
                 .WithColor(Config.Doremi.EmbedColor)
                 .WithTitle("Doremi Music List:")
                 .WithDescription($"These are the music list that's available for me to play: " +
-                $"You can use the **play** commands followed with the track number or title.\n" +
-                $"Example: **{Config.Doremi.PrefixParent[0]}play 1** or **{Config.Doremi.PrefixParent[0]}play ojamajocarnival**")
+                $"You can use the **radio** commands followed with the track number or title.\n" +
+                $"Example: **{Config.Doremi.PrefixParent[0]}radio 1** or **{Config.Doremi.PrefixParent[0]}radio ojamajocarnival**")
                 .AddField("[Num] Title",
                 musiclist)
                 .Build());
@@ -2230,8 +2251,8 @@ namespace OjamajoBot.Module
 
     }
 
-    [Name("minigame"), Group("minigame"), Summary("This category contains all minigame interactive commands.")]
-    public class DoremiInteractive : InteractiveBase
+    [Name("minigame"), Group("minigame"), Summary("This category contains all Doremi minigame interactive commands.")]
+    public class DoremiMinigameInteractive : InteractiveBase
     { 
         // NextMessageAsync will wait for the next message to come in over the gateway, given certain criteria
         // By default, this will be limited to messages from the source user in the source channel
@@ -2298,6 +2319,65 @@ namespace OjamajoBot.Module
 
         }
 
+        [Command("rockpaperscissor", RunMode = RunMode.Async), Alias("rps"), Summary("Play the Rock Paper Scissor minigame with Doremi. 20 score points reward.")]
+        public async Task RockPaperScissor(string guess = "")
+        {
+            if (guess == ""){
+                await ReplyAsync($"Please enter the valid parameter: **rock** or **paper** or **scissor**");
+                return;
+            } else if (guess.ToLower() != "rock" && guess.ToLower() != "paper" && guess.ToLower() != "scissor") {
+                await ReplyAsync($"Sorry **{Context.User.Username}**. " +
+                    $"Please enter the valid parameter: **rock** or **paper** or **scissor**");
+                return;
+            }
+
+            guess = guess.ToLower();//lower the text
+            int randomGuess = new Random().Next(0, 3);//generate random
+
+            string[] arrWinReaction = { "Looks like I win the game this time.", 
+                $"Sorry {Context.User.Username}, better luck next time.",
+                $"No way ! I guess you will have to pay me a {Config.Emoji.steak}"};//bot win
+            string[] arrLoseReaction = { "I'm the world unluckiest pretty girl! :sob:", 
+                "Oh no, looks like I lose the game."};//bot lose
+            string[] arrDrawReaction = { "Ehh, it's a draw!","We got a draw this time." };//bot draw
+
+            string textTemplate = $"emojicontext Doremi landed her **{MinigameCore.rockPaperScissor(randomGuess,guess)["randomResult"]}** against your **{guess}**. ";
+            
+            string picReactionFolderDir = "config/rps_reaction/doremi/";
+
+            if (MinigameCore.rockPaperScissor(randomGuess,guess)["gameState"] == "win"){ // player win
+                int rndIndex = new Random().Next(0, arrLoseReaction.Length);
+
+                picReactionFolderDir += "lose";
+                textTemplate = textTemplate.Replace("emojicontext", ":clap:");
+                textTemplate += $"{Context.User.Username} **win** the game! You got **20** score points.\n" +
+                    $"\"{arrLoseReaction[rndIndex]}\"";
+
+                var guildId = Context.Guild.Id;
+                var userId = Context.User.Id;
+
+                //save the data
+                MinigameCore.updateScore(guildId.ToString(), userId.ToString(), 10);
+
+            } else if (MinigameCore.rockPaperScissor(randomGuess,guess)["gameState"] == "draw"){ // player draw
+                int rndIndex = new Random().Next(0, arrDrawReaction.Length);
+                picReactionFolderDir += "draw";
+                textTemplate = textTemplate.Replace("emojicontext", ":x:");
+                textTemplate += $"**The game is draw!**\n" +
+                    $"\"{arrDrawReaction[rndIndex]}\"";
+            } else  { //player lose
+                int rndIndex = new Random().Next(0, arrWinReaction.Length);
+                picReactionFolderDir += "win";
+                textTemplate = textTemplate.Replace("emojicontext", ":x:");
+                textTemplate += $"{Context.User.Username} **lose** the game!\n" +
+                    $"\"{arrWinReaction[rndIndex]}\"";
+            }
+
+            string randomPathFile = GlobalFunctions.getRandomFile(picReactionFolderDir, new string[] { ".png", ".jpg", ".gif", ".webm" });
+            await ReplyAsync(textTemplate);
+            await Context.Channel.SendFileAsync($"{randomPathFile}");
+        }
+        
         [Command("hangman", RunMode = RunMode.Async), Summary("Play the hangman game with the available category.\n**Available category:** `random`/`characters`/`color`/`fruit`/`animal`\n" +
             "**Available difficulty:**\n" +
             "**easy:** 30 seconds, 10 lives, score+50\n" +
@@ -2432,7 +2512,7 @@ namespace OjamajoBot.Module
                                 var userId = Context.User.Id;
 
                                 //save the data
-                                updateScore(guildId.ToString(), userId.ToString(), scoreValue);
+                                MinigameCore.updateScore(guildId.ToString(), userId.ToString(), scoreValue);
                                 return;
                             }
                         }
@@ -2524,7 +2604,7 @@ namespace OjamajoBot.Module
                     var userId = Context.User.Id;
 
                     //save the data
-                    updateScore(guildId.ToString(), userId.ToString(), scoreValue);
+                    MinigameCore.updateScore(guildId.ToString(), userId.ToString(), scoreValue);
 
                     replyCorrect += $". Your **score+{scoreValue}**";
                     await ReplyAsync(replyCorrect, embed: new EmbedBuilder()
@@ -2586,7 +2666,7 @@ namespace OjamajoBot.Module
                             var guildId = Context.Guild.Id;
                             var userId = Context.User.Id;
                             //save the data
-                            updateScore(guildId.ToString(), userId.ToString(), scoreValue);
+                            MinigameCore.updateScore(guildId.ToString(), userId.ToString(), scoreValue);
                         }
                         return;
                     } else if (loweredResponse != "same" || loweredResponse != "lower" || loweredResponse != "higher"){
@@ -2600,26 +2680,6 @@ namespace OjamajoBot.Module
                 return;
             } else
                 await ReplyAsync($"Sorry **{Context.User.Username}**, you're still running the **minigame** interactive commands, please finish it first.");
-        }
-
-         public void updateScore(string guildId,string userId,int scoreValue)
-        {
-            //save the data
-            var quizJsonFile = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.minigameDataFileName}"));
-            var jobjscore = (JObject)quizJsonFile.GetValue("score");
-
-            if (!jobjscore.ContainsKey(userId.ToString()))
-            {
-                jobjscore.Add(new JProperty(userId.ToString(), scoreValue.ToString()));
-            }
-            else
-            {
-                int tempScore = Convert.ToInt32(jobjscore[userId.ToString()]) + scoreValue;
-                jobjscore[userId.ToString()] = tempScore.ToString();
-            }
-
-            File.WriteAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.minigameDataFileName}", quizJsonFile.ToString());
-
         }
 
     }

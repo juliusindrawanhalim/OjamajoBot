@@ -1,4 +1,5 @@
 ﻿using Discord;
+using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
 using Newtonsoft.Json.Linq;
@@ -314,7 +315,6 @@ namespace OjamajoBot.Module
                 $":sunglasses: Keep calm and dab on {Config.Emoji.dabzuki}",
                 $":sunglasses: **D**esire **A**spire **B**elieve **I**nspire  **T**ake fire {Config.Emoji.dabzuki}",
                 $":sunglasses: Just Dab and Let it go! {Config.Emoji.dabzuki}",
-                $":sunglasses: I'm fabulous {Config.Emoji.dabzuki}",
                 $":sunglasses: No Bad Vibes {Config.Emoji.dabzuki}",
                 $":sunglasses: Dab checked \u2705 {Config.Emoji.dabzuki}",
                 $":sunglasses: Let's do the dab with me, everyone! {Config.Emoji.dabzuki}",
@@ -413,11 +413,26 @@ namespace OjamajoBot.Module
             JArray getDataObject = null; moments = moments.ToLower();
             if (moments == "")
             {
-                var key = Config.Hazuki.jObjRandomMoments.Properties().ToList();
-                var randIndex = new Random().Next(0, key.Count);
-                moments = key[randIndex].Name;
-                getDataObject = (JArray)Config.Hazuki.jObjRandomMoments[moments];
-                finalUrl = getDataObject[new Random().Next(0, getDataObject.Count)].ToString();
+                int randomType = new Random().Next(0, 5);
+
+                if(randomType != 3){
+                    int randomMix = new Random().Next(0, 2); string path;
+                    if (randomMix == 0)
+                        path = "config/randomMoments/hazuki";
+                    else
+                        path = "config/randomMoments/hazuki/mix";
+
+                    string randomPathFile = GlobalFunctions.getRandomFile(path, new string[] { ".png", ".jpg", ".gif", ".webm" });
+                    await Context.Channel.SendFileAsync($"{randomPathFile}");
+                    return;
+                } else {
+                    //select specific from wiki
+                    var key = Config.Hazuki.jObjRandomMoments.Properties().ToList();
+                    var randIndex = new Random().Next(0, key.Count);
+                    moments = key[randIndex].Name;
+                    getDataObject = (JArray)Config.Hazuki.jObjRandomMoments[moments];
+                    finalUrl = getDataObject[new Random().Next(0, getDataObject.Count)].ToString();
+                }
             }
             else
             {
@@ -436,11 +451,13 @@ namespace OjamajoBot.Module
 
             footerUrl = finalUrl;
             if (finalUrl.Contains("wikia")) footerUrl = "https://ojamajowitchling.fandom.com/";
-            await base.ReplyAsync(embed: new EmbedBuilder()
+
+            await ReplyAsync(embed: new EmbedBuilder()
             .WithColor(Config.Hazuki.EmbedColor)
             .WithImageUrl(finalUrl)
             .WithFooter(footerUrl)
             .Build());
+            
         }
 
         [Command("stats"), Alias("bio"), Summary("I will show you my biography info")]
@@ -502,7 +519,7 @@ namespace OjamajoBot.Module
                     .WithAuthor("SOS Trio", "https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcTWj56dpMHiFcKv0Gz_cBQPZTZRNZoaUskA_OuamYo8pTy4CaoJ")
                     .WithColor(Config.Hazuki.EmbedColor)
                     .WithDescription($"{setup}\n{punchline}")
-                    .WithImageUrl("https://cdn.discordapp.com/attachments/644383823286763544/665777255640989749/Wheezuki.png")
+                    .WithImageUrl("https://cdn.discordapp.com/attachments/662953139011452929/701404624044818512/unknown.png")
                     .WithFooter("Contributed by: Letter Three")
                     .Build());
 
@@ -686,43 +703,166 @@ namespace OjamajoBot.Module
 
     }
 
-    //public class HazukiMusic : ModuleBase<SocketCommandContext>
-    //{
-    //    //a modules stops existing when a command is done executing and services exist aslong we did not dispose them
+    [Name("minigame"), Group("minigame"), Summary("This category contains all Hazuki minigame interactive commands.")]
+    public class HazukiMinigameInteractive : InteractiveBase
+    {
+        [Command("score"), Summary("Show your current minigame score points.")]
+        public async Task Show_Quiz_Score()
+        {//show the player score
+            var guildId = Context.Guild.Id;
+            var userId = Context.User.Id;
+            var quizJsonFile = (JObject)JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.minigameDataFileName}")).GetValue("score");
+            int score = 0;
+            if (quizJsonFile.ContainsKey(userId.ToString()))
+                score = (int)quizJsonFile.GetValue(userId.ToString());
+            await ReplyAsync($"\uD83C\uDFC6 Your minigame score points are: **{score}**");
+            return;
+        }
 
-    //    // Scroll down further for the AudioService.
-    //    // Like, way down
-    //    private readonly AudioService _service;
+        [Command("leaderboard"), Summary("Show the top 10 player score points for minigame leaderboard.")]
+        public async Task Show_Minigame_Leaderboard()
+        {//show top 10 player score
+            var guildId = Context.Guild.Id;
+            var userId = Context.User.Id;
 
-    //    // Remember to add an instance of the AudioService
-    //    // to your IServiceCollection when you initialize your bot
-    //    public HazukiMusic(AudioService service)
-    //    {
-    //        _service = service;
-    //    }
+            var quizJsonFile = (JObject)JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.minigameDataFileName}")).GetValue("score");
 
-    //    // You *MUST* mark these commands with 'RunMode.Async'
-    //    // otherwise the bot will not respond until the Task times out.
-    //    [Command("join", RunMode = RunMode.Async)]
-    //    public async Task JoinCmd()
-    //    {
-    //        await _service.JoinAudio(Context.Guild, (Context.User as IVoiceState).VoiceChannel);
-    //    }
+            string finalText = "";
+            EmbedBuilder builder = new EmbedBuilder();
+            builder.Title = "\uD83C\uDFC6 Minigame Leaderboard";
 
-    //    // Remember to add preconditions to your commands,
-    //    // this is merely the minimal amount necessary.
-    //    // Adding more commands of your own is also encouraged.
-    //    [Command("leave", RunMode = RunMode.Async)]
-    //    public async Task LeaveCmd()
-    //    {
-    //        await _service.LeaveAudio(Context.Guild);
-    //    }
+            builder.Color = Config.Hazuki.EmbedColor;
 
-    //    [Command("play", RunMode = RunMode.Async)]
-    //    public async Task PlayCmd([Remainder] string song)
-    //    {
-    //        await _service.SendAudioAsync(Context.Guild, Context.Channel, "music/" + song + ".mp3");
-    //    }
+            if (quizJsonFile.Count >= 1)
+            {
+                builder.Description = "Here are the top 10 player score points for minigame leaderboard:";
 
-    //}
-}
+                var convertedToList = quizJsonFile.Properties().OrderByDescending(p => (int)p.Value).ToList();
+                int ctrExists = 0;
+                for (int i = 0; i < quizJsonFile.Count; i++)
+                {
+                    SocketGuildUser userExists = Context.Guild.GetUser(Convert.ToUInt64(convertedToList[i].Name));
+                    if (userExists != null)
+                    {
+                        finalText += $"{i + 1}. {MentionUtils.MentionUser(Convert.ToUInt64(convertedToList[i].Name))} : {convertedToList[i].Value} \n";
+                        ctrExists++;
+                    }
+                    if (ctrExists >= 9) break;
+                }
+                builder.AddField("[Rank]. Name & Score", finalText);
+            }
+            else
+            {
+                builder.Description = "Currently there's no minigame leaderboard yet.";
+            }
+
+            await ReplyAsync(embed: builder.Build());
+
+        }
+
+        [Command("rockpaperscissor", RunMode = RunMode.Async), Alias("rps"), Summary("Play the Rock Paper Scissor minigame with Hazuki. 20 score points reward.")]
+        public async Task RockPaperScissor(string guess = "")
+        {
+            if (guess == "")
+            {
+                await ReplyAsync($"Please enter the valid parameter: **rock** or **paper** or **scissor**");
+                return;
+            }
+            else if (guess.ToLower() != "rock" && guess.ToLower() != "paper" && guess.ToLower() != "scissor")
+            {
+                await ReplyAsync($"Sorry **{Context.User.Username}**. " +
+                    $"Please enter the valid parameter: **rock** or **paper** or **scissor**");
+                return;
+            }
+
+            guess = guess.ToLower();//lower the text
+            int randomGuess = new Random().Next(0, 3);//generate random
+
+            string[] arrWinReaction = { $"I'm sorry {Context.User.Username}, but I win the game this time." };//bot win
+            string[] arrLoseReaction = { "Oh no, looks like I lose the game." };//bot lose
+            string[] arrDrawReaction = { "We both landed a draw." };//bot draw
+
+            string textTemplate = $"emojicontext Hazuki landed her **{MinigameCore.rockPaperScissor(randomGuess, guess)["randomResult"]}** against your **{guess}**. ";
+
+            string picReactionFolderDir = "config/rps_reaction/hazuki/";
+
+            if (MinigameCore.rockPaperScissor(randomGuess, guess)["gameState"] == "win")
+            { // player win
+                int rndIndex = new Random().Next(0, arrLoseReaction.Length);
+
+                picReactionFolderDir += "lose";
+                textTemplate = textTemplate.Replace("emojicontext", ":clap:");
+                textTemplate += $"{Context.User.Username} **win** the game! You got **20** score points.\n" +
+                    $"\"{arrLoseReaction[rndIndex]}\"";
+
+                var guildId = Context.Guild.Id;
+                var userId = Context.User.Id;
+
+                //save the data
+                MinigameCore.updateScore(guildId.ToString(), userId.ToString(), 10);
+
+            }
+            else if (MinigameCore.rockPaperScissor(randomGuess, guess)["gameState"] == "draw")
+            { // player draw
+                int rndIndex = new Random().Next(0, arrDrawReaction.Length);
+                picReactionFolderDir += "draw";
+                textTemplate = textTemplate.Replace("emojicontext", ":x:");
+                textTemplate += $"**The game is draw!**\n" +
+                    $"\"{arrDrawReaction[rndIndex]}\"";
+            }
+            else
+            { //player lose
+                int rndIndex = new Random().Next(0, arrWinReaction.Length);
+                picReactionFolderDir += "win";
+                textTemplate = textTemplate.Replace("emojicontext", ":x:");
+                textTemplate += $"{Context.User.Username} **lose** the game!\n" +
+                    $"\"{arrWinReaction[rndIndex]}\"";
+            }
+
+            string randomPathFile = GlobalFunctions.getRandomFile(picReactionFolderDir, new string[] { ".png", ".jpg", ".gif", ".webm" });
+            await ReplyAsync(textTemplate);
+            await Context.Channel.SendFileAsync($"{randomPathFile}");
+        }
+
+    }
+
+        //public class HazukiMusic : ModuleBase<SocketCommandContext>
+        //{
+        //    //a modules stops existing when a command is done executing and services exist aslong we did not dispose them
+
+        //    // Scroll down further for the AudioService.
+        //    // Like, way down
+        //    private readonly AudioService _service;
+
+        //    // Remember to add an instance of the AudioService
+        //    // to your IServiceCollection when you initialize your bot
+        //    public HazukiMusic(AudioService service)
+        //    {
+        //        _service = service;
+        //    }
+
+        //    // You *MUST* mark these commands with 'RunMode.Async'
+        //    // otherwise the bot will not respond until the Task times out.
+        //    [Command("join", RunMode = RunMode.Async)]
+        //    public async Task JoinCmd()
+        //    {
+        //        await _service.JoinAudio(Context.Guild, (Context.User as IVoiceState).VoiceChannel);
+        //    }
+
+        //    // Remember to add preconditions to your commands,
+        //    // this is merely the minimal amount necessary.
+        //    // Adding more commands of your own is also encouraged.
+        //    [Command("leave", RunMode = RunMode.Async)]
+        //    public async Task LeaveCmd()
+        //    {
+        //        await _service.LeaveAudio(Context.Guild);
+        //    }
+
+        //    [Command("play", RunMode = RunMode.Async)]
+        //    public async Task PlayCmd([Remainder] string song)
+        //    {
+        //        await _service.SendAudioAsync(Context.Guild, Context.Channel, "music/" + song + ".mp3");
+        //    }
+
+        //}
+    }

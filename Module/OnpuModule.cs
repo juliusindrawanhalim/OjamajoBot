@@ -6,6 +6,7 @@ using Newtonsoft.Json.Linq;
 using OjamajoBot.Service;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -386,11 +387,26 @@ namespace OjamajoBot.Module
             string finalUrl = ""; string footerUrl = "";
             JArray getDataObject = null; moments = moments.ToLower();
             if (moments == ""){
-                var key = Config.Onpu.jObjRandomMoments.Properties().ToList();
-                var randIndex = new Random().Next(0, key.Count);
-                moments = key[randIndex].Name;
-                getDataObject = (JArray)Config.Onpu.jObjRandomMoments[moments];
-                finalUrl = getDataObject[new Random().Next(0, getDataObject.Count)].ToString();
+
+                int randomType = new Random().Next(0, 5);
+                if (randomType != 3){
+                    int randomMix = new Random().Next(0, 2); string path;
+                    if (randomMix == 0)
+                        path = "config/randomMoments/onpu";
+                    else
+                        path = "config/randomMoments/onpu/mix";
+
+                    string randomPathFile = GlobalFunctions.getRandomFile(path, new string[] { ".png", ".jpg", ".gif", ".webm" });
+                    await Context.Channel.SendFileAsync($"{randomPathFile}");
+                    return;
+                } else {
+                    var key = Config.Onpu.jObjRandomMoments.Properties().ToList();
+                    var randIndex = new Random().Next(0, key.Count);
+                    moments = key[randIndex].Name;
+                    getDataObject = (JArray)Config.Onpu.jObjRandomMoments[moments];
+                    finalUrl = getDataObject[new Random().Next(0, getDataObject.Count)].ToString();
+                }
+                
             } else {
                 if (Config.Onpu.jObjRandomMoments.ContainsKey(moments)){
                     getDataObject = (JArray)Config.Onpu.jObjRandomMoments[moments];
@@ -514,6 +530,129 @@ namespace OjamajoBot.Module
         }
 
         //todo: smug commands
+
+    }
+
+    [Name("minigame"), Group("minigame"), Summary("This category contains all Onpu minigame interactive commands.")]
+    public class OnpuMinigameInteractive : InteractiveBase
+    {
+        [Command("score"), Summary("Show your current minigame score points.")]
+        public async Task Show_Quiz_Score()
+        {//show the player score
+            var guildId = Context.Guild.Id;
+            var userId = Context.User.Id;
+            var quizJsonFile = (JObject)JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.minigameDataFileName}")).GetValue("score");
+            int score = 0;
+            if (quizJsonFile.ContainsKey(userId.ToString()))
+                score = (int)quizJsonFile.GetValue(userId.ToString());
+            await ReplyAsync($"\uD83C\uDFC6 Your minigame score points are: **{score}**");
+            return;
+        }
+
+        [Command("leaderboard"), Summary("Show the top 10 player score points for minigame leaderboard.")]
+        public async Task Show_Minigame_Leaderboard()
+        {//show top 10 player score
+            var guildId = Context.Guild.Id;
+            var userId = Context.User.Id;
+
+            var quizJsonFile = (JObject)JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.minigameDataFileName}")).GetValue("score");
+
+            string finalText = "";
+            EmbedBuilder builder = new EmbedBuilder();
+            builder.Title = "\uD83C\uDFC6 Minigame Leaderboard";
+
+            builder.Color = Config.Onpu.EmbedColor;
+
+            if (quizJsonFile.Count >= 1)
+            {
+                builder.Description = "Here are the top 10 player score points for minigame leaderboard:";
+
+                var convertedToList = quizJsonFile.Properties().OrderByDescending(p => (int)p.Value).ToList();
+                int ctrExists = 0;
+                for (int i = 0; i < quizJsonFile.Count; i++)
+                {
+                    SocketGuildUser userExists = Context.Guild.GetUser(Convert.ToUInt64(convertedToList[i].Name));
+                    if (userExists != null)
+                    {
+                        finalText += $"{i + 1}. {MentionUtils.MentionUser(Convert.ToUInt64(convertedToList[i].Name))} : {convertedToList[i].Value} \n";
+                        ctrExists++;
+                    }
+                    if (ctrExists >= 9) break;
+                }
+                builder.AddField("[Rank]. Name & Score", finalText);
+            }
+            else
+            {
+                builder.Description = "Currently there's no minigame leaderboard yet.";
+            }
+
+            await ReplyAsync(embed: builder.Build());
+
+        }
+
+        [Command("rockpaperscissor", RunMode = RunMode.Async), Alias("rps"), Summary("Play the Rock Paper Scissor minigame with Hazuki. 20 score points reward.")]
+        public async Task RockPaperScissor(string guess = "")
+        {
+            if (guess == "")
+            {
+                await ReplyAsync($"Please enter the valid parameter: **rock** or **paper** or **scissor**");
+                return;
+            }
+            else if (guess.ToLower() != "rock" && guess.ToLower() != "paper" && guess.ToLower() != "scissor")
+            {
+                await ReplyAsync($"Sorry **{Context.User.Username}**. " +
+                    $"Please enter the valid parameter: **rock** or **paper** or **scissor**");
+                return;
+            }
+
+            guess = guess.ToLower();//lower the text
+            int randomGuess = new Random().Next(0, 3);//generate random
+
+            string[] arrWinReaction = { $"Better luck next time, {Context.User.Username}.", "I win the game this round!" };//bot win
+            string[] arrLoseReaction = { "I lose from the game." };//bot lose
+            string[] arrDrawReaction = { "Well, it's a draw." };//bot draw
+
+            string textTemplate = $"emojicontext Onpu landed her **{MinigameCore.rockPaperScissor(randomGuess, guess)["randomResult"]}** against your **{guess}**. ";
+
+            string picReactionFolderDir = "config/rps_reaction/onpu/";
+
+            if (MinigameCore.rockPaperScissor(randomGuess, guess)["gameState"] == "win")
+            { // player win
+                int rndIndex = new Random().Next(0, arrLoseReaction.Length);
+
+                picReactionFolderDir += "lose";
+                textTemplate = textTemplate.Replace("emojicontext", ":clap:");
+                textTemplate += $"{Context.User.Username} **win** the game! You got **20** score points.\n" +
+                    $"\"{arrLoseReaction[rndIndex]}\"";
+
+                var guildId = Context.Guild.Id;
+                var userId = Context.User.Id;
+
+                //save the data
+                MinigameCore.updateScore(guildId.ToString(), userId.ToString(), 10);
+
+            }
+            else if (MinigameCore.rockPaperScissor(randomGuess, guess)["gameState"] == "draw")
+            { // player draw
+                int rndIndex = new Random().Next(0, arrDrawReaction.Length);
+                picReactionFolderDir += "draw";
+                textTemplate = textTemplate.Replace("emojicontext", ":x:");
+                textTemplate += $"**The game is draw!**\n" +
+                    $"\"{arrDrawReaction[rndIndex]}\"";
+            }
+            else
+            { //player lose
+                int rndIndex = new Random().Next(0, arrWinReaction.Length);
+                picReactionFolderDir += "win";
+                textTemplate = textTemplate.Replace("emojicontext", ":x:");
+                textTemplate += $"{Context.User.Username} **lose** the game!\n" +
+                    $"\"{arrWinReaction[rndIndex]}\"";
+            }
+
+            string randomPathFile = GlobalFunctions.getRandomFile(picReactionFolderDir, new string[] { ".png", ".jpg", ".gif", ".webm" });
+            await ReplyAsync(textTemplate);
+            await Context.Channel.SendFileAsync($"{randomPathFile}");
+        }
 
     }
 

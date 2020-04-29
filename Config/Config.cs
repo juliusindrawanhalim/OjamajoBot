@@ -21,7 +21,7 @@ namespace Config
         public static string headConfigGuildFolder = $"{headConfigFolder}guild/";
         public static string headLogsFolder = "logs/";
         public static string minigameDataFileName = "minigame_data.json";
-        public static string lastUpdate = "March 30,2020";
+        public static string lastUpdate = "Apr 24,2020";
         public static JObject jObjWiki;
         public static string wikiParentUrl = "https://ojamajowitchling.fandom.com/wiki/";
         public static int minGlobalTimeHour = 12;
@@ -93,14 +93,14 @@ namespace Config
                 catch { Console.WriteLine("Error: Momoko configuration array is not properly formatted"); Console.ReadLine(); }
 
                 //init pop config
-                try
-                {
-                    string _parent = "pop";
-                    Pop.Token = jobjectconfig.GetValue(_parent)["token"].ToString();
-                    Pop.Randomeventinterval = (double)jobjectconfig.GetValue(_parent)["randomeventinterval"];
-                    Pop.jObjRandomMoments = (JObject)jobjectRandomMoments.GetValue(_parent);
-                }
-                catch { Console.WriteLine("Error: Momoko configuration array is not properly formatted"); Console.ReadLine(); }
+                //try
+                //{
+                //    string _parent = "pop";
+                //    Pop.Token = jobjectconfig.GetValue(_parent)["token"].ToString();
+                //    Pop.Randomeventinterval = (double)jobjectconfig.GetValue(_parent)["randomeventinterval"];
+                //    Pop.jObjRandomMoments = (JObject)jobjectRandomMoments.GetValue(_parent);
+                //}
+                //catch { Console.WriteLine("Error: Pop configuration array is not properly formatted"); Console.ReadLine(); }
 
                 //init music config
                 Music.jobjectfile = jobjectconfig;
@@ -165,8 +165,8 @@ namespace Config
         public static string[,] arrRandomActivity = {
             {$"at misora elementary school {Emoji.school}" , "I'm still at school right now."},
             {$"piano {Emoji.piano}","I'm playing piano right now. Do you want to hear me playing the piano?"},
-            {"at sweet house maho dou","I'm working on maho-dou right now. Please visit the shop any time"},
-            {$"with steak {Emoji.steak}",$"I'm eating my favorite food right now, the big steak {Emoji.drool}"},
+            {"at maho dou","I'm working on maho-dou right now. Please visit the shop any time"},
+            {$"with big steak {Emoji.steak}",$"I'm eating my favorite food right now, the big steak {Emoji.drool}"},
             {"with friends","I'm playing with my classmates. I love everyone on the class."},
             {"with Hazuki",$"I'm playing with {MentionUtils.MentionUser(Hazuki.Id)} right now. She's one of my best friend."},
             {"with Aiko",$"I'm playing with {MentionUtils.MentionUser(Aiko.Id)} right now. " +
@@ -179,13 +179,13 @@ namespace Config
             {"with homework \uD83D\uDCDA","I'm doing my homework right now"},
             {"with Momoko",$"I'm playing with {MentionUtils.MentionUser(Momoko.Id)} right now."},
             {"with Onpu",$"I'm playing with {MentionUtils.MentionUser(Onpu.Id)} right now."},
-            {"with Dodo",$"I'm playing with fairy: Dodo right now."}
+            {"with Dodo the fairy",$"I'm playing with fairy: Dodo right now."}
         };
         public static int indexCurrentActivity { get; set; }
 
         public static string EmbedName = "Doremi Bot";
         public static string EmbedNameError = "Doremi 404";
-        public static string EmbedAvatarUrl = "https://cdn.discordapp.com/emojis/651062436866293760.png?v=1";
+        public static string EmbedAvatarUrl = "https://cdn.discordapp.com/avatars/655668640502251530/96739e8725d5607cf9bb592d4a52f920.png";
     }
 
     public class Hazuki
@@ -203,9 +203,10 @@ namespace Config
         public static IDictionary<string, Timer> _timerRandomEvent = new Dictionary<string, Timer>();
         public static IDictionary<string, Timer> _timerBirthdayAnnouncement = new Dictionary<string, Timer>();//birthday reminder timer
 
+        //backup
         public static string[,] arrRandomActivity = {
             {$"at misora elementary school {Emoji.school}" , "I'm still at school right now."},
-            {"at sweet house maho dou","I'm working on maho-dou right now. Please come visit the shop any time."},
+            {"at maho dou","I'm working on maho-dou right now. Please come visit the shop any time."},
             {"with Doremi",$"I'm playing with {MentionUtils.MentionUser(Doremi.Id)} right now. She's one of my best friend."},
             {"with Aiko",$"I'm playing with {MentionUtils.MentionUser(Aiko.Id)} right now. " +
                     $"We're going to make some Takoyaki with {MentionUtils.MentionUser(Doremi.Id)}, {MentionUtils.MentionUser(Onpu.Id)} and {MentionUtils.MentionUser(Momoko.Id)}."},
@@ -215,14 +216,15 @@ namespace Config
             {$"at witch's world {Emoji.broom}","I'm at the witch's world right now."},
             {"with homework \uD83D\uDCDA","I'm doing my homework right now."},
             {"with Momoko",$"I'm playing with {MentionUtils.MentionUser(Momoko.Id)} right now."},
-            {"with Onpu",$"I'm playing with {MentionUtils.MentionUser(Onpu.Id)} right now."},
-            {"with Rere",$"I'm playing with my fairy: Rere right now."}
+            {"with Onpu-",$"I'm playing with {MentionUtils.MentionUser(Onpu.Id)} right now."},
+            {"with Rere the fairy",$"I'm playing with my fairy: Rere right now."}
         };
+
         public static int indexCurrentActivity { get; set; }
 
         public static string EmbedName = "Hazuki Bot";
         public static string EmbedNameError = "Hazuki 404";
-        public static string EmbedAvatarUrl = "https://cdn.discordapp.com/emojis/651062978854125589.png?v=1";
+        public static string EmbedAvatarUrl = "https://cdn.discordapp.com/avatars/655307117128974346/5411e9a959f73069151b94862f8efa56.png";
     }
 
     public class Aiko
@@ -245,7 +247,7 @@ namespace Config
 
         public static string[,] arrRandomActivity = {
             {$"at misora elementary school {Emoji.school}","I'm still at school right now."},
-            {"at sweet house maho dou","I'm working on maho-dou right now. Please come to the shop any time"},
+            {"at maho dou","I'm working on maho-dou right now. Please come to the shop any time"},
             {"with takoyaki",$"I'm making some delicious takoyaki right now with {MentionUtils.MentionUser(Doremi.Id)}, {MentionUtils.MentionUser(Hazuki.Id)}, {MentionUtils.MentionUser(Onpu.Id)} and {MentionUtils.MentionUser(Momoko.Id)}. " +
                     $"I will give you some when it's ready."},
             {"with friends","I'm playing with my classmates. We're gonna play some tennis table."},
@@ -258,13 +260,13 @@ namespace Config
             {"with homework \uD83D\uDCDA","I'm doing my homework right now."},
             {"with Momoko",$"I'm playing with {MentionUtils.MentionUser(Momoko.Id)} right now."},
             {"with Onpu",$"I'm playing with {MentionUtils.MentionUser(Onpu.Id)} right now."},
-            {"with Mimi",$"I'm playing with my fairy: Mimi right now."}
+            {"with Mimi the fairy",$"I'm playing with my fairy: Mimi right now."}
         };
         public static int indexCurrentActivity { get; set; }
 
         public static string EmbedName = "Aiko Bot";
         public static string EmbedNameError = "Aiko 404";
-        public static string EmbedAvatarUrl = "https://cdn.discordapp.com/emojis/651063151948726273.png?v=1";
+        public static string EmbedAvatarUrl = "https://cdn.discordapp.com/avatars/663612449341046803/ccb59d60b2206d6a3749a2836b8e6e80.png";
     }
 
     public class Onpu
@@ -282,9 +284,10 @@ namespace Config
         public static IDictionary<string, Timer> _timerRandomEvent = new Dictionary<string, Timer>();
         public static IDictionary<string, Timer> _timerBirthdayAnnouncement = new Dictionary<string, Timer>();//birthday reminder timer
 
+        //backup 
         public static string[,] arrRandomActivity = {
             {$"at misora elementary school {Emoji.school}" , "I'm still at school right now."},
-            {"at sweet house maho dou","I'm working on maho-dou right now. Please come to the shop any time"},
+            {"at maho dou","I'm working on maho-dou right now. Please come to the shop any time"},
             {"with Hazuki",$"I'm playing with {MentionUtils.MentionUser(Hazuki.Id)} right now. She's a really nice and kind friend for you to meet."},
             {"with Doremi",$"I'm playing with {MentionUtils.MentionUser(Doremi.Id)} right now. We're probably gonna make steak for her."},
             {"with Aiko",$"I'm playing with {MentionUtils.MentionUser(Aiko.Id)} right now. We're probably gonna make steak for her."},
@@ -294,13 +297,13 @@ namespace Config
             {$"at witch's world {Emoji.broom}","I'm at the witch's world right now."},
             {"flute","I'm playing with my flute instrument now. Wanna hear me to play some music?"},
             {"with homework \uD83D\uDCDA","I'm doing my homework right now."},
-            {"with Roro",$"I'm playing with my fairy: Roro right now."}
+            {"with Roro the fairy",$"I'm playing with my fairy: Roro right now."}
         };
         public static int indexCurrentActivity { get; set; }
 
         public static string EmbedName = "Onpu Bot";
         public static string EmbedNameError = "Onpu 404";
-        public static string EmbedAvatarUrl = "https://cdn.discordapp.com/emojis/651063415514857492.png?v=1";
+        public static string EmbedAvatarUrl = "https://cdn.discordapp.com/avatars/663615334150045706/57116d111b518b8a29de8efb9438fa4b.png";
     }
 
     public class Momoko
@@ -321,7 +324,7 @@ namespace Config
 
         public static string[,] arrRandomActivity = {
             {$"at misora elementary school {Emoji.school}" , "I'm still at school right now."},
-            {"at sweet house maho dou","I'm working on maho-dou right now. Please come to the shop any time"},
+            {"at maho dou","I'm working on maho-dou right now. Please come to the shop any time"},
             {"with Hazuki",$"I'm playing with {MentionUtils.MentionUser(Hazuki.Id)} right now. She's a really nice and kind friend for you to meet."},
             {"with Doremi",$"I'm playing with {MentionUtils.MentionUser(Doremi.Id)} right now. We're probably gonna make steak for her."},
             {"with Aiko",$"I'm playing with {MentionUtils.MentionUser(Aiko.Id)} right now. She's a nice girl that loves to eat takoyaki very much."},
@@ -335,7 +338,7 @@ namespace Config
 
         public static string EmbedName = "Momoko Bot";
         public static string EmbedNameError = "Momoko 404";
-        public static string EmbedAvatarUrl = "https://cdn.discordapp.com/emojis/651063629403127808.png?v=1";
+        public static string EmbedAvatarUrl = "https://cdn.discordapp.com/avatars/663615454140432414/37f52c6178d6ca94c796db50c7511c74.png";
         public static IDictionary<string, Timer> timerProcessBakery = new Dictionary<string, Timer>();
         public static IDictionary<string, Boolean> isRunningBakery = new Dictionary<string, Boolean>();
     }
@@ -354,10 +357,10 @@ namespace Config
 
         public static string[,] arrRandomActivity = {
             {$"at misora elementary school {Emoji.school}" , "I'm still at school right now."},
-            {"at sweet house maho dou","I'm working on maho-dou right now. Please come to the shop any time"},
+            {"at maho dou","I'm working on maho-dou right now. Please come to the shop any time"},
             {$"piano {Emoji.piano}","I'm playing piano right now. Do you want to hear me playing the piano?"},
             {"with homework \uD83D\uDCDA","I'm doing my homework right now."},
-            {"with Fafa",$"I'm playing with my fairy: Fafa right now."}
+            {"with Fafa the fairy",$"I'm playing with my fairy: Fafa right now."}
         };
         public static int indexCurrentActivity { get; set; }
 
@@ -371,8 +374,8 @@ namespace Config
         public static string doremi = "<:Doremi:651062436866293760>";
         public static string hazuki = "<:Hazuki:651062978854125589>";
         public static string onpu = "<:Onpu:651063415514857492>";
-        public static string dabzuki = "<:Dabzuki:658926367286755331>";
-        public static string onpuyay = "<:onpu_yay:679228197123915776>";
+        public static string dabzuki = "<:hazuki_dab:695162857222045737>";
+        public static string onpuyay = "<:onpu_yay:695162857544745011>";
         public static string drool = "\uD83E\uDD24";
         public static string steak = "\uD83E\uDD69";
         public static string school = "\uD83C\uDFEB";

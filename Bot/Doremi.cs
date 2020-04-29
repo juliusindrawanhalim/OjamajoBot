@@ -556,7 +556,7 @@ namespace OjamajoBot.Bot
             await commands.AddModuleAsync(typeof(DorememesModule), services);
             await commands.AddModuleAsync(typeof(DoremiBirthdayModule), services);
             await commands.AddModuleAsync(typeof(DoremiVictoriaMusic), services);
-            await commands.AddModuleAsync(typeof(DoremiInteractive), services);
+            await commands.AddModuleAsync(typeof(DoremiMinigameInteractive), services);
             await commands.AddModuleAsync(typeof(DoremiWiki), services);
             await commands.AddModuleAsync(typeof(DoremiModerator), services);
             //await commands.AddModuleAsync(typeof(DoremiModeratorChannels), services);
