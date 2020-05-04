@@ -16,12 +16,14 @@ namespace Config
     {
         public static JObject jobjectconfig; public static JObject jobjectQuiz;
         public static JObject jobjectRandomMoments;
-        public static string headConfigFolder = "config/";
+        public static string headTradingCardConfigFolder = "trading_card";
         public static string attachmentsFolder = "attachments/";
+        public static string headConfigFolder = "config/";
         public static string headConfigGuildFolder = $"{headConfigFolder}guild/";
         public static string headLogsFolder = "logs/";
         public static string minigameDataFileName = "minigame_data.json";
-        public static string lastUpdate = "Apr 24,2020";
+        public static string tradingCardDataFileName = "trading_card_list.json";
+        public static string lastUpdate = "May 3,2020";
         public static JObject jObjWiki;
         public static string wikiParentUrl = "https://ojamajowitchling.fandom.com/wiki/";
         public static int minGlobalTimeHour = 12;
@@ -161,6 +163,11 @@ namespace Config
 
         public static IDictionary<string, Timer> _timerRandomEvent = new Dictionary<string, Timer>();
         public static IDictionary<string, Timer> _timerBirthdayAnnouncement = new Dictionary<string, Timer>();//birthday reminder timer
+        //trading card
+        public static IDictionary<string, Timer> _timerTradingCardSpawn = new Dictionary<string, Timer>();//trading card spawn timer
+        public static IDictionary<string, string> _tradingCardSpawnedId = new Dictionary<string, string>();//the spawned trading card id
+        public static IDictionary<string, string> _tradingCardSpawnedCategory = new Dictionary<string, string>();//category
+        public static IDictionary<string, string> _tradingCardCatchToken = new Dictionary<string, string>();//catch token
 
         public static string[,] arrRandomActivity = {
             {$"at misora elementary school {Emoji.school}" , "I'm still at school right now."},

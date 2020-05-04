@@ -1,4 +1,5 @@
-﻿using Discord;
+﻿using Config;
+using Discord;
 using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
@@ -8,13 +9,16 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using Victoria;
 using Victoria.Enums;
 
@@ -640,7 +644,7 @@ namespace OjamajoBot.Module
                 await Context.Message.DeleteAsync();
                 var sentMessage = await ReplyAsync($"{MentionUtils.MentionUser(Context.User.Id)} has a star messages:\n{MessagesOrWithAttachment}");
                 var sentAttachment = await Context.Channel.SendFileAsync(completePath);
-                await sentMessage.AddReactionAsync(new Emoji("\u2B50"));
+                await sentMessage.AddReactionAsync(new Discord.Emoji("\u2B50"));
                 File.Delete(completePath);
                 return;
 
@@ -656,7 +660,7 @@ namespace OjamajoBot.Module
 
             await Context.Message.DeleteAsync();
             var sentWithoutAttached = await ReplyAsync($"{MentionUtils.MentionUser(Context.User.Id)} has a star messages:\n{MessagesOrWithAttachment}");
-            await sentWithoutAttached.AddReactionAsync(new Emoji("\u2B50"));
+            await sentWithoutAttached.AddReactionAsync(new Discord.Emoji("\u2B50"));
         }
 
         [Command("steak"), Summary("Show any random doremi and her steak moments")]
@@ -990,12 +994,6 @@ namespace OjamajoBot.Module
     }
 
     [Name("mod"), Group("mod"), Summary("Basic moderator commands. Require `manage channels` permission")]
-    [RequireBotPermission(GuildPermission.ManageChannels,
-        ErrorMessage = "It seems I don't have need to have the `manage channels` permission :(",
-        NotAGuildErrorMessage = "It seems I don't have need to have the `manage channels` permission :(")]
-    [RequireBotPermission(GuildPermission.ManageRoles,
-        ErrorMessage = "It seems I don't have need to have the `manage roles` permission :(",
-        NotAGuildErrorMessage = "It seems I don't have need to have the `manage roles` permission :(")]
     [RequireUserPermission(GuildPermission.ManageChannels,
         ErrorMessage = "Sorry, you need the `manage channels` permission",
         NotAGuildErrorMessage = "Sorry, you need the `manage channels` permission")]
@@ -1166,11 +1164,11 @@ namespace OjamajoBot.Module
                             string birthdayMessage = "";
                             var key = jobjbirthday[i].Name; var val = jobjbirthday[i].Value.ToString();
                             //var birthdayMonth = "";
-                            try{
+                            try {
                                 var user = channel_name.GetUser(Convert.ToUInt64(key));
-                                
+
                                 if ((DateTime.TryParseExact(val, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out date) ||
-                                DateTime.TryParseExact(val, "dd/MM", CultureInfo.InvariantCulture, DateTimeStyles.None, out date))&&
+                                DateTime.TryParseExact(val, "dd/MM", CultureInfo.InvariantCulture, DateTimeStyles.None, out date)) &&
                                 (Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour &&
                                 Int32.Parse(DateTime.Now.ToString("HH")) < Config.Core.maxGlobalTimeHour))
                                 {
@@ -1205,7 +1203,7 @@ namespace OjamajoBot.Module
                             await socketClient
                             .GetGuild(guildId)
                             .GetTextChannel(channel_name.Id)
-                            .SendMessageAsync(embed:builder.Build());
+                            .SendMessageAsync(embed: builder.Build());
                     }
                     catch
                     {
@@ -1305,9 +1303,120 @@ namespace OjamajoBot.Module
                TimeSpan.FromHours(24) //time to wait before executing the timer again
                );
 
-                await ReplyAsync($"{Config.Emoji.birthdayCake} **Birthday Announcement Channels** has been assigned into: {MentionUtils.MentionChannel(channel_name.Id)}");
+                await ReplyAsync($"{Config.Emoji.birthdayCake} **Birthday Announcement Channels** has been assigned at: {MentionUtils.MentionChannel(channel_name.Id)}");
 
             }
+
+            //trading card configuration section
+            //assign trading card spawning channel
+            [Command("trading card spawn"), Summary("Set Doremi Bot to make the trading card to be spawned at <channel_name>.")]
+            public async Task assignTradingCardSpawnChannel(SocketGuildChannel channel_name)
+            {
+                var guildId = channel_name.Guild.Id;
+                var socketClient = Context.Client;
+
+                Config.Guild.setPropertyValue(guildId, "trading_card_spawn", channel_name.Id.ToString());
+                await ReplyAsync($"**Trading Card Spawning Channels** has been assigned at: {MentionUtils.MentionChannel(channel_name.Id)}");
+
+                if (Config.Doremi._timerTradingCardSpawn.ContainsKey(guildId.ToString()))
+                    Config.Doremi._timerTradingCardSpawn[guildId.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
+
+                //start doremi card spawning timer
+                Config.Doremi._timerTradingCardSpawn[guildId.ToString()] = new Timer(async _ =>
+                {
+                    int randomCategory = new Random().Next(0,101);
+                    string chosenCategory = "";
+                    if (randomCategory >= 0 && randomCategory <= 80){//normal
+                        chosenCategory = "normal";
+                    } else if (randomCategory >= 81 && randomCategory <= 90){//platinum
+                        chosenCategory = "platinum";
+                    } else if(randomCategory >= 91){//metal
+                        chosenCategory = "metal";
+                    }
+
+                    int randomParent = new Random().Next(0, 5);
+                    //int randomParent = 0; //don't forget to erase this, for testing purpose
+                    string parent = ""; DiscordSocketClient client = socketClient;
+                    Discord.Color color= Config.Doremi.EmbedColor; string author=""; string embedAvatarUrl = "";
+
+                    if (randomParent == 0)
+                    {
+                        parent = "doremi"; author = $"Doremi Trading Card - {chosenCategory}";
+                        embedAvatarUrl = Config.Doremi.EmbedAvatarUrl;
+                    } else if (randomParent == 1)
+                    {
+                        client = Bot.Hazuki.client;
+                        parent = "hazuki"; author = $"Hazuki Trading Card - {chosenCategory}";
+                        color = Config.Hazuki.EmbedColor; embedAvatarUrl = Config.Hazuki.EmbedAvatarUrl;
+                    }
+                    else if (randomParent == 2)
+                    {
+                        client = Bot.Aiko.client;
+                        parent = "aiko"; author = $"Aiko Trading Card - {chosenCategory}";
+                        color = Config.Aiko.EmbedColor; embedAvatarUrl = Config.Aiko.EmbedAvatarUrl;
+                    }
+                    else if (randomParent == 3) {
+                        client = Bot.Onpu.client;
+                        parent = "onpu"; author = $"Onpu Trading Card - {chosenCategory}";
+                        color = Config.Onpu.EmbedColor; embedAvatarUrl = Config.Onpu.EmbedAvatarUrl;
+                    }
+                    else if (randomParent >= 4)
+                    {
+                        client = Bot.Momoko.client;
+                        parent = "momoko"; author = $"Momoko Trading Card - {chosenCategory}";
+                        color = Config.Momoko.EmbedColor; embedAvatarUrl = Config.Momoko.EmbedAvatarUrl;
+                    }
+                        
+                    //start read json
+                    var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
+                    var key = JObject.Parse(jObjTradingCardList[parent][chosenCategory].ToString()).Properties().ToList();
+                    var randIndex = new Random().Next(0, key.Count);
+
+                    //chosen data:
+                    string chosenId = key[randIndex].Name;
+                    string chosenName = jObjTradingCardList[parent][chosenCategory][key[randIndex].Name]["name"].ToString();
+                    string chosenUrl = jObjTradingCardList[parent][chosenCategory][key[randIndex].Name]["url"].ToString();
+                    Config.Doremi._tradingCardSpawnedId[guildId.ToString()] = chosenId;
+                    Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()] = chosenCategory;
+                    Config.Doremi._tradingCardCatchToken[guildId.ToString()] = GlobalFunctions.RandomString(8);
+
+                    var embed = new EmbedBuilder()
+                        .WithAuthor(author, embedAvatarUrl)
+                        .WithColor(color)
+                        .WithTitle($"{chosenName} - ID: {chosenId}")
+                        .WithImageUrl(chosenUrl);
+
+                    await client
+                        .GetGuild(guildId)
+                        .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guildId, "trading_card_spawn")))
+                        .SendMessageAsync($":exclamation:A **{chosenCategory}** {parent} card has been spawned! Try to capture it with **<bot prefix>!card capture<ID>**", 
+                        embed:embed.Build());
+                },
+                null,
+                TimeSpan.FromMinutes(Convert.ToInt32(Guild.getPropertyValue(guildId, "trading_card_spawn_interval"))), //time to wait before executing the timer for the first time
+                TimeSpan.FromMinutes(Convert.ToInt32(Guild.getPropertyValue(guildId, "trading_card_spawn_interval"))) //time to wait before executing the timer again
+                );
+            }
+
+            //set spawning interval
+            [Command("trading card spawn interval"), Summary("Set the trading card spawn interval (in minutes).")]
+            public async Task setTradingCardSpawnInterval(int interval_hour)
+            {
+                if (interval_hour <= 4 || interval_hour >= 1441) await ReplyAsync($"Please enter interval between 5-1440 (in minutes)");
+                else {
+                    var guildId = Context.Guild.Id;
+                    Config.Guild.setPropertyValue(guildId, "trading_card_spawn_interval", interval_hour.ToString());
+                    await ReplyAsync($"**Trading Card Spawning interval** has been set into **{interval_hour}** hour(s)");
+
+                    if (Config.Doremi._timerTradingCardSpawn.ContainsKey(guildId.ToString()))
+                        Config.Doremi._timerTradingCardSpawn[guildId.ToString()].Change(
+                            TimeSpan.FromMinutes(Convert.ToInt32(Guild.getPropertyValue(guildId, "trading_card_spawn_interval"))), 
+                            TimeSpan.FromMinutes(Convert.ToInt32(Guild.getPropertyValue(guildId, "trading_card_spawn_interval"))));
+                }
+                    
+            }
+
+            //TRADING CARD CONFIGURATION ENDS
 
             [Command("random event"), Summary("Schedule Doremi Bot to make random event message on <channel_name> for every 24 hours.")]
             public async Task assignRandomEventChannel(IGuildChannel channel_name)
@@ -1351,7 +1460,7 @@ namespace OjamajoBot.Module
             //}
 
             [Command("remove settings"), Summary("Remove the settings on the assigned channels. " +
-                "Current available settings: `birthday`/`random event`")]
+                "Current available settings: `birthday`/`random event`/`trading card spawn`")]
             public async Task removeChannelSettings([Remainder]string settings)
             {
                 string property = ""; Boolean propertyValueExisted = false;
@@ -1386,6 +1495,21 @@ namespace OjamajoBot.Module
                             Config.Doremi._timerRandomEvent[Context.Guild.Id.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
                     }
                 }
+                else if (settings.ToLower() == "trading card spawn")
+                {
+                    property = "Trading Card Spawn";
+                    if (Config.Guild.hasPropertyValues(guildId.ToString(), "trading_card_spawn"))
+                    {
+                        propertyValueExisted = true;
+                        Config.Guild.setPropertyValue(Context.Guild.Id, "trading_card_spawn", "");
+                        if (Config.Doremi._timerTradingCardSpawn.ContainsKey(Context.Guild.Id.ToString()))
+                            Config.Doremi._timerTradingCardSpawn[Context.Guild.Id.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
+
+                        Config.Doremi._tradingCardSpawnedId[Context.Guild.Id.ToString()] = "";
+                        Config.Doremi._tradingCardSpawnedCategory[Context.Guild.Id.ToString()] = "";
+
+                    }
+                }
                 else
                 {
                     await ReplyAsync($"Sorry, I can't found that channel settings"); return;
@@ -1398,6 +1522,302 @@ namespace OjamajoBot.Module
             }
         }
 
+    }
+
+    [Name("card"), Group("card"), Summary("This category contains all Doremi Trading card command.")]
+    public class DoremiTradingCardInteractive : InteractiveBase
+    {
+        [Command("register", RunMode = RunMode.Async), Summary("Register your configuration for trading cards group command.")]
+        public async Task trading_card_register()
+        {
+            var guildId = Context.Guild.Id;
+            var clientId = Context.User.Id;
+            string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+
+            if (!File.Exists(playerDataDirectory))
+            {
+                File.Copy($@"{Config.Core.headConfigFolder}trading_card_template_data.json", $@"{playerDataDirectory}");
+                await ReplyAsync(embed: new EmbedBuilder()
+                .WithColor(Config.Doremi.EmbedColor)
+                .WithDescription($":white_check_mark: Your trading card data has been successfully registered.")
+                .WithImageUrl("https://cdn.discordapp.com/attachments/706490547191152690/706511135788105728/143751262x.png").Build());
+            }
+            else
+            {
+                await ReplyAsync(embed: new EmbedBuilder()
+                .WithColor(Config.Doremi.EmbedColor)
+                .WithDescription(":x: Sorry, your trading card data has been registered already.")
+                .WithImageUrl("https://cdn.discordapp.com/attachments/706490547191152690/706494009991757864/doremi.png").Build());
+            }
+        }
+
+        [Command("capture", RunMode = RunMode.Async), Summary("Capture spawned card with Doremi.")]
+        public async Task trading_card_doremi_capture(string card_id)
+        {
+            //reference: https://www.newtonsoft.com/json/help/html/ModifyJson.htm
+            var guildId = Context.Guild.Id;
+            var clientId = Context.User.Id;
+            string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+            JObject arrInventory = JObject.Parse(File.ReadAllText(playerDataDirectory));
+            string replyText=""; string parent = "doremi";
+
+            if (!File.Exists(playerDataDirectory))
+            {
+                replyText = "I'm sorry, please register yourself first with **do!card register** command.";
+            }
+            else
+            {
+                string spawnedCardId = Config.Doremi._tradingCardSpawnedId[guildId.ToString()].ToString();
+                string spawnedCardCategory = Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToString();
+                if (spawnedCardId != "" && spawnedCardCategory != "")
+                {
+                    if (spawnedCardId.Contains("do"))//check if the card is doremi/not
+                    {
+                        if (spawnedCardId == card_id)
+                        { 
+                            int catchState = 0;
+
+                            //check last capture time
+                            try
+                            {
+                                if ((string)arrInventory["catch_token"] == "" || 
+                                    (string)arrInventory["catch_token"]!=Config.Doremi._tradingCardCatchToken[guildId.ToString()].ToString())
+                                {
+                                    int catchRate;
+
+                                    //init RNG catch rate
+                                    if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "normal")
+                                    {
+                                        catchRate = new Random().Next(0, 11);
+                                        if (catchRate <= 9) catchState = 1;
+                                    }
+                                    else if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "platinum")
+                                    {
+                                        catchRate = new Random().Next(0, 11);
+                                        if (catchRate <= 4) catchState = 1;
+                                    }
+                                    else if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "metal")
+                                    {
+                                        catchRate = new Random().Next(0, 11);
+                                        if (catchRate <= 1) catchState = 1;
+                                    }
+
+                                    if (catchState == 1)
+                                    {
+                                        //start read json
+                                        var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
+
+                                        string name = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["name"].ToString();
+                                        string imgUrl = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["url"].ToString();
+                                        string rank = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["0"].ToString();
+                                        string star = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["1"].ToString();
+                                        string point = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["2"].ToString();
+
+                                        //check inventory
+                                        if (arrInventory[parent][spawnedCardCategory].ToString().Contains(spawnedCardId))
+                                        {//card already exist on inventory
+                                            replyText = $":x: Sorry, I can't capture **{card_id} - {name}** because you have it already.";
+                                        } else {//card not exist yet
+                                            //save data:
+                                            arrInventory["catch_token"] = Config.Doremi._tradingCardCatchToken[guildId.ToString()];
+                                            JArray item = (JArray)arrInventory[parent][spawnedCardCategory];
+                                            item.Add(spawnedCardId);
+                                            File.WriteAllText(playerDataDirectory, arrInventory.ToString());
+
+                                            await ReplyAsync($":white_check_mark: Congratulations, **{Context.User.Username}** have successfully capture Doremi **{spawnedCardCategory}** card: **{name}**",
+                                             embed: new EmbedBuilder()
+                                            .WithAuthor(name)
+                                            .WithColor(Config.Doremi.EmbedColor)
+                                            .AddField("ID", spawnedCardId, true)
+                                            .AddField("Category", spawnedCardCategory, true)
+                                            .AddField("Rank", rank, true)
+                                            .AddField("⭐", star, true)
+                                            .AddField("Point", point, true)
+                                            .WithImageUrl(imgUrl)
+                                            .WithFooter($"Captured by: {Context.User.Username}")
+                                            .Build());
+
+                                            //erase spawned instance
+                                            Config.Doremi._tradingCardSpawnedId[guildId.ToString()] = "";
+                                            Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()] = "";
+                                            return;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        //save data:
+                                        arrInventory["catch_token"] = Config.Doremi._tradingCardCatchToken[guildId.ToString()];
+                                        File.WriteAllText(playerDataDirectory, arrInventory.ToString());
+                                        replyText = ":x: I'm sorry, but you **fail** to catch the card. Better luck next time.";
+                                    }
+                                }
+                                else
+                                {
+                                    replyText = ":x: Sorry, please wait for the next card spawn.";
+                                }
+                            } catch(Exception e)
+                            {
+                                Console.WriteLine(e.ToString());
+                            }
+                            
+                        }
+                        else
+                        {
+                            replyText = ":x: Sorry, it seems you type the wrong **Card Id** at this time. Please type the correct one.";
+                        }
+                    }
+                    else
+                    {
+                        replyText = ":x: Sorry, I can't capture that card. Try to use the other ojamajo bot to capture this card.";
+                    }
+
+                }
+                else
+                {
+                    replyText = ":x: Sorry, either this card has been captured by someone or not spawned anymore. Please wait for the card to spawn again.";
+                }
+
+            }
+
+            //fail
+            await ReplyAsync(embed: new EmbedBuilder()
+            .WithColor(Config.Doremi.EmbedColor)
+            .WithDescription(replyText)
+            .WithImageUrl("https://cdn.discordapp.com/attachments/706490547191152690/706494009991757864/doremi.png").Build());
+
+        }
+
+        //list all cards that have been collected
+        [Command("inventory", RunMode = RunMode.Async), Summary("List all **Doremi** trading cards that you have collected.")]
+        public async Task trading_card_open_inventory()
+        {
+            var guildId = Context.Guild.Id;
+            var clientId = Context.User.Id;
+            string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+            var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
+
+            string replyText; string parent = "doremi";
+            int maxNormal = 48; int maxPlatinum = 8; int maxMetal = 6;
+
+            if (!File.Exists(playerDataDirectory)) //not registered yet
+            {
+                await ReplyAsync(embed: new EmbedBuilder()
+                .WithColor(Config.Doremi.EmbedColor)
+                .WithDescription("I'm sorry, please register yourself first with **do!card register** command.")
+                .WithImageUrl("https://cdn.discordapp.com/attachments/706490547191152690/706494009991757864/doremi.png").Build());
+            } else {
+                var playerData = JObject.Parse(File.ReadAllText(playerDataDirectory));
+                //var jParentObject = (JObject)Config.Core.jObjWiki["episodes"];
+
+                EmbedBuilder builder = new EmbedBuilder()
+                .WithColor(Config.Doremi.EmbedColor);
+
+                try
+                {
+                    //normal category
+                    string category = "normal"; var arrList = (JArray)playerData[parent][category]; 
+
+                    if (arrList.Count >= 1)
+                    {
+                        await PagedReplyAsync(
+                            TradingCardCore.printInventoryTemplate("doremi","doremi", category, jObjTradingCardList, arrList,maxNormal)
+                        );
+                    }
+                    else
+                    {
+                        await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
+                            Config.Doremi.EmbedColor, "doremi", category, maxNormal)
+                            .Build());
+                    }
+
+                    //platinum category
+                    category = "platinum"; arrList = (JArray)playerData[parent][category]; 
+                    if (arrList.Count >= 1)
+                    {
+                        await PagedReplyAsync(
+                            TradingCardCore.printInventoryTemplate("doremi", "doremi", category, jObjTradingCardList, arrList, maxPlatinum)
+                        );
+                    }
+                    else
+                    {
+                        await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
+                            Config.Doremi.EmbedColor, "doremi", category, maxPlatinum)
+                            .Build());
+                    }
+
+                    //metal category
+                    category = "metal"; arrList = (JArray)playerData[parent][category];
+                    if (arrList.Count >= 1)
+                    {
+                        await PagedReplyAsync(
+                            TradingCardCore.printInventoryTemplate("doremi", "doremi", category, jObjTradingCardList, arrList, maxMetal)
+                        );
+                    }
+                    else
+                    {
+                        await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
+                            Config.Doremi.EmbedColor, "doremi", category, maxMetal)
+                            .Build());
+                    }
+
+                }
+                catch (Exception e) { Console.WriteLine(e.ToString()); }
+
+
+            }
+
+        }
+
+        [Command("detail", RunMode = RunMode.Async), Alias("look"), Summary("See the detail of Doremi card information from the <card_id>.")]
+        public async Task trading_card_look(string card_id)
+        {
+            var guildId = Context.Guild.Id;
+            var clientId = Context.User.Id;
+            string parent = "doremi";
+
+            string category = "";
+
+            if (card_id.Contains("doP"))//platinum
+                category = "platinum";
+            else if (card_id.Contains("doM"))//metal
+                category = "metal";
+            else if (card_id.Contains("do"))
+                category = "normal";
+
+            try {
+                //start read json
+                string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+                JObject arrInventory = JObject.Parse(File.ReadAllText(playerDataDirectory));
+                var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
+                string name = jObjTradingCardList[parent][category][card_id]["name"].ToString();
+
+                if (arrInventory[parent][category].ToString().Contains(card_id)){
+                    
+                    string imgUrl = jObjTradingCardList[parent][category][card_id]["url"].ToString();
+                    string rank = jObjTradingCardList[parent][category][card_id]["0"].ToString();
+                    string star = jObjTradingCardList[parent][category][card_id]["1"].ToString();
+                    string point = jObjTradingCardList[parent][category][card_id]["2"].ToString();
+
+                    await ReplyAsync(embed: TradingCardCore.printCardDetailTemplate(Config.Doremi.EmbedColor, name,
+                        imgUrl, card_id, category, rank, star, point)
+                        .Build());
+                } else {
+                    await ReplyAsync(embed: new EmbedBuilder()
+                    .WithColor(Config.Doremi.EmbedColor)
+                    .WithDescription($"Sorry, you don't have: **{card_id} - {name}** card yet. Try capture it to look at this card.")
+                    .WithImageUrl("https://cdn.discordapp.com/attachments/706490547191152690/706494009991757864/doremi.png").Build());
+                }
+
+                
+
+            } catch(Exception e) {
+                await ReplyAsync(embed: new EmbedBuilder()
+                .WithColor(Config.Doremi.EmbedColor)
+                .WithDescription("Sorry, I can't find that card ID.")
+                .WithImageUrl("https://cdn.discordapp.com/attachments/706490547191152690/706494009991757864/doremi.png").Build());
+            }
+
+        }
     }
 
     [Name("memesdraw"), Group("memesdraw"), Summary("Memes Draw Category.")]
@@ -1510,7 +1930,7 @@ namespace OjamajoBot.Module
 
             if (!isFounded){
                 await ReplyAsync("Sorry, I can't find that template choices. " +
-                    $"See the available dorememes generator template with `{Config.Doremi.PrefixParent[0]}dorememes template list` command.");
+                    $"See the available dorememes generator template with `{Config.Doremi.PrefixParent[0]}memesdraw template list` command.");
                 return;
             }
 
@@ -2315,6 +2735,9 @@ namespace OjamajoBot.Module
                 builder.Description = "Currently there's no minigame leaderboard yet.";
             }
 
+            //cardpedia
+            //browse/look
+
             await ReplyAsync(embed: builder.Build());
 
         }
@@ -2433,10 +2856,8 @@ namespace OjamajoBot.Module
                     }
                     
                 }
-                    
-
+                
                 string tempRandomedAnswer = string.Join(" ", randomedAnswer.ToCharArray()) + " "; //with space
-                                                                                                  //Console.WriteLine(randomedAnswer);
 
                 string questionsFormat = $"Can you guess what **{key}** is this?```{replacedAnswer}```";
 

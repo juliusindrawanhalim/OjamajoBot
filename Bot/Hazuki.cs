@@ -180,6 +180,7 @@ namespace OjamajoBot.Bot
             await commands.AddModuleAsync(typeof(HazukiMagicalStageModule), services);
             await commands.AddModuleAsync(typeof(HazukiRandomEventModule), services);
             await commands.AddModuleAsync(typeof(HazukiMinigameInteractive), services);
+            await commands.AddModuleAsync(typeof(HazukiTradingCardInteractive), services);
             //await commands.AddModuleAsync(typeof(HazukiMusic), services);
         }
 

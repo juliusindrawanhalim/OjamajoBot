@@ -826,43 +826,325 @@ namespace OjamajoBot.Module
 
     }
 
-        //public class HazukiMusic : ModuleBase<SocketCommandContext>
-        //{
-        //    //a modules stops existing when a command is done executing and services exist aslong we did not dispose them
+    [Name("card"), Group("card"), Summary("This category contains all Hazuki Trading card command.")]
+    public class HazukiTradingCardInteractive : InteractiveBase
+    {
 
-        //    // Scroll down further for the AudioService.
-        //    // Like, way down
-        //    private readonly AudioService _service;
+        [Command("capture", RunMode = RunMode.Async), Summary("Capture spawned card with Hazuki.")]
+        public async Task trading_card_hazuki_capture(string card_id)
+        {
+            //reference: https://www.newtonsoft.com/json/help/html/ModifyJson.htm
+            var guildId = Context.Guild.Id;
+            var clientId = Context.User.Id;
+            string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+            JObject arrInventory = JObject.Parse(File.ReadAllText(playerDataDirectory));
+            string replyText = ""; string parent = "hazuki";
 
-        //    // Remember to add an instance of the AudioService
-        //    // to your IServiceCollection when you initialize your bot
-        //    public HazukiMusic(AudioService service)
-        //    {
-        //        _service = service;
-        //    }
+            if (!File.Exists(playerDataDirectory))
+            {
+                replyText = "I'm sorry, please register yourself first with **do!card register** command.";
+            }
+            else
+            {
+                string spawnedCardId = Config.Doremi._tradingCardSpawnedId[guildId.ToString()].ToString();
+                string spawnedCardCategory = Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToString();
+                if (spawnedCardId != "" && spawnedCardCategory != "")
+                {
+                    if (spawnedCardId.Contains("ha"))//check if the card is hazuki/not
+                    {
+                        if (spawnedCardId == card_id)
+                        {
+                            int catchState = 0;
 
-        //    // You *MUST* mark these commands with 'RunMode.Async'
-        //    // otherwise the bot will not respond until the Task times out.
-        //    [Command("join", RunMode = RunMode.Async)]
-        //    public async Task JoinCmd()
-        //    {
-        //        await _service.JoinAudio(Context.Guild, (Context.User as IVoiceState).VoiceChannel);
-        //    }
+                            //check last capture time
+                            try
+                            {
+                                if ((string)arrInventory["catch_token"] == "" ||
+                                    (string)arrInventory["catch_token"] != Config.Doremi._tradingCardCatchToken[guildId.ToString()].ToString())
+                                {
+                                    int catchRate;
 
-        //    // Remember to add preconditions to your commands,
-        //    // this is merely the minimal amount necessary.
-        //    // Adding more commands of your own is also encouraged.
-        //    [Command("leave", RunMode = RunMode.Async)]
-        //    public async Task LeaveCmd()
-        //    {
-        //        await _service.LeaveAudio(Context.Guild);
-        //    }
+                                    //init RNG catch rate
+                                    if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "normal")
+                                    {
+                                        catchRate = new Random().Next(0, 11);
+                                        if (catchRate <= 9) catchState = 1;
+                                    }
+                                    else if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "platinum")
+                                    {
+                                        catchRate = new Random().Next(0, 11);
+                                        if (catchRate <= 4) catchState = 1;
+                                    }
+                                    else if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "metal")
+                                    {
+                                        catchRate = new Random().Next(0, 11);
+                                        if (catchRate <= 1) catchState = 1;
+                                    }
 
-        //    [Command("play", RunMode = RunMode.Async)]
-        //    public async Task PlayCmd([Remainder] string song)
-        //    {
-        //        await _service.SendAudioAsync(Context.Guild, Context.Channel, "music/" + song + ".mp3");
-        //    }
+                                    if (catchState == 1)
+                                    {
+                                        //start read json
+                                        var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
 
-        //}
+                                        string name = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["name"].ToString();
+                                        string imgUrl = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["url"].ToString();
+                                        string rank = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["0"].ToString();
+                                        string star = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["1"].ToString();
+                                        string point = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["2"].ToString();
+
+                                        //check inventory
+                                        if (arrInventory[parent][spawnedCardCategory].ToString().Contains(spawnedCardId))
+                                        {//card already exist on inventory
+                                            replyText = $":x: Sorry, I can't capture **{card_id} - {name}** because you have it already.";
+                                        }
+                                        else
+                                        {//card not exist yet
+                                            //save data:
+                                            arrInventory["catch_token"] = Config.Doremi._tradingCardCatchToken[guildId.ToString()];
+                                            JArray item = (JArray)arrInventory[parent][spawnedCardCategory];
+                                            item.Add(spawnedCardId);
+                                            File.WriteAllText(playerDataDirectory, arrInventory.ToString());
+
+                                            await ReplyAsync($":white_check_mark: Congratulations, **{Context.User.Username}** have successfully capture Hazuki **{spawnedCardCategory}** card: **{name}**",
+                                             embed: new EmbedBuilder()
+                                            .WithAuthor(name)
+                                            .WithColor(Config.Hazuki.EmbedColor)
+                                            .AddField("ID", spawnedCardId, true)
+                                            .AddField("Category", spawnedCardCategory, true)
+                                            .AddField("Rank", rank, true)
+                                            .AddField("⭐", star, true)
+                                            .AddField("Point", point, true)
+                                            .WithImageUrl(imgUrl)
+                                            .WithFooter($"Captured by: {Context.User.Username}")
+                                            .Build());
+
+                                            //erase spawned instance
+                                            Config.Doremi._tradingCardSpawnedId[guildId.ToString()] = "";
+                                            Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()] = "";
+                                            return;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        //save data:
+                                        arrInventory["catch_token"] = Config.Doremi._tradingCardCatchToken[guildId.ToString()];
+                                        File.WriteAllText(playerDataDirectory, arrInventory.ToString());
+                                        replyText = ":x: I'm sorry, but you **fail** to catch the card. Better luck next time.";
+                                    }
+                                }
+                                else
+                                {
+                                    replyText = ":x: Sorry, please wait for the next card spawn.";
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine(e.ToString());
+                            }
+
+                        }
+                        else
+                        {
+                            replyText = ":x: Sorry, it seems you type the wrong **Card Id** at this time. Please type the correct one.";
+                        }
+                    }
+                    else
+                    {
+                        replyText = ":x: Sorry, I can't capture that card. Try to use the other ojamajo bot to capture this card.";
+                    }
+
+                }
+                else
+                {
+                    replyText = ":x: Sorry, either this card has been captured by someone or not spawned anymore. Please wait for the card to spawn again.";
+                }
+
+            }
+
+            //fail
+            await ReplyAsync(embed: new EmbedBuilder()
+            .WithColor(Config.Hazuki.EmbedColor)
+            .WithDescription(replyText)
+            .WithImageUrl("https://cdn.discordapp.com/attachments/706490547191152690/706494023782629386/hazuki.png").Build());
+
+        }
+
+        //list all cards that have been collected
+        [Command("inventory", RunMode = RunMode.Async), Summary("List all **Hazuki** trading cards that you have collected.")]
+        public async Task trading_card_open_inventory()
+        {
+            var guildId = Context.Guild.Id;
+            var clientId = Context.User.Id;
+            string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+            var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
+
+            string replyText; string parent = "hazuki";
+            int maxNormal = 46; int maxPlatinum = 9; int maxMetal = 6;
+
+            if (!File.Exists(playerDataDirectory)) //not registered yet
+            {
+                await ReplyAsync(embed: new EmbedBuilder()
+                .WithColor(Config.Hazuki.EmbedColor)
+                .WithDescription("I'm sorry, please register yourself first with **do!card register** command.")
+                .WithImageUrl("https://cdn.discordapp.com/attachments/706490547191152690/706494023782629386/hazuki.png").Build());
+            }
+            else
+            {
+                var playerData = JObject.Parse(File.ReadAllText(playerDataDirectory));
+                //var jParentObject = (JObject)Config.Core.jObjWiki["episodes"];
+
+                EmbedBuilder builder = new EmbedBuilder()
+                .WithColor(Config.Hazuki.EmbedColor);
+
+                try
+                {
+                    //normal category
+                    string category = "normal"; var arrList = (JArray)playerData[parent][category];
+
+                    if (arrList.Count >= 1)
+                    {
+                        await PagedReplyAsync(
+                            TradingCardCore.printInventoryTemplate("hazuki", "hazuki", category, jObjTradingCardList, arrList, maxNormal)
+                        );
+                    }
+                    else
+                    {
+                        await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
+                            Config.Hazuki.EmbedColor, "hazuki", category, maxNormal)
+                            .Build());
+                    }
+
+                    //platinum category
+                    category = "platinum"; arrList = (JArray)playerData[parent][category];
+                    if (arrList.Count >= 1)
+                    {
+                        await PagedReplyAsync(
+                            TradingCardCore.printInventoryTemplate("hazuki", "hazuki", category, jObjTradingCardList, arrList, maxPlatinum)
+                        );
+                    }
+                    else
+                    {
+                        await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
+                            Config.Hazuki.EmbedColor, "hazuki", category, maxPlatinum)
+                            .Build());
+                    }
+
+                    //metal category
+                    category = "metal"; arrList = (JArray)playerData[parent][category];
+                    if (arrList.Count >= 1)
+                    {
+                        await PagedReplyAsync(
+                            TradingCardCore.printInventoryTemplate("hazuki", "hazuki", category, jObjTradingCardList, arrList, maxMetal)
+                        );
+                    }
+                    else
+                    {
+                        await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
+                            Config.Hazuki.EmbedColor, "hazuki", category, maxMetal)
+                            .Build());
+                    }
+
+                }
+                catch (Exception e) { Console.WriteLine(e.ToString()); }
+
+
+            }
+
+        }
+
+        [Command("detail", RunMode = RunMode.Async), Alias("look"), Summary("See the detail of Hazuki card information from the <card_id>.")]
+        public async Task trading_card_look(string card_id)
+        {
+            var guildId = Context.Guild.Id;
+            var clientId = Context.User.Id;
+            string parent = "hazuki";
+
+            string category = "";
+
+            if (card_id.Contains("haP"))//platinum
+                category = "platinum";
+            else if (card_id.Contains("haM"))//metal
+                category = "metal";
+            else if (card_id.Contains("ha"))
+                category = "normal";
+
+            try
+            {
+                //start read json
+                string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+                JObject arrInventory = JObject.Parse(File.ReadAllText(playerDataDirectory));
+                var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
+                string name = jObjTradingCardList[parent][category][card_id]["name"].ToString();
+
+                if (arrInventory[parent][category].ToString().Contains(card_id))
+                {
+
+                    string imgUrl = jObjTradingCardList[parent][category][card_id]["url"].ToString();
+                    string rank = jObjTradingCardList[parent][category][card_id]["0"].ToString();
+                    string star = jObjTradingCardList[parent][category][card_id]["1"].ToString();
+                    string point = jObjTradingCardList[parent][category][card_id]["2"].ToString();
+
+                    await ReplyAsync(embed: TradingCardCore.printCardDetailTemplate(Config.Hazuki.EmbedColor, name,
+                        imgUrl, card_id, category, rank, star, point)
+                        .Build());
+                }
+                else
+                {
+                    await ReplyAsync(embed: new EmbedBuilder()
+                    .WithColor(Config.Hazuki.EmbedColor)
+                    .WithDescription($"Sorry, you don't have: **{card_id} - {name}** card yet. Try capture it to look at this card.")
+                    .WithImageUrl("https://cdn.discordapp.com/attachments/706490547191152690/706494023782629386/hazuki.png").Build());
+                }
+
+            }
+            catch (Exception e)
+            {
+                await ReplyAsync(embed: new EmbedBuilder()
+                .WithColor(Config.Hazuki.EmbedColor)
+                .WithDescription("Sorry, I can't find that card ID.")
+                .WithImageUrl("https://cdn.discordapp.com/attachments/706490547191152690/706494023782629386/hazuki.png").Build());
+            }
+
+        }
     }
+
+    //public class HazukiMusic : ModuleBase<SocketCommandContext>
+    //{
+    //    //a modules stops existing when a command is done executing and services exist aslong we did not dispose them
+
+    //    // Scroll down further for the AudioService.
+    //    // Like, way down
+    //    private readonly AudioService _service;
+
+    //    // Remember to add an instance of the AudioService
+    //    // to your IServiceCollection when you initialize your bot
+    //    public HazukiMusic(AudioService service)
+    //    {
+    //        _service = service;
+    //    }
+
+    //    // You *MUST* mark these commands with 'RunMode.Async'
+    //    // otherwise the bot will not respond until the Task times out.
+    //    [Command("join", RunMode = RunMode.Async)]
+    //    public async Task JoinCmd()
+    //    {
+    //        await _service.JoinAudio(Context.Guild, (Context.User as IVoiceState).VoiceChannel);
+    //    }
+
+    //    // Remember to add preconditions to your commands,
+    //    // this is merely the minimal amount necessary.
+    //    // Adding more commands of your own is also encouraged.
+    //    [Command("leave", RunMode = RunMode.Async)]
+    //    public async Task LeaveCmd()
+    //    {
+    //        await _service.LeaveAudio(Context.Guild);
+    //    }
+
+    //    [Command("play", RunMode = RunMode.Async)]
+    //    public async Task PlayCmd([Remainder] string song)
+    //    {
+    //        await _service.SendAudioAsync(Context.Guild, Context.Channel, "music/" + song + ".mp3");
+    //    }
+
+    //}
+}

@@ -26,6 +26,9 @@ namespace Config
             //check if config guild directory exists/not
             if (!Directory.Exists($"{Core.headConfigGuildFolder}{id_guild.ToString()}"))
                 Directory.CreateDirectory($"{Core.headConfigGuildFolder}{id_guild.ToString()}");
+            //check trading cards configuration folder exists/not
+            if (!Directory.Exists($"{Core.headConfigGuildFolder}{id_guild.ToString()}/{Core.headTradingCardConfigFolder}"))
+                Directory.CreateDirectory($"{Core.headConfigGuildFolder}{id_guild.ToString()}/{Core.headTradingCardConfigFolder}");
 
             if (File.Exists($"{Core.headConfigGuildFolder}{id_guild}/{id_guild}.json")){
                 JObject guildConfig = JObject.Parse(File.ReadAllText($"{Core.headConfigGuildFolder}{id_guild}/{id_guild}.json"));
@@ -66,6 +69,14 @@ namespace Config
                 if (!guildConfig.ContainsKey("momoko_role_id"))
                     guildConfig.Add(new JProperty("momoko_role_id", ""));
 
+                //trading_card_spawn channels
+                if (!guildConfig.ContainsKey("trading_card_spawn"))
+                    guildConfig.Add(new JProperty("trading_card_spawn", ""));
+
+                //trading_card_spawn_interval
+                if (!guildConfig.ContainsKey("trading_card_spawn_interval"))
+                    guildConfig.Add(new JProperty("trading_card_spawn_interval", "60"));
+
                 File.WriteAllText($"{Core.headConfigGuildFolder}{id_guild}/{id_guild}.json", guildConfig.ToString());
 
             } else { //create json file if it's not existed
@@ -79,6 +90,8 @@ namespace Config
                     new JProperty("aiko_role_id", ""),
                     new JProperty("onpu_role_id", ""),
                     new JProperty("momoko_role_id", ""),
+                    new JProperty("trading_card_spawn", ""),
+                    new JProperty("trading_card_spawn_interval", "60"),
                     new JProperty("user_birthday", new JObject()));
 
                 File.WriteAllText($"{Core.headConfigGuildFolder}{id_guild}/{id_guild}.json", guildConfig.ToString());

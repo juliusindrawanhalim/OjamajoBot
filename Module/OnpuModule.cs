@@ -656,6 +656,288 @@ namespace OjamajoBot.Module
 
     }
 
+    [Name("card"), Group("card"), Summary("This category contains all Onpu Trading card command.")]
+    public class OnpuTradingCardInteractive : InteractiveBase
+    {
+
+        [Command("capture", RunMode = RunMode.Async), Summary("Capture spawned card with Onpu.")]
+        public async Task trading_card_onpu_capture(string card_id)
+        {
+            //reference: https://www.newtonsoft.com/json/help/html/ModifyJson.htm
+            var guildId = Context.Guild.Id;
+            var clientId = Context.User.Id;
+            string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+            JObject arrInventory = JObject.Parse(File.ReadAllText(playerDataDirectory));
+            string replyText = ""; string parent = "onpu";
+
+            if (!File.Exists(playerDataDirectory))
+            {
+                replyText = "I'm sorry, please register yourself first with **do!card register** command.";
+            }
+            else
+            {
+                string spawnedCardId = Config.Doremi._tradingCardSpawnedId[guildId.ToString()].ToString();
+                string spawnedCardCategory = Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToString();
+                if (spawnedCardId != "" && spawnedCardCategory != "")
+                {
+                    if (spawnedCardId.Contains("on"))//check if the card is onpu/not
+                    {
+                        if (spawnedCardId == card_id)
+                        {
+                            int catchState = 0;
+
+                            //check last capture time
+                            try
+                            {
+                                if ((string)arrInventory["catch_token"] == "" ||
+                                    (string)arrInventory["catch_token"] != Config.Doremi._tradingCardCatchToken[guildId.ToString()].ToString())
+                                {
+                                    int catchRate;
+
+                                    //init RNG catch rate
+                                    if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "normal")
+                                    {
+                                        catchRate = new Random().Next(0, 11);
+                                        if (catchRate <= 9) catchState = 1;
+                                    }
+                                    else if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "platinum")
+                                    {
+                                        catchRate = new Random().Next(0, 11);
+                                        if (catchRate <= 4) catchState = 1;
+                                    }
+                                    else if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "metal")
+                                    {
+                                        catchRate = new Random().Next(0, 11);
+                                        if (catchRate <= 1) catchState = 1;
+                                    }
+
+                                    if (catchState == 1)
+                                    {
+                                        //start read json
+                                        var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
+
+                                        string name = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["name"].ToString();
+                                        string imgUrl = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["url"].ToString();
+                                        string rank = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["0"].ToString();
+                                        string star = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["1"].ToString();
+                                        string point = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["2"].ToString();
+
+                                        //check inventory
+                                        if (arrInventory[parent][spawnedCardCategory].ToString().Contains(spawnedCardId))
+                                        {//card already exist on inventory
+                                            replyText = $":x: Sorry, I can't capture **{card_id} - {name}** because you have it already.";
+                                        }
+                                        else
+                                        {//card not exist yet
+                                            //save data:
+                                            arrInventory["catch_token"] = Config.Doremi._tradingCardCatchToken[guildId.ToString()];
+                                            JArray item = (JArray)arrInventory[parent][spawnedCardCategory];
+                                            item.Add(spawnedCardId);
+                                            File.WriteAllText(playerDataDirectory, arrInventory.ToString());
+
+                                            await ReplyAsync($":white_check_mark: Congratulations, **{Context.User.Username}** have successfully capture Onpu **{spawnedCardCategory}** card: **{name}**",
+                                             embed: new EmbedBuilder()
+                                            .WithAuthor(name)
+                                            .WithColor(Config.Onpu.EmbedColor)
+                                            .AddField("ID", spawnedCardId, true)
+                                            .AddField("Category", spawnedCardCategory, true)
+                                            .AddField("Rank", rank, true)
+                                            .AddField("⭐", star, true)
+                                            .AddField("Point", point, true)
+                                            .WithImageUrl(imgUrl)
+                                            .WithFooter($"Captured by: {Context.User.Username}")
+                                            .Build());
+
+                                            //erase spawned instance
+                                            Config.Doremi._tradingCardSpawnedId[guildId.ToString()] = "";
+                                            Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()] = "";
+                                            return;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        //save data:
+                                        arrInventory["catch_token"] = Config.Doremi._tradingCardCatchToken[guildId.ToString()];
+                                        File.WriteAllText(playerDataDirectory, arrInventory.ToString());
+                                        replyText = ":x: I'm sorry, but you **fail** to catch the card. Better luck next time.";
+                                    }
+                                }
+                                else
+                                {
+                                    replyText = ":x: Sorry, please wait for the next card spawn.";
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine(e.ToString());
+                            }
+
+                        }
+                        else
+                        {
+                            replyText = ":x: Sorry, it seems you type the wrong **Card Id** at this time. Please type the correct one.";
+                        }
+                    }
+                    else
+                    {
+                        replyText = ":x: Sorry, I can't capture that card. Try to use the other ojamajo bot to capture this card.";
+                    }
+
+                }
+                else
+                {
+                    replyText = ":x: Sorry, either this card has been captured by someone or not spawned anymore. Please wait for the card to spawn again.";
+                }
+
+            }
+
+            //fail
+            await ReplyAsync(embed: new EmbedBuilder()
+            .WithColor(Config.Onpu.EmbedColor)
+            .WithDescription(replyText)
+            .WithImageUrl("https://cdn.discordapp.com/attachments/706490547191152690/706494042631962666/onpu.jpg").Build());
+
+        }
+
+        //list all cards that have been collected
+        [Command("inventory", RunMode = RunMode.Async), Summary("List all **Onpu** trading cards that you have collected.")]
+        public async Task trading_card_open_inventory()
+        {
+            var guildId = Context.Guild.Id;
+            var clientId = Context.User.Id;
+            string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+            var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
+
+            string replyText; string parent = "onpu";
+            int maxNormal = 46; int maxPlatinum = 13; int maxMetal = 6;
+
+            if (!File.Exists(playerDataDirectory)) //not registered yet
+            {
+                await ReplyAsync(embed: new EmbedBuilder()
+                .WithColor(Config.Onpu.EmbedColor)
+                .WithDescription("I'm sorry, please register yourself first with **do!card register** command.")
+                .WithImageUrl("https://cdn.discordapp.com/attachments/706490547191152690/706494042631962666/onpu.jpg").Build());
+            }
+            else
+            {
+                var playerData = JObject.Parse(File.ReadAllText(playerDataDirectory));
+                //var jParentObject = (JObject)Config.Core.jObjWiki["episodes"];
+
+                EmbedBuilder builder = new EmbedBuilder()
+                .WithColor(Config.Onpu.EmbedColor);
+
+                try
+                {
+                    //normal category
+                    string category = "normal"; var arrList = (JArray)playerData[parent][category];
+
+                    if (arrList.Count >= 1)
+                    {
+                        await PagedReplyAsync(
+                            TradingCardCore.printInventoryTemplate("onpu", "onpu", category, jObjTradingCardList, arrList, maxNormal)
+                        );
+                    }
+                    else
+                    {
+                        await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
+                            Config.Onpu.EmbedColor, "onpu", category, maxNormal)
+                            .Build());
+                    }
+
+                    //platinum category
+                    category = "platinum"; arrList = (JArray)playerData[parent][category];
+                    if (arrList.Count >= 1)
+                    {
+                        await PagedReplyAsync(
+                            TradingCardCore.printInventoryTemplate("onpu", "onpu", category, jObjTradingCardList, arrList, maxPlatinum)
+                        );
+                    }
+                    else
+                    {
+                        await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
+                            Config.Onpu.EmbedColor, "onpu", category, maxPlatinum)
+                            .Build());
+                    }
+
+                    //metal category
+                    category = "metal"; arrList = (JArray)playerData[parent][category];
+                    if (arrList.Count >= 1)
+                    {
+                        await PagedReplyAsync(
+                            TradingCardCore.printInventoryTemplate("onpu", "onpu", category, jObjTradingCardList, arrList, maxMetal)
+                        );
+                    }
+                    else
+                    {
+                        await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
+                            Config.Onpu.EmbedColor, "onpu", category, maxMetal)
+                            .Build());
+                    }
+
+                }
+                catch (Exception e) { Console.WriteLine(e.ToString()); }
+
+
+            }
+
+        }
+
+        [Command("detail", RunMode = RunMode.Async), Alias("look"), Summary("See the detail of Onpu card information from the <card_id>.")]
+        public async Task trading_card_look(string card_id)
+        {
+            var guildId = Context.Guild.Id;
+            var clientId = Context.User.Id;
+            string parent = "onpu";
+
+            string category = "";
+
+            if (card_id.Contains("onP"))//platinum
+                category = "platinum";
+            else if (card_id.Contains("onM"))//metal
+                category = "metal";
+            else if (card_id.Contains("on"))
+                category = "normal";
+
+            try
+            {
+                //start read json
+                string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+                JObject arrInventory = JObject.Parse(File.ReadAllText(playerDataDirectory));
+                var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
+                string name = jObjTradingCardList[parent][category][card_id]["name"].ToString();
+
+                if (arrInventory[parent][category].ToString().Contains(card_id))
+                {
+
+                    string imgUrl = jObjTradingCardList[parent][category][card_id]["url"].ToString();
+                    string rank = jObjTradingCardList[parent][category][card_id]["0"].ToString();
+                    string star = jObjTradingCardList[parent][category][card_id]["1"].ToString();
+                    string point = jObjTradingCardList[parent][category][card_id]["2"].ToString();
+
+                    await ReplyAsync(embed: TradingCardCore.printCardDetailTemplate(Config.Onpu.EmbedColor, name,
+                        imgUrl, card_id, category, rank, star, point)
+                        .Build());
+                }
+                else
+                {
+                    await ReplyAsync(embed: new EmbedBuilder()
+                    .WithColor(Config.Onpu.EmbedColor)
+                    .WithDescription($"Sorry, you don't have: **{card_id} - {name}** card yet. Try capture it to look at this card.")
+                    .WithImageUrl("https://cdn.discordapp.com/attachments/706490547191152690/706494042631962666/onpu.jpg").Build());
+                }
+
+            }
+            catch (Exception e)
+            {
+                await ReplyAsync(embed: new EmbedBuilder()
+                .WithColor(Config.Onpu.EmbedColor)
+                .WithDescription("Sorry, I can't find that card ID.")
+                .WithImageUrl("https://cdn.discordapp.com/attachments/706490547191152690/706494042631962666/onpu.jpg").Build());
+            }
+
+        }
+    }
+
     [Summary("hidden")]
     class OnpuMagicalStageModule : ModuleBase<SocketCommandContext>
     {

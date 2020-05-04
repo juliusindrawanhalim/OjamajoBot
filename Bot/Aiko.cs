@@ -185,6 +185,7 @@ namespace OjamajoBot.Bot
             await commands.AddModuleAsync(typeof(AikoMagicalStageModule), services);
             await commands.AddModuleAsync(typeof(AikoRandomEventModule), services);
             await commands.AddModuleAsync(typeof(AikoMinigameInteractive), services);
+            await commands.AddModuleAsync(typeof(AikoTradingCardInteractive), services);
             //await commands.AddModuleAsync(typeof(AkoMusic), services);
         }
 

@@ -146,7 +146,6 @@ namespace OjamajoBot.Bot
                     Console.WriteLine(updLog);
                 }
 
-                
             },
             null,
             TimeSpan.FromSeconds(1), //time to wait before executing the timer for the first time (set first status)
@@ -368,11 +367,101 @@ namespace OjamajoBot.Bot
                 );
             }
 
-            //var channel = client.GetChannel(guild.SystemChannel.Id) as SocketTextChannel;
-            //await channel.SendMessageAsync(guild.SystemChannel.Id.ToString());
+            //init variable
+            Config.Doremi._tradingCardSpawnedId[guild.Id.ToString()] = "";
+            Config.Doremi._tradingCardSpawnedCategory[guild.Id.ToString()] = "";
 
-            Config.Guild.init(guild.Id);
-            Config.Music.queuedTrack[guild.Id.ToString()] = new List<string>();
+            //set random card spawn timer
+            if (Config.Guild.hasPropertyValues(guild.Id.ToString(), "trading_card_spawn"))
+            {
+                Config.Doremi._timerTradingCardSpawn[guild.Id.ToString()] = new Timer(async _ =>
+                {
+                    int randomCategory = new Random().Next(0, 101);
+                    string chosenCategory = "";
+                    if (randomCategory >= 0 && randomCategory <= 80)
+                    {//normal
+                        chosenCategory = "normal";
+                    }
+                    else if (randomCategory >= 81 && randomCategory <= 90)
+                    {//platinum
+                        chosenCategory = "platinum";
+                    }
+                    else if (randomCategory >= 91)
+                    {//metal
+                        chosenCategory = "metal";
+                    }
+
+                    int randomParent = new Random().Next(0, 5);
+                    //int randomParent = 4; //don't forget to erase this, for testing purpose
+                    string parent = ""; DiscordSocketClient client = this.client;
+                    Discord.Color color = Config.Doremi.EmbedColor; string author = ""; string embedAvatarUrl = "";
+
+                    if (randomParent == 0)
+                    {
+                        parent = "doremi"; author = $"Doremi Trading Card - {chosenCategory}";
+                        embedAvatarUrl = Config.Doremi.EmbedAvatarUrl;
+                    }
+                    else if (randomParent == 1)
+                    {
+                        client = Bot.Hazuki.client;
+                        parent = "hazuki"; author = $"Hazuki Trading Card - {chosenCategory}";
+                        color = Config.Hazuki.EmbedColor; embedAvatarUrl = Config.Hazuki.EmbedAvatarUrl;
+                    }
+                    else if (randomParent == 2)
+                    {
+                        client = Bot.Aiko.client;
+                        parent = "aiko"; author = $"Aiko Trading Card - {chosenCategory}";
+                        color = Config.Aiko.EmbedColor; embedAvatarUrl = Config.Aiko.EmbedAvatarUrl;
+                    }
+                    else if (randomParent == 3)
+                    {
+                        client = Bot.Onpu.client;
+                        parent = "onpu"; author = $"Onpu Trading Card - {chosenCategory}";
+                        color = Config.Onpu.EmbedColor; embedAvatarUrl = Config.Onpu.EmbedAvatarUrl;
+                    }
+                    else if (randomParent >= 4)
+                    {
+                        client = Bot.Momoko.client;
+                        parent = "momoko"; author = $"Momoko Trading Card - {chosenCategory}";
+                        color = Config.Momoko.EmbedColor; embedAvatarUrl = Config.Momoko.EmbedAvatarUrl;
+                    }
+
+                    //start read json
+                    var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
+                    var key = JObject.Parse(jObjTradingCardList[parent][chosenCategory].ToString()).Properties().ToList();
+                    var randIndex = new Random().Next(0, key.Count);
+
+                    //chosen data:
+                    string chosenId = key[randIndex].Name;
+                    string chosenName = jObjTradingCardList[parent][chosenCategory][key[randIndex].Name]["name"].ToString();
+                    string chosenUrl = jObjTradingCardList[parent][chosenCategory][key[randIndex].Name]["url"].ToString();
+                    Config.Doremi._tradingCardSpawnedId[guild.Id.ToString()] = chosenId;
+                    Config.Doremi._tradingCardSpawnedCategory[guild.Id.ToString()] = chosenCategory;
+                    Config.Doremi._tradingCardCatchToken[guild.Id.ToString()] = GlobalFunctions.RandomString(8);
+
+                    var embed = new EmbedBuilder()
+                        .WithAuthor(author, embedAvatarUrl)
+                        .WithColor(color)
+                        .WithTitle($"{chosenName} - ID: {chosenId}")
+                        .WithImageUrl(chosenUrl);
+
+                    await client
+                        .GetGuild(guild.Id)
+                        .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "trading_card_spawn")))
+                        .SendMessageAsync($":exclamation:A **{chosenCategory}** {parent} card has been spawned! Try capture it with **<bot prefix>!card capture<ID>**",
+                        embed: embed.Build());
+                },
+                null,
+                TimeSpan.FromMinutes(Convert.ToInt32(Config.Guild.getPropertyValue(guild.Id, "trading_card_spawn_interval"))), //time to wait before executing the timer for the first time
+                TimeSpan.FromMinutes(Convert.ToInt32(Config.Guild.getPropertyValue(guild.Id, "trading_card_spawn_interval"))) //time to wait before executing the timer again
+                );
+            }
+
+                //var channel = client.GetChannel(guild.SystemChannel.Id) as SocketTextChannel;
+                //await channel.SendMessageAsync(guild.SystemChannel.Id.ToString());
+
+                Config.Guild.init(guild.Id);
+                Config.Music.queuedTrack[guild.Id.ToString()] = new List<string>();
             //Config.Music.storedLavaTrack[guild.Id.ToString()] = new List<LavaTrack>();
         }
 
@@ -391,13 +480,17 @@ namespace OjamajoBot.Bot
                     $"Hi there {user.Mention}, welcome to the {channel.Guild.Name}. We hope you enjoy and happy with all of us.",
                     $"Hello {user.Mention}, welcome to the {channel.Guild.Name}. We're really happy that you join our group.",
                     $"Hello new friends: {user.Mention}, welcome to the {channel.Guild.Name}. " +
-                    $"We're expecting you to come and hopefully you're enjoying your stay on the group."
+                    $"We're expecting you to come and hopefully you're enjoying your stay on the group.",
+                    $"Hi {user.Mention}, welcome aboard to {channel.Guild.Name}. Hope you enjoy your stay.",
+                    $"We are happy to welcome you: {user.Mention} to the {channel.Guild.Name}."
                 };
 
                 string[] arrRandomPictures =
                 {"https://66.media.tumblr.com/c8f9c5455355f8e522d52bacb8155ab0/tumblr_mswho8nWx11r98a5go1_400.gif",
                 "https://thumbs.gfycat.com/DamagedGrouchyBarracuda-small.gif",
-                "https://data.whicdn.com/images/39976659/original.gif"};
+                "https://data.whicdn.com/images/39976659/original.gif",
+                "https://cdn.discordapp.com/attachments/706770454697738300/706770708147208323/the-ojamajos.png",
+                "https://cdn.discordapp.com/attachments/706770454697738300/706770837558263928/TW361403.png"};
 
                 int rndIndexWelcomeMessage = new Random().Next(0, arrRandomWelcomeMessage.GetLength(0));
                 int rndIndexRandomPictures = new Random().Next(0, arrRandomPictures.GetLength(0));
@@ -561,6 +654,7 @@ namespace OjamajoBot.Bot
             await commands.AddModuleAsync(typeof(DoremiModerator), services);
             //await commands.AddModuleAsync(typeof(DoremiModeratorChannels), services);
             await commands.AddModuleAsync(typeof(DoremiMagicalStageModule), services);
+            await commands.AddModuleAsync(typeof(DoremiTradingCardInteractive), services);
         }
 
         private async Task HandleCommandAsync(SocketMessage arg)
