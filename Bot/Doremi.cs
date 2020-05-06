@@ -39,10 +39,10 @@ namespace OjamajoBot.Bot
         private AudioService audioservice;
         //private Lavalink4netService lavalink4netservice;
 
-        private VictoriaService victoriaservice;
+        //private VictoriaService victoriaservice;
 
         //init lavanode
-        private LavaNode _lavaNode;
+        //private LavaNode _lavaNode;
 
         //timer to rotates activity
         private Timer _timerStatus;
@@ -153,8 +153,8 @@ namespace OjamajoBot.Bot
             );
             //end block
 
-            _lavaNode = services.GetRequiredService<LavaNode>();
-            victoriaservice = new VictoriaService(_lavaNode, client);
+            //_lavaNode = services.GetRequiredService<LavaNode>();
+            //victoriaservice = new VictoriaService(_lavaNode, client);
             client.UserJoined += AnnounceJoinedUser;
             client.UserLeft += AnnounceLeavingUser;
             client.MessageReceived += MessageReceived;
@@ -170,7 +170,7 @@ namespace OjamajoBot.Bot
             client.Ready += () => {
 
                 Console.WriteLine("Doremi Connected!");
-                _lavaNode.ConnectAsync();
+                //_lavaNode.ConnectAsync();
 
                 return Task.CompletedTask;
             };
@@ -204,7 +204,6 @@ namespace OjamajoBot.Bot
             .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/c/c3/01.07.JPG")
             .Build());
 
-            Config.Music.queuedTrack[guild.Id.ToString()] = new List<string>();
             Console.WriteLine($"Doremi Bot joined into: {guild.Name}");
             Config.Guild.init(guild.Id);
         }
@@ -376,53 +375,55 @@ namespace OjamajoBot.Bot
             {
                 Config.Doremi._timerTradingCardSpawn[guild.Id.ToString()] = new Timer(async _ =>
                 {
-                    int randomCategory = new Random().Next(0, 101);
+                    //0-2 | 3-7 | 8-10
+                    //9/5/2
+                    int randomCategory = new Random().Next(11);
                     string chosenCategory = "";
-                    if (randomCategory >= 0 && randomCategory <= 80)
+                    if (randomCategory <=2)//0-2
                     {//normal
-                        chosenCategory = "normal";
+                        chosenCategory = "metal";
                     }
-                    else if (randomCategory >= 81 && randomCategory <= 90)
+                    else if (randomCategory <=5)//0-5
                     {//platinum
                         chosenCategory = "platinum";
                     }
-                    else if (randomCategory >= 91)
+                    else if (randomCategory <=10)//0-10
                     {//metal
-                        chosenCategory = "metal";
+                        chosenCategory = "normal";
                     }
 
                     int randomParent = new Random().Next(0, 5);
-                    //int randomParent = 4; //don't forget to erase this, for testing purpose
+                    //int randomParent = 0; //don't forget to erase this, for testing purpose
                     string parent = ""; DiscordSocketClient client = this.client;
                     Discord.Color color = Config.Doremi.EmbedColor; string author = ""; string embedAvatarUrl = "";
 
                     if (randomParent == 0)
                     {
-                        parent = "doremi"; author = $"Doremi Trading Card - {chosenCategory}";
+                        parent = "doremi"; author = $"Doremi {GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
                         embedAvatarUrl = Config.Doremi.EmbedAvatarUrl;
                     }
                     else if (randomParent == 1)
                     {
                         client = Bot.Hazuki.client;
-                        parent = "hazuki"; author = $"Hazuki Trading Card - {chosenCategory}";
+                        parent = "hazuki"; author = $"Hazuki {GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
                         color = Config.Hazuki.EmbedColor; embedAvatarUrl = Config.Hazuki.EmbedAvatarUrl;
                     }
                     else if (randomParent == 2)
                     {
                         client = Bot.Aiko.client;
-                        parent = "aiko"; author = $"Aiko Trading Card - {chosenCategory}";
+                        parent = "aiko"; author = $"Aiko {GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
                         color = Config.Aiko.EmbedColor; embedAvatarUrl = Config.Aiko.EmbedAvatarUrl;
                     }
                     else if (randomParent == 3)
                     {
                         client = Bot.Onpu.client;
-                        parent = "onpu"; author = $"Onpu Trading Card - {chosenCategory}";
+                        parent = "onpu"; author = $"Onpu {GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
                         color = Config.Onpu.EmbedColor; embedAvatarUrl = Config.Onpu.EmbedAvatarUrl;
                     }
                     else if (randomParent >= 4)
                     {
                         client = Bot.Momoko.client;
-                        parent = "momoko"; author = $"Momoko Trading Card - {chosenCategory}";
+                        parent = "momoko"; author = $"Momoko {GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
                         color = Config.Momoko.EmbedColor; embedAvatarUrl = Config.Momoko.EmbedAvatarUrl;
                     }
 
@@ -442,18 +443,19 @@ namespace OjamajoBot.Bot
                     var embed = new EmbedBuilder()
                         .WithAuthor(author, embedAvatarUrl)
                         .WithColor(color)
-                        .WithTitle($"{chosenName} - ID: {chosenId}")
+                        .WithTitle($"{chosenName}")
+                        .WithFooter($"ID: {chosenId}")
                         .WithImageUrl(chosenUrl);
 
                     await client
                         .GetGuild(guild.Id)
                         .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "trading_card_spawn")))
-                        .SendMessageAsync($":exclamation:A **{chosenCategory}** {parent} card has been spawned! Try capture it with **<bot prefix>!card capture<ID>**",
+                        .SendMessageAsync($":exclamation:A **{chosenCategory}** {parent} card has been spawned! Try to capture it with **<bot>!card capture/catch**",
                         embed: embed.Build());
                 },
                 null,
-                TimeSpan.FromMinutes(Convert.ToInt32(Config.Guild.getPropertyValue(guild.Id, "trading_card_spawn_interval"))), //time to wait before executing the timer for the first time
-                TimeSpan.FromMinutes(Convert.ToInt32(Config.Guild.getPropertyValue(guild.Id, "trading_card_spawn_interval"))) //time to wait before executing the timer again
+                TimeSpan.FromMinutes(Convert.ToInt32(Config.Guild.getPropertyValue(guild.Id, "trading_card_spawn_interval")) + new Random().Next(5,11)), //time to wait before executing the timer for the first time
+                TimeSpan.FromMinutes(Convert.ToInt32(Config.Guild.getPropertyValue(guild.Id, "trading_card_spawn_interval")) + new Random().Next(5, 11)) //time to wait before executing the timer again
                 );
             }
 
@@ -461,7 +463,6 @@ namespace OjamajoBot.Bot
                 //await channel.SendMessageAsync(guild.SystemChannel.Id.ToString());
 
                 Config.Guild.init(guild.Id);
-                Config.Music.queuedTrack[guild.Id.ToString()] = new List<string>();
             //Config.Music.storedLavaTrack[guild.Id.ToString()] = new List<LavaTrack>();
         }
 
@@ -489,6 +490,7 @@ namespace OjamajoBot.Bot
                 {"https://66.media.tumblr.com/c8f9c5455355f8e522d52bacb8155ab0/tumblr_mswho8nWx11r98a5go1_400.gif",
                 "https://thumbs.gfycat.com/DamagedGrouchyBarracuda-small.gif",
                 "https://data.whicdn.com/images/39976659/original.gif",
+                "https://cdn140.picsart.com/316023608328211.png?type=webp&to=min&r=640",
                 "https://cdn.discordapp.com/attachments/706770454697738300/706770708147208323/the-ojamajos.png",
                 "https://cdn.discordapp.com/attachments/706770454697738300/706770837558263928/TW361403.png"};
 
@@ -648,7 +650,7 @@ namespace OjamajoBot.Bot
             await commands.AddModuleAsync(typeof(DoremiModule), services);
             await commands.AddModuleAsync(typeof(DorememesModule), services);
             await commands.AddModuleAsync(typeof(DoremiBirthdayModule), services);
-            await commands.AddModuleAsync(typeof(DoremiVictoriaMusic), services);
+            //await commands.AddModuleAsync(typeof(DoremiVictoriaMusic), services);
             await commands.AddModuleAsync(typeof(DoremiMinigameInteractive), services);
             await commands.AddModuleAsync(typeof(DoremiWiki), services);
             await commands.AddModuleAsync(typeof(DoremiModerator), services);

@@ -212,7 +212,8 @@ namespace OjamajoBot.Bot
                 switch (result.Error)
                 {
                     case CommandError.BadArgCount:
-                        await context.Channel.SendMessageAsync();
+                        await context.Channel.SendMessageAsync($"Gomen ne {context.User.Username}, looks like you have missing/too much parameter. " +
+                            $"See `{Config.Aiko.PrefixParent[0]}help <commands or category>`for commands help.");
                         break;
                     case CommandError.UnknownCommand:
                         await message.Channel.SendMessageAsync($"Gomen ne {context.User.Username}, I can't seem to understand your commands. " +

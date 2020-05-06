@@ -1,7 +1,9 @@
-﻿using Discord;
+﻿using Config;
+using Discord;
 using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
+using Lavalink.NET;
 using Newtonsoft.Json.Linq;
 using OjamajoBot.Service;
 using System;
@@ -11,6 +13,8 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Victoria;
+using Victoria.Enums;
 
 namespace OjamajoBot.Module
 {
@@ -277,11 +281,11 @@ namespace OjamajoBot.Module
         public async Task transform(string form = "dokkan")
         {
             IDictionary<string, string> arrImage = new Dictionary<string, string>();
-            arrImage["default"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/3/3e/Sh-onpu.gif";
-            arrImage["sharp"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/3/3e/Sh-onpu.gif";
-            arrImage["royal"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/f/f0/Royalonpu.gif";
-            arrImage["motto"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/e/e1/Mo-onpu.gif";
-            arrImage["dokkan"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/3/3c/Onpu-dokk.gif";
+            arrImage["default"] = "https://cdn.discordapp.com/attachments/706812100789403659/706819480176689163/sharp.gif";
+            arrImage["sharp"] = "https://cdn.discordapp.com/attachments/706812100789403659/706819480176689163/sharp.gif";
+            arrImage["royal"] = "https://cdn.discordapp.com/attachments/706812100789403659/706819551119015946/royal.gif";
+            arrImage["motto"] = "https://cdn.discordapp.com/attachments/706812100789403659/706819681075331172/motto.gif";
+            arrImage["dokkan"] = "https://cdn.discordapp.com/attachments/706812100789403659/706819976409120788/dokkan.gif";
 
             if (arrImage.ContainsKey(form)){
                 await base.ReplyAsync("Pretty Witchy Onpu Chi~",
@@ -656,127 +660,138 @@ namespace OjamajoBot.Module
 
     }
 
-    [Name("card"), Group("card"), Summary("This category contains all Onpu Trading card command.")]
+    [Name("Card"), Group("card"), Summary("This category contains all Onpu Trading card command.")]
     public class OnpuTradingCardInteractive : InteractiveBase
     {
 
-        [Command("capture", RunMode = RunMode.Async), Summary("Capture spawned card with Onpu.")]
-        public async Task trading_card_onpu_capture(string card_id)
+        [Command("capture", RunMode = RunMode.Async), Alias("catch"), Summary("Capture spawned card with Onpu.")]
+        public async Task trading_card_onpu_capture()
         {
             //reference: https://www.newtonsoft.com/json/help/html/ModifyJson.htm
             var guildId = Context.Guild.Id;
             var clientId = Context.User.Id;
             string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
-            JObject arrInventory = JObject.Parse(File.ReadAllText(playerDataDirectory));
             string replyText = ""; string parent = "onpu";
 
             if (!File.Exists(playerDataDirectory))
             {
                 replyText = "I'm sorry, please register yourself first with **do!card register** command.";
+                await ReplyAsync(embed: new EmbedBuilder()
+                .WithColor(Config.Onpu.EmbedColor)
+                .WithDescription(replyText)
+                .WithImageUrl(TradingCardCore.Onpu.emojiError).Build());
+                return;
             }
             else
             {
+                JObject arrInventory = JObject.Parse(File.ReadAllText(playerDataDirectory));
                 string spawnedCardId = Config.Doremi._tradingCardSpawnedId[guildId.ToString()].ToString();
                 string spawnedCardCategory = Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToString();
                 if (spawnedCardId != "" && spawnedCardCategory != "")
                 {
                     if (spawnedCardId.Contains("on"))//check if the card is onpu/not
                     {
-                        if (spawnedCardId == card_id)
+                        
+                        int catchState = 0;
+
+                        //check last capture time
+                        try
                         {
-                            int catchState = 0;
-
-                            //check last capture time
-                            try
+                            if ((string)arrInventory["catch_token"] == "" ||
+                                (string)arrInventory["catch_token"] != Config.Doremi._tradingCardCatchToken[guildId.ToString()].ToString())
                             {
-                                if ((string)arrInventory["catch_token"] == "" ||
-                                    (string)arrInventory["catch_token"] != Config.Doremi._tradingCardCatchToken[guildId.ToString()].ToString())
+                                int catchRate;
+
+                                //init RNG catch rate
+                                if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "normal")
                                 {
-                                    int catchRate;
+                                    catchRate = new Random().Next(11);
+                                    if (catchRate <= 9) catchState = 1;
+                                }
+                                else if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "platinum")
+                                {
+                                    catchRate = new Random().Next(11);
+                                    if (catchRate <= 5) catchState = 1;
+                                }
+                                else if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "metal")
+                                {
+                                    catchRate = new Random().Next(11);
+                                    if (catchRate <= 2) catchState = 1;
+                                }
 
-                                    //init RNG catch rate
-                                    if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "normal")
-                                    {
-                                        catchRate = new Random().Next(0, 11);
-                                        if (catchRate <= 9) catchState = 1;
-                                    }
-                                    else if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "platinum")
-                                    {
-                                        catchRate = new Random().Next(0, 11);
-                                        if (catchRate <= 4) catchState = 1;
-                                    }
-                                    else if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "metal")
-                                    {
-                                        catchRate = new Random().Next(0, 11);
-                                        if (catchRate <= 1) catchState = 1;
-                                    }
+                                if (catchState == 1)
+                                {
+                                    //start read json
+                                    var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
 
-                                    if (catchState == 1)
-                                    {
-                                        //start read json
-                                        var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
+                                    string name = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["name"].ToString();
+                                    string imgUrl = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["url"].ToString();
+                                    string rank = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["0"].ToString();
+                                    string star = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["1"].ToString();
+                                    string point = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["2"].ToString();
 
-                                        string name = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["name"].ToString();
-                                        string imgUrl = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["url"].ToString();
-                                        string rank = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["0"].ToString();
-                                        string star = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["1"].ToString();
-                                        string point = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["2"].ToString();
-
-                                        //check inventory
-                                        if (arrInventory[parent][spawnedCardCategory].ToString().Contains(spawnedCardId))
-                                        {//card already exist on inventory
-                                            replyText = $":x: Sorry, I can't capture **{card_id} - {name}** because you have it already.";
-                                        }
-                                        else
-                                        {//card not exist yet
-                                            //save data:
-                                            arrInventory["catch_token"] = Config.Doremi._tradingCardCatchToken[guildId.ToString()];
-                                            JArray item = (JArray)arrInventory[parent][spawnedCardCategory];
-                                            item.Add(spawnedCardId);
-                                            File.WriteAllText(playerDataDirectory, arrInventory.ToString());
-
-                                            await ReplyAsync($":white_check_mark: Congratulations, **{Context.User.Username}** have successfully capture Onpu **{spawnedCardCategory}** card: **{name}**",
-                                             embed: new EmbedBuilder()
-                                            .WithAuthor(name)
-                                            .WithColor(Config.Onpu.EmbedColor)
-                                            .AddField("ID", spawnedCardId, true)
-                                            .AddField("Category", spawnedCardCategory, true)
-                                            .AddField("Rank", rank, true)
-                                            .AddField("⭐", star, true)
-                                            .AddField("Point", point, true)
-                                            .WithImageUrl(imgUrl)
-                                            .WithFooter($"Captured by: {Context.User.Username}")
-                                            .Build());
-
-                                            //erase spawned instance
-                                            Config.Doremi._tradingCardSpawnedId[guildId.ToString()] = "";
-                                            Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()] = "";
-                                            return;
-                                        }
+                                    //check inventory
+                                    if (arrInventory[parent][spawnedCardCategory].ToString().Contains(spawnedCardId))
+                                    {//card already exist on inventory
+                                        replyText = $":x: Sorry, I can't capture **{spawnedCardId} - {name}** because you have it already.";
                                     }
                                     else
-                                    {
+                                    {//card not exist yet
                                         //save data:
+                                        arrInventory["catch_attempt"] = (Convert.ToInt32(arrInventory["catch_attempt"]) + 1).ToString();
                                         arrInventory["catch_token"] = Config.Doremi._tradingCardCatchToken[guildId.ToString()];
+                                        JArray item = (JArray)arrInventory[parent][spawnedCardCategory];
+                                        item.Add(spawnedCardId);
                                         File.WriteAllText(playerDataDirectory, arrInventory.ToString());
-                                        replyText = ":x: I'm sorry, but you **fail** to catch the card. Better luck next time.";
+
+                                        string[] arrRandomFirstSentence = {
+                                            "Congratulations,","Nice catch~"
+                                        };
+
+                                        await ReplyAsync($":white_check_mark: {arrRandomFirstSentence[new Random().Next(0, arrRandomFirstSentence.Length)]} " +
+                                            $"**{Context.User.Username}** have successfully capture **{spawnedCardCategory}** card: **{name}**",
+                                            embed: TradingCardCore.printCardCaptureTemplate(Config.Onpu.EmbedColor, name, imgUrl,
+                                            spawnedCardId, spawnedCardCategory, rank, star, point, Context.User.Username, Config.Onpu.EmbedAvatarUrl)
+                                            .Build());
+
+                                        //check if player have captured all card/not
+                                        if (((JArray)arrInventory["onpu"]["normal"]).Count >= TradingCardCore.Onpu.maxNormal &&
+                                            ((JArray)arrInventory["onpu"]["platinum"]).Count >= TradingCardCore.Onpu.maxPlatinum &&
+                                            ((JArray)arrInventory["onpu"]["metal"]).Count >= TradingCardCore.Onpu.maxMetal)
+                                        {
+                                            await ReplyAsync(embed: TradingCardCore
+                                                .userCompleteTheirList(Config.Onpu.EmbedColor, "onpu",
+                                                $":clap: Congratulations, **{Context.User.Username}** have successfully capture all **Onpu Card Pack**!",
+                                                "https://cdn.discordapp.com/attachments/706490547191152690/707424375380508682/win2.jpg", guildId.ToString(),
+                                                Context.User.Id.ToString())
+                                                .Build());
+                                        }
+
+                                        //erase spawned instance
+                                        Config.Doremi._tradingCardSpawnedId[guildId.ToString()] = "";
+                                        Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()] = "";
+                                        return;
                                     }
                                 }
                                 else
                                 {
-                                    replyText = ":x: Sorry, please wait for the next card spawn.";
+                                    //save data:
+                                    arrInventory["catch_attempt"] = (Convert.ToInt32(arrInventory["catch_attempt"]) + 1).ToString();
+                                    arrInventory["catch_token"] = Config.Doremi._tradingCardCatchToken[guildId.ToString()];
+                                    File.WriteAllText(playerDataDirectory, arrInventory.ToString());
+                                    replyText = $":x: I'm sorry {Context.User.Username}, but you **fail** to catch the card. Better luck next time.";
                                 }
                             }
-                            catch (Exception e)
+                            else
                             {
-                                Console.WriteLine(e.ToString());
+                                replyText = ":x: Sorry, please wait for the next card spawn.";
                             }
-
                         }
-                        else
+                        catch (Exception e)
                         {
-                            replyText = ":x: Sorry, it seems you type the wrong **Card Id** at this time. Please type the correct one.";
+                            Console.WriteLine(e.ToString());
                         }
+
                     }
                     else
                     {
@@ -795,7 +810,7 @@ namespace OjamajoBot.Module
             await ReplyAsync(embed: new EmbedBuilder()
             .WithColor(Config.Onpu.EmbedColor)
             .WithDescription(replyText)
-            .WithImageUrl("https://cdn.discordapp.com/attachments/706490547191152690/706494042631962666/onpu.jpg").Build());
+            .WithImageUrl(TradingCardCore.Onpu.emojiError).Build());
 
         }
 
@@ -809,14 +824,13 @@ namespace OjamajoBot.Module
             var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
 
             string replyText; string parent = "onpu";
-            int maxNormal = 46; int maxPlatinum = 13; int maxMetal = 6;
 
             if (!File.Exists(playerDataDirectory)) //not registered yet
             {
                 await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Onpu.EmbedColor)
                 .WithDescription("I'm sorry, please register yourself first with **do!card register** command.")
-                .WithImageUrl("https://cdn.discordapp.com/attachments/706490547191152690/706494042631962666/onpu.jpg").Build());
+                .WithImageUrl(TradingCardCore.Onpu.emojiError).Build());
             }
             else
             {
@@ -834,13 +848,13 @@ namespace OjamajoBot.Module
                     if (arrList.Count >= 1)
                     {
                         await PagedReplyAsync(
-                            TradingCardCore.printInventoryTemplate("onpu", "onpu", category, jObjTradingCardList, arrList, maxNormal)
+                            TradingCardCore.printInventoryTemplate("onpu", "onpu", category, jObjTradingCardList, arrList, TradingCardCore.Onpu.maxNormal)
                         );
                     }
                     else
                     {
                         await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                            Config.Onpu.EmbedColor, "onpu", category, maxNormal)
+                            Config.Onpu.EmbedColor, "onpu", category, TradingCardCore.Onpu.maxNormal)
                             .Build());
                     }
 
@@ -849,13 +863,13 @@ namespace OjamajoBot.Module
                     if (arrList.Count >= 1)
                     {
                         await PagedReplyAsync(
-                            TradingCardCore.printInventoryTemplate("onpu", "onpu", category, jObjTradingCardList, arrList, maxPlatinum)
+                            TradingCardCore.printInventoryTemplate("onpu", "onpu", category, jObjTradingCardList, arrList, TradingCardCore.Onpu.maxPlatinum)
                         );
                     }
                     else
                     {
                         await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                            Config.Onpu.EmbedColor, "onpu", category, maxPlatinum)
+                            Config.Onpu.EmbedColor, "onpu", category, TradingCardCore.Onpu.maxPlatinum)
                             .Build());
                     }
 
@@ -864,13 +878,13 @@ namespace OjamajoBot.Module
                     if (arrList.Count >= 1)
                     {
                         await PagedReplyAsync(
-                            TradingCardCore.printInventoryTemplate("onpu", "onpu", category, jObjTradingCardList, arrList, maxMetal)
+                            TradingCardCore.printInventoryTemplate("onpu", "onpu", category, jObjTradingCardList, arrList, TradingCardCore.Onpu.maxMetal)
                         );
                     }
                     else
                     {
                         await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                            Config.Onpu.EmbedColor, "onpu", category, maxMetal)
+                            Config.Onpu.EmbedColor, "onpu", category, TradingCardCore.Onpu.maxMetal)
                             .Build());
                     }
 
@@ -882,7 +896,29 @@ namespace OjamajoBot.Module
 
         }
 
-        [Command("detail", RunMode = RunMode.Async), Alias("look"), Summary("See the detail of Onpu card information from the <card_id>.")]
+        [Command("status", RunMode = RunMode.Async), Summary("Show your Trading Card Status report.")]
+        public async Task trading_card_status()
+        {
+            var guildId = Context.Guild.Id;
+            var clientId = Context.User.Id;
+            string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+
+            if (!File.Exists(playerDataDirectory))
+            { //not registered yet
+                await ReplyAsync(embed: new EmbedBuilder()
+                .WithColor(Config.Onpu.EmbedColor)
+                .WithDescription("I'm sorry, please register yourself first with **do!card register** command.")
+                .WithImageUrl(TradingCardCore.Onpu.emojiError).Build());
+            }
+            else
+            {
+                await ReplyAsync(embed: TradingCardCore.
+                    printStatusTemplate(Config.Onpu.EmbedColor, Context.User.Username, guildId.ToString(), clientId.ToString())
+                    .Build());
+            }
+        }
+
+        [Command("detail", RunMode = RunMode.Async), Alias("info","look"), Summary("See the detail of Onpu card information from the <card_id>.")]
         public async Task trading_card_look(string card_id)
         {
             var guildId = Context.Guild.Id;
@@ -923,7 +959,7 @@ namespace OjamajoBot.Module
                     await ReplyAsync(embed: new EmbedBuilder()
                     .WithColor(Config.Onpu.EmbedColor)
                     .WithDescription($"Sorry, you don't have: **{card_id} - {name}** card yet. Try capture it to look at this card.")
-                    .WithImageUrl("https://cdn.discordapp.com/attachments/706490547191152690/706494042631962666/onpu.jpg").Build());
+                    .WithImageUrl(TradingCardCore.Onpu.emojiError).Build());
                 }
 
             }
@@ -932,10 +968,585 @@ namespace OjamajoBot.Module
                 await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Onpu.EmbedColor)
                 .WithDescription("Sorry, I can't find that card ID.")
-                .WithImageUrl("https://cdn.discordapp.com/attachments/706490547191152690/706494042631962666/onpu.jpg").Build());
+                .WithImageUrl(TradingCardCore.Onpu.emojiError).Build());
             }
 
         }
+    }
+
+    [Name("Music"), Remarks("Please join any voice channel first, then type `on!join` so the bot can stream on your voice channel.")]
+    public sealed class OnpuVictoriaMusic : ModuleBase<SocketCommandContext>
+    {
+        private readonly LavaNode _lavaNode;
+
+        public OnpuVictoriaMusic(LavaNode lavanode)
+        {
+            _lavaNode = lavanode;
+        }
+
+        [Command("Join"), Summary("Join to your connected voice channel (Please join any voice channel first)")]
+        public async Task JoinAsync()
+        {
+            //await _lavaNode.JoinAsync((Context.User as IVoiceState).VoiceChannel);
+            //await ReplyAsync($"Joined {(Context.User as IVoiceState).VoiceChannel} channel!");
+
+
+            if (_lavaNode.HasPlayer(Context.Guild))
+            {
+                await ReplyAsync("I'm already connected to a voice channel.");
+                return;
+            }
+
+            var voiceState = Context.User as IVoiceState;
+
+            if (voiceState?.VoiceChannel == null)
+            {
+                await ReplyAsync("Please join any voice channel first.");
+                return;
+            }
+
+            try
+            {
+                await _lavaNode.JoinAsync(voiceState.VoiceChannel, Context.Channel as ITextChannel);
+                await ReplyAsync($"Onpu has joined {voiceState.VoiceChannel.Name}. Thank you for inviting me~");
+            }
+            catch (Exception exception)
+            {
+                await ReplyAsync(exception.Message);
+            }
+        }
+
+        [Command("Leave"), Summary("Leave from connected voice channel")]
+        public async Task LeaveAsync()
+        {
+            //await _lavaNode.LeaveAsync((Context.User as IVoiceState).VoiceChannel);
+            //await ReplyAsync($"Left {(Context.User as IVoiceState).VoiceChannel} channel!");
+
+
+            if (!_lavaNode.TryGetPlayer(Context.Guild, out var player))
+            {
+                await ReplyAsync("I'm not connected to any voice channels yet.");
+                return;
+            }
+
+            var voiceChannel = (Context.User as IVoiceState).VoiceChannel ?? player.VoiceChannel;
+            if (voiceChannel == null)
+            {
+                await ReplyAsync("Not sure which voice channel to disconnect from.");
+                return;
+            }
+
+            try
+            {
+                await _lavaNode.LeaveAsync(voiceChannel);
+                await ReplyAsync($"Onpu is now leaving {MentionUtils.MentionChannel(voiceChannel.Id)}. Thank you for inviting me up~",
+                    embed:new EmbedBuilder()
+                    .WithColor(Config.Onpu.EmbedColor)
+                    .WithImageUrl("https://pm1.narvii.com/6537/3e62e3ff05fc640b28943026d4c5efd28f43adc1_00.jpg")
+                    .WithFooter("Signed by: Onpu Segawa",Config.Onpu.EmbedAvatarUrl)
+                    .Build());
+            }
+            catch (Exception exception)
+            {
+                await ReplyAsync(exception.Message);
+            }
+        }
+
+        [Command("Move"), Summary("Move onpu bot into your new connected voice channel")]
+        public async Task MoveAsync()
+        {
+            if (!_lavaNode.HasPlayer(Context.Guild))
+            {
+                await ReplyAsync("I'm not connected to a voice channel.");
+                return;
+            }
+
+            await _lavaNode.MoveAsync((Context.User as IVoiceState).VoiceChannel);
+            var player = _lavaNode.GetPlayer(Context.Guild);
+            await ReplyAsync($"Moved from {player.VoiceChannel} to {(Context.User as IVoiceState).VoiceChannel}!");
+        }
+
+        [Command("Seek"), Summary("Seek the music into the given <timespan>[hh:mm:ss]")]
+        public async Task SeekAsync([Remainder] string timespan)
+        {
+            if (!_lavaNode.TryGetPlayer(Context.Guild, out var player))
+            {
+                await ReplyAsync("I'm not connected to a voice channel.");
+                return;
+            }
+
+            if (player.PlayerState != PlayerState.Playing)
+            {
+                await ReplyAsync("Sorry, I can't seek when nothing is playing.");
+                return;
+            }
+
+            try
+            {
+                await player.SeekAsync(TimeSpan.Parse(timespan));
+                await ReplyAsync($"I've seeked `{player.Track.Title}` to {TimeSpan.Parse(timespan)}.");
+            }
+            catch (Exception exception)
+            {
+                await ReplyAsync(exception.Message);
+            }
+        }
+
+        //https://www.youtube.com/watch?v=dQw4w9WgXcQ
+        [Command("play"), Alias("yt"), Summary("Play the youtube music. `<KeywordOrUrl>` parameter can be a search keyword or youtube url.")]
+        public async Task PlayYoutubeAsync([Remainder] string KeywordOrUrl)
+        {
+            if (!_lavaNode.HasPlayer(Context.Guild))
+            {
+                await ReplyAsync($"Please invite me with **{Config.Onpu.PrefixParent[0]}join** on your connected voice channel.");
+                return;
+            }
+
+            var search = await _lavaNode.SearchYouTubeAsync(KeywordOrUrl);
+            var track = search.Tracks.FirstOrDefault();
+
+            //check maximum video/music must be under 5 minutes
+            if (track.Duration.TotalMinutes >= 8)
+            {
+                await ReplyAsync($"Sorry, that music is above/within 8 minutes. Please use the shorter one.");
+                return;
+            }
+
+            var player = _lavaNode.HasPlayer(Context.Guild)
+                ? _lavaNode.GetPlayer(Context.Guild)
+                : await _lavaNode.JoinAsync((Context.User as IVoiceState).VoiceChannel);
+
+            if (player.PlayerState == PlayerState.Playing)
+            {
+                player.Queue.Enqueue(track);
+                //Config.Music.storedLavaTrack[Context.Guild.Id.ToString()].Add(track);
+                await ReplyAsync($":arrow_down: Added to queue: {track.Title}.",
+                embed: new EmbedBuilder()
+                .WithTitle(track.Title)
+                .WithColor(Config.Onpu.EmbedColor)
+                .WithUrl(track.Url)
+                .AddField("Duration", track.Duration, true)
+                .AddField("Author", track.Author, true)
+                .WithThumbnailUrl($"https://i.ytimg.com/vi/{track.Id}/hqdefault.jpg")
+                .WithFooter("Onpu Musicbox", Config.Onpu.EmbedAvatarUrl)
+                .Build());
+            }
+            else
+            {
+                await player.PlayAsync(track);
+
+                await ReplyAsync(embed: new EmbedBuilder()
+                .WithTitle(track.Title)
+                .WithColor(Config.Onpu.EmbedColor)
+                .WithUrl(track.Url)
+                .WithAuthor("Now Playing")
+                .AddField("Duration", track.Duration, true)
+                .AddField("Author", track.Author, true)
+                .WithThumbnailUrl($"https://i.ytimg.com/vi/{track.Id}/hqdefault.jpg")
+                .WithFooter("Onpu Musicbox", Config.Onpu.EmbedAvatarUrl)
+                .Build());
+            }
+        }
+
+        [Command("radio playall"), Alias("radio all"), Summary("Play all the music that's available on onpu music list")]
+        public async Task PlayAll()
+        {
+
+            if (!_lavaNode.HasPlayer(Context.Guild))
+            {
+                await ReplyAsync($"Please invite me with **{Config.Onpu.PrefixParent[0]}join** on your connected voice channel.");
+                return;
+            }
+
+            var player = _lavaNode.HasPlayer(Context.Guild)
+                ? _lavaNode.GetPlayer(Context.Guild)
+                : await _lavaNode.JoinAsync((Context.User as IVoiceState).VoiceChannel);
+
+            await ReplyAsync($"I will play all music on the musiclist");
+
+            JObject jObj = Config.Music.jobjectfile;
+
+            for (int i = 0; i < (jObj.GetValue("musiclist") as JObject).Count; i++)
+            {
+                string query = jObj.GetValue("musiclist")[(i + 1).ToString()]["filename"].ToString();
+                var searchResponse = await _lavaNode.SearchAsync("music/" + query);
+
+                if (searchResponse.LoadStatus == LoadStatus.LoadFailed ||
+                searchResponse.LoadStatus == LoadStatus.NoMatches)
+                {
+                    await ReplyAsync($"I can't find anything for `{query}`.");
+                    return;
+                }
+
+                if (player.PlayerState == PlayerState.Playing || player.PlayerState == PlayerState.Paused)
+                {
+                    if (!string.IsNullOrWhiteSpace(searchResponse.Playlist.Name))
+                    {
+                        foreach (var track in searchResponse.Tracks)
+                        {
+                            //Config.Music.storedLavaTrack[Context.Guild.Id.ToString()].Add(track);
+                            player.Queue.Enqueue(track);
+                        }
+
+                        //await ReplyAsync($"🔈 Enqueued {searchResponse.Tracks.Count} tracks.");
+                    }
+                    else
+                    {
+                        var track = searchResponse.Tracks[0];
+                        player.Queue.Enqueue(track);
+                        //await ReplyAsync($"🔈 Enqueued: {track.Title}");
+                    }
+                }
+                else
+                {
+                    var track = searchResponse.Tracks[0];
+                    //Config.Music.storedLavaTrack[Context.Guild.Id.ToString()].Add(track);
+
+                    if (!string.IsNullOrWhiteSpace(searchResponse.Playlist.Name))
+                    {
+                        for (var j = 0; j < searchResponse.Tracks.Count; j++)
+                        {
+                            if (j == 0)
+                            {
+                                await player.PlayAsync(track);
+                                await ReplyAsync($"🔈 Now Playing: {track.Title}");
+                            }
+                            else
+                            {
+                                player.Queue.Enqueue(searchResponse.Tracks[j]);
+                            }
+                        }
+
+                        //await ReplyAsync($"🔈 Enqueued {searchResponse.Tracks.Count} tracks.");
+                    }
+                    else
+                    {
+                        await player.PlayAsync(track);
+                        await ReplyAsync($"🔈 Now Playing: {track.Title}");
+                    }
+                }
+
+            }
+
+        }
+
+        [Command("radio"), Summary("Play the music with the given <track number or title> parameter")]
+        public async Task PlayLocal([Remainder] string TrackNumbersOrTitle)
+        {
+            if (string.IsNullOrWhiteSpace(TrackNumbersOrTitle))
+            {
+                await ReplyAsync($"Please provide track numbers or title. Use {Config.Onpu.PrefixParent[0]}mulist to show all onpu music list.");
+                return;
+            }
+
+            if (!_lavaNode.HasPlayer(Context.Guild))
+            {
+                await ReplyAsync($"Please invite me with **{Config.Onpu.PrefixParent[0]}join** on your connected voice channel.");
+                return;
+            }
+
+            var player = _lavaNode.HasPlayer(Context.Guild)
+                ? _lavaNode.GetPlayer(Context.Guild)
+                : await _lavaNode.JoinAsync((Context.User as IVoiceState).VoiceChannel);
+
+            JObject jObj = Config.Music.jobjectfile;
+            if (int.TryParse(TrackNumbersOrTitle, out int n))
+            {
+
+                if (n <= (jObj.GetValue("musiclist") as JObject).Count)
+                {
+                    TrackNumbersOrTitle = jObj.GetValue("musiclist")[n.ToString()]["filename"].ToString();
+                }
+                else
+                {
+                    await ReplyAsync($"Sorry, I can't find anything for track number {TrackNumbersOrTitle}. See the available onpu music list on `{Config.Onpu.PrefixParent[0]}mulist`.");
+                    return;
+                }
+
+            }
+            else
+            {
+                for (int i = 0; i < (jObj.GetValue("musiclist") as JObject).Count; i++)
+                {
+                    string replacedFilename = jObj.GetValue("musiclist")[(i + 1).ToString()]["filename"].ToString().Replace(".mp3", "").Replace(".ogg", "");
+                    if (replacedFilename == TrackNumbersOrTitle)
+                    {
+                        TrackNumbersOrTitle = jObj.GetValue("musiclist")[(i + 1).ToString()]["filename"].ToString();
+                    }
+
+                }
+            }
+
+            var searchResponse = await _lavaNode.SearchAsync("music/" + TrackNumbersOrTitle);
+            if (searchResponse.LoadStatus == LoadStatus.LoadFailed ||
+                searchResponse.LoadStatus == LoadStatus.NoMatches)
+            {
+                await ReplyAsync($"I wasn't able to find anything for `{TrackNumbersOrTitle}`. See the available onpu music list on `onpu!mulist` commands.");
+                return;
+            }
+
+            if (player.PlayerState == PlayerState.Playing || player.PlayerState == PlayerState.Paused)
+            {
+                if (!string.IsNullOrWhiteSpace(searchResponse.Playlist.Name))
+                {
+                    foreach (var track in searchResponse.Tracks)
+                    {
+                        player.Queue.Enqueue(track);
+                        Console.WriteLine("play queue:" + track.Title);
+                        //Config.Music.storedLavaTrack[Context.Guild.Id.ToString()].Add(track);
+                    }
+
+                    await ReplyAsync($":arrow_down: Enqueued {searchResponse.Tracks.Count} tracks.");
+                }
+                else
+                {
+                    var track = searchResponse.Tracks[0];
+                    player.Queue.Enqueue(track);
+                    //Config.Music.storedLavaTrack[Context.Guild.Id.ToString()].Add(track);
+                    await ReplyAsync($":arrow_down: Enqueued: {track.Title}");
+                }
+            }
+            else
+            {
+                var track = searchResponse.Tracks[0];
+                //Config.Music.storedLavaTrack[Context.Guild.Id.ToString()].Add(track);
+
+                if (!string.IsNullOrWhiteSpace(searchResponse.Playlist.Name))
+                {
+                    for (var i = 0; i < searchResponse.Tracks.Count; i++)
+                    {
+                        if (i == 0)
+                        {
+                            await player.PlayAsync(track);
+                            await ReplyAsync($"🔈 Now Playing: {track.Title}");
+                        }
+                        else
+                        {
+                            player.Queue.Enqueue(searchResponse.Tracks[i]);
+                        }
+                    }
+
+                    await ReplyAsync($":arrow_down: Enqueued {searchResponse.Tracks.Count} tracks.");
+                }
+                else
+                {
+                    await player.PlayAsync(track);
+                    await ReplyAsync($"🔈 Now Playing: {track.Title}");
+                }
+            }
+        }
+
+        [Command("NowPlaying"), Alias("Np"), Summary("Show the currently played music (Needs to be from Youtube)")]
+        public async Task NowPlayingAsync()
+        {
+            if (!_lavaNode.TryGetPlayer(Context.Guild, out var player))
+            {
+                await ReplyAsync("I'm not connected to a voice channel.");
+                return;
+            }
+
+            if (player.PlayerState != PlayerState.Playing)
+            {
+                await ReplyAsync("I'm not playing any tracks yet.");
+                return;
+            }
+
+            var track = player.Track;
+
+            var embed = new EmbedBuilder
+            {
+                Title = $"{track.Title}",
+                ThumbnailUrl = $"https://i.ytimg.com/vi/{track.Id}/hqdefault.jpg",
+                Url = track.Url,
+                Color = Config.Onpu.EmbedColor
+            }
+
+            .WithAuthor("Now Playing")
+            .AddField("Author", track.Author,true)
+            .AddField("Duration", track.Duration, true)
+            .AddField("Position", track.Position, true)
+            .WithFooter("Onpu Musicbox", Config.Onpu.EmbedAvatarUrl);
+
+            await ReplyAsync(embed: embed.Build());
+        }
+
+        [Command("Pause"), Summary("Pause the music player")]
+        public async Task PauseAsync()
+        {
+            if (!_lavaNode.TryGetPlayer(Context.Guild, out var player))
+            {
+                await ReplyAsync("I'm not connected to a voice channel.");
+                return;
+            }
+
+            if (player.PlayerState != PlayerState.Playing)
+            {
+                await ReplyAsync("I cannot pause when I'm not playing anything.");
+                return;
+            }
+
+            try
+            {
+                await player.PauseAsync();
+                await ReplyAsync($":pause_button: Music Paused: **{player.Track.Title}**");
+            }
+            catch (Exception exception)
+            {
+                await ReplyAsync(exception.Message);
+            }
+        }
+
+        [Command("Resume"), Summary("Resume the music player")]
+        public async Task ResumeAsync()
+        {
+            if (!_lavaNode.TryGetPlayer(Context.Guild, out var player))
+            {
+                await ReplyAsync("I'm not connected to a voice channel.");
+                return;
+            }
+
+            if (player.PlayerState != PlayerState.Paused)
+            {
+                await ReplyAsync("I cannot resume when I'm not playing anything.");
+                return;
+            }
+
+            try
+            {
+                await player.ResumeAsync();
+                await ReplyAsync($":arrow_forward: Music Resumed: **{player.Track.Title}**");
+            }
+            catch (Exception exception)
+            {
+                await ReplyAsync(exception.Message);
+            }
+        }
+
+        [Command("Stop"), Summary("Stop the music player")]
+        public async Task StopAsync()
+        {
+            //Config.Music.storedLavaTrack.Clear();
+            var player = _lavaNode.HasPlayer(Context.Guild)
+                ? _lavaNode.GetPlayer(Context.Guild)
+                : await _lavaNode.JoinAsync((Context.User as IVoiceState).VoiceChannel);
+            player.Queue.Clear();
+            await player.StopAsync();
+            await ReplyAsync($":stop_button: Okay, I have stop the music.");
+        }
+
+        [Command("Skip"), Summary("Skip into next track")]
+        public async Task SkipAsync()
+        {
+            var player = _lavaNode.GetPlayer(Context.Guild);
+
+            if (!_lavaNode.TryGetPlayer(Context.Guild, out player))
+            {
+                await ReplyAsync("I'm not connected to a voice channel.");
+                return;
+            }
+
+            if (player.PlayerState != PlayerState.Playing)
+            {
+                await ReplyAsync("Sorry, I can't skip when nothing is playing.");
+                return;
+            } else if (player.Queue.Count <= 0) {
+                await ReplyAsync("Sorry, there's no next queue on the list.");
+                return;
+            }
+
+            //player.Queue.Enqueue(player.Track);
+            string oldTrack = player.Track.Title;
+            await player.SkipAsync();
+
+            var track = player.Track;
+
+            await ReplyAsync($"🗑️ Ok, I've skipped **{oldTrack}**.", 
+                embed: new EmbedBuilder()
+                .WithAuthor("Now Playing")
+                .WithTitle(track.Title)
+                .WithColor(Config.Onpu.EmbedColor)
+                .WithUrl(track.Url)
+                .AddField("Duration", track.Duration, true)
+                .AddField("Author", track.Author, true)
+                .WithThumbnailUrl($"https://i.ytimg.com/vi/{track.Id}/hqdefault.jpg")
+                .WithFooter("Onpu Musicbox", Config.Onpu.EmbedAvatarUrl)
+                .Build());
+
+        }
+
+        [Command("Volume"), Summary("Set the music player volume into given <volume>. Max: 200")]
+        public async Task SetVolume([Remainder] ushort volume)
+        {
+            await _lavaNode.GetPlayer(Context.Guild).UpdateVolumeAsync(volume);
+            await ReplyAsync($":sound: Volume set to:{volume}");
+        }
+
+        [Command("Musiclist"), Alias("mulist"), Summary("Show all available onpu music list")]
+        public async Task ShowMusicList()
+        {
+            JObject jObj = Config.Music.jobjectfile;
+            String musiclist = "";
+            for (int i = 0; i < (jObj.GetValue("musiclist") as JObject).Count; i++)
+            {
+                string replacedFilename = jObj.GetValue("musiclist")[(i + 1).ToString()]["filename"].ToString().Replace(".mp3", "").Replace(".ogg", "");
+                string title = jObj.GetValue("musiclist")[(i + 1).ToString()]["title"].ToString();
+                musiclist += $"[**{i + 1}**] **{replacedFilename}** : {title}\n";
+            }
+            //for (int i = 0; i < Config.MusicList.arrMusicList.Count; i++)
+            //{
+            //    String seperatedMusicTitle = Config.MusicList.arrMusicList[i].Replace(".mp3", "").Replace(".ogg", "");//erase format
+            //    String musiclist = $"[**{i + 1}**] **ojamajocarnival** : Ojamajo Carnival\n";
+            //}
+
+            await ReplyAsync(embed: new EmbedBuilder()
+                .WithColor(Config.Onpu.EmbedColor)
+                .WithTitle("Onpu Music List:")
+                .WithDescription($"These are the music list that's available for me to play: " +
+                $"You can use the **radio** commands followed with the track number or title.\n" +
+                $"Example: **{Config.Onpu.PrefixParent[0]}radio 1** or **{Config.Onpu.PrefixParent[0]}radio ojamajocarnival**")
+                .AddField("[Num] Title",
+                musiclist)
+                .Build());
+        }
+
+        [Command("queue"), Alias("muq"), Summary("Show all music in queue list")]
+        public async Task ShowMusicListQueue()
+        {
+            try
+            {
+                if (_lavaNode.HasPlayer(Context.Guild))
+                {
+                    var player = _lavaNode.GetPlayer(Context.Guild);
+                    var itemsQueue = player.Queue.Items;
+
+                    var allTracks = player.Queue.Items.Cast<LavaTrack>().ToList();
+                    String musiclist = "";
+                    musiclist += $"**1**. **[{player.Track.Title}]({player.Track.Url})** [Now Playing]\n";
+
+                    if (player.Queue.Count >= 1)
+                    {
+                        for (int i = 0; i < player.Queue.Count; i++)
+                            musiclist += $"**{i + 2}**. **[{allTracks[i].Title}]({allTracks[i].Url})**\n";
+                    }
+
+                    await base.ReplyAsync(embed: new EmbedBuilder()
+                            .WithColor(Config.Onpu.EmbedColor)
+                            .WithThumbnailUrl($"https://i.ytimg.com/vi/{player.Track.Id}/hqdefault.jpg")
+                            .WithTitle("⬇️ Current music in queue:")
+                            .AddField($"Title", musiclist)
+                            .WithFooter($"Total music in queue: {player.Queue.Count + 1}", Config.Onpu.EmbedAvatarUrl)
+                            .Build());
+                }
+            } catch(Exception e) {
+                Console.WriteLine(e.ToString());
+                await ReplyAsync($"Sorry, there are no music on the current queue list.");
+                return;
+            }
+            
+
+
+        }
+
     }
 
     [Summary("hidden")]

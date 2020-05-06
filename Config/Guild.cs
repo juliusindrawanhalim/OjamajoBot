@@ -29,8 +29,11 @@ namespace Config
             //check trading cards configuration folder exists/not
             if (!Directory.Exists($"{Core.headConfigGuildFolder}{id_guild.ToString()}/{Core.headTradingCardConfigFolder}"))
                 Directory.CreateDirectory($"{Core.headConfigGuildFolder}{id_guild.ToString()}/{Core.headTradingCardConfigFolder}");
+            //check trading cards leaderboards file exists/not
+            if (!File.Exists($"{Config.Core.headConfigGuildFolder}{id_guild.ToString()}/trading_card_leaderboard_data.json"))
+                File.Copy($@"{Config.Core.headConfigFolder}trading_card_leaderboard_template_data.json", $@"{Config.Core.headConfigGuildFolder}{id_guild.ToString()}/trading_card_leaderboard_data.json");
 
-            if (File.Exists($"{Core.headConfigGuildFolder}{id_guild}/{id_guild}.json")){
+                if (File.Exists($"{Core.headConfigGuildFolder}{id_guild}/{id_guild}.json")){
                 JObject guildConfig = JObject.Parse(File.ReadAllText($"{Core.headConfigGuildFolder}{id_guild}/{id_guild}.json"));
 
                 //id_random_event

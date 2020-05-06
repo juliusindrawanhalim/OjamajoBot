@@ -269,9 +269,9 @@ namespace OjamajoBot.Module
         public async Task transform(string form = "dokkan")
         {
             IDictionary<string, string> arrImage = new Dictionary<string, string>();
-            arrImage["default"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/57/Mo-momo.gif";
-            arrImage["motto"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/57/Mo-momo.gif";
-            arrImage["dokkan"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/93/Momo-dokk.gif";
+            arrImage["default"] = "https://cdn.discordapp.com/attachments/706812115482312754/706820194944942141/motto.gif";
+            arrImage["motto"] = "https://cdn.discordapp.com/attachments/706812115482312754/706820194944942141/motto.gif";
+            arrImage["dokkan"] = "https://cdn.discordapp.com/attachments/706812115482312754/706820390017564692/dokkan.gif";
 
             if (arrImage.ContainsKey(form)){
                 await ReplyAsync("Pretty Witchy Momoko Chi~\n");
@@ -623,7 +623,7 @@ namespace OjamajoBot.Module
     class MomokoMagicalStageModule : ModuleBase<SocketCommandContext>
     {
         //magical stage section
-        [Command("Pururun purun, Suzuyaka ni!")] //magical stage from doremi
+        [Command("Pururun purun, Suzuyaka ni!")] //magical stage from onpu
         public async Task magicalStage()
         {
             if (Context.User.Id == Config.Onpu.Id)
@@ -784,132 +784,145 @@ namespace OjamajoBot.Module
 
     }
 
-    [Name("card"), Group("card"), Summary("This category contains all Momoko Trading card command.")]
+    [Name("Card"), Group("card"), Summary("This category contains all Momoko Trading card command.")]
     public class MomokoTradingCardInteractive : InteractiveBase
     {
 
-        [Command("capture", RunMode = RunMode.Async), Summary("Capture spawned card with Momoko.")]
-        public async Task trading_card_momoko_capture(string card_id)
+        [Command("capture", RunMode = RunMode.Async), Alias("catch"), Summary("Capture spawned card with Momoko.")]
+        public async Task trading_card_momoko_capture()
         {
             //reference: https://www.newtonsoft.com/json/help/html/ModifyJson.htm
             var guildId = Context.Guild.Id;
             var clientId = Context.User.Id;
             string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
-            JObject arrInventory = JObject.Parse(File.ReadAllText(playerDataDirectory));
             string replyText = ""; string parent = "momoko";
 
             if (!File.Exists(playerDataDirectory))
             {
                 replyText = "I'm sorry, please register yourself first with **do!card register** command.";
+                await ReplyAsync(embed: new EmbedBuilder()
+                .WithColor(Config.Momoko.EmbedColor)
+                .WithDescription(replyText)
+                .WithImageUrl(TradingCardCore.Momoko.emojiError).Build());
+                return;
             }
             else
             {
+                JObject arrInventory = JObject.Parse(File.ReadAllText(playerDataDirectory));
                 string spawnedCardId = Config.Doremi._tradingCardSpawnedId[guildId.ToString()].ToString();
                 string spawnedCardCategory = Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToString();
                 if (spawnedCardId != "" && spawnedCardCategory != "")
                 {
                     if (spawnedCardId.Contains("mo"))//check if the card is momoko/not
                     {
-                        if (spawnedCardId == card_id)
+                        
+                        int catchState = 0;
+
+                        //check last capture time
+                        try
                         {
-                            int catchState = 0;
-
-                            //check last capture time
-                            try
+                            if ((string)arrInventory["catch_token"] == "" ||
+                                (string)arrInventory["catch_token"] != Config.Doremi._tradingCardCatchToken[guildId.ToString()].ToString())
                             {
-                                if ((string)arrInventory["catch_token"] == "" ||
-                                    (string)arrInventory["catch_token"] != Config.Doremi._tradingCardCatchToken[guildId.ToString()].ToString())
+                                int catchRate;
+
+                                //init RNG catch rate
+                                if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "normal")
                                 {
-                                    int catchRate;
+                                    catchRate = new Random().Next(11);
+                                    if (catchRate <= 9) catchState = 1;
+                                }
+                                else if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "platinum")
+                                {
+                                    catchRate = new Random().Next(11);
+                                    if (catchRate <= 5) catchState = 1;
+                                }
+                                else if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "metal")
+                                {
+                                    catchRate = new Random().Next(11);
+                                    if (catchRate <= 2) catchState = 1;
+                                }
 
-                                    //init RNG catch rate
-                                    if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "normal")
-                                    {
-                                        catchRate = new Random().Next(0, 11);
-                                        if (catchRate <= 9) catchState = 1;
-                                    }
-                                    else if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "platinum")
-                                    {
-                                        catchRate = new Random().Next(0, 11);
-                                        if (catchRate <= 4) catchState = 1;
-                                    }
-                                    else if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "metal")
-                                    {
-                                        catchRate = new Random().Next(0, 11);
-                                        if (catchRate <= 1) catchState = 1;
-                                    }
+                                if (catchState == 1)
+                                {
+                                    //start read json
+                                    var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
 
-                                    if (catchState == 1)
-                                    {
-                                        //start read json
-                                        var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
+                                    string name = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["name"].ToString();
+                                    string imgUrl = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["url"].ToString();
+                                    string rank = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["0"].ToString();
+                                    string star = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["1"].ToString();
+                                    string point = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["2"].ToString();
 
-                                        string name = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["name"].ToString();
-                                        string imgUrl = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["url"].ToString();
-                                        string rank = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["0"].ToString();
-                                        string star = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["1"].ToString();
-                                        string point = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["2"].ToString();
-
-                                        //check inventory
-                                        if (arrInventory[parent][spawnedCardCategory].ToString().Contains(spawnedCardId))
-                                        {//card already exist on inventory
-                                            replyText = $":x: Sorry, I can't capture **{card_id} - {name}** because you have it already.";
-                                        }
-                                        else
-                                        {//card not exist yet
-                                            //save data:
-                                            arrInventory["catch_token"] = Config.Doremi._tradingCardCatchToken[guildId.ToString()];
-                                            JArray item = (JArray)arrInventory[parent][spawnedCardCategory];
-                                            item.Add(spawnedCardId);
-                                            File.WriteAllText(playerDataDirectory, arrInventory.ToString());
-
-                                            await ReplyAsync($":white_check_mark: Congratulations, **{Context.User.Username}** have successfully capture Momoko **{spawnedCardCategory}** card: **{name}**",
-                                             embed: new EmbedBuilder()
-                                            .WithAuthor(name)
-                                            .WithColor(Config.Momoko.EmbedColor)
-                                            .AddField("ID", spawnedCardId, true)
-                                            .AddField("Category", spawnedCardCategory, true)
-                                            .AddField("Rank", rank, true)
-                                            .AddField("⭐", star, true)
-                                            .AddField("Point", point, true)
-                                            .WithImageUrl(imgUrl)
-                                            .WithFooter($"Captured by: {Context.User.Username}")
-                                            .Build());
-
-                                            //erase spawned instance
-                                            Config.Doremi._tradingCardSpawnedId[guildId.ToString()] = "";
-                                            Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()] = "";
-                                            return;
-                                        }
+                                    //check inventory
+                                    if (arrInventory[parent][spawnedCardCategory].ToString().Contains(spawnedCardId))
+                                    {//card already exist on inventory
+                                        replyText = $":x: Sorry, I can't capture **{spawnedCardId} - {name}** because you have it already.";
                                     }
                                     else
-                                    {
+                                    {//card not exist yet
                                         //save data:
+                                        arrInventory["catch_attempt"] = (Convert.ToInt32(arrInventory["catch_attempt"]) + 1).ToString();
                                         arrInventory["catch_token"] = Config.Doremi._tradingCardCatchToken[guildId.ToString()];
+                                        JArray item = (JArray)arrInventory[parent][spawnedCardCategory];
+                                        item.Add(spawnedCardId);
                                         File.WriteAllText(playerDataDirectory, arrInventory.ToString());
-                                        replyText = ":x: I'm sorry, but you **fail** to catch the card. Better luck next time.";
+
+                                        string[] arrRandomFirstSentence = {
+                                            "Congratulations,","Nice catch!","Very good!","Awesome catch!",
+                                            "Great job!"
+                                        };
+
+                                        await ReplyAsync($":white_check_mark: {arrRandomFirstSentence[new Random().Next(0, arrRandomFirstSentence.Length)]} " +
+                                            $"**{Context.User.Username}** have successfully capture **{spawnedCardCategory}** card: **{name}**",
+                                            embed: TradingCardCore.printCardCaptureTemplate(Config.Momoko.EmbedColor, name, imgUrl,
+                                            spawnedCardId, spawnedCardCategory, rank, star, point, Context.User.Username, Config.Momoko.EmbedAvatarUrl)
+                                            .Build());
+
+                                        //check if player have captured all card/not
+                                        if (((JArray)arrInventory["momoko"]["normal"]).Count >= TradingCardCore.Momoko.maxNormal &&
+                                            ((JArray)arrInventory["momoko"]["platinum"]).Count >= TradingCardCore.Momoko.maxPlatinum &&
+                                            ((JArray)arrInventory["momoko"]["metal"]).Count >= TradingCardCore.Momoko.maxMetal)
+                                        {
+                                            await ReplyAsync(embed: TradingCardCore
+                                                .userCompleteTheirList(Config.Momoko.EmbedColor, "momoko",
+                                                $":clap: Congratulations, **{Context.User.Username}** have successfully capture all **Momoko Card Pack**!",
+                                                "https://cdn.discordapp.com/attachments/706490547191152690/707424504120344576/win5.jpg", guildId.ToString(),
+                                                Context.User.Id.ToString())
+                                                .Build());
+                                        }
+
+                                        //erase spawned instance
+                                        Config.Doremi._tradingCardSpawnedId[guildId.ToString()] = "";
+                                        Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()] = "";
+                                        return;
                                     }
                                 }
                                 else
                                 {
-                                    replyText = ":x: Sorry, please wait for the next card spawn.";
+                                    //save data:
+                                    arrInventory["catch_attempt"] = (Convert.ToInt32(arrInventory["catch_attempt"]) + 1).ToString();
+                                    arrInventory["catch_token"] = Config.Doremi._tradingCardCatchToken[guildId.ToString()];
+                                    File.WriteAllText(playerDataDirectory, arrInventory.ToString());
+                                    replyText = $":x: I'm sorry {Context.User.Username}, but you **fail** to catch the card. Better luck next time.";
                                 }
                             }
-                            catch (Exception e)
+                            else
                             {
-                                Console.WriteLine(e.ToString());
+                                replyText = ":x: Sorry, please wait for the next card spawn.";
                             }
-
                         }
-                        else
+                        catch (Exception e)
                         {
-                            replyText = ":x: Sorry, it seems you type the wrong **Card Id** at this time. Please type the correct one.";
+                            Console.WriteLine(e.ToString());
                         }
+
                     }
                     else
                     {
-                        replyText = ":x: Sorry, I can't capture that card. Try to use the other ojamajo bot to capture this card.";
+                        replyText = ":x: Sorry, it seems you type the wrong **Card Id** at this time. Please type the correct one.";
                     }
+                    
 
                 }
                 else
@@ -923,7 +936,7 @@ namespace OjamajoBot.Module
             await ReplyAsync(embed: new EmbedBuilder()
             .WithColor(Config.Momoko.EmbedColor)
             .WithDescription(replyText)
-            .WithImageUrl("https://cdn.discordapp.com/attachments/706490547191152690/706769235019300945/Linesticker21.png").Build());
+            .WithImageUrl(TradingCardCore.Momoko.emojiError).Build());
 
         }
 
@@ -937,14 +950,13 @@ namespace OjamajoBot.Module
             var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
 
             string replyText; string parent = "momoko";
-            int maxNormal = 43; int maxPlatinum = 6; int maxMetal = 4;
 
             if (!File.Exists(playerDataDirectory)) //not registered yet
             {
                 await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Momoko.EmbedColor)
                 .WithDescription("I'm sorry, please register yourself first with **do!card register** command.")
-                .WithImageUrl("https://cdn.discordapp.com/attachments/706490547191152690/706769235019300945/Linesticker21.png").Build());
+                .WithImageUrl(TradingCardCore.Momoko.emojiError).Build());
             }
             else
             {
@@ -962,13 +974,13 @@ namespace OjamajoBot.Module
                     if (arrList.Count >= 1)
                     {
                         await PagedReplyAsync(
-                            TradingCardCore.printInventoryTemplate("momoko", "momoko", category, jObjTradingCardList, arrList, maxNormal)
+                            TradingCardCore.printInventoryTemplate("momoko", "momoko", category, jObjTradingCardList, arrList, TradingCardCore.Momoko.maxNormal)
                         );
                     }
                     else
                     {
                         await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                            Config.Momoko.EmbedColor, "momoko", category, maxNormal)
+                            Config.Momoko.EmbedColor, "momoko", category, TradingCardCore.Momoko.maxNormal)
                             .Build());
                     }
 
@@ -977,13 +989,13 @@ namespace OjamajoBot.Module
                     if (arrList.Count >= 1)
                     {
                         await PagedReplyAsync(
-                            TradingCardCore.printInventoryTemplate("momoko", "momoko", category, jObjTradingCardList, arrList, maxPlatinum)
+                            TradingCardCore.printInventoryTemplate("momoko", "momoko", category, jObjTradingCardList, arrList, TradingCardCore.Momoko.maxPlatinum)
                         );
                     }
                     else
                     {
                         await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                            Config.Momoko.EmbedColor, "momoko", category, maxPlatinum)
+                            Config.Momoko.EmbedColor, "momoko", category, TradingCardCore.Momoko.maxPlatinum)
                             .Build());
                     }
 
@@ -992,13 +1004,13 @@ namespace OjamajoBot.Module
                     if (arrList.Count >= 1)
                     {
                         await PagedReplyAsync(
-                            TradingCardCore.printInventoryTemplate("momoko", "momoko", category, jObjTradingCardList, arrList, maxMetal)
+                            TradingCardCore.printInventoryTemplate("momoko", "momoko", category, jObjTradingCardList, arrList, TradingCardCore.Momoko.maxMetal)
                         );
                     }
                     else
                     {
                         await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                            Config.Momoko.EmbedColor, "momoko", category, maxMetal)
+                            Config.Momoko.EmbedColor, "momoko", category, TradingCardCore.Momoko.maxMetal)
                             .Build());
                     }
 
@@ -1010,7 +1022,29 @@ namespace OjamajoBot.Module
 
         }
 
-        [Command("detail", RunMode = RunMode.Async), Alias("look"), Summary("See the detail of Momoko card information from the <card_id>.")]
+        [Command("status", RunMode = RunMode.Async), Summary("Show your Trading Card Status report.")]
+        public async Task trading_card_status()
+        {
+            var guildId = Context.Guild.Id;
+            var clientId = Context.User.Id;
+            string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+
+            if (!File.Exists(playerDataDirectory))
+            { //not registered yet
+                await ReplyAsync(embed: new EmbedBuilder()
+                .WithColor(Config.Momoko.EmbedColor)
+                .WithDescription("Gomen ne, please register yourself first with **do!card register** command.")
+                .WithImageUrl(TradingCardCore.Momoko.emojiError).Build());
+            }
+            else
+            {
+                await ReplyAsync(embed: TradingCardCore.
+                    printStatusTemplate(Config.Momoko.EmbedColor, Context.User.Username, guildId.ToString(), clientId.ToString())
+                    .Build());
+            }
+        }
+
+        [Command("detail", RunMode = RunMode.Async), Alias("info", "look"), Summary("See the detail of Momoko card information from the <card_id>.")]
         public async Task trading_card_look(string card_id)
         {
             var guildId = Context.Guild.Id;
@@ -1051,7 +1085,7 @@ namespace OjamajoBot.Module
                     await ReplyAsync(embed: new EmbedBuilder()
                     .WithColor(Config.Momoko.EmbedColor)
                     .WithDescription($"Sorry, you don't have: **{card_id} - {name}** card yet. Try capture it to look at this card.")
-                    .WithImageUrl("https://cdn.discordapp.com/attachments/706490547191152690/706769235019300945/Linesticker21.png").Build());
+                    .WithImageUrl(TradingCardCore.Momoko.emojiError).Build());
                 }
 
             }
@@ -1060,7 +1094,7 @@ namespace OjamajoBot.Module
                 await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Momoko.EmbedColor)
                 .WithDescription("Sorry, I can't find that card ID.")
-                .WithImageUrl("https://cdn.discordapp.com/attachments/706490547191152690/706769235019300945/Linesticker21.png").Build());
+                .WithImageUrl(TradingCardCore.Momoko.emojiError).Build());
             }
 
         }

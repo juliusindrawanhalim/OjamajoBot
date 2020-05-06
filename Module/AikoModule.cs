@@ -291,11 +291,11 @@ namespace OjamajoBot.Module
         public async Task transform(string form = "dokkan")
         {
             IDictionary<string, string> arrImage = new Dictionary<string, string>();
-            arrImage["default"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/d/d1/Ca-aiko.gif";
-            arrImage["sharp"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/7/74/Sh-aiko.gif";
-            arrImage["royal"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/c/c6/Royalaiko.gif";
-            arrImage["motto"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/a/ac/Mo-aiko.gif";
-            arrImage["dokkan"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/5f/Aiko-dokk.gif";
+            arrImage["default"] = "https://cdn.discordapp.com/attachments/706812082368282646/706817977626001469/default.gif";
+            arrImage["sharp"] = "https://cdn.discordapp.com/attachments/706812082368282646/706818340265656350/sharp.gif";
+            arrImage["royal"] = "https://cdn.discordapp.com/attachments/706812082368282646/706818543647457310/royal.gif";
+            arrImage["motto"] = "https://cdn.discordapp.com/attachments/706812082368282646/706818722400043008/motto.gif";
+            arrImage["dokkan"] = "https://cdn.discordapp.com/attachments/706812082368282646/706818945197539438/dokkan.gif";
 
             if (arrImage.ContainsKey(form)) {
                 await ReplyAsync("Pretty Witchy Aiko Chi~\n");
@@ -902,127 +902,139 @@ namespace OjamajoBot.Module
         }
     }
 
-    [Name("card"), Group("card"), Summary("This category contains all Aiko Trading card command.")]
+    [Name("Card"), Group("card"), Summary("This category contains all Aiko Trading card command.")]
     public class AikoTradingCardInteractive : InteractiveBase
     {
 
-        [Command("capture", RunMode = RunMode.Async), Summary("Capture spawned card with Aiko.")]
-        public async Task trading_card_aiko_capture(string card_id)
+        [Command("capture", RunMode = RunMode.Async), Alias("catch"), Summary("Capture spawned card with Aiko.")]
+        public async Task trading_card_aiko_capture()
         {
             //reference: https://www.newtonsoft.com/json/help/html/ModifyJson.htm
             var guildId = Context.Guild.Id;
             var clientId = Context.User.Id;
             string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
-            JObject arrInventory = JObject.Parse(File.ReadAllText(playerDataDirectory));
             string replyText = ""; string parent = "aiko";
 
             if (!File.Exists(playerDataDirectory))
             {
-                replyText = "I'm sorry, please register yourself first with **do!card register** command.";
+                replyText = "Gomen ne, please register yourself first with **do!card register** command.";
+                await ReplyAsync(embed: new EmbedBuilder()
+                .WithColor(Config.Aiko.EmbedColor)
+                .WithDescription(replyText)
+                .WithImageUrl(TradingCardCore.Aiko.emojiError).Build());
+                return;
             }
             else
             {
+                JObject arrInventory = JObject.Parse(File.ReadAllText(playerDataDirectory));
                 string spawnedCardId = Config.Doremi._tradingCardSpawnedId[guildId.ToString()].ToString();
                 string spawnedCardCategory = Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToString();
                 if (spawnedCardId != "" && spawnedCardCategory != "")
                 {
                     if (spawnedCardId.Contains("ai"))//check if the card is aiko/not
                     {
-                        if (spawnedCardId == card_id)
+                        
+                        int catchState = 0;
+
+                        //check last capture time
+                        try
                         {
-                            int catchState = 0;
-
-                            //check last capture time
-                            try
+                            if ((string)arrInventory["catch_token"] == "" ||
+                                (string)arrInventory["catch_token"] != Config.Doremi._tradingCardCatchToken[guildId.ToString()].ToString())
                             {
-                                if ((string)arrInventory["catch_token"] == "" ||
-                                    (string)arrInventory["catch_token"] != Config.Doremi._tradingCardCatchToken[guildId.ToString()].ToString())
+                                int catchRate;
+
+                                //init RNG catch rate
+                                if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "normal")
                                 {
-                                    int catchRate;
+                                    catchRate = new Random().Next(11);
+                                    if (catchRate <= 9) catchState = 1;
+                                }
+                                else if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "platinum")
+                                {
+                                    catchRate = new Random().Next(11);
+                                    if (catchRate <= 5) catchState = 1;
+                                }
+                                else if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "metal")
+                                {
+                                    catchRate = new Random().Next(11);
+                                    if (catchRate <= 2) catchState = 1;
+                                }
 
-                                    //init RNG catch rate
-                                    if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "normal")
-                                    {
-                                        catchRate = new Random().Next(0, 11);
-                                        if (catchRate <= 9) catchState = 1;
-                                    }
-                                    else if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "platinum")
-                                    {
-                                        catchRate = new Random().Next(0, 11);
-                                        if (catchRate <= 4) catchState = 1;
-                                    }
-                                    else if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "metal")
-                                    {
-                                        catchRate = new Random().Next(0, 11);
-                                        if (catchRate <= 1) catchState = 1;
-                                    }
+                                if (catchState == 1)
+                                {
+                                    //start read json
+                                    var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
 
-                                    if (catchState == 1)
-                                    {
-                                        //start read json
-                                        var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
+                                    string name = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["name"].ToString();
+                                    string imgUrl = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["url"].ToString();
+                                    string rank = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["0"].ToString();
+                                    string star = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["1"].ToString();
+                                    string point = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["2"].ToString();
 
-                                        string name = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["name"].ToString();
-                                        string imgUrl = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["url"].ToString();
-                                        string rank = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["0"].ToString();
-                                        string star = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["1"].ToString();
-                                        string point = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["2"].ToString();
-
-                                        //check inventory
-                                        if (arrInventory[parent][spawnedCardCategory].ToString().Contains(spawnedCardId))
-                                        {//card already exist on inventory
-                                            replyText = $":x: Sorry, I can't capture **{card_id} - {name}** because you have it already.";
-                                        }
-                                        else
-                                        {//card not exist yet
-                                            //save data:
-                                            arrInventory["catch_token"] = Config.Doremi._tradingCardCatchToken[guildId.ToString()];
-                                            JArray item = (JArray)arrInventory[parent][spawnedCardCategory];
-                                            item.Add(spawnedCardId);
-                                            File.WriteAllText(playerDataDirectory, arrInventory.ToString());
-
-                                            await ReplyAsync($":white_check_mark: Congratulations, **{Context.User.Username}** have successfully capture Aiko **{spawnedCardCategory}** card: **{name}**",
-                                             embed: new EmbedBuilder()
-                                            .WithAuthor(name)
-                                            .WithColor(Config.Aiko.EmbedColor)
-                                            .AddField("ID", spawnedCardId, true)
-                                            .AddField("Category", spawnedCardCategory, true)
-                                            .AddField("Rank", rank, true)
-                                            .AddField("⭐", star, true)
-                                            .AddField("Point", point, true)
-                                            .WithImageUrl(imgUrl)
-                                            .WithFooter($"Captured by: {Context.User.Username}")
-                                            .Build());
-
-                                            //erase spawned instance
-                                            Config.Doremi._tradingCardSpawnedId[guildId.ToString()] = "";
-                                            Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()] = "";
-                                            return;
-                                        }
+                                    //check inventory
+                                    if (arrInventory[parent][spawnedCardCategory].ToString().Contains(spawnedCardId))
+                                    {//card already exist on inventory
+                                        replyText = $":x: Sorry, I can't capture **{spawnedCardId} - {name}** because you have it already.";
                                     }
                                     else
-                                    {
+                                    {//card not exist yet
                                         //save data:
+                                        arrInventory["catch_attempt"] = (Convert.ToInt32(arrInventory["catch_attempt"]) + 1).ToString();
                                         arrInventory["catch_token"] = Config.Doremi._tradingCardCatchToken[guildId.ToString()];
+                                        JArray item = (JArray)arrInventory[parent][spawnedCardCategory];
+                                        item.Add(spawnedCardId);
                                         File.WriteAllText(playerDataDirectory, arrInventory.ToString());
-                                        replyText = ":x: I'm sorry, but you **fail** to catch the card. Better luck next time.";
+
+                                        string[] arrRandomFirstSentence = {
+                                            "Congratulations,","Awesome!","Great one!"
+                                        };
+
+                                        await ReplyAsync($":white_check_mark: {arrRandomFirstSentence[new Random().Next(0, arrRandomFirstSentence.Length)]} " +
+                                            $"**{Context.User.Username}** have successfully capture **{spawnedCardCategory}** card: **{name}**",
+                                            embed: TradingCardCore.printCardCaptureTemplate(Config.Aiko.EmbedColor, name, imgUrl,
+                                            spawnedCardId, spawnedCardCategory, rank, star, point, Context.User.Username, Config.Aiko.EmbedAvatarUrl)
+                                            .Build());
+
+                                        //check if player have captured all card/not
+                                        if (((JArray)arrInventory["aiko"]["normal"]).Count >= TradingCardCore.Aiko.maxNormal &&
+                                            ((JArray)arrInventory["aiko"]["platinum"]).Count >= TradingCardCore.Aiko.maxPlatinum &&
+                                            ((JArray)arrInventory["aiko"]["metal"]).Count >= TradingCardCore.Aiko.maxMetal)
+                                        {
+                                            await ReplyAsync(embed: TradingCardCore
+                                                .userCompleteTheirList(Config.Aiko.EmbedColor, "aiko",
+                                                $":clap: Congratulations, **{Context.User.Username}** have successfully capture all **Aiko Card Pack**!",
+                                                "https://cdn.discordapp.com/attachments/706490547191152690/707424297685090344/win1.jpg", guildId.ToString(),
+                                                Context.User.Id.ToString())
+                                                .Build());
+                                        }
+
+                                        //erase spawned instance
+                                        Config.Doremi._tradingCardSpawnedId[guildId.ToString()] = "";
+                                        Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()] = "";
+                                        return;
                                     }
                                 }
                                 else
                                 {
-                                    replyText = ":x: Sorry, please wait for the next card spawn.";
+                                    //save data:
+                                    arrInventory["catch_attempt"] = (Convert.ToInt32(arrInventory["catch_attempt"]) + 1).ToString();
+                                    arrInventory["catch_token"] = Config.Doremi._tradingCardCatchToken[guildId.ToString()];
+                                    File.WriteAllText(playerDataDirectory, arrInventory.ToString());
+                                    replyText = $":x: I'm sorry {Context.User.Username}, but you **fail** to catch the card. Better luck next time.";
                                 }
                             }
-                            catch (Exception e)
+                            else
                             {
-                                Console.WriteLine(e.ToString());
+                                replyText = ":x: Sorry, please wait for the next card spawn.";
                             }
-
                         }
-                        else
+                        catch (Exception e)
                         {
-                            replyText = ":x: Sorry, it seems you type the wrong **Card Id** at this time. Please type the correct one.";
+                            Console.WriteLine(e.ToString());
                         }
+
+                        
                     }
                     else
                     {
@@ -1041,7 +1053,7 @@ namespace OjamajoBot.Module
             await ReplyAsync(embed: new EmbedBuilder()
             .WithColor(Config.Aiko.EmbedColor)
             .WithDescription(replyText)
-            .WithImageUrl("https://cdn.discordapp.com/attachments/706490547191152690/706494032976674856/aiko.jpg").Build());
+            .WithImageUrl(TradingCardCore.Aiko.emojiError).Build());
 
         }
 
@@ -1055,14 +1067,13 @@ namespace OjamajoBot.Module
             var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
 
             string replyText; string parent = "aiko";
-            int maxNormal = 45; int maxPlatinum = 7; int maxMetal = 6;
 
             if (!File.Exists(playerDataDirectory)) //not registered yet
             {
                 await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Aiko.EmbedColor)
-                .WithDescription("I'm sorry, please register yourself first with **do!card register** command.")
-                .WithImageUrl("https://cdn.discordapp.com/attachments/706490547191152690/706494032976674856/aiko.jpg").Build());
+                .WithDescription("Gomen ne, please register yourself first with **do!card register** command.")
+                .WithImageUrl(TradingCardCore.Aiko.emojiError).Build());
             }
             else
             {
@@ -1080,13 +1091,13 @@ namespace OjamajoBot.Module
                     if (arrList.Count >= 1)
                     {
                         await PagedReplyAsync(
-                            TradingCardCore.printInventoryTemplate("aiko", "aiko", category, jObjTradingCardList, arrList, maxNormal)
-                        );
+                            TradingCardCore.printInventoryTemplate("aiko", "aiko", category, jObjTradingCardList, arrList, TradingCardCore.Aiko.maxNormal)
+                        ) ;
                     }
                     else
                     {
                         await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                            Config.Aiko.EmbedColor, "aiko", category, maxNormal)
+                            Config.Aiko.EmbedColor, "aiko", category, TradingCardCore.Aiko.maxNormal)
                             .Build());
                     }
 
@@ -1095,13 +1106,13 @@ namespace OjamajoBot.Module
                     if (arrList.Count >= 1)
                     {
                         await PagedReplyAsync(
-                            TradingCardCore.printInventoryTemplate("aiko", "aiko", category, jObjTradingCardList, arrList, maxPlatinum)
+                            TradingCardCore.printInventoryTemplate("aiko", "aiko", category, jObjTradingCardList, arrList, TradingCardCore.Aiko.maxPlatinum)
                         );
                     }
                     else
                     {
                         await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                            Config.Aiko.EmbedColor, "aiko", category, maxPlatinum)
+                            Config.Aiko.EmbedColor, "aiko", category, TradingCardCore.Aiko.maxPlatinum)
                             .Build());
                     }
 
@@ -1110,13 +1121,13 @@ namespace OjamajoBot.Module
                     if (arrList.Count >= 1)
                     {
                         await PagedReplyAsync(
-                            TradingCardCore.printInventoryTemplate("aiko", "aiko", category, jObjTradingCardList, arrList, maxMetal)
+                            TradingCardCore.printInventoryTemplate("aiko", "aiko", category, jObjTradingCardList, arrList, TradingCardCore.Aiko.maxMetal)
                         );
                     }
                     else
                     {
                         await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                            Config.Aiko.EmbedColor, "aiko", category, maxMetal)
+                            Config.Aiko.EmbedColor, "aiko", category, TradingCardCore.Aiko.maxMetal)
                             .Build());
                     }
 
@@ -1128,7 +1139,29 @@ namespace OjamajoBot.Module
 
         }
 
-        [Command("detail", RunMode = RunMode.Async), Alias("look"), Summary("See the detail of Aiko card information from the <card_id>.")]
+        [Command("status", RunMode = RunMode.Async), Summary("Show your Trading Card Status report.")]
+        public async Task trading_card_status()
+        {
+            var guildId = Context.Guild.Id;
+            var clientId = Context.User.Id;
+            string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+
+            if (!File.Exists(playerDataDirectory))
+            { //not registered yet
+                await ReplyAsync(embed: new EmbedBuilder()
+                .WithColor(Config.Aiko.EmbedColor)
+                .WithDescription("Gomen ne, please register yourself first with **do!card register** command.")
+                .WithImageUrl(TradingCardCore.Aiko.emojiError).Build());
+            }
+            else
+            {
+                await ReplyAsync(embed: TradingCardCore.
+                    printStatusTemplate(Config.Aiko.EmbedColor, Context.User.Username, guildId.ToString(), clientId.ToString())
+                    .Build());
+            }
+        }
+
+        [Command("detail", RunMode = RunMode.Async), Alias("info","look"), Summary("See the detail of Aiko card information from the <card_id>.")]
         public async Task trading_card_look(string card_id)
         {
             var guildId = Context.Guild.Id;
@@ -1169,7 +1202,7 @@ namespace OjamajoBot.Module
                     await ReplyAsync(embed: new EmbedBuilder()
                     .WithColor(Config.Aiko.EmbedColor)
                     .WithDescription($"Sorry, you don't have: **{card_id} - {name}** card yet. Try capture it to look at this card.")
-                    .WithImageUrl("https://cdn.discordapp.com/attachments/706490547191152690/706494032976674856/aiko.jpg").Build());
+                    .WithImageUrl(TradingCardCore.Aiko.emojiError).Build());
                 }
 
             }
@@ -1178,7 +1211,7 @@ namespace OjamajoBot.Module
                 await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Aiko.EmbedColor)
                 .WithDescription("Sorry, I can't find that card ID.")
-                .WithImageUrl("https://cdn.discordapp.com/attachments/706490547191152690/706494032976674856/aiko.jpg").Build());
+                .WithImageUrl(TradingCardCore.Aiko.emojiError).Build());
             }
 
         }

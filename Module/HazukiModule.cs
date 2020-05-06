@@ -286,11 +286,11 @@ namespace OjamajoBot.Module
         public async Task transform(string form = "dokkan")
         {
             IDictionary<string, string> arrImage = new Dictionary<string, string>();
-            arrImage["default"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/6/63/Ca-hazuki.gif";
-            arrImage["sharp"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/c/cc/Sh-hazuki.gif";
-            arrImage["royal"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/7/7d/Royalhazuki.gif";
-            arrImage["motto"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/4/4d/Mo-hazuki.gif";
-            arrImage["dokkan"] = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/1/19/Hazuki-dokk.gif";
+            arrImage["default"] = "https://cdn.discordapp.com/attachments/706812058175406210/706813870827765811/default.gif";
+            arrImage["sharp"] = "https://cdn.discordapp.com/attachments/706812058175406210/706814005921972314/sharp.gif";
+            arrImage["royal"] = "https://cdn.discordapp.com/attachments/706812058175406210/706814304296632380/royal.gif";
+            arrImage["motto"] = "https://cdn.discordapp.com/attachments/706812058175406210/706814145055424562/motto.gif";
+            arrImage["dokkan"] = "https://cdn.discordapp.com/attachments/706812058175406210/706814281701916712/dokkan.gif";
 
             if (arrImage.ContainsKey(form))
             {
@@ -826,127 +826,138 @@ namespace OjamajoBot.Module
 
     }
 
-    [Name("card"), Group("card"), Summary("This category contains all Hazuki Trading card command.")]
+    [Name("Card"), Group("card"), Summary("This category contains all Hazuki Trading card command.")]
     public class HazukiTradingCardInteractive : InteractiveBase
     {
-
-        [Command("capture", RunMode = RunMode.Async), Summary("Capture spawned card with Hazuki.")]
-        public async Task trading_card_hazuki_capture(string card_id)
+        [Command("capture", RunMode = RunMode.Async), Alias("catch"), Summary("Capture spawned card with Hazuki.")]
+        public async Task trading_card_hazuki_capture()
         {
             //reference: https://www.newtonsoft.com/json/help/html/ModifyJson.htm
             var guildId = Context.Guild.Id;
             var clientId = Context.User.Id;
             string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
-            JObject arrInventory = JObject.Parse(File.ReadAllText(playerDataDirectory));
             string replyText = ""; string parent = "hazuki";
 
             if (!File.Exists(playerDataDirectory))
             {
                 replyText = "I'm sorry, please register yourself first with **do!card register** command.";
+                await ReplyAsync(embed: new EmbedBuilder()
+                .WithColor(Config.Hazuki.EmbedColor)
+                .WithDescription(replyText)
+                .WithImageUrl(TradingCardCore.Hazuki.emojiError).Build());
+                return;
             }
             else
             {
+                JObject arrInventory = JObject.Parse(File.ReadAllText(playerDataDirectory));
                 string spawnedCardId = Config.Doremi._tradingCardSpawnedId[guildId.ToString()].ToString();
                 string spawnedCardCategory = Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToString();
                 if (spawnedCardId != "" && spawnedCardCategory != "")
                 {
                     if (spawnedCardId.Contains("ha"))//check if the card is hazuki/not
                     {
-                        if (spawnedCardId == card_id)
+                        
+                        int catchState = 0;
+
+                        //check last capture time
+                        try
                         {
-                            int catchState = 0;
-
-                            //check last capture time
-                            try
+                            if ((string)arrInventory["catch_token"] == "" ||
+                                (string)arrInventory["catch_token"] != Config.Doremi._tradingCardCatchToken[guildId.ToString()].ToString())
                             {
-                                if ((string)arrInventory["catch_token"] == "" ||
-                                    (string)arrInventory["catch_token"] != Config.Doremi._tradingCardCatchToken[guildId.ToString()].ToString())
+                                int catchRate;
+
+                                //init RNG catch rate
+                                if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "normal")
                                 {
-                                    int catchRate;
+                                    catchRate = new Random().Next(11);
+                                    if (catchRate <= 9) catchState = 1;
+                                }
+                                else if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "platinum")
+                                {
+                                    catchRate = new Random().Next(11);
+                                    if (catchRate <= 5) catchState = 1;
+                                }
+                                else if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "metal")
+                                {
+                                    catchRate = new Random().Next(11);
+                                    if (catchRate <= 2) catchState = 1;
+                                }
 
-                                    //init RNG catch rate
-                                    if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "normal")
-                                    {
-                                        catchRate = new Random().Next(0, 11);
-                                        if (catchRate <= 9) catchState = 1;
-                                    }
-                                    else if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "platinum")
-                                    {
-                                        catchRate = new Random().Next(0, 11);
-                                        if (catchRate <= 4) catchState = 1;
-                                    }
-                                    else if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "metal")
-                                    {
-                                        catchRate = new Random().Next(0, 11);
-                                        if (catchRate <= 1) catchState = 1;
-                                    }
+                                if (catchState == 1)
+                                {
+                                    //start read json
+                                    var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
 
-                                    if (catchState == 1)
-                                    {
-                                        //start read json
-                                        var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
+                                    string name = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["name"].ToString();
+                                    string imgUrl = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["url"].ToString();
+                                    string rank = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["0"].ToString();
+                                    string star = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["1"].ToString();
+                                    string point = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["2"].ToString();
 
-                                        string name = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["name"].ToString();
-                                        string imgUrl = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["url"].ToString();
-                                        string rank = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["0"].ToString();
-                                        string star = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["1"].ToString();
-                                        string point = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["2"].ToString();
-
-                                        //check inventory
-                                        if (arrInventory[parent][spawnedCardCategory].ToString().Contains(spawnedCardId))
-                                        {//card already exist on inventory
-                                            replyText = $":x: Sorry, I can't capture **{card_id} - {name}** because you have it already.";
-                                        }
-                                        else
-                                        {//card not exist yet
-                                            //save data:
-                                            arrInventory["catch_token"] = Config.Doremi._tradingCardCatchToken[guildId.ToString()];
-                                            JArray item = (JArray)arrInventory[parent][spawnedCardCategory];
-                                            item.Add(spawnedCardId);
-                                            File.WriteAllText(playerDataDirectory, arrInventory.ToString());
-
-                                            await ReplyAsync($":white_check_mark: Congratulations, **{Context.User.Username}** have successfully capture Hazuki **{spawnedCardCategory}** card: **{name}**",
-                                             embed: new EmbedBuilder()
-                                            .WithAuthor(name)
-                                            .WithColor(Config.Hazuki.EmbedColor)
-                                            .AddField("ID", spawnedCardId, true)
-                                            .AddField("Category", spawnedCardCategory, true)
-                                            .AddField("Rank", rank, true)
-                                            .AddField("⭐", star, true)
-                                            .AddField("Point", point, true)
-                                            .WithImageUrl(imgUrl)
-                                            .WithFooter($"Captured by: {Context.User.Username}")
-                                            .Build());
-
-                                            //erase spawned instance
-                                            Config.Doremi._tradingCardSpawnedId[guildId.ToString()] = "";
-                                            Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()] = "";
-                                            return;
-                                        }
+                                    //check inventory
+                                    if (arrInventory[parent][spawnedCardCategory].ToString().Contains(spawnedCardId))
+                                    {//card already exist on inventory
+                                        replyText = $":x: Sorry, I can't capture **{spawnedCardId} - {name}** because you have it already.";
                                     }
                                     else
-                                    {
+                                    {//card not exist yet
                                         //save data:
+                                        arrInventory["catch_attempt"] = (Convert.ToInt32(arrInventory["catch_attempt"]) + 1).ToString();
                                         arrInventory["catch_token"] = Config.Doremi._tradingCardCatchToken[guildId.ToString()];
+                                        JArray item = (JArray)arrInventory[parent][spawnedCardCategory];
+                                        item.Add(spawnedCardId);
                                         File.WriteAllText(playerDataDirectory, arrInventory.ToString());
-                                        replyText = ":x: I'm sorry, but you **fail** to catch the card. Better luck next time.";
+
+                                        string[] arrRandomFirstSentence = {
+                                            "Congratulations,","Nice One!"
+                                        };
+
+                                        await ReplyAsync($":white_check_mark: {arrRandomFirstSentence[new Random().Next(0, arrRandomFirstSentence.Length)]} " +
+                                            $"**{Context.User.Username}** have successfully capture **{spawnedCardCategory}** card: **{name}**",
+                                            embed: TradingCardCore.printCardCaptureTemplate(Config.Hazuki.EmbedColor, name, imgUrl,
+                                            spawnedCardId, spawnedCardCategory, rank, star, point, Context.User.Username, Config.Hazuki.EmbedAvatarUrl)
+                                            .Build());
+
+                                        //check if player have captured all card/not
+                                        if (((JArray)arrInventory["hazuki"]["normal"]).Count >= TradingCardCore.Hazuki.maxNormal &&
+                                            ((JArray)arrInventory["hazuki"]["platinum"]).Count >= TradingCardCore.Hazuki.maxPlatinum &&
+                                            ((JArray)arrInventory["hazuki"]["metal"]).Count >= TradingCardCore.Hazuki.maxMetal)
+                                        {
+                                            await ReplyAsync(embed: TradingCardCore
+                                                .userCompleteTheirList(Config.Hazuki.EmbedColor, "hazuki",
+                                                $":clap: Congratulations, **{Context.User.Username}** have successfully capture all **Hazuki Card Pack**!",
+                                                "https://cdn.discordapp.com/attachments/706490547191152690/707424248872042568/win1.jpg", guildId.ToString(),
+                                                Context.User.Id.ToString())
+                                                .Build());
+                                        }
+
+                                        //erase spawned instance
+                                        Config.Doremi._tradingCardSpawnedId[guildId.ToString()] = "";
+                                        Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()] = "";
+                                        return;
                                     }
                                 }
                                 else
                                 {
-                                    replyText = ":x: Sorry, please wait for the next card spawn.";
+                                    //save data:
+                                    arrInventory["catch_attempt"] = (Convert.ToInt32(arrInventory["catch_attempt"]) + 1).ToString();
+                                    arrInventory["catch_token"] = Config.Doremi._tradingCardCatchToken[guildId.ToString()];
+                                    File.WriteAllText(playerDataDirectory, arrInventory.ToString());
+                                    replyText = $":x: I'm sorry {Context.User.Username}, but you **fail** to catch the card. Better luck next time.";
                                 }
                             }
-                            catch (Exception e)
+                            else
                             {
-                                Console.WriteLine(e.ToString());
+                                replyText = ":x: Sorry, please wait for the next card spawn.";
                             }
-
                         }
-                        else
+                        catch (Exception e)
                         {
-                            replyText = ":x: Sorry, it seems you type the wrong **Card Id** at this time. Please type the correct one.";
+                            Console.WriteLine(e.ToString());
                         }
+
+                        
                     }
                     else
                     {
@@ -965,8 +976,30 @@ namespace OjamajoBot.Module
             await ReplyAsync(embed: new EmbedBuilder()
             .WithColor(Config.Hazuki.EmbedColor)
             .WithDescription(replyText)
-            .WithImageUrl("https://cdn.discordapp.com/attachments/706490547191152690/706494023782629386/hazuki.png").Build());
+            .WithImageUrl(TradingCardCore.Hazuki.emojiError).Build());
 
+        }
+
+        [Command("status", RunMode = RunMode.Async), Summary("Show your Trading Card Status report.")]
+        public async Task trading_card_status()
+        {
+            var guildId = Context.Guild.Id;
+            var clientId = Context.User.Id;
+            string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+
+            if (!File.Exists(playerDataDirectory))
+            { //not registered yet
+                await ReplyAsync(embed: new EmbedBuilder()
+                .WithColor(Config.Hazuki.EmbedColor)
+                .WithDescription("I'm sorry, please register yourself first with **do!card register** command.")
+                .WithImageUrl(TradingCardCore.Hazuki.emojiError).Build());
+            }
+            else
+            {
+                await ReplyAsync(embed: TradingCardCore.
+                    printStatusTemplate(Config.Hazuki.EmbedColor, Context.User.Username, guildId.ToString(), clientId.ToString())
+                    .Build());
+            }
         }
 
         //list all cards that have been collected
@@ -979,14 +1012,13 @@ namespace OjamajoBot.Module
             var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
 
             string replyText; string parent = "hazuki";
-            int maxNormal = 46; int maxPlatinum = 9; int maxMetal = 6;
 
             if (!File.Exists(playerDataDirectory)) //not registered yet
             {
                 await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Hazuki.EmbedColor)
                 .WithDescription("I'm sorry, please register yourself first with **do!card register** command.")
-                .WithImageUrl("https://cdn.discordapp.com/attachments/706490547191152690/706494023782629386/hazuki.png").Build());
+                .WithImageUrl(TradingCardCore.Hazuki.emojiError).Build());
             }
             else
             {
@@ -1004,13 +1036,13 @@ namespace OjamajoBot.Module
                     if (arrList.Count >= 1)
                     {
                         await PagedReplyAsync(
-                            TradingCardCore.printInventoryTemplate("hazuki", "hazuki", category, jObjTradingCardList, arrList, maxNormal)
+                            TradingCardCore.printInventoryTemplate("hazuki", "hazuki", category, jObjTradingCardList, arrList, TradingCardCore.Hazuki.maxNormal)
                         );
                     }
                     else
                     {
                         await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                            Config.Hazuki.EmbedColor, "hazuki", category, maxNormal)
+                            Config.Hazuki.EmbedColor, "hazuki", category, TradingCardCore.Hazuki.maxNormal)
                             .Build());
                     }
 
@@ -1019,13 +1051,13 @@ namespace OjamajoBot.Module
                     if (arrList.Count >= 1)
                     {
                         await PagedReplyAsync(
-                            TradingCardCore.printInventoryTemplate("hazuki", "hazuki", category, jObjTradingCardList, arrList, maxPlatinum)
+                            TradingCardCore.printInventoryTemplate("hazuki", "hazuki", category, jObjTradingCardList, arrList, TradingCardCore.Hazuki.maxPlatinum)
                         );
                     }
                     else
                     {
                         await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                            Config.Hazuki.EmbedColor, "hazuki", category, maxPlatinum)
+                            Config.Hazuki.EmbedColor, "hazuki", category, TradingCardCore.Hazuki.maxPlatinum)
                             .Build());
                     }
 
@@ -1034,13 +1066,13 @@ namespace OjamajoBot.Module
                     if (arrList.Count >= 1)
                     {
                         await PagedReplyAsync(
-                            TradingCardCore.printInventoryTemplate("hazuki", "hazuki", category, jObjTradingCardList, arrList, maxMetal)
+                            TradingCardCore.printInventoryTemplate("hazuki", "hazuki", category, jObjTradingCardList, arrList, TradingCardCore.Hazuki.maxMetal)
                         );
                     }
                     else
                     {
                         await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                            Config.Hazuki.EmbedColor, "hazuki", category, maxMetal)
+                            Config.Hazuki.EmbedColor, "hazuki", category, TradingCardCore.Hazuki.maxMetal)
                             .Build());
                     }
 
@@ -1052,7 +1084,7 @@ namespace OjamajoBot.Module
 
         }
 
-        [Command("detail", RunMode = RunMode.Async), Alias("look"), Summary("See the detail of Hazuki card information from the <card_id>.")]
+        [Command("detail", RunMode = RunMode.Async), Alias("info","look"), Summary("See the detail of Hazuki card information from the <card_id>.")]
         public async Task trading_card_look(string card_id)
         {
             var guildId = Context.Guild.Id;
@@ -1093,7 +1125,7 @@ namespace OjamajoBot.Module
                     await ReplyAsync(embed: new EmbedBuilder()
                     .WithColor(Config.Hazuki.EmbedColor)
                     .WithDescription($"Sorry, you don't have: **{card_id} - {name}** card yet. Try capture it to look at this card.")
-                    .WithImageUrl("https://cdn.discordapp.com/attachments/706490547191152690/706494023782629386/hazuki.png").Build());
+                    .WithImageUrl(TradingCardCore.Hazuki.emojiError).Build());
                 }
 
             }
@@ -1102,7 +1134,7 @@ namespace OjamajoBot.Module
                 await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Hazuki.EmbedColor)
                 .WithDescription("Sorry, I can't find that card ID.")
-                .WithImageUrl("https://cdn.discordapp.com/attachments/706490547191152690/706494023782629386/hazuki.png").Build());
+                .WithImageUrl(TradingCardCore.Hazuki.emojiError).Build());
             }
 
         }

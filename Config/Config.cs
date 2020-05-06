@@ -23,10 +23,10 @@ namespace Config
         public static string headLogsFolder = "logs/";
         public static string minigameDataFileName = "minigame_data.json";
         public static string tradingCardDataFileName = "trading_card_list.json";
-        public static string lastUpdate = "May 3,2020";
+        public static string lastUpdate = "May 6,2020";
         public static JObject jObjWiki;
         public static string wikiParentUrl = "https://ojamajowitchling.fandom.com/wiki/";
-        public static int minGlobalTimeHour = 12;
+        public static int minGlobalTimeHour = 11;
         public static int maxGlobalTimeHour = 15;
 
         public Core()
@@ -181,12 +181,15 @@ namespace Config
                 $"Please come and join us to make takoyaki, will you?"},
             {"with Kotake","Psst, I'm trying to disturb kotake right now :smirk:"},
             {"with Pop","I'm playing with Pop now. She needs my help with some piano lesson."},
-            {"at House",$"I'm at my house right now. I hope my mom will make a steak for dinner {Emoji.steak}"},
+            {"with Hana","I'm playing with Hana now."},
+            {"at Home",$"I'm at my home right now. I hope my mom will make a steak for dinner {Emoji.steak}"},
             {$"at witch's world {Emoji.broom}","I'm at the witch's world right now."},
             {"with homework \uD83D\uDCDA","I'm doing my homework right now"},
             {"with Momoko",$"I'm playing with {MentionUtils.MentionUser(Momoko.Id)} right now."},
             {"with Onpu",$"I'm playing with {MentionUtils.MentionUser(Onpu.Id)} right now."},
-            {"with Dodo the fairy",$"I'm playing with fairy: Dodo right now."}
+            {"with Dodo the fairy",$"I'm playing with fairy: Dodo right now."},
+            {"with Tamaki",$"I'm playing with Tamaki right now."},
+            {"with Ojamajo Trading Card",$"I'm playing Ojamajo Trading Card right now."}
         };
         public static int indexCurrentActivity { get; set; }
 
@@ -219,12 +222,15 @@ namespace Config
                     $"We're going to make some Takoyaki with {MentionUtils.MentionUser(Doremi.Id)}, {MentionUtils.MentionUser(Onpu.Id)} and {MentionUtils.MentionUser(Momoko.Id)}."},
             {$"violin {Emoji.violin}","I'm playing with my violin instrument now. Wanna hear me to play some music?"},
             {"with Masaru","I'm playing with my Masaru right now. We're usually playing music together on the afternoon \uD83D\uDE0A"},
-            {"at House",$"I'm at my house right now. I have violin lesson to attend after this."},
+            {"at Home",$"I'm at my home right now. I have violin lesson to attend after this."},
             {$"at witch's world {Emoji.broom}","I'm at the witch's world right now."},
             {"with homework \uD83D\uDCDA","I'm doing my homework right now."},
             {"with Momoko",$"I'm playing with {MentionUtils.MentionUser(Momoko.Id)} right now."},
             {"with Onpu-",$"I'm playing with {MentionUtils.MentionUser(Onpu.Id)} right now."},
-            {"with Rere the fairy",$"I'm playing with my fairy: Rere right now."}
+            {"with Rere the fairy",$"I'm playing with my fairy: Rere right now."},
+            {"with Hana","I'm playing with Hana now."},
+            {"with Marina","I'm playing with Marina now. We're planning to plant some flower together."},
+            {"with Ojamajo Trading Card",$"I'm playing Ojamajo Trading Card right now."}
         };
 
         public static int indexCurrentActivity { get; set; }
@@ -267,7 +273,9 @@ namespace Config
             {"with homework \uD83D\uDCDA","I'm doing my homework right now."},
             {"with Momoko",$"I'm playing with {MentionUtils.MentionUser(Momoko.Id)} right now."},
             {"with Onpu",$"I'm playing with {MentionUtils.MentionUser(Onpu.Id)} right now."},
-            {"with Mimi the fairy",$"I'm playing with my fairy: Mimi right now."}
+            {"with Mimi the fairy",$"I'm playing with my fairy: Mimi right now."},
+            {"with Hana","I'm playing with Hana now."},
+            {"with Ojamajo Trading Card",$"I'm playing Ojamajo Trading Card right now."}
         };
         public static int indexCurrentActivity { get; set; }
 
@@ -299,12 +307,14 @@ namespace Config
             {"with Doremi",$"I'm playing with {MentionUtils.MentionUser(Doremi.Id)} right now. We're probably gonna make steak for her."},
             {"with Aiko",$"I'm playing with {MentionUtils.MentionUser(Aiko.Id)} right now. We're probably gonna make steak for her."},
             {"with Momoko",$"I'm playing with {MentionUtils.MentionUser(Momoko.Id)} right now."},
-            {"at tv studio","I'm working on the studio right now. Feel free to come and watch me on some drama performances."},
-            {"at radio station","I'm currently broadcasting at radio station right now. Stay tune for more daily info."},
+            {"at misora tv studio","I'm working on the studio right now. Feel free to come and watch me on some drama performances."},
+            {"at misora radio station","I'm currently broadcasting at radio station right now. Stay tune for more daily info."},
             {$"at witch's world {Emoji.broom}","I'm at the witch's world right now."},
             {"flute","I'm playing with my flute instrument now. Wanna hear me to play some music?"},
             {"with homework \uD83D\uDCDA","I'm doing my homework right now."},
-            {"with Roro the fairy",$"I'm playing with my fairy: Roro right now."}
+            {"with Roro the fairy",$"I'm playing with my fairy: Roro right now."},
+            {"with Hana","I'm playing with Hana now."},
+            {"with Ojamajo Trading Card",$"I'm playing Ojamajo Trading Card right now."}
         };
         public static int indexCurrentActivity { get; set; }
 
@@ -339,7 +349,11 @@ namespace Config
             {$"at witch's world {Emoji.broom}","I'm at the witch's world right now."},
             {$"guitar {Emoji.guitar}","I'm playing with my guitar instrument now. Wanna hear me to play some music?"},
             {"with homework \uD83D\uDCDA","I'm doing my homework right now."},
-            {"with Nini",$"I'm playing with my fairy: Nini right now."}
+            {"with Nini",$"I'm playing with my fairy: Nini right now."},
+            {"baseball \u26BE",$"I'm playing baseball right now."},
+            {"with Hana","I'm playing with Hana now."},
+            {"with Tamaki",$"I'm playing with Tamaki right now."},
+            {"with Ojamajo Trading Card",$"I'm playing Ojamajo Trading Card right now."}
         };
         public static int indexCurrentActivity { get; set; }
 
@@ -401,7 +415,7 @@ namespace Config
         public static JObject jobjectfile { get; set; }
         //public static List<LavaTrack> storedLavaTrack = new List<LavaTrack>();
         //public static IDictionary<string, List<LavaTrack>> storedLavaTrack = new Dictionary<string, List<LavaTrack>>();
-        public static IDictionary<string,List<string>> queuedTrack = new Dictionary<string,List<string>>();
+        //public static IDictionary<string,List<string>> queuedTrack = new Dictionary<string,List<string>>();
         public static Byte repeat = 2;//0:repeat off;1:repeat one;2:repeat all
     }
 

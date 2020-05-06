@@ -21,7 +21,6 @@ namespace OjamajoBot.Service
         {
             socketClient.Ready += OnReady;
             _lavaNode = lavaNode;
-
             _lavaNode.OnPlayerUpdated += OnPlayerUpdated;
             _lavaNode.OnStatsReceived += OnStatsReceived;
             _lavaNode.OnTrackEnded += OnTrackEnded;
@@ -77,20 +76,32 @@ namespace OjamajoBot.Service
 
             if (!player.Queue.TryDequeue(out var queueable))
             {
-                await player.TextChannel.SendMessageAsync("No more tracks to play.");
+
+                await player.TextChannel.SendMessageAsync(":stop_button: No more tracks to play.");
                 return;
             }
 
             if (!(queueable is LavaTrack track))
             {
-                await player.TextChannel.SendMessageAsync("Next item in queue is not a track.");
+                await player.TextChannel.SendMessageAsync(":x: Next item in queue is not a track.");
                 return;
             }
 
+            //https://i.ytimg.com/vi/tPEE9ZwTmy0/hqdefault.jpg
+            //https://i.ytimg.com/vi/tPEE9ZwTmy0/hqdefault.jpg
             await args.Player.PlayAsync(track);
             await args.Player.TextChannel.SendMessageAsync(
-                $"{args.Reason}: {args.Track.Title}\n" +
-                $"Now playing: {track.Title}");
+                $"{args.Reason}: **{args.Track.Title}**.",
+                embed: new EmbedBuilder()
+                .WithAuthor("Now Playing")
+                .WithTitle(track.Title)
+                .WithColor(Config.Onpu.EmbedColor)
+                .WithUrl(track.Url)
+                .AddField("Duration", track.Duration, true)
+                .AddField("Author", track.Author, true)
+                .WithThumbnailUrl($"https://i.ytimg.com/vi/{track.Id}/hqdefault.jpg")
+                .WithFooter("Onpu Musicbox", Config.Onpu.EmbedAvatarUrl)
+                .Build());
         }
 
         //backup

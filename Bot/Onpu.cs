@@ -14,6 +14,7 @@ using OjamajoBot.Module;
 using OjamajoBot.Service;
 using System.Threading;
 using Discord.Addons.Interactive;
+using Victoria;
 
 namespace OjamajoBot.Bot
 {
@@ -24,10 +25,12 @@ namespace OjamajoBot.Bot
 
         public static DiscordSocketClient client;
 
-        private AudioService audioservice;
-
         //timer to rotates activity
         private Timer _timerStatus;
+
+        private AudioService audioservice;
+        private VictoriaService victoriaservice;
+        private LavaNode _lavaNode;
 
         public async Task RunBotAsync()
         {
@@ -41,14 +44,22 @@ namespace OjamajoBot.Bot
                 .AddSingleton(commands)
                 .AddSingleton(new InteractiveService(client))
                 .AddSingleton(audioservice)
+                //victoria
+                .AddSingleton<LavaConfig>()
+                .AddSingleton<LavaNode>()
                 .BuildServiceProvider();
 
             client.Log += client_log;
+
+            // do something .. don't forget disposing serviceProvider!
+            Dispose();
 
             await RegisterCommandsAsync();
             await client.LoginAsync(TokenType.Bot, Config.Onpu.Token);
             await client.StartAsync();
 
+            _lavaNode = services.GetRequiredService<LavaNode>();
+            victoriaservice = new VictoriaService(_lavaNode, client);
             client.JoinedGuild += JoinedGuild;
             client.GuildAvailable += GuildAvailable;
 
@@ -123,6 +134,7 @@ namespace OjamajoBot.Bot
             client.Ready += () =>
             {
                 Console.WriteLine("Onpu Connected!");
+                _lavaNode.ConnectAsync();
                 return Task.CompletedTask;
             };
 
@@ -171,10 +183,16 @@ namespace OjamajoBot.Bot
             }
         }
 
+        /// <summary>
+        ///     Unregisters the events attached to the discord client.
+        /// </summary>
+        public void Dispose() => client.MessageReceived -= HandleCommandAsync;
+
         public async Task RegisterCommandsAsync()
         {
             client.MessageReceived += HandleCommandAsync;
             await commands.AddModuleAsync(typeof(OnpuModule), services);
+            await commands.AddModuleAsync(typeof(OnpuVictoriaMusic), services);
             await commands.AddModuleAsync(typeof(OnpuMagicalStageModule), services);
             await commands.AddModuleAsync(typeof(OnpuMinigameInteractive), services);
             await commands.AddModuleAsync(typeof(OnpuTradingCardInteractive), services);
