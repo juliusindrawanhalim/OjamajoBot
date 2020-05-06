@@ -165,9 +165,9 @@ namespace Config
         public static IDictionary<string, Timer> _timerBirthdayAnnouncement = new Dictionary<string, Timer>();//birthday reminder timer
         //trading card
         public static IDictionary<string, Timer> _timerTradingCardSpawn = new Dictionary<string, Timer>();//trading card spawn timer
-        public static IDictionary<string, string> _tradingCardSpawnedId = new Dictionary<string, string>();//the spawned trading card id
-        public static IDictionary<string, string> _tradingCardSpawnedCategory = new Dictionary<string, string>();//category
-        public static IDictionary<string, string> _tradingCardCatchToken = new Dictionary<string, string>();//catch token
+        //public static IDictionary<string, string> _tradingCardSpawnedId = new Dictionary<string, string>();//the spawned trading card id
+        //public static IDictionary<string, string> _tradingCardSpawnedCategory = new Dictionary<string, string>();//category
+        //public static IDictionary<string, string> _tradingCardCatchToken = new Dictionary<string, string>();//catch token
 
         public static string[,] arrRandomActivity = {
             {$"at misora elementary school {Emoji.school}" , "I'm still at school right now."},

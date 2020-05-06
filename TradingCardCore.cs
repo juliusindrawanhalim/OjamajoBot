@@ -1,4 +1,5 @@
 ﻿using Discord;
+using Lavalink4NET.Statistics;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -11,6 +12,9 @@ namespace OjamajoBot
     public class TradingCardCore
     {
         public static string version = "1.01";
+        public static string propertyId = "trading_card_spawn_id";
+        public static string propertyCategory = "trading_card_spawn_category";
+        public static string propertyToken = "trading_card_spawn_token";
 
         public static EmbedBuilder printUpdatesNote()
         {
@@ -180,6 +184,13 @@ namespace OjamajoBot
                     .WithFooter($"Captured by: {username}",botIconUrl);
         }
 
+        public static void resetSpawnInstance(ulong guildId)
+        {
+            Config.Guild.setPropertyValue(guildId, propertyId, "");
+            Config.Guild.setPropertyValue(guildId, propertyCategory, "");
+            Config.Guild.setPropertyValue(guildId, propertyToken, "");
+        }
+
         public static EmbedBuilder printStatusTemplate(Color color, string username, string guildId, string clientId)
         {
             string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
@@ -196,7 +207,6 @@ namespace OjamajoBot
                 ((JArray)arrListAiko["normal"]).Count + ((JArray)arrListAiko["platinum"]).Count + ((JArray)arrListAiko["metal"]).Count +
                 ((JArray)arrListOnpu["normal"]).Count + ((JArray)arrListOnpu["platinum"]).Count + ((JArray)arrListOnpu["metal"]).Count +
                 ((JArray)arrListMomoko["normal"]).Count + ((JArray)arrListMomoko["platinum"]).Count + ((JArray)arrListMomoko["metal"]).Count;
-
 
             string doremiText = $"**Normal: {((JArray)arrListDoremi["normal"]).Count}/{Doremi.maxNormal}**\n" +
                 $"**Platinum: {((JArray)arrListDoremi["platinum"]).Count}/{Doremi.maxPlatinum}**\n" +
@@ -235,29 +245,33 @@ namespace OjamajoBot
             public static string parent = "doremi";
             public static string emojiOk = "https://cdn.discordapp.com/attachments/706490547191152690/706511135788105728/143751262x.png";
             public static string emojiError = "https://cdn.discordapp.com/attachments/706490547191152690/706494009991757864/doremi.png";
+            public static string emojiCompleteAllCard = "https://cdn.discordapp.com/attachments/706490547191152690/707424151723311154/win1.jpg";
         }
 
         public class Hazuki {
             public static int maxNormal = 46; public static int maxPlatinum = 9; public static int maxMetal = 6;
             public static string emojiError = "https://cdn.discordapp.com/attachments/706490547191152690/706494023782629386/hazuki.png";
+            public static string emojiCompleteAllCard = "https://cdn.discordapp.com/attachments/706490547191152690/707424248872042568/win1.jpg";
         }
 
         public class Aiko{
             public static int maxNormal = 45; public static int maxPlatinum = 7; public static int maxMetal = 6;
             public static string emojiError = "https://cdn.discordapp.com/attachments/706490547191152690/706494032976674856/aiko.jpg";
+            public static string emojiCompleteAllCard = "https://cdn.discordapp.com/attachments/706490547191152690/707424297685090344/win1.jpg";
         }
 
         public class Onpu
         {
             public static int maxNormal = 46; public static int maxPlatinum = 13; public static int maxMetal = 6;
             public static string emojiError = "https://cdn.discordapp.com/attachments/706490547191152690/706494042631962666/onpu.jpg";
+            public static string emojiCompleteAllCard = "https://cdn.discordapp.com/attachments/706490547191152690/707424375380508682/win2.jpg";
         }
 
         public class Momoko
         {
             public static int maxNormal = 43; public static int maxPlatinum = 6; public static int maxMetal = 4;
             public static string emojiError = "https://cdn.discordapp.com/attachments/706490547191152690/706769235019300945/Linesticker21.png";
-
+            public static string emojiCompleteAllCard = "https://cdn.discordapp.com/attachments/706490547191152690/707424504120344576/win5.jpg";
         }
 
     }

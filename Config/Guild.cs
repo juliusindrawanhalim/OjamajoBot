@@ -80,6 +80,18 @@ namespace Config
                 if (!guildConfig.ContainsKey("trading_card_spawn_interval"))
                     guildConfig.Add(new JProperty("trading_card_spawn_interval", "60"));
 
+                //trading_card_spawn_id
+                if (!guildConfig.ContainsKey("trading_card_spawn_id"))
+                    guildConfig.Add(new JProperty("trading_card_spawn_id", ""));
+
+                //trading_card_spawn_category
+                if (!guildConfig.ContainsKey("trading_card_spawn_category"))
+                    guildConfig.Add(new JProperty("trading_card_spawn_category", ""));
+
+                //trading_card_spawn_token
+                if (!guildConfig.ContainsKey("trading_card_spawn_token"))
+                    guildConfig.Add(new JProperty("trading_card_spawn_token", ""));
+
                 File.WriteAllText($"{Core.headConfigGuildFolder}{id_guild}/{id_guild}.json", guildConfig.ToString());
 
             } else { //create json file if it's not existed
@@ -95,6 +107,9 @@ namespace Config
                     new JProperty("momoko_role_id", ""),
                     new JProperty("trading_card_spawn", ""),
                     new JProperty("trading_card_spawn_interval", "60"),
+                    new JProperty("trading_card_spawn_id", ""),
+                    new JProperty("trading_card_spawn_category", ""),
+                    new JProperty("trading_card_spawn_token", ""),
                     new JProperty("user_birthday", new JObject()));
 
                 File.WriteAllText($"{Core.headConfigGuildFolder}{id_guild}/{id_guild}.json", guildConfig.ToString());

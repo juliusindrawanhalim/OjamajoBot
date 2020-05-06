@@ -1341,14 +1341,19 @@ namespace OjamajoBot.Module
                 //start doremi card spawning timer
                 Config.Doremi._timerTradingCardSpawn[guildId.ToString()] = new Timer(async _ =>
                 {
-                    int randomCategory = new Random().Next(0,101);
+                    int randomCategory = new Random().Next(11);
                     string chosenCategory = "";
-                    if (randomCategory >= 0 && randomCategory <= 80){//normal
-                        chosenCategory = "normal";
-                    } else if (randomCategory >= 81 && randomCategory <= 90){//platinum
-                        chosenCategory = "platinum";
-                    } else if(randomCategory >= 91){//metal
+                    if (randomCategory <= 2)//0-2
+                    {//normal
                         chosenCategory = "metal";
+                    }
+                    else if (randomCategory <= 5)//0-5
+                    {//platinum
+                        chosenCategory = "platinum";
+                    }
+                    else if (randomCategory <= 10)//0-10
+                    {//metal
+                        chosenCategory = "normal";
                     }
 
                     int randomParent = new Random().Next(0, 5);
@@ -1395,9 +1400,9 @@ namespace OjamajoBot.Module
                     string chosenId = key[randIndex].Name;
                     string chosenName = jObjTradingCardList[parent][chosenCategory][key[randIndex].Name]["name"].ToString();
                     string chosenUrl = jObjTradingCardList[parent][chosenCategory][key[randIndex].Name]["url"].ToString();
-                    Config.Doremi._tradingCardSpawnedId[guildId.ToString()] = chosenId;
-                    Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()] = chosenCategory;
-                    Config.Doremi._tradingCardCatchToken[guildId.ToString()] = GlobalFunctions.RandomString(8);
+                    Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyId, chosenId);
+                    Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyCategory, chosenCategory);
+                    Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyToken, GlobalFunctions.RandomString(8));
 
                     var embed = new EmbedBuilder()
                         .WithAuthor(author, embedAvatarUrl)
@@ -1409,7 +1414,7 @@ namespace OjamajoBot.Module
                     await client
                         .GetGuild(guildId)
                         .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guildId, "trading_card_spawn")))
-                        .SendMessageAsync($":exclamation:A **{chosenCategory}** {parent} card has been spawned! Try to capture it with **<bot>!card capture/catch**", 
+                        .SendMessageAsync($":exclamation:A **{chosenCategory}** {parent} card has been spawned! Capture it with **<bot>!card capture/catch**", 
                         embed:embed.Build());
                 },
                 null,
@@ -1526,9 +1531,9 @@ namespace OjamajoBot.Module
                             Config.Doremi._timerTradingCardSpawn[Context.Guild.Id.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
 
                         //reset spawn settings
-                        Config.Doremi._tradingCardSpawnedId[Context.Guild.Id.ToString()] = "";
-                        Config.Doremi._tradingCardSpawnedCategory[Context.Guild.Id.ToString()] = "";
-                        Config.Doremi._tradingCardCatchToken[Context.Guild.Id.ToString()] = "";
+                        Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyId, "");
+                        Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyCategory, "");
+                        Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyToken, "");
 
                     }
                 }
@@ -1595,8 +1600,8 @@ namespace OjamajoBot.Module
             else
             {
                 JObject arrInventory = JObject.Parse(File.ReadAllText(playerDataDirectory));
-                string spawnedCardId = Config.Doremi._tradingCardSpawnedId[guildId.ToString()].ToString();
-                string spawnedCardCategory = Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToString();
+                string spawnedCardId = Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyId);
+                string spawnedCardCategory = Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyCategory);
                 if (spawnedCardId != "" && spawnedCardCategory != "")
                 {
                     if (spawnedCardId.Contains("do"))//check if the card is doremi/not
@@ -1607,22 +1612,22 @@ namespace OjamajoBot.Module
                         try
                         {
                             if ((string)arrInventory["catch_token"] == "" ||
-                                (string)arrInventory["catch_token"] != Config.Doremi._tradingCardCatchToken[guildId.ToString()].ToString())
+                                (string)arrInventory["catch_token"] != Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyToken))
                             {
                                 int catchRate;
 
                                 //init RNG catch rate
-                                if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "normal")
+                                if (spawnedCardCategory.ToLower() == "normal")
                                 {
                                     catchRate = new Random().Next(11);
                                     if (catchRate <= 9) catchState = 1;
                                 }
-                                else if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "platinum")
+                                else if (spawnedCardCategory.ToLower() == "platinum")
                                 {
                                     catchRate = new Random().Next(11);
                                     if (catchRate <= 5) catchState = 1;
                                 }
-                                else if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "metal")
+                                else if (spawnedCardCategory.ToLower() == "metal")
                                 {
                                     catchRate = new Random().Next(11);
                                     if (catchRate <= 2) catchState = 1;
@@ -1648,7 +1653,7 @@ namespace OjamajoBot.Module
                                     {//card not exist yet
                                         //save data:
                                         arrInventory["catch_attempt"] = (Convert.ToInt32(arrInventory["catch_attempt"]) + 1).ToString();
-                                        arrInventory["catch_token"] = Config.Doremi._tradingCardCatchToken[guildId.ToString()];
+                                        arrInventory["catch_token"] = Config.Guild.getPropertyValue(guildId,TradingCardCore.propertyToken);
                                         JArray item = (JArray)arrInventory[parent][spawnedCardCategory];
                                         item.Add(spawnedCardId);
                                         File.WriteAllText(playerDataDirectory, arrInventory.ToString());
@@ -1671,14 +1676,13 @@ namespace OjamajoBot.Module
                                             await ReplyAsync(embed: TradingCardCore
                                                 .userCompleteTheirList(Config.Doremi.EmbedColor,"doremi",
                                                 $":clap: Congratulations, **{Context.User.Username}** have successfully capture all **Doremi Card Pack**!",
-                                                "https://cdn.discordapp.com/attachments/706490547191152690/707424151723311154/win1.jpg",guildId.ToString(), 
+                                                TradingCardCore.Doremi.emojiCompleteAllCard,guildId.ToString(), 
                                                 Context.User.Id.ToString())
                                                 .Build());
                                         }
 
                                         //erase spawned instance
-                                        Config.Doremi._tradingCardSpawnedId[guildId.ToString()] = "";
-                                        Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()] = "";
+                                        TradingCardCore.resetSpawnInstance(guildId);
                                         return;
                                     }
                                 }
@@ -1686,7 +1690,7 @@ namespace OjamajoBot.Module
                                 {
                                     //save data:
                                     arrInventory["catch_attempt"] = (Convert.ToInt32(arrInventory["catch_attempt"]) + 1).ToString();
-                                    arrInventory["catch_token"] = Config.Doremi._tradingCardCatchToken[guildId.ToString()];
+                                    arrInventory["catch_token"] = Config.Guild.getPropertyValue(guildId,TradingCardCore.propertyToken);
                                     File.WriteAllText(playerDataDirectory, arrInventory.ToString());
                                     replyText = $":x: I'm sorry {Context.User.Username}, but you **fail** to catch the card. Better luck next time.";
                                 }

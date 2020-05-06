@@ -685,8 +685,8 @@ namespace OjamajoBot.Module
             else
             {
                 JObject arrInventory = JObject.Parse(File.ReadAllText(playerDataDirectory));
-                string spawnedCardId = Config.Doremi._tradingCardSpawnedId[guildId.ToString()].ToString();
-                string spawnedCardCategory = Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToString();
+                string spawnedCardId = Config.Guild.getPropertyValue(guildId,TradingCardCore.propertyId);
+                string spawnedCardCategory = Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyCategory);
                 if (spawnedCardId != "" && spawnedCardCategory != "")
                 {
                     if (spawnedCardId.Contains("on"))//check if the card is onpu/not
@@ -698,22 +698,22 @@ namespace OjamajoBot.Module
                         try
                         {
                             if ((string)arrInventory["catch_token"] == "" ||
-                                (string)arrInventory["catch_token"] != Config.Doremi._tradingCardCatchToken[guildId.ToString()].ToString())
+                                (string)arrInventory["catch_token"] != Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyToken))
                             {
                                 int catchRate;
 
                                 //init RNG catch rate
-                                if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "normal")
+                                if (spawnedCardCategory.ToLower() == "normal")
                                 {
                                     catchRate = new Random().Next(11);
                                     if (catchRate <= 9) catchState = 1;
                                 }
-                                else if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "platinum")
+                                else if (spawnedCardCategory.ToLower() == "platinum")
                                 {
                                     catchRate = new Random().Next(11);
                                     if (catchRate <= 5) catchState = 1;
                                 }
-                                else if (Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()].ToLower() == "metal")
+                                else if (spawnedCardCategory.ToLower() == "metal")
                                 {
                                     catchRate = new Random().Next(11);
                                     if (catchRate <= 2) catchState = 1;
@@ -739,7 +739,7 @@ namespace OjamajoBot.Module
                                     {//card not exist yet
                                         //save data:
                                         arrInventory["catch_attempt"] = (Convert.ToInt32(arrInventory["catch_attempt"]) + 1).ToString();
-                                        arrInventory["catch_token"] = Config.Doremi._tradingCardCatchToken[guildId.ToString()];
+                                        arrInventory["catch_token"] = Config.Guild.getPropertyValue(guildId,TradingCardCore.propertyToken);
                                         JArray item = (JArray)arrInventory[parent][spawnedCardCategory];
                                         item.Add(spawnedCardId);
                                         File.WriteAllText(playerDataDirectory, arrInventory.ToString());
@@ -762,14 +762,13 @@ namespace OjamajoBot.Module
                                             await ReplyAsync(embed: TradingCardCore
                                                 .userCompleteTheirList(Config.Onpu.EmbedColor, "onpu",
                                                 $":clap: Congratulations, **{Context.User.Username}** have successfully capture all **Onpu Card Pack**!",
-                                                "https://cdn.discordapp.com/attachments/706490547191152690/707424375380508682/win2.jpg", guildId.ToString(),
+                                                TradingCardCore.Onpu.emojiCompleteAllCard, guildId.ToString(),
                                                 Context.User.Id.ToString())
                                                 .Build());
                                         }
 
                                         //erase spawned instance
-                                        Config.Doremi._tradingCardSpawnedId[guildId.ToString()] = "";
-                                        Config.Doremi._tradingCardSpawnedCategory[guildId.ToString()] = "";
+                                        TradingCardCore.resetSpawnInstance(guildId);
                                         return;
                                     }
                                 }
@@ -777,7 +776,7 @@ namespace OjamajoBot.Module
                                 {
                                     //save data:
                                     arrInventory["catch_attempt"] = (Convert.ToInt32(arrInventory["catch_attempt"]) + 1).ToString();
-                                    arrInventory["catch_token"] = Config.Doremi._tradingCardCatchToken[guildId.ToString()];
+                                    arrInventory["catch_token"] = Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyToken);
                                     File.WriteAllText(playerDataDirectory, arrInventory.ToString());
                                     replyText = $":x: I'm sorry {Context.User.Username}, but you **fail** to catch the card. Better luck next time.";
                                 }
@@ -1120,8 +1119,8 @@ namespace OjamajoBot.Module
             {
                 player.Queue.Enqueue(track);
                 //Config.Music.storedLavaTrack[Context.Guild.Id.ToString()].Add(track);
-                await ReplyAsync($":arrow_down: Added to queue: {track.Title}.",
-                embed: new EmbedBuilder()
+                await ReplyAsync(embed: new EmbedBuilder()
+                .WithAuthor("⬇️ Added to queue")
                 .WithTitle(track.Title)
                 .WithColor(Config.Onpu.EmbedColor)
                 .WithUrl(track.Url)
@@ -1364,7 +1363,7 @@ namespace OjamajoBot.Module
             .WithAuthor("Now Playing")
             .AddField("Author", track.Author,true)
             .AddField("Duration", track.Duration, true)
-            .AddField("Position", track.Position, true)
+            .AddField("Position", track.Position.ToString(@"hh\:mm\:ss"), true)
             .WithFooter("Onpu Musicbox", Config.Onpu.EmbedAvatarUrl);
 
             await ReplyAsync(embed: embed.Build());

@@ -367,8 +367,8 @@ namespace OjamajoBot.Bot
             }
 
             //init variable
-            Config.Doremi._tradingCardSpawnedId[guild.Id.ToString()] = "";
-            Config.Doremi._tradingCardSpawnedCategory[guild.Id.ToString()] = "";
+            //Config.Doremi._tradingCardSpawnedId[guild.Id.ToString()] = "";
+            //Config.Doremi._tradingCardSpawnedCategory[guild.Id.ToString()] = "";
 
             //set random card spawn timer
             if (Config.Guild.hasPropertyValues(guild.Id.ToString(), "trading_card_spawn"))
@@ -436,9 +436,13 @@ namespace OjamajoBot.Bot
                     string chosenId = key[randIndex].Name;
                     string chosenName = jObjTradingCardList[parent][chosenCategory][key[randIndex].Name]["name"].ToString();
                     string chosenUrl = jObjTradingCardList[parent][chosenCategory][key[randIndex].Name]["url"].ToString();
-                    Config.Doremi._tradingCardSpawnedId[guild.Id.ToString()] = chosenId;
-                    Config.Doremi._tradingCardSpawnedCategory[guild.Id.ToString()] = chosenCategory;
-                    Config.Doremi._tradingCardCatchToken[guild.Id.ToString()] = GlobalFunctions.RandomString(8);
+                    Config.Guild.setPropertyValue(guild.Id, TradingCardCore.propertyId, chosenId);
+                    Config.Guild.setPropertyValue(guild.Id, TradingCardCore.propertyCategory, chosenCategory);
+                    Config.Guild.setPropertyValue(guild.Id, TradingCardCore.propertyToken, GlobalFunctions.RandomString(8));
+
+                    //Config.Doremi._tradingCardSpawnedId[guild.Id.ToString()] = chosenId;
+                    //Config.Doremi._tradingCardSpawnedCategory[guild.Id.ToString()] = chosenCategory;
+                    //Config.Doremi._tradingCardCatchToken[guild.Id.ToString()] = GlobalFunctions.RandomString(8);
 
                     var embed = new EmbedBuilder()
                         .WithAuthor(author, embedAvatarUrl)
@@ -450,12 +454,12 @@ namespace OjamajoBot.Bot
                     await client
                         .GetGuild(guild.Id)
                         .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "trading_card_spawn")))
-                        .SendMessageAsync($":exclamation:A **{chosenCategory}** {parent} card has been spawned! Try to capture it with **<bot>!card capture/catch**",
+                        .SendMessageAsync($":exclamation:A **{chosenCategory}** {parent} card has been spawned! Capture it with **<bot>!card capture/catch**",
                         embed: embed.Build());
                 },
                 null,
                 TimeSpan.FromMinutes(Convert.ToInt32(Config.Guild.getPropertyValue(guild.Id, "trading_card_spawn_interval")) + new Random().Next(5,11)), //time to wait before executing the timer for the first time
-                TimeSpan.FromMinutes(Convert.ToInt32(Config.Guild.getPropertyValue(guild.Id, "trading_card_spawn_interval")) + new Random().Next(5, 11)) //time to wait before executing the timer again
+                TimeSpan.FromMinutes(Convert.ToInt32(Config.Guild.getPropertyValue(guild.Id, "trading_card_spawn_interval")) + new Random().Next(5,11)) //time to wait before executing the timer again
                 );
             }
 
