@@ -379,16 +379,16 @@ namespace OjamajoBot.Bot
                     //9/5/2
                     int randomCategory = new Random().Next(11);
                     string chosenCategory = "";
-                    if (randomCategory <=2)//0-2
-                    {//normal
+                    if (randomCategory <=TradingCardCore.spawnRateMetal)//0-2
+                    {//metal
                         chosenCategory = "metal";
                     }
-                    else if (randomCategory <=5)//0-5
+                    else if (randomCategory <= TradingCardCore.spawnRatePlatinum)//0-5
                     {//platinum
                         chosenCategory = "platinum";
                     }
-                    else if (randomCategory <=10)//0-10
-                    {//metal
+                    else if (randomCategory <= TradingCardCore.spawnRateNormal)//0-9
+                    {//normal
                         chosenCategory = "normal";
                     }
 

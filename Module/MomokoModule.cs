@@ -830,17 +830,17 @@ namespace OjamajoBot.Module
                                 if (spawnedCardCategory.ToLower() == "normal")
                                 {
                                     catchRate = new Random().Next(11);
-                                    if (catchRate <= 9) catchState = 1;
+                                    if (catchRate <= TradingCardCore.spawnRateNormal) catchState = 1;
                                 }
                                 else if (spawnedCardCategory.ToLower() == "platinum")
                                 {
                                     catchRate = new Random().Next(11);
-                                    if (catchRate <= 5) catchState = 1;
+                                    if (catchRate <= TradingCardCore.spawnRatePlatinum) catchState = 1;
                                 }
                                 else if (spawnedCardCategory.ToLower() == "metal")
                                 {
                                     catchRate = new Random().Next(11);
-                                    if (catchRate <= 2) catchState = 1;
+                                    if (catchRate <= TradingCardCore.spawnRateMetal) catchState = 1;
                                 }
 
                                 if (catchState == 1)
@@ -973,13 +973,13 @@ namespace OjamajoBot.Module
                     if (arrList.Count >= 1)
                     {
                         await PagedReplyAsync(
-                            TradingCardCore.printInventoryTemplate("momoko", "momoko", category, jObjTradingCardList, arrList, TradingCardCore.Momoko.maxNormal)
+                            TradingCardCore.printInventoryTemplate("momoko", "momoko", category, jObjTradingCardList, arrList, TradingCardCore.Momoko.maxNormal, clientId)
                         );
                     }
                     else
                     {
                         await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                            Config.Momoko.EmbedColor, "momoko", category, TradingCardCore.Momoko.maxNormal)
+                            Config.Momoko.EmbedColor, "momoko", category, TradingCardCore.Momoko.maxNormal, Context.User.Username)
                             .Build());
                     }
 
@@ -988,13 +988,13 @@ namespace OjamajoBot.Module
                     if (arrList.Count >= 1)
                     {
                         await PagedReplyAsync(
-                            TradingCardCore.printInventoryTemplate("momoko", "momoko", category, jObjTradingCardList, arrList, TradingCardCore.Momoko.maxPlatinum)
+                            TradingCardCore.printInventoryTemplate("momoko", "momoko", category, jObjTradingCardList, arrList, TradingCardCore.Momoko.maxPlatinum, clientId)
                         );
                     }
                     else
                     {
                         await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                            Config.Momoko.EmbedColor, "momoko", category, TradingCardCore.Momoko.maxPlatinum)
+                            Config.Momoko.EmbedColor, "momoko", category, TradingCardCore.Momoko.maxPlatinum, Context.User.Username)
                             .Build());
                     }
 
@@ -1003,13 +1003,13 @@ namespace OjamajoBot.Module
                     if (arrList.Count >= 1)
                     {
                         await PagedReplyAsync(
-                            TradingCardCore.printInventoryTemplate("momoko", "momoko", category, jObjTradingCardList, arrList, TradingCardCore.Momoko.maxMetal)
+                            TradingCardCore.printInventoryTemplate("momoko", "momoko", category, jObjTradingCardList, arrList, TradingCardCore.Momoko.maxMetal, clientId)
                         );
                     }
                     else
                     {
                         await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                            Config.Momoko.EmbedColor, "momoko", category, TradingCardCore.Momoko.maxMetal)
+                            Config.Momoko.EmbedColor, "momoko", category, TradingCardCore.Momoko.maxMetal, Context.User.Username)
                             .Build());
                     }
 

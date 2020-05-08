@@ -948,17 +948,17 @@ namespace OjamajoBot.Module
                                 if (spawnedCardCategory.ToLower() == "normal")
                                 {
                                     catchRate = new Random().Next(11);
-                                    if (catchRate <= 9) catchState = 1;
+                                    if (catchRate <= TradingCardCore.spawnRateNormal) catchState = 1;
                                 }
                                 else if (spawnedCardCategory.ToLower() == "platinum")
                                 {
                                     catchRate = new Random().Next(11);
-                                    if (catchRate <= 5) catchState = 1;
+                                    if (catchRate <= TradingCardCore.spawnRatePlatinum) catchState = 1;
                                 }
                                 else if (spawnedCardCategory.ToLower() == "metal")
                                 {
                                     catchRate = new Random().Next(11);
-                                    if (catchRate <= 2) catchState = 1;
+                                    if (catchRate <= TradingCardCore.spawnRateMetal) catchState = 1;
                                 }
 
                                 if (catchState == 1)
@@ -1090,13 +1090,13 @@ namespace OjamajoBot.Module
                     if (arrList.Count >= 1)
                     {
                         await PagedReplyAsync(
-                            TradingCardCore.printInventoryTemplate("aiko", "aiko", category, jObjTradingCardList, arrList, TradingCardCore.Aiko.maxNormal)
+                            TradingCardCore.printInventoryTemplate("aiko", "aiko", category, jObjTradingCardList, arrList, TradingCardCore.Aiko.maxNormal,clientId)
                         ) ;
                     }
                     else
                     {
                         await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                            Config.Aiko.EmbedColor, "aiko", category, TradingCardCore.Aiko.maxNormal)
+                            Config.Aiko.EmbedColor, "aiko", category, TradingCardCore.Aiko.maxNormal, Context.User.Username)
                             .Build());
                     }
 
@@ -1105,13 +1105,13 @@ namespace OjamajoBot.Module
                     if (arrList.Count >= 1)
                     {
                         await PagedReplyAsync(
-                            TradingCardCore.printInventoryTemplate("aiko", "aiko", category, jObjTradingCardList, arrList, TradingCardCore.Aiko.maxPlatinum)
+                            TradingCardCore.printInventoryTemplate("aiko", "aiko", category, jObjTradingCardList, arrList, TradingCardCore.Aiko.maxPlatinum, clientId)
                         );
                     }
                     else
                     {
                         await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                            Config.Aiko.EmbedColor, "aiko", category, TradingCardCore.Aiko.maxPlatinum)
+                            Config.Aiko.EmbedColor, "aiko", category, TradingCardCore.Aiko.maxPlatinum, Context.User.Username)
                             .Build());
                     }
 
@@ -1120,13 +1120,13 @@ namespace OjamajoBot.Module
                     if (arrList.Count >= 1)
                     {
                         await PagedReplyAsync(
-                            TradingCardCore.printInventoryTemplate("aiko", "aiko", category, jObjTradingCardList, arrList, TradingCardCore.Aiko.maxMetal)
+                            TradingCardCore.printInventoryTemplate("aiko", "aiko", category, jObjTradingCardList, arrList, TradingCardCore.Aiko.maxMetal, clientId)
                         );
                     }
                     else
                     {
                         await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                            Config.Aiko.EmbedColor, "aiko", category, TradingCardCore.Aiko.maxMetal)
+                            Config.Aiko.EmbedColor, "aiko", category, TradingCardCore.Aiko.maxMetal, Context.User.Username)
                             .Build());
                     }
 

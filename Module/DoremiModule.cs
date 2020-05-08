@@ -3,8 +3,10 @@ using Discord;
 using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
+using Lavalink.NET;
 using Newtonsoft.Json.Linq;
 using OjamajoBot.Service;
+using Spectacles.NET.Types;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -14,7 +16,9 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Reflection.Metadata;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -1337,22 +1341,21 @@ namespace OjamajoBot.Module
 
                 if (Config.Doremi._timerTradingCardSpawn.ContainsKey(guildId.ToString()))
                     Config.Doremi._timerTradingCardSpawn[guildId.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
-
                 //start doremi card spawning timer
                 Config.Doremi._timerTradingCardSpawn[guildId.ToString()] = new Timer(async _ =>
                 {
                     int randomCategory = new Random().Next(11);
                     string chosenCategory = "";
-                    if (randomCategory <= 2)//0-2
-                    {//normal
+                    if (randomCategory <= TradingCardCore.spawnRateMetal)//0-2
+                    {//metal
                         chosenCategory = "metal";
                     }
-                    else if (randomCategory <= 5)//0-5
+                    else if (randomCategory <= TradingCardCore.spawnRatePlatinum)//0-5
                     {//platinum
                         chosenCategory = "platinum";
                     }
-                    else if (randomCategory <= 10)//0-10
-                    {//metal
+                    else if (randomCategory <= TradingCardCore.spawnRateNormal)//0-10
+                    {//normal
                         chosenCategory = "normal";
                     }
 
@@ -1418,8 +1421,8 @@ namespace OjamajoBot.Module
                         embed:embed.Build());
                 },
                 null,
-                TimeSpan.FromMinutes(Convert.ToInt32(Guild.getPropertyValue(guildId, "trading_card_spawn_interval")) + new Random().Next(5, 11)), //time to wait before executing the timer for the first time
-                TimeSpan.FromMinutes(Convert.ToInt32(Guild.getPropertyValue(guildId, "trading_card_spawn_interval")) + new Random().Next(5, 11)) //time to wait before executing the timer again
+                TimeSpan.FromMinutes(Convert.ToInt32(Config.Guild.getPropertyValue(guildId, "trading_card_spawn_interval")) + new Random().Next(5, 11)), //time to wait before executing the timer for the first time
+                TimeSpan.FromMinutes(Convert.ToInt32(Config.Guild.getPropertyValue(guildId, "trading_card_spawn_interval")) + new Random().Next(5, 11)) //time to wait before executing the timer again
                 );
             }
 
@@ -1435,8 +1438,8 @@ namespace OjamajoBot.Module
 
                     if (Config.Doremi._timerTradingCardSpawn.ContainsKey(guildId.ToString()))
                         Config.Doremi._timerTradingCardSpawn[guildId.ToString()].Change(
-                            TimeSpan.FromMinutes(Convert.ToInt32(Guild.getPropertyValue(guildId, "trading_card_spawn_interval")) + new Random().Next(5, 11)), 
-                            TimeSpan.FromMinutes(Convert.ToInt32(Guild.getPropertyValue(guildId, "trading_card_spawn_interval")) + new Random().Next(5, 11)));
+                            TimeSpan.FromMinutes(Convert.ToInt32(Config.Guild.getPropertyValue(guildId, "trading_card_spawn_interval")) + new Random().Next(5, 11)), 
+                            TimeSpan.FromMinutes(Convert.ToInt32(Config.Guild.getPropertyValue(guildId, "trading_card_spawn_interval")) + new Random().Next(5, 11)));
                 }
                     
             }   
@@ -1620,17 +1623,17 @@ namespace OjamajoBot.Module
                                 if (spawnedCardCategory.ToLower() == "normal")
                                 {
                                     catchRate = new Random().Next(11);
-                                    if (catchRate <= 9) catchState = 1;
+                                    if (catchRate <= TradingCardCore.spawnRateNormal) catchState = 1;
                                 }
                                 else if (spawnedCardCategory.ToLower() == "platinum")
                                 {
                                     catchRate = new Random().Next(11);
-                                    if (catchRate <= 5) catchState = 1;
+                                    if (catchRate <= TradingCardCore.spawnRatePlatinum) catchState = 1;
                                 }
                                 else if (spawnedCardCategory.ToLower() == "metal")
                                 {
                                     catchRate = new Random().Next(11);
-                                    if (catchRate <= 2) catchState = 1;
+                                    if (catchRate <= TradingCardCore.spawnRateMetal) catchState = 1;
                                 }
 
                                 if (catchState == 1)
@@ -1653,7 +1656,7 @@ namespace OjamajoBot.Module
                                     {//card not exist yet
                                         //save data:
                                         arrInventory["catch_attempt"] = (Convert.ToInt32(arrInventory["catch_attempt"]) + 1).ToString();
-                                        arrInventory["catch_token"] = Config.Guild.getPropertyValue(guildId,TradingCardCore.propertyToken);
+                                        arrInventory["catch_token"] = Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyToken);
                                         JArray item = (JArray)arrInventory[parent][spawnedCardCategory];
                                         item.Add(spawnedCardId);
                                         File.WriteAllText(playerDataDirectory, arrInventory.ToString());
@@ -1662,21 +1665,21 @@ namespace OjamajoBot.Module
                                             "Congratulations,","Nice Catch!","Nice one!","Yatta!"
                                         };
 
-                                        await ReplyAsync($":white_check_mark: {arrRandomFirstSentence[new Random().Next(0,arrRandomFirstSentence.Length)]} " +
+                                        await ReplyAsync($":white_check_mark: {arrRandomFirstSentence[new Random().Next(0, arrRandomFirstSentence.Length)]} " +
                                             $"**{Context.User.Username}** have successfully capture **{spawnedCardCategory}** card: **{name}**",
-                                            embed: TradingCardCore.printCardCaptureTemplate(Config.Doremi.EmbedColor,name,imgUrl,
-                                            spawnedCardId,spawnedCardCategory,rank,star,point,Context.User.Username, Config.Doremi.EmbedAvatarUrl)
+                                            embed: TradingCardCore.printCardCaptureTemplate(Config.Doremi.EmbedColor, name, imgUrl,
+                                            spawnedCardId, spawnedCardCategory, rank, star, point, Context.User.Username, Config.Doremi.EmbedAvatarUrl)
                                             .Build());
 
                                         //check if player have captured all card/not
-                                        if (((JArray)arrInventory["doremi"]["normal"]).Count>=TradingCardCore.Doremi.maxNormal&&
-                                            ((JArray)arrInventory["doremi"]["platinum"]).Count >= TradingCardCore.Doremi.maxPlatinum&&
+                                        if (((JArray)arrInventory["doremi"]["normal"]).Count >= TradingCardCore.Doremi.maxNormal &&
+                                            ((JArray)arrInventory["doremi"]["platinum"]).Count >= TradingCardCore.Doremi.maxPlatinum &&
                                             ((JArray)arrInventory["doremi"]["metal"]).Count >= TradingCardCore.Doremi.maxMetal)
                                         {
                                             await ReplyAsync(embed: TradingCardCore
-                                                .userCompleteTheirList(Config.Doremi.EmbedColor,"doremi",
+                                                .userCompleteTheirList(Config.Doremi.EmbedColor, "doremi",
                                                 $":clap: Congratulations, **{Context.User.Username}** have successfully capture all **Doremi Card Pack**!",
-                                                TradingCardCore.Doremi.emojiCompleteAllCard,guildId.ToString(), 
+                                                TradingCardCore.Doremi.emojiCompleteAllCard, guildId.ToString(),
                                                 Context.User.Id.ToString())
                                                 .Build());
                                         }
@@ -1690,7 +1693,7 @@ namespace OjamajoBot.Module
                                 {
                                     //save data:
                                     arrInventory["catch_attempt"] = (Convert.ToInt32(arrInventory["catch_attempt"]) + 1).ToString();
-                                    arrInventory["catch_token"] = Config.Guild.getPropertyValue(guildId,TradingCardCore.propertyToken);
+                                    arrInventory["catch_token"] = Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyToken);
                                     File.WriteAllText(playerDataDirectory, arrInventory.ToString());
                                     replyText = $":x: I'm sorry {Context.User.Username}, but you **fail** to catch the card. Better luck next time.";
                                 }
@@ -1760,13 +1763,13 @@ namespace OjamajoBot.Module
                     if (arrList.Count >= 1)
                     {
                         await PagedReplyAsync(
-                            TradingCardCore.printInventoryTemplate("doremi", "doremi", category, jObjTradingCardList, arrList, TradingCardCore.Doremi.maxNormal)
+                            TradingCardCore.printInventoryTemplate("doremi", "doremi", category, jObjTradingCardList, arrList, TradingCardCore.Doremi.maxNormal, clientId)
                         );
                     }
                     else
                     {
                         await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                            Config.Doremi.EmbedColor, "doremi", category, TradingCardCore.Doremi.maxNormal)
+                            Config.Doremi.EmbedColor, "doremi", category, TradingCardCore.Doremi.maxNormal, Context.User.Username)
                             .Build());
                     }
 
@@ -1775,13 +1778,13 @@ namespace OjamajoBot.Module
                     if (arrList.Count >= 1)
                     {
                         await PagedReplyAsync(
-                            TradingCardCore.printInventoryTemplate("doremi", "doremi", category, jObjTradingCardList, arrList, TradingCardCore.Doremi.maxPlatinum)
+                            TradingCardCore.printInventoryTemplate("doremi", "doremi", category, jObjTradingCardList, arrList, TradingCardCore.Doremi.maxPlatinum, clientId)
                         );
                     }
                     else
                     {
                         await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                            Config.Doremi.EmbedColor, "doremi", category, TradingCardCore.Doremi.maxPlatinum)
+                            Config.Doremi.EmbedColor, "doremi", category, TradingCardCore.Doremi.maxPlatinum, Context.User.Username)
                             .Build());
                     }
 
@@ -1790,13 +1793,13 @@ namespace OjamajoBot.Module
                     if (arrList.Count >= 1)
                     {
                         await PagedReplyAsync(
-                            TradingCardCore.printInventoryTemplate("doremi", "doremi", category, jObjTradingCardList, arrList, TradingCardCore.Doremi.maxMetal)
+                            TradingCardCore.printInventoryTemplate("doremi", "doremi", category, jObjTradingCardList, arrList, TradingCardCore.Doremi.maxMetal, clientId)
                         );
                     }
                     else
                     {
                         await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                            Config.Doremi.EmbedColor, "doremi", category, TradingCardCore.Doremi.maxMetal)
+                            Config.Doremi.EmbedColor, "doremi", category, TradingCardCore.Doremi.maxMetal, Context.User.Username)
                             .Build());
                     }
 
@@ -1806,7 +1809,7 @@ namespace OjamajoBot.Module
 
         }
 
-        [Command("detail", RunMode = RunMode.Async), Alias("info","look"), Summary("See the detail of Doremi card information from the <card_id>.")]
+        [Command("detail", RunMode = RunMode.Async), Alias("info", "look"), Summary("See the detail of Doremi card information from the <card_id>.")]
         public async Task trading_card_look(string card_id)
         {
             var guildId = Context.Guild.Id;
@@ -1866,15 +1869,18 @@ namespace OjamajoBot.Module
             var guildId = Context.Guild.Id;
             var clientId = Context.User.Id;
             string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
-            
-            if (!File.Exists(playerDataDirectory)){ //not registered yet
+
+            if (!File.Exists(playerDataDirectory))
+            { //not registered yet
                 await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
                 .WithDescription("I'm sorry, please register yourself first with **do!card register** command.")
                 .WithImageUrl(TradingCardCore.Doremi.emojiError).Build());
-            } else {
+            }
+            else
+            {
                 await ReplyAsync(embed: TradingCardCore.
-                    printStatusTemplate(Config.Doremi.EmbedColor,Context.User.Username,guildId.ToString(),clientId.ToString())
+                    printStatusTemplate(Config.Doremi.EmbedColor, Context.User.Username, guildId.ToString(), clientId.ToString())
                     .Build());
             }
         }
@@ -1900,21 +1906,1038 @@ namespace OjamajoBot.Module
         }
 
         //trade
-        //[Command("trade", RunMode = RunMode.Async), Summary("Trade one of your doremi trading card with other user.")]
-        //public async Task trading_card_trade()
-        //{
-        //    Boolean isTrading = false;
-        //    while (isTrading)
-        //    {
+        [Command("trade", RunMode = RunMode.Async), Summary("Open the trading card hub which lets you trade the card with each other.")]
+        public async Task trading_card_trade()
+        {
+            var guildId = Context.Guild.Id;
+            var clientId = Context.User.Id;
+            string userFolderDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}";
 
-        //    }
-        //        //you only allowed to trade for 2x each day
-        //        /*json format:
-        //         * "trading_queue": {
-        //            "01929183481": ["do","on"]
-        //        }
-        //         */
-        //}
+            string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+            var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
+
+            if (!File.Exists(playerDataDirectory)) //not registered yet
+            {
+                await ReplyAsync(embed: new EmbedBuilder()
+                .WithColor(Config.Doremi.EmbedColor)
+                .WithDescription("I'm sorry, please register yourself first with **do!card register** command.")
+                .WithImageUrl(TradingCardCore.Doremi.emojiError).Build());
+                return;
+            }
+
+            var playerData = JObject.Parse(File.ReadAllText(playerDataDirectory));
+            int fileCount = Directory.GetFiles(userFolderDirectory).Length;
+
+            if (fileCount <= 1){
+                await ReplyAsync("Sorry, server need to have more than 1 user that register the trading card data.");
+                return;
+            } else {
+                try
+                {
+                    //start read all user id
+                    List<string> arrUserId = new List<string>();
+                    List<string> pageContent = new List<string>();
+                    List<string> pageContentUserList = new List<string>();
+                    //List<string> pageUserContent = new List<string>();
+                    //List<string> pageUserCardList = new List<string>();
+                    //List<string> pageUserOtherCardList = new List<string>();
+
+                    //selection variables
+                    //other users
+                    string selectionUserId = ""; string selectionOtherUserCardChoiceId = ""; string selectionOtherUserCardPack = "";
+                    string selectionOtherUserCardCategory = ""; 
+                    //your selection
+                    string selectionYourCardChoiceId = ""; string selectionYourCardPack = "";
+                    string selectionYourCardCategory = "";
+
+                    DirectoryInfo d = new DirectoryInfo(userFolderDirectory);//Assuming Test is your Folder
+                    FileInfo[] Files = d.GetFiles("*.json"); //Getting Text files
+
+                    //user selection
+                    string titleUserSelection = $"**Step 1 - Select the user with numbers**\n";
+                    string tempVal = titleUserSelection;
+                    int currentIndex = 0;
+
+                    int ctr = 0;
+                    foreach (FileInfo file in Files)
+                    {
+                        ulong otherUserId = Convert.ToUInt64(Path.GetFileNameWithoutExtension(file.Name));
+                        if (otherUserId != clientId)
+                        {
+                            arrUserId.Add(otherUserId.ToString());
+                            tempVal += $"**{ctr + 1}. {MentionUtils.MentionUser(otherUserId)}**\n";
+
+                            if (currentIndex < 14) currentIndex++;
+                            else
+                            {
+                                pageContentUserList.Add(tempVal);
+                                currentIndex = 0;
+                                tempVal = titleUserSelection;
+                            }
+
+                            if (ctr == fileCount - 2) pageContentUserList.Add(tempVal);
+                            ctr++;
+                        }
+                    }
+                    //end user selection
+
+                    Boolean isTrading = true;
+                    var timeoutDuration = TimeSpan.FromSeconds(60);
+                    string replyTimeout = ":stopwatch: I'm sorry, but you have reach your timeout. " +
+                        "Please use the `card trade` command again to retry the trade process.";
+                    int stepProcess = 1;//0/1:select the user,
+                                        //2: select your card pack, 3: select card category, 4: select 
+                                        //5:review process
+                    Boolean newStep = true;
+                    //select user
+                    await ReplyAsync(embed: new EmbedBuilder()
+                        .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+                        .WithDescription($"Welcome to {TradingCardCore.Doremi.embedName}. " +
+                        $"Here you can trade your trading card with each other. " +
+                        $"You can type **cancel**/**exit** anytime on each steps to cancel the trade process.\n" +
+                        $"You can type **back** anytime on each steps to back into previous steps.\n" +
+                        $"Some of the trade rules that will be applied:\n" +
+                        $"-You **cannot** trade for more than once to the same user in the trading queue.\n" +
+                        $"-You **cannot** trade card that you or that user already had.")
+                        .WithColor(Config.Doremi.EmbedColor)
+                        .Build());
+                    await PagedReplyAsync(pageContentUserList);
+                    var response = await NextMessageAsync(timeout: timeoutDuration);
+                    newStep = false;
+                    while (isTrading)
+                    {
+
+                        List<string> arrUserCardList = new List<string>();
+                        List<string> arrUserOtherCardList = new List<string>();
+
+                        try
+                        {
+                            var checkNull = response.Content.ToLower().ToString();
+                        }
+                        catch
+                        {
+                            await ReplyAsync(replyTimeout);
+                            isTrading = false;
+                            return;
+                        }
+
+                        //response = await NextMessageAsync(timeout: timeoutDuration);
+                        //string responseText = response.Content.ToLower().ToString();
+
+                        if (response.Content.ToString().ToLower() == "cancel"||
+                            response.Content.ToString().ToLower() == "exit")
+                        {
+                            await ReplyAsync(embed: new EmbedBuilder()
+                                .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+                                .WithDescription($"You have cancel your trade. Thank you for using the {TradingCardCore.Doremi.embedName}")
+                                .WithColor(Config.Doremi.EmbedColor)
+                                .Build());
+                            isTrading = false;
+                            return;
+                        }
+                        else if (stepProcess == 1)
+                        { //select user
+                            var isNumeric = int.TryParse(response.Content.ToString().ToLower(), out int n);
+                            if (newStep)
+                            {
+                                newStep = false;
+                                await PagedReplyAsync(pageContentUserList);
+                                response = await NextMessageAsync(timeout: timeoutDuration);
+                            }
+                            else
+                            {
+                                if (!isNumeric)
+                                {
+                                    stepProcess = 1;
+                                    selectionUserId = "";
+                                    await ReplyAsync(":x: Please re-type the proper number selection.");
+                                    await PagedReplyAsync(pageContentUserList);
+                                    response = await NextMessageAsync(timeout: timeoutDuration);
+                                }
+                                //array length:2[0,1], selected:2
+                                else if (Convert.ToInt32(response.Content.ToLower().ToString()) <= 0 ||
+                                    Convert.ToInt32(response.Content.ToString().ToLower()) > arrUserId.Count)
+                                {
+                                    stepProcess = 1;
+                                    selectionUserId = "";
+                                    await ReplyAsync(":x: That number choice is not on the list. Please re-type the proper number selection.");
+                                    await PagedReplyAsync(pageContentUserList);
+                                    response = await NextMessageAsync(timeout: timeoutDuration);
+                                }
+                                else
+                                {
+                                    selectionUserId = arrUserId[Convert.ToInt32(response.Content.ToString().ToLower()) - 1];
+                                    var otherUserData = JObject.Parse(File.ReadAllText(
+                                    $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{selectionUserId}.json"
+                                    ));
+                                    if (((JObject)(otherUserData["trading_queue"])).ContainsKey(clientId.ToString()))
+                                    {
+                                        await ReplyAsync(embed: new EmbedBuilder()
+                                            .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+                                            .WithDescription($":x: Sorry, you cannot trade more than once with " +
+                                            $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}.")
+                                            .Build());
+                                        await PagedReplyAsync(pageContentUserList);
+                                        response = await NextMessageAsync(timeout: timeoutDuration);
+                                    }
+                                    else
+                                    {
+                                        stepProcess = 2; newStep = true;
+                                    }
+
+                                }
+                            }
+
+
+                        }
+                        else if (stepProcess == 2)
+                        { //card pack & category selection from other user
+                            var otherUserData = JObject.Parse(File.ReadAllText(
+                                $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{selectionUserId}.json"
+                                ));
+                            List<string> listCardPackCategory = TradingCardCore.tradeListAllowed((JObject)otherUserData);
+
+                            if (listCardPackCategory.Count <= 0)
+                            {
+                                await ReplyAsync(embed: new EmbedBuilder()
+                                    .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+                                    .WithColor(Config.Doremi.EmbedColor)
+                                    .WithDescription($":x: Sorry, there are no cards that can be selected from " +
+                                    $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}.\n" +
+                                    $"Please select other users.")
+                                    .Build());
+                                stepProcess = 1; newStep = true;
+                                response = await NextMessageAsync(timeout: timeoutDuration);
+                            }
+                            else
+                            {
+                                string textConcatDoremi = ""; string textConcatHazuki = ""; string textConcatAiko = "";
+                                string textConcatOnpu = ""; string textConcatMomoko = "";
+                                for (int i = 0; i < listCardPackCategory.Count; i++)
+                                {
+                                    if (listCardPackCategory[i].Contains("doremi"))
+                                        textConcatDoremi += $"{listCardPackCategory[i]}\n";
+                                    else if (listCardPackCategory[i].Contains("hazuki"))
+                                        textConcatHazuki += $"{listCardPackCategory[i]}\n";
+                                    else if (listCardPackCategory[i].Contains("aiko"))
+                                        textConcatAiko += $"{listCardPackCategory[i]}\n";
+                                    else if (listCardPackCategory[i].Contains("onpu"))
+                                        textConcatOnpu += $"{listCardPackCategory[i]}\n";
+                                    else if (listCardPackCategory[i].Contains("momoko"))
+                                        textConcatMomoko += $"{listCardPackCategory[i]}\n";
+                                }
+
+                                if (textConcatDoremi == "") textConcatDoremi = "No card trade for this pack.";
+                                if (textConcatHazuki == "") textConcatHazuki = "No card trade for this pack.";
+                                if (textConcatAiko == "") textConcatAiko = "No card trade for this pack.";
+                                if (textConcatOnpu == "") textConcatOnpu = "No card trade for this pack.";
+                                if (textConcatMomoko == "") textConcatMomoko = "No card trade for this pack.";
+
+                                if (newStep)
+                                {
+                                    newStep = false;
+                                    await ReplyAsync(embed: new EmbedBuilder()
+                                    .WithTitle("Step 2 - Card Pack & Category Selection")
+                                    .WithDescription($"Type the **card pack & category** selection from " +
+                                    $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}. Example: **doremi normal**.\n" +
+                                    $"Type **back** to select other user.")
+                                    .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+                                    .WithColor(Config.Doremi.EmbedColor)
+                                    .AddField("Doremi Card Pack", textConcatDoremi, true)
+                                    .AddField("Hazuki Card Pack", textConcatHazuki, true)
+                                    .AddField("Aiko Card Pack", textConcatAiko, true)
+                                    .AddField("Onpu Card Pack", textConcatOnpu, true)
+                                    .AddField("Momoko Card Pack", textConcatMomoko, true)
+                                    .Build());
+                                    response = await NextMessageAsync(timeout: timeoutDuration);
+                                }
+                                else
+                                {
+                                    if (response.Content.ToString().ToLower() == "back")
+                                    {
+                                        stepProcess = 1;
+                                        newStep = true;
+                                    }
+                                    else if (!listCardPackCategory.Any(str => str.Contains(response.Content.ToString().ToLower())) ||
+                                        !response.Content.ToString().ToLower().Contains(" "))
+                                    {
+                                        await ReplyAsync(":x: Please re-enter the proper card pack selection.",
+                                        embed: new EmbedBuilder()
+                                        .WithTitle("Step 2 - Card Pack & Category Selection")
+                                        .WithDescription($"Type the card pack & category selection from " +
+                                        $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}. Example: **doremi normal**.\n" +
+                                        $"Type **back** to select other user.")
+                                        .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+                                        .WithColor(Config.Doremi.EmbedColor)
+                                        .AddField("Doremi Card Pack", textConcatDoremi, true)
+                                        .AddField("Hazuki Card Pack", textConcatHazuki, true)
+                                        .AddField("Aiko Card Pack", textConcatAiko, true)
+                                        .AddField("Onpu Card Pack", textConcatOnpu, true)
+                                        .AddField("Momoko Card Pack", textConcatMomoko, true)
+                                        .Build());
+                                        response = await NextMessageAsync(timeout: timeoutDuration);
+                                    }
+                                    else
+                                    {
+                                        stepProcess = 3;
+                                        string[] splittedChoice = response.Content.ToString().ToLower().Split(" ");
+                                        selectionOtherUserCardPack = splittedChoice[0]; selectionOtherUserCardCategory = splittedChoice[1];
+                                        newStep = true;
+                                    }
+                                }
+                            }
+                        }
+                        else if (stepProcess == 3)
+                        {
+                            //select other user card id that you want to trade.
+                            //your card id data
+                            var yourData = JObject.Parse(File.ReadAllText(
+                                $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{Convert.ToUInt64(clientId)}.json"
+                                ));
+                            var jYourData = (JArray)(yourData[selectionOtherUserCardPack][selectionOtherUserCardCategory]);
+                            //other user card id data
+                            var otherUserData = JObject.Parse(File.ReadAllText(
+                                $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{selectionUserId}.json"
+                                ));
+                            var jOtherUserData = (JArray)(otherUserData[selectionOtherUserCardPack][selectionOtherUserCardCategory]);
+
+                            //available list
+                            var arrList = jOtherUserData;
+                            var arrYourList = jYourData; int founded = 0;
+                            //remove the card that you already have
+                            for (int i = 0; i < arrList.Count; i++)
+                            {
+                                founded = 0;
+                                for(int j=0;j< arrYourList.Count; j++)
+                                {
+                                    if (arrList[i].ToString().ToLower() == arrYourList[j].ToString().ToLower())
+                                    {
+                                        founded = 1;
+                                        j = arrYourList.Count;
+                                    }
+                                }
+                                if(founded == 0)
+                                    arrUserOtherCardList.Add(arrList[i].ToString());
+                            }
+                                
+                            pageContent = TradingCardCore.printTradeCardListTemplate(selectionOtherUserCardPack, selectionOtherUserCardCategory,
+                                jObjTradingCardList, arrUserOtherCardList);
+                            //end available list
+
+                            if (newStep)
+                            {
+                                newStep = false;
+
+                                if (arrUserOtherCardList.Count >= 1)
+                                {
+                                    await ReplyAsync(embed: new EmbedBuilder()
+                                    .WithTitle("Step 3 - Card Id Selection")
+                                    .WithDescription($"Type the **card id** choice from " +
+                                    $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}. Example: **do001**.\n" +
+                                    $"Type **back** to select other card pack.")
+                                    .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+                                    .WithColor(Config.Doremi.EmbedColor)
+                                    .Build());
+                                    await PagedReplyAsync(pageContent);
+                                    response = await NextMessageAsync(timeout: timeoutDuration);
+                                } else {
+                                    await ReplyAsync(embed: new EmbedBuilder()
+                                        .WithTitle($"Step 3 - {GlobalFunctions.UppercaseFirst(selectionOtherUserCardPack)} {GlobalFunctions.UppercaseFirst(selectionOtherUserCardCategory)} Card Id Selection")
+                                        .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+                                        .WithDescription($":x: Sorry, there are no **{GlobalFunctions.UppercaseFirst(selectionOtherUserCardPack)} {GlobalFunctions.UppercaseFirst(selectionOtherUserCardCategory)}** card that you can choose from " +
+                                        $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}.\n" +
+                                        "Type **back** to select other card pack.")
+                                        .WithColor(Config.Doremi.EmbedColor)
+                                        .Build());
+                                    response = await NextMessageAsync(timeout: timeoutDuration);
+                                }
+                            }
+                            else
+                            {
+                                if (response.Content.ToString().ToLower() == "back")
+                                {
+                                    stepProcess = 2;
+                                    newStep = true;
+                                }
+                                else if (arrUserOtherCardList.Count <= 0)
+                                {
+                                    await ReplyAsync(embed: new EmbedBuilder()
+                                        .WithTitle("Step 3 - Card Id Selection")
+                                        .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+                                        .WithDescription($":x: Sorry, there are no **{GlobalFunctions.UppercaseFirst(selectionOtherUserCardPack)} {GlobalFunctions.UppercaseFirst(selectionOtherUserCardCategory)}** card that you can choose from " +
+                                        $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}.\n" +
+                                        "Type **back** to select other card pack.")
+                                        .WithColor(Config.Doremi.EmbedColor)
+                                        .Build());
+                                    response = await NextMessageAsync(timeout: timeoutDuration);
+                                }
+                                else if (!arrUserOtherCardList.Contains(response.Content.ToString(), StringComparer.Ordinal))
+                                {
+                                    await ReplyAsync(":x: Please re-enter the correct **card id.**");
+                                    await PagedReplyAsync(pageContent);
+                                    response = await NextMessageAsync(timeout: timeoutDuration);
+                                }
+                                else
+                                {
+                                    stepProcess = 4; newStep = true;
+                                    selectionOtherUserCardChoiceId = response.Content.ToString();
+                                }
+                            }
+                        }
+                        else if (stepProcess == 4)
+                        {
+                            //card pack & category selection from yours
+                            var yourUserData = JObject.Parse(File.ReadAllText(
+                                $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId.ToString()}.json"
+                                ));
+                            List<string> listCardPackCategory = TradingCardCore.tradeListAllowed((JObject)yourUserData);
+
+                            if (listCardPackCategory.Count <= 0)
+                            {
+                                await ReplyAsync(embed: new EmbedBuilder()
+                                    .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+                                    .WithColor(Config.Doremi.EmbedColor)
+                                    .WithTitle($"Step 4 - Select Your Available Card Pack")
+                                    .WithDescription($"Sorry, there are no cards that you can trade. " +
+                                    $"Your card trading process has been canceled.")
+                                    .Build());
+                                isTrading = false;
+                                return;
+                            }
+                            else
+                            {
+                                string textConcatDoremi = ""; string textConcatHazuki = ""; string textConcatAiko = "";
+                                string textConcatOnpu = ""; string textConcatMomoko = "";
+                                for (int i = 0; i < listCardPackCategory.Count; i++)
+                                {
+                                    if (listCardPackCategory[i].Contains("doremi"))
+                                        textConcatDoremi += $"{listCardPackCategory[i]}\n";
+                                    else if (listCardPackCategory[i].Contains("hazuki"))
+                                        textConcatHazuki += $"{listCardPackCategory[i]}\n";
+                                    else if (listCardPackCategory[i].Contains("aiko"))
+                                        textConcatAiko += $"{listCardPackCategory[i]}\n";
+                                    else if (listCardPackCategory[i].Contains("onpu"))
+                                        textConcatOnpu += $"{listCardPackCategory[i]}\n";
+                                    else if (listCardPackCategory[i].Contains("momoko"))
+                                        textConcatMomoko += $"{listCardPackCategory[i]}\n";
+                                }
+
+                                if (textConcatDoremi == "") textConcatDoremi = "No card trade for this pack.";
+                                if (textConcatHazuki == "") textConcatHazuki = "No card trade for this pack.";
+                                if (textConcatAiko == "") textConcatAiko = "No card trade for this pack.";
+                                if (textConcatOnpu == "") textConcatOnpu = "No card trade for this pack.";
+                                if (textConcatMomoko == "") textConcatMomoko = "No card trade for this pack.";
+
+                                if (newStep)
+                                {
+                                    newStep = false;
+                                    await ReplyAsync(embed: new EmbedBuilder()
+                                    .WithTitle("Step 4 - Select Your Available Card Pack")
+                                    .WithDescription($"Type the **card pack & category** selection from yours. Example: **doremi normal**.\n" +
+                                    $"Type **back** to re-select other card from {MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}.")
+                                    .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+                                    .WithColor(Config.Doremi.EmbedColor)
+                                    .AddField("Doremi Card Pack", textConcatDoremi, true)
+                                    .AddField("Hazuki Card Pack", textConcatHazuki, true)
+                                    .AddField("Aiko Card Pack", textConcatAiko, true)
+                                    .AddField("Onpu Card Pack", textConcatOnpu, true)
+                                    .AddField("Momoko Card Pack", textConcatMomoko, true)
+                                    .Build());
+                                    response = await NextMessageAsync(timeout: timeoutDuration);
+                                }
+                                else
+                                {
+                                    if (response.Content.ToString().ToLower() == "back")
+                                    {
+                                        stepProcess = 3;
+                                        newStep = true;
+                                    }
+                                    else if (!listCardPackCategory.Contains(response.Content.ToString().ToLower(), StringComparer.OrdinalIgnoreCase) ||
+                                      !response.Content.ToString().ToLower().Contains(" "))
+                                    {
+                                        await ReplyAsync(":x: Please re-enter the proper card pack selection.",
+                                        embed: new EmbedBuilder()
+                                        .WithTitle("Step 4 - Select Your Available Card Pack")
+                                        .WithDescription($"Type the **card pack & category** selection from yours. Example: **doremi normal**.\n" +
+                                        $"Type **back** to re-select other card from {MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}.")
+                                        .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+                                        .WithColor(Config.Doremi.EmbedColor)
+                                        .AddField("Doremi Card Pack", textConcatDoremi, true)
+                                        .AddField("Hazuki Card Pack", textConcatHazuki, true)
+                                        .AddField("Aiko Card Pack", textConcatAiko, true)
+                                        .AddField("Onpu Card Pack", textConcatOnpu, true)
+                                        .AddField("Momoko Card Pack", textConcatMomoko, true)
+                                        .Build());
+                                        response = await NextMessageAsync(timeout: timeoutDuration);
+                                    }
+                                    else
+                                    {
+                                        stepProcess = 5;
+                                        string[] splittedChoice = response.Content.ToString().ToLower().Split(" ");
+                                        selectionYourCardPack = splittedChoice[0]; selectionYourCardCategory = splittedChoice[1];
+                                        newStep = true;
+                                    }
+                                }
+                            }
+
+                        }
+                        else if (stepProcess == 5)
+                        {
+                            //select other user card id that you want to trade.
+                            //your card id data
+                            var yourData = JObject.Parse(File.ReadAllText(
+                                $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{Convert.ToUInt64(clientId)}.json"
+                                ));
+                            var jYourData = (JArray)(yourData[selectionYourCardPack][selectionYourCardCategory]);
+                            //other user card id data
+                            var otherUserData = JObject.Parse(File.ReadAllText(
+                                $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{selectionUserId}.json"
+                                ));
+                            var jOtherUserData = (JArray)(otherUserData[selectionYourCardPack][selectionYourCardCategory]);
+
+                            //available list
+                            var arrList = jOtherUserData;
+                            var arrYourList = jYourData; int founded = 0;
+                            //remove the card that you already have
+                            for (int i = 0; i < arrYourList.Count; i++)
+                            {
+                                founded = 0;
+                                for (int j = 0; j < arrList.Count; j++)
+                                {
+                                    if (arrYourList[i].ToString().ToLower() == arrList[j].ToString().ToLower())
+                                    {
+                                        founded = 1;
+                                        j = arrList.Count;
+                                    }
+                                }
+                                if (founded == 0)
+                                    arrUserCardList.Add(arrYourList[i].ToString());
+                            }
+
+                            pageContent = TradingCardCore.printTradeCardListTemplate(selectionYourCardPack, selectionYourCardCategory,
+                                jObjTradingCardList, arrUserCardList);
+
+                            //end available list
+
+                            if (newStep)
+                            {
+                                newStep = false;
+                                if (arrUserCardList.Count <=0) {
+                                    await ReplyAsync(embed: new EmbedBuilder()
+                                    .WithTitle("Step 5 - Card Id Selection")
+                                    .WithDescription($":x: Sorry, there are no **{GlobalFunctions.UppercaseFirst(selectionYourCardPack)} {GlobalFunctions.UppercaseFirst(selectionYourCardCategory)}** card that you can choose.\n" +
+                                        "Type **back** to select other card pack.")
+                                    .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+                                    .WithColor(Config.Doremi.EmbedColor)
+                                    .Build());
+                                    response = await NextMessageAsync(timeout: timeoutDuration);
+                                } else
+                                {
+                                    await ReplyAsync(embed: new EmbedBuilder()
+                                    .WithTitle($"Step 5 - {GlobalFunctions.UppercaseFirst(selectionYourCardPack)} {GlobalFunctions.UppercaseFirst(selectionYourCardCategory)} Card Id Selection")
+                                    .WithDescription($"Type the **card id** selection from yours. Example: **do001**.\n" +
+                                    $"Type **back** to select other card pack.")
+                                    .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+                                    .WithColor(Config.Doremi.EmbedColor)
+                                    .Build());
+                                    await PagedReplyAsync(pageContent);
+                                    response = await NextMessageAsync(timeout: timeoutDuration);
+                                }
+                                
+                            }
+                            else
+                            {
+                                if (response.Content.ToString().ToLower() == "back")
+                                {
+                                    stepProcess = 4;
+                                    newStep = true;
+                                }
+                                else if (arrUserCardList.Count <= 0)
+                                {
+                                    await ReplyAsync(embed: new EmbedBuilder()
+                                        .WithTitle("Step 5 - Card Id Selection")
+                                        .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+                                        .WithDescription($":x: Sorry, there are no **{GlobalFunctions.UppercaseFirst(selectionYourCardPack)} {GlobalFunctions.UppercaseFirst(selectionYourCardCategory)}** card that you can choose.\n" +
+                                        "Type **back** to select other card pack.")
+                                        .Build());
+                                    response = await NextMessageAsync(timeout: timeoutDuration);
+                                }
+                                else if (!arrUserCardList.Contains(response.Content.ToString(), StringComparer.Ordinal))
+                                {
+                                    await ReplyAsync(":x: Please re-enter the correct **card id.**");
+                                    await PagedReplyAsync(pageContent);
+                                    response = await NextMessageAsync(timeout: timeoutDuration);
+                                }
+                                else
+                                {
+                                    stepProcess = 6; newStep = true;
+                                    selectionYourCardChoiceId = response.Content.ToString();
+                                }
+                            }
+                        }
+                        else if (stepProcess == 6)
+                        {
+                            EmbedBuilder eb = new EmbedBuilder()
+                            .WithTitle("Step 6 - Review Your Trade")
+                            .WithDescription($"You will trade with {MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}. You can see your trade information review below.\n" +
+                            $"Type **confirm** or **accept** to confirm the trade.\n" +
+                            $"Type **back** to select other card pack.\n" +
+                            $"Type **cancel** to cancel your trading process.")
+                            .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+                            //other user:
+                            .AddField($"You will receive:",
+                            $"-Card Pack: " +
+                            $"{GlobalFunctions.UppercaseFirst(selectionOtherUserCardPack)} {GlobalFunctions.UppercaseFirst(selectionOtherUserCardCategory)}\n" +
+                            $"-Card Name: " +
+                            $"**[{selectionOtherUserCardChoiceId} - " +
+                            $"{TradingCardCore.getCardProperty(selectionOtherUserCardPack, selectionOtherUserCardCategory, selectionOtherUserCardChoiceId, "name")}](" +
+                            $"{TradingCardCore.getCardProperty(selectionOtherUserCardPack, selectionOtherUserCardCategory, selectionOtherUserCardChoiceId, "url")})**")
+                            //yours
+                            .AddField($"You will send:",
+                            $"-Card Pack: " +
+                            $"{GlobalFunctions.UppercaseFirst(selectionYourCardPack)} {GlobalFunctions.UppercaseFirst(selectionYourCardCategory)}\n" +
+                            $"-Card Name: " +
+                            $"**[{selectionYourCardChoiceId} - " +
+                            $"{TradingCardCore.getCardProperty(selectionYourCardPack, selectionYourCardCategory, selectionYourCardChoiceId, "name")}](" +
+                            $"{TradingCardCore.getCardProperty(selectionYourCardPack, selectionYourCardCategory, selectionYourCardChoiceId, "url")})**")
+                            .WithColor(Config.Doremi.EmbedColor);
+
+                            //review the trade
+                            if (newStep)
+                            {
+                                newStep = false;
+                                await ReplyAsync(embed: eb.Build());
+                                response = await NextMessageAsync(timeout: timeoutDuration);
+                            } else {
+                                if (response.Content.ToString().ToLower() == "back")
+                                {
+                                    stepProcess = 5;
+                                    newStep = true;
+                                } else if(response.Content.ToString().ToLower() != "accept"&&
+                                    response.Content.ToString().ToLower() != "confirm") {
+                                    await ReplyAsync(":x: Please type with the valid choice: **accept/confirm**",
+                                        embed: eb.Build());
+                                    response = await NextMessageAsync(timeout: timeoutDuration);
+                                } else
+                                {
+                                    await ReplyAsync(embed: new EmbedBuilder()
+                                        .WithTitle("✅ Trade Completed")
+                                        .WithColor(Config.Doremi.EmbedColor)
+                                        .WithDescription($"Your trade offer has been sent to " +
+                                        $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}!\nThank you for using {TradingCardCore.Doremi.embedName}.")
+                                        .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+                                        .WithImageUrl(TradingCardCore.Doremi.emojiOk)
+                                        .Build());
+
+                                    await ReplyAsync($"You have a new card trade offer, {MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}.\n" +
+                                        $"Please use **{Config.Doremi.PrefixParent[0]}card trade process** to process your trade offer.");
+
+                                    //save to user
+                                    string[] parameterNames = new string[] { selectionOtherUserCardChoiceId, selectionYourCardChoiceId };
+                                    JArray jarrayObj = new JArray();
+                                    foreach (string parameterName in parameterNames)
+                                    {
+                                        jarrayObj.Add(parameterName);
+                                    }
+
+                                    string otherUserDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{selectionUserId}.json";
+                                    var JUserData = JObject.Parse(File.ReadAllText(otherUserDataDirectory));
+                                    ((JObject)JUserData["trading_queue"]).Add(clientId.ToString(), new JArray(jarrayObj));
+
+
+                                    //JArray item = (JArray)arrInventory[parent][spawnedCardCategory];
+                                    //item.Add(spawnedCardId);
+                                    File.WriteAllText(otherUserDataDirectory, JUserData.ToString());
+                                    isTrading = false;
+                                    return;
+                                }
+                            }
+                        }
+
+                            //What card pack do you want to trade? select with number/the name
+
+                            //Please type the card id that you want to trade
+
+                            //Please type the 
+                            //
+                        }
+                }
+                catch(Exception e)
+                {
+                    Console.WriteLine(e.ToString());
+                }
+                
+            }
+
+            
+            //you only allowed to trade for 2x each day
+            /*json format:
+             * "trading_queue": {
+                "01929183481": ["do","on"]
+            }
+             */
+        }
+
+        [Command("trade process", RunMode = RunMode.Async), Summary("Trade one of your doremi trading card with other user.")]
+        public async Task trading_card_queue_process()
+        {
+            var guildId = Context.Guild.Id;
+            var clientId = Context.User.Id;
+            string userFolderDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}";
+
+            string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+            var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
+
+            if (!File.Exists(playerDataDirectory)) //not registered yet
+            {
+                await ReplyAsync(embed: new EmbedBuilder()
+                .WithColor(Config.Doremi.EmbedColor)
+                .WithDescription("I'm sorry, please register yourself first with **do!card register** command.")
+                .WithImageUrl(TradingCardCore.Doremi.emojiError).Build());
+                return;
+            }
+
+            var playerData = JObject.Parse(File.ReadAllText(playerDataDirectory));
+            int fileCount = Directory.GetFiles(userFolderDirectory).Length;
+
+            if (fileCount <= 1)
+            {
+                await ReplyAsync("Sorry, server need to have more than 1 user that register the trading card data.");
+                return;
+            }
+            else
+            {
+                try
+                {
+                    //start read all user id
+                    List<string> arrUserId = new List<string>();
+                    List<string> pageContent = new List<string>();
+                    List<string> pageContentUserList = new List<string>();
+
+                    string titleUserList = $"**Step 1 - Trade Process List Selection. Select with numbers.**\n";
+                    string tempValUserList = titleUserList;
+
+                    //list all users
+                    var userList = (JObject)playerData["trading_queue"];
+
+                    if (userList.Count <= 0)
+                    {
+                        await ReplyAsync(":x: There are no trade that you can process.");
+                        return;
+                    }
+
+                    IList<JToken> objUserList = userList;
+                    int currentIndex = 0;
+                    for (int i = 0; i < userList.Count; i++)
+                    {
+                        var key = (JProperty)objUserList[i];
+
+                        tempValUserList += $"**{i + 1}.** {MentionUtils.MentionUser(Convert.ToUInt64(key.Name))}\n";
+                        arrUserId.Add(key.Name);
+
+                        if (currentIndex < 14) currentIndex++;
+                        else
+                        {
+                            pageContentUserList.Add(tempValUserList);
+                            currentIndex = 0;
+                            tempValUserList = titleUserList;
+                        }
+
+                        if (i == userList.Count - 1) pageContentUserList.Add(tempValUserList);
+
+                    }
+
+                    //selection variables
+                    //other users
+                    string selectionUserId = ""; string selectionOtherUserCardChoiceId = ""; string selectionYourCardChoiceId = "";
+                    string selectionOtherUserCardPack = ""; string selectionOtherUserCardCategory = "";
+                    string selectionYourCardPack = ""; string selectionYourCardCategory = "";
+
+                    DirectoryInfo d = new DirectoryInfo(userFolderDirectory);//Assuming Test is your Folder
+                    FileInfo[] Files = d.GetFiles("*.json"); //Getting Text files
+
+                    //user selection
+                    string titleUserSelection = $"**Step 1 - Select the user trade process with numbers**\n";
+                    string tempVal = titleUserSelection;
+
+                    Boolean isTrading = true;
+                    var timeoutDuration = TimeSpan.FromSeconds(60);
+                    string replyTimeout = ":stopwatch: I'm sorry, but you have reach your timeout. " +
+                        "Please use the `card trade` command again to retry the trade process.";
+                    int stepProcess = 1;//0/1:select the user,
+                                        //2:review process
+                    Boolean newStep = true;
+                    //select user
+                    await ReplyAsync(embed: new EmbedBuilder()
+                        .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+                        .WithDescription($"Welcome to {TradingCardCore.Doremi.embedName}. " +
+                        $"Here you can process your trade offer that sent by someone. " +
+                        $"You can type **cancel**/**exit** anytime to cancel the trade process.")
+                        .WithColor(Config.Doremi.EmbedColor)
+                        .Build());
+
+                    await PagedReplyAsync(pageContentUserList);
+                    var response = await NextMessageAsync(timeout: timeoutDuration);
+                    newStep = false;
+
+                    while (isTrading)
+                    {
+                        try
+                        {
+                            var checkNull = response.Content.ToLower().ToString();
+                        }
+                        catch
+                        {
+                            await ReplyAsync(replyTimeout);
+                            isTrading = false;
+                            return;
+                        }
+
+                        if (response.Content.ToString().ToLower() == "cancel" ||
+                            response.Content.ToString().ToLower() == "exit")
+                        {
+                            await ReplyAsync(embed: new EmbedBuilder()
+                                .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+                                .WithDescription($"You have cancel your trade process. Thank you for using the {TradingCardCore.Doremi.embedName}")
+                                .WithColor(Config.Doremi.EmbedColor)
+                                .Build());
+                            isTrading = false;
+                            return;
+                        }
+                        else if (stepProcess == 1)
+                        {
+                            //select user
+                            var isNumeric = int.TryParse(response.Content.ToString().ToLower(), out int n);
+                            if (newStep)
+                            {
+                                newStep = false;
+                                await PagedReplyAsync(pageContentUserList);
+                                response = await NextMessageAsync(timeout: timeoutDuration);
+                            }
+                            else
+                            {
+                                if (!isNumeric)
+                                {
+                                    stepProcess = 1;
+                                    selectionUserId = "";
+                                    await ReplyAsync(":x: Please re-type the proper number selection.");
+                                    await PagedReplyAsync(pageContentUserList);
+                                    response = await NextMessageAsync(timeout: timeoutDuration);
+                                }
+                                //array length:2[0,1], selected:2
+                                else if (Convert.ToInt32(response.Content.ToLower().ToString()) <= 0 ||
+                                    Convert.ToInt32(response.Content.ToString().ToLower()) > arrUserId.Count)
+                                {
+                                    stepProcess = 1;
+                                    selectionUserId = "";
+                                    await ReplyAsync(":x: That number choice is not on the list. Please re-type the proper number selection.");
+                                    await PagedReplyAsync(pageContentUserList);
+                                    response = await NextMessageAsync(timeout: timeoutDuration);
+                                }
+                                else
+                                {
+                                    stepProcess = 2; newStep = true;
+                                    selectionUserId = arrUserId[Convert.ToInt32(response.Content.ToString()) - 1];
+                                    var selectedUserData = (JArray)userList[selectionUserId];
+                                    //will be send
+                                    selectionYourCardChoiceId = selectedUserData[0].ToString();
+                                    selectionYourCardPack = TradingCardCore.getCardParent(selectionYourCardChoiceId);
+                                    selectionYourCardCategory = TradingCardCore.getCardCategory(selectionYourCardChoiceId);
+                                    //will be received
+                                    selectionOtherUserCardChoiceId = selectedUserData[1].ToString();
+                                    selectionOtherUserCardPack = TradingCardCore.getCardParent(selectionOtherUserCardChoiceId);
+                                    selectionOtherUserCardCategory = TradingCardCore.getCardCategory(selectionOtherUserCardChoiceId);
+                                }
+                            }
+                        }
+                        else if (stepProcess == 2)
+                        {
+                            //check if your card/other user card still exists on the inventory or not
+                            var JCheckUserData = JObject.Parse(File.ReadAllText(playerDataDirectory));
+                            string otherUserDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/" +
+                                $"{selectionUserId}.json";
+                            var JCheckOtherUserData = JObject.Parse(File.ReadAllText(otherUserDataDirectory));
+
+                            JArray notRequiredArrayYours = JArray.Parse(JCheckUserData[selectionYourCardPack][selectionYourCardCategory].ToString());
+                            bool notExistsYours = notRequiredArrayYours.Any(t => t.Value<string>() == selectionYourCardChoiceId);//check yours have the cards in inventory
+                            JArray requiredArrayYours = JArray.Parse(JCheckUserData[selectionOtherUserCardPack][selectionOtherUserCardCategory].ToString());
+                            bool existsYours = requiredArrayYours.Any(t => t.Value<string>() == selectionOtherUserCardChoiceId);//check yours for duplicates
+
+                            JArray notRequiredArrayOtherUser = JArray.Parse(JCheckOtherUserData[selectionOtherUserCardPack][selectionOtherUserCardCategory].ToString());
+                            bool notExistsOtherUser = notRequiredArrayOtherUser.Any(t => t.Value<string>() == selectionOtherUserCardChoiceId);//check others have the cards in inventory
+                            JArray requiredArrayOthers = JArray.Parse(JCheckOtherUserData[selectionYourCardPack][selectionYourCardCategory].ToString());
+                            bool existsOthers = requiredArrayOthers.Any(t => t.Value<string>() == selectionYourCardChoiceId);//check others for duplicates
+
+                            if (!notExistsYours || !notExistsOtherUser)
+                            {//check if card still exists/not
+                                await ReplyAsync(embed: new EmbedBuilder()
+                                .WithTitle("🗑️ Trade Process Cancelled")
+                                .WithColor(Config.Doremi.EmbedColor)
+                                .WithDescription($"Your trade with " +
+                                $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))} has been cancelled because one of you don't have the offered card anymore\n" +
+                                $"Please use the **{Config.Doremi.PrefixParent[0]}card trade process** again to process other card offer.")
+                                .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+                                .Build());
+                                isTrading = false;
+                                //save the file
+                                string yourUserDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+                                var JUserData = JObject.Parse(File.ReadAllText(yourUserDataDirectory));
+                                ((JObject)JUserData["trading_queue"]).Remove(selectionUserId);
+                                File.WriteAllText(yourUserDataDirectory, JUserData.ToString());
+                                isTrading = false;
+                                return;
+                            } else if (existsYours || existsOthers)
+                            {//check for duplicates
+                                await ReplyAsync(embed: new EmbedBuilder()
+                                .WithTitle("🗑️ Trade Process Cancelled")
+                                .WithColor(Config.Doremi.EmbedColor)
+                                .WithDescription($"Your trade with " +
+                                $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))} has been cancelled because one of you have the same card offer that being sent.\n"+
+                                $"Please use the **{Config.Doremi.PrefixParent[0]}card trade process** again to process other card offer.")
+                                .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+                                .Build());
+                                isTrading = false;
+                                //save the file
+                                string yourUserDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+                                var JUserData = JObject.Parse(File.ReadAllText(yourUserDataDirectory));
+                                ((JObject)JUserData["trading_queue"]).Remove(selectionUserId);
+                                File.WriteAllText(yourUserDataDirectory, JUserData.ToString());
+                                isTrading = false;
+                                return;
+                            }
+
+                            EmbedBuilder eb = new EmbedBuilder()
+                            .WithTitle("Step 2 - Review Your Trade")
+                            .WithDescription($"You can see your trade information review below from {MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}.\n" +
+                            $"Type **confirm** or **accept** to confirm the trade.\n" +
+                            $"Type **reject** to reject the trade.\n" +
+                            $"Type **back** to select other card pack.\n" +
+                            $"Type **cancel** to cancel your trading process.")
+                            .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+                            //other user:
+                            .AddField($"You will receive:",
+                            $"-Card Pack: " +
+                            $"{GlobalFunctions.UppercaseFirst(selectionOtherUserCardPack)} {GlobalFunctions.UppercaseFirst(selectionOtherUserCardCategory)}\n" +
+                            $"-Card Name: " +
+                            $"**[{selectionOtherUserCardChoiceId} - " +
+                            $"{TradingCardCore.getCardProperty(selectionOtherUserCardPack, selectionOtherUserCardCategory, selectionOtherUserCardChoiceId, "name")}](" +
+                            $"{TradingCardCore.getCardProperty(selectionOtherUserCardPack, selectionOtherUserCardCategory, selectionOtherUserCardChoiceId, "url")})**")
+                            //yours
+                            .AddField($"You will send:",
+                            $"-Card Pack: " +
+                            $"{GlobalFunctions.UppercaseFirst(selectionYourCardPack)} {GlobalFunctions.UppercaseFirst(selectionYourCardCategory)}\n" +
+                            $"-Card Name: " +
+                            $"**[{selectionYourCardChoiceId} - " +
+                            $"{TradingCardCore.getCardProperty(selectionYourCardPack, selectionYourCardCategory, selectionYourCardChoiceId, "name")}](" +
+                            $"{TradingCardCore.getCardProperty(selectionYourCardPack, selectionYourCardCategory, selectionYourCardChoiceId, "url")})**")
+                            .WithColor(Config.Doremi.EmbedColor);
+
+                            //review the trade
+                            if (newStep)
+                            {
+                                newStep = false;
+                                await ReplyAsync(embed: eb.Build());
+                                response = await NextMessageAsync(timeout: timeoutDuration);
+                            }
+                            else
+                            {
+                                if (response.Content.ToString().ToLower() == "back") {
+                                    stepProcess = 1;
+                                    newStep = true;
+                                }
+                                else if (response.Content.ToString().ToLower() != "accept" &&
+                                  response.Content.ToString().ToLower() != "confirm" &&
+                                  response.Content.ToString().ToLower() != "reject") {
+                                    await ReplyAsync(":x: Please type with the valid choice: **accept/confirm/reject**.",
+                                        embed: eb.Build());
+                                    response = await NextMessageAsync(timeout: timeoutDuration);
+                                }
+                                else if (response.Content.ToString().ToLower() == "reject") {
+                                    await ReplyAsync(embed: new EmbedBuilder()
+                                        .WithTitle("🗑️ Trade Process Rejected")
+                                        .WithColor(Config.Doremi.EmbedColor)
+                                        .WithDescription($"You have reject the trade offer from " +
+                                        $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}.\nThank you for using {TradingCardCore.Doremi.embedName}.")
+                                        .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+                                        .Build());
+
+                                    //save the file
+
+
+                                    string yourUserDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+                                    var JUserData = JObject.Parse(File.ReadAllText(yourUserDataDirectory));
+                                    ((JObject)JUserData["trading_queue"]).Remove(selectionUserId);
+                                    File.WriteAllText(yourUserDataDirectory, JUserData.ToString());
+                                    isTrading = false;
+                                    return;
+                                }
+                                else
+                                {
+                                    await ReplyAsync(embed: new EmbedBuilder()
+                                        .WithTitle("✅ Trade Process Completed")
+                                        .WithColor(Config.Doremi.EmbedColor)
+                                        .WithDescription($"You have successfully accepted the trade offer from " +
+                                        $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}.\nThank you for using {TradingCardCore.Doremi.embedName}.")
+                                        .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+                                        .WithImageUrl(TradingCardCore.Doremi.emojiOk)
+                                        .Build());
+
+                                    //save to yours
+                                    string yourUserDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+                                    var JYourData = JObject.Parse(File.ReadAllText(yourUserDataDirectory));
+                                    //remove from yours
+                                    JArray arrInventoryYoursRemove = JArray.Parse(JYourData[selectionYourCardPack][selectionYourCardCategory].ToString());
+                                    for (int i = 0; i < arrInventoryYoursRemove.Count; i++)
+                                    {
+                                        if (arrInventoryYoursRemove[i].ToString() ==selectionYourCardChoiceId)
+                                            arrInventoryYoursRemove[i].Remove();
+                                    }
+                                    JYourData[selectionYourCardPack][selectionYourCardCategory] = arrInventoryYoursRemove;
+
+                                    //add to yours
+                                    JArray arrInventoryYoursAdd = JArray.Parse(JYourData[selectionOtherUserCardPack][selectionOtherUserCardCategory].ToString());
+                                    arrInventoryYoursAdd.Add(selectionOtherUserCardChoiceId);
+                                    JYourData[selectionOtherUserCardPack][selectionOtherUserCardCategory] = arrInventoryYoursAdd;
+                                    //remove trading_queue
+                                    ((JObject)JYourData["trading_queue"]).Remove(selectionUserId);
+                                    File.WriteAllText(yourUserDataDirectory, JYourData.ToString());
+                                    //==================================================================
+                                    //save to other users
+                                    var JOtherUserData = JObject.Parse(File.ReadAllText(otherUserDataDirectory));
+                                    ((JObject)JOtherUserData["trading_queue"]).Remove(selectionUserId);
+                                    //remove from others
+                                    JArray arrInventoryOthersRemove = JArray.Parse(JOtherUserData[selectionOtherUserCardPack][selectionOtherUserCardCategory].ToString());
+                                    for (int i = 0; i < arrInventoryOthersRemove.Count; i++)
+                                    {
+                                        if (arrInventoryOthersRemove[i].ToString() == selectionOtherUserCardChoiceId)
+                                            arrInventoryOthersRemove[i].Remove();
+                                    }
+                                    JOtherUserData[selectionOtherUserCardPack][selectionOtherUserCardCategory] = arrInventoryOthersRemove;
+
+                                    //add to others
+                                    JArray arrInventoryOthersAdd = JArray.Parse(JOtherUserData[selectionYourCardPack][selectionYourCardCategory].ToString());
+                                    arrInventoryOthersAdd.Add(selectionYourCardChoiceId);
+                                    JOtherUserData[selectionYourCardPack][selectionYourCardCategory] = arrInventoryOthersAdd;
+                                    File.WriteAllText(otherUserDataDirectory, JOtherUserData.ToString());
+
+                                    isTrading = false;
+                                    return;
+
+                                }
+                            }
+
+                        }
+
+                    }
+
+
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.ToString());
+                }
+            }
+        }
     }
 
     [Name("memesdraw"), Group("memesdraw"), Summary("Memes Draw Category.")]
