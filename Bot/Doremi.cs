@@ -30,7 +30,7 @@ namespace OjamajoBot.Bot
         public CommandService commands;
         private IServiceProvider services;
 
-        private DiscordSocketClient client;
+        public static DiscordSocketClient client;
 
         //set timer for random event
         //private static Timer randomEventTimer;
@@ -377,9 +377,15 @@ namespace OjamajoBot.Bot
                 {
                     //0-2 | 3-7 | 8-10
                     //9/5/2
+                    int randomParent = new Random().Next(0, 6);
                     int randomCategory = new Random().Next(11);
                     string chosenCategory = "";
-                    if (randomCategory <=TradingCardCore.spawnRateMetal)//0-2
+
+                    if (randomCategory <= TradingCardCore.spawnRateOjamajos)//0-1
+                    {//metal
+                        chosenCategory = "ojamajos";
+                    }
+                    else if (randomCategory <=TradingCardCore.spawnRateMetal)//0-2
                     {//metal
                         chosenCategory = "metal";
                     }
@@ -387,62 +393,67 @@ namespace OjamajoBot.Bot
                     {//platinum
                         chosenCategory = "platinum";
                     }
-                    else if (randomCategory <= TradingCardCore.spawnRateNormal)//0-9
+                    else if (randomCategory <= TradingCardCore.spawnRateNormal)//0-10
                     {//normal
                         chosenCategory = "normal";
                     }
 
-                    int randomParent = new Random().Next(0, 5);
-                    //int randomParent = 0; //don't forget to erase this, for testing purpose
-                    string parent = ""; DiscordSocketClient client = this.client;
+                    string parent = ""; DiscordSocketClient client = Bot.Doremi.client;
                     Discord.Color color = Config.Doremi.EmbedColor; string author = ""; string embedAvatarUrl = "";
-
+                    //randomParent = 0; //don't forget to erase this, for testing purpose
+                    //chosenCategory = "ojamajos";//for testing purpose
                     if (randomParent == 0)
                     {
-                        parent = "doremi"; author = $"Doremi {GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
-                        embedAvatarUrl = Config.Doremi.EmbedAvatarUrl;
+                        parent = "doremi"; embedAvatarUrl = Config.Doremi.EmbedAvatarUrl;
                     }
                     else if (randomParent == 1)
                     {
-                        client = Bot.Hazuki.client;
-                        parent = "hazuki"; author = $"Hazuki {GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
+                        client = Bot.Hazuki.client; parent = "hazuki";
                         color = Config.Hazuki.EmbedColor; embedAvatarUrl = Config.Hazuki.EmbedAvatarUrl;
                     }
                     else if (randomParent == 2)
                     {
-                        client = Bot.Aiko.client;
-                        parent = "aiko"; author = $"Aiko {GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
+                        client = Bot.Aiko.client; parent = "aiko";
                         color = Config.Aiko.EmbedColor; embedAvatarUrl = Config.Aiko.EmbedAvatarUrl;
                     }
                     else if (randomParent == 3)
                     {
-                        client = Bot.Onpu.client;
-                        parent = "onpu"; author = $"Onpu {GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
+                        client = Bot.Onpu.client; parent = "onpu";
                         color = Config.Onpu.EmbedColor; embedAvatarUrl = Config.Onpu.EmbedAvatarUrl;
                     }
-                    else if (randomParent >= 4)
+                    else if (randomParent == 4)
                     {
-                        client = Bot.Momoko.client;
-                        parent = "momoko"; author = $"Momoko {GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
+                        client = Bot.Momoko.client; parent = "momoko";
                         color = Config.Momoko.EmbedColor; embedAvatarUrl = Config.Momoko.EmbedAvatarUrl;
                     }
+                    else if (randomParent >= 5)
+                    {
+                        chosenCategory = "special"; parent = "other";
+                        color = Config.Doremi.EmbedColor; embedAvatarUrl = Config.Doremi.EmbedAvatarUrl;
+                    }
 
+                    if (chosenCategory == "ojamajos") {
+                        author = $"{GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
+                    } else if (chosenCategory == "special") {
+                        author = $"Other {GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
+                    } else {
+                        author = $"{GlobalFunctions.UppercaseFirst(parent)} {GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
+                    }
+
+                    string chosenId = ""; string chosenName = ""; string chosenUrl = "";
                     //start read json
                     var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
                     var key = JObject.Parse(jObjTradingCardList[parent][chosenCategory].ToString()).Properties().ToList();
-                    var randIndex = new Random().Next(0, key.Count);
+                    int randIndex = new Random().Next(0, key.Count);
 
                     //chosen data:
-                    string chosenId = key[randIndex].Name;
-                    string chosenName = jObjTradingCardList[parent][chosenCategory][key[randIndex].Name]["name"].ToString();
-                    string chosenUrl = jObjTradingCardList[parent][chosenCategory][key[randIndex].Name]["url"].ToString();
+                    chosenId = key[randIndex].Name;
+                    chosenName = jObjTradingCardList[parent][chosenCategory][key[randIndex].Name]["name"].ToString();
+                    chosenUrl = jObjTradingCardList[parent][chosenCategory][key[randIndex].Name]["url"].ToString();
+                    
                     Config.Guild.setPropertyValue(guild.Id, TradingCardCore.propertyId, chosenId);
                     Config.Guild.setPropertyValue(guild.Id, TradingCardCore.propertyCategory, chosenCategory);
                     Config.Guild.setPropertyValue(guild.Id, TradingCardCore.propertyToken, GlobalFunctions.RandomString(8));
-
-                    //Config.Doremi._tradingCardSpawnedId[guild.Id.ToString()] = chosenId;
-                    //Config.Doremi._tradingCardSpawnedCategory[guild.Id.ToString()] = chosenCategory;
-                    //Config.Doremi._tradingCardCatchToken[guild.Id.ToString()] = GlobalFunctions.RandomString(8);
 
                     var embed = new EmbedBuilder()
                         .WithAuthor(author, embedAvatarUrl)
@@ -451,15 +462,17 @@ namespace OjamajoBot.Bot
                         .WithFooter($"ID: {chosenId}")
                         .WithImageUrl(chosenUrl);
 
+                    if (chosenCategory == "ojamajos") parent = "";
+
                     await client
-                        .GetGuild(guild.Id)
-                        .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "trading_card_spawn")))
-                        .SendMessageAsync($":exclamation:A **{chosenCategory}** {parent} card has been spawned! Capture it with **<bot>!card capture/catch**",
-                        embed: embed.Build());
+                    .GetGuild(guild.Id)
+                    .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "trading_card_spawn")))
+                    .SendMessageAsync($":exclamation:A **{chosenCategory}** {parent} card has appeared! Capture it with **<bot>!card capture/catch**",
+                    embed: embed.Build());
                 },
                 null,
                 TimeSpan.FromMinutes(Convert.ToInt32(Config.Guild.getPropertyValue(guild.Id, "trading_card_spawn_interval")) + new Random().Next(5,11)), //time to wait before executing the timer for the first time
-                TimeSpan.FromMinutes(Convert.ToInt32(Config.Guild.getPropertyValue(guild.Id, "trading_card_spawn_interval")) + new Random().Next(5,11)) //time to wait before executing the timer again
+                TimeSpan.FromMinutes(Convert.ToInt32(Config.Guild.getPropertyValue(guild.Id, "trading_card_spawn_interval")) + new Random().Next(5, 11)) //time to wait before executing the timer again
                 );
             }
 

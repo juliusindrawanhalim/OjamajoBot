@@ -11,7 +11,7 @@ namespace OjamajoBot
 {
     public class TradingCardCore
     {
-        public static string version = "1.02";
+        public static string version = "1.03";
         public static string propertyId = "trading_card_spawn_id";
         public static string propertyCategory = "trading_card_spawn_category";
         public static string propertyToken = "trading_card_spawn_token";
@@ -19,16 +19,23 @@ namespace OjamajoBot
         public static int captureRateNormal = 9;
         public static int captureRatePlatinum = 5;
         public static int captureRateMetal = 3;
+        public static int captureRateOjamajos = 2;
+        public static int captureRateSpecial = 4;
 
-        public static int spawnRateNormal = 9;
+        public static int spawnRateNormal = 10;
         public static int spawnRatePlatinum = 5;
         public static int spawnRateMetal = 2;
+        public static int spawnRateOjamajos = 1;
+
+        public static int maxSpecial = 37;
+
+        public static string imgMagicSeeds = "https://cdn.discordapp.com/attachments/706770454697738300/709013040518922260/magic_seeds.jpg";
 
         public static EmbedBuilder printUpdatesNote()
         {
             //return new EmbedBuilder()
             //    .WithColor(Config.Doremi.EmbedColor)
-            //    .WithTitle($"Doremi Trading Card - Update {version} - 06.06.20")
+            //    .WithTitle($"Doremi Trading Card - Update {version} - 06.05.20")
             //    .WithDescription("-New optional capture command:`card info/card look`\n" +
             //    "-New optional capture command: `card catch`\n" +
             //    "-New command: `card status` [let you see all the cards & total that you own for all card pack]\n" +
@@ -39,11 +46,25 @@ namespace OjamajoBot
             //    "-Dialogue updates on card capture\n" +
             //    "-Additional randomized timer for spawn interval between 5-10 minutes");
 
+            //return new EmbedBuilder()
+            //    .WithColor(Config.Doremi.EmbedColor)
+            //    .WithTitle($"Doremi Trading Card - Update {version} - 08.05.20")
+            //    .WithDescription($"-New trading command with: **{Config.Doremi.PrefixParent[0]}card trade**\n" +
+            //    $"-You can process your trade with: **{Config.Doremi.PrefixParent[0]}card trade process**");
+
             return new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
-                .WithTitle($"Doremi Trading Card - Update {version} - 08.06.20")
-                .WithDescription($"-New trading command with: **{Config.Doremi.PrefixParent[0]}card trade**\n" +
-                $"-You can process your trade with: **{Config.Doremi.PrefixParent[0]}card trade process**");
+                .WithTitle($"Doremi Trading Card - Update {version} - 12.05.20")
+                .WithDescription($"-New Trading Card Category & Pack: **Ojamajos Category** & **Other Pack: Special Category**. These 2 cards can't be traded.\n" +
+                $"-Ojamajos card can be captured with any related bots. Example: Doremi & Hazuki can be captured with doremi/hazuki bots. Related card will be automatically placed into the valid card pack inventory.\n" +
+                $"-Other Special card can be captured with any bots and shared their same inventory.\n" +
+                $"-Ojamajos category card capture rate: **20%**\n" +
+                $"-Other-Special category card capture rate: **40%**\n" +
+                $"-Card Shop Feature: with **{Config.Doremi.PrefixParent[0]}card shop** command. " +
+                $"You can purchase items with the collected magic seeds daily.\n" +
+                $"-Card Capture Boost Feature with **<bot>!card capture boost**\n" +
+                $"-Card Boost Status with **<bot>!card boost**\n" +
+                $"-You will now receive daily random amount of magic seeds between 1-5");
         }
 
         public static List<string> printInventoryTemplate(string pack, string parent, string category,
@@ -78,6 +99,88 @@ namespace OjamajoBot
 
         }
 
+        public static EmbedBuilder printCardBoostStatus(Color color, string guildId, ulong userId, string username)
+        {
+            string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{userId}.json";
+            JObject arrInventory = JObject.Parse(File.ReadAllText(playerDataDirectory));
+
+            string doremiBoost = ""; string hazukiBoost = ""; string aikoBoost = "";
+            string onpuBoost = ""; string momokoBoost = ""; string specialBoost = "";
+
+            //doremi boost
+            if (Convert.ToInt32(arrInventory["boost"]["doremi"]["normal"].ToString()) > 0)
+                doremiBoost = $"**normal: {Convert.ToInt32(arrInventory["boost"]["doremi"]["normal"].ToString())*10}%**\n";
+            if (Convert.ToInt32(arrInventory["boost"]["doremi"]["normal"].ToString()) > 0)
+                doremiBoost += $"**platinum: {Convert.ToInt32(arrInventory["boost"]["doremi"]["platinum"].ToString()) * 10}%**\n";
+            if (Convert.ToInt32(arrInventory["boost"]["doremi"]["normal"].ToString()) > 0)
+                doremiBoost += $"**metal: {Convert.ToInt32(arrInventory["boost"]["doremi"]["metal"].ToString()) * 10}%**\n";
+            if (Convert.ToInt32(arrInventory["boost"]["doremi"]["ojamajos"].ToString()) > 0)
+                doremiBoost += $"**ojamajos: {Convert.ToInt32(arrInventory["boost"]["doremi"]["ojamajos"].ToString()) * 10}%**";
+
+            //hazuki boost
+            if (Convert.ToInt32(arrInventory["boost"]["hazuki"]["normal"].ToString()) > 0)
+                hazukiBoost = $"**normal: {Convert.ToInt32(arrInventory["boost"]["hazuki"]["normal"].ToString()) * 10}%**\n";
+            if (Convert.ToInt32(arrInventory["boost"]["hazuki"]["normal"].ToString()) > 0)
+                hazukiBoost += $"**platinum: {Convert.ToInt32(arrInventory["boost"]["hazuki"]["platinum"].ToString()) * 10}%**\n";
+            if (Convert.ToInt32(arrInventory["boost"]["hazuki"]["normal"].ToString()) > 0)
+                hazukiBoost += $"**metal: {Convert.ToInt32(arrInventory["boost"]["hazuki"]["metal"].ToString()) * 10}%**\n";
+            if (Convert.ToInt32(arrInventory["boost"]["hazuki"]["ojamajos"].ToString()) > 0)
+                hazukiBoost += $"**ojamajos: {Convert.ToInt32(arrInventory["boost"]["hazuki"]["ojamajos"].ToString()) * 10}%**";
+
+            //aiko boost
+            if (Convert.ToInt32(arrInventory["boost"]["aiko"]["normal"].ToString()) > 0)
+                aikoBoost = $"**normal: {Convert.ToInt32(arrInventory["boost"]["aiko"]["normal"].ToString()) * 10}%**\n";
+            if (Convert.ToInt32(arrInventory["boost"]["aiko"]["normal"].ToString()) > 0)
+                aikoBoost += $"**platinum: {Convert.ToInt32(arrInventory["boost"]["aiko"]["platinum"].ToString()) * 10}%**\n";
+            if (Convert.ToInt32(arrInventory["boost"]["aiko"]["normal"].ToString()) > 0)
+                aikoBoost += $"**metal: {Convert.ToInt32(arrInventory["boost"]["aiko"]["metal"].ToString()) * 10}%**\n";
+            if (Convert.ToInt32(arrInventory["boost"]["aiko"]["ojamajos"].ToString()) > 0)
+                aikoBoost += $"**ojamajos: {Convert.ToInt32(arrInventory["boost"]["aiko"]["ojamajos"].ToString()) * 10}%**";
+
+            //onpu boost
+            if (Convert.ToInt32(arrInventory["boost"]["onpu"]["normal"].ToString()) > 0)
+                onpuBoost = $"**normal: {Convert.ToInt32(arrInventory["boost"]["onpu"]["normal"].ToString()) * 10}%**\n";
+            if (Convert.ToInt32(arrInventory["boost"]["onpu"]["normal"].ToString()) > 0)
+                onpuBoost += $"**platinum: {Convert.ToInt32(arrInventory["boost"]["onpu"]["platinum"].ToString()) * 10}%**\n";
+            if (Convert.ToInt32(arrInventory["boost"]["onpu"]["normal"].ToString()) > 0)
+                onpuBoost += $"**metal: {Convert.ToInt32(arrInventory["boost"]["onpu"]["metal"].ToString()) * 10}%**\n";
+            if (Convert.ToInt32(arrInventory["boost"]["onpu"]["ojamajos"].ToString()) > 0)
+                onpuBoost += $"**ojamajos: {Convert.ToInt32(arrInventory["boost"]["onpu"]["ojamajos"].ToString()) * 10}%**";
+
+            //momoko boost
+            if (Convert.ToInt32(arrInventory["boost"]["momoko"]["normal"].ToString()) > 0)
+                momokoBoost = $"**normal: {Convert.ToInt32(arrInventory["boost"]["momoko"]["normal"].ToString()) * 10}%**\n";
+            if (Convert.ToInt32(arrInventory["boost"]["momoko"]["normal"].ToString()) > 0)
+                momokoBoost += $"**platinum: {Convert.ToInt32(arrInventory["boost"]["momoko"]["platinum"].ToString()) * 10}%**\n";
+            if (Convert.ToInt32(arrInventory["boost"]["momoko"]["normal"].ToString()) > 0)
+                momokoBoost += $"**metal: {Convert.ToInt32(arrInventory["boost"]["momoko"]["metal"].ToString()) * 10}%**\n";
+            if (Convert.ToInt32(arrInventory["boost"]["momoko"]["ojamajos"].ToString()) > 0)
+                momokoBoost += $"**ojamajos: {Convert.ToInt32(arrInventory["boost"]["momoko"]["ojamajos"].ToString()) * 10}%**";
+
+            //other boost
+            if (Convert.ToInt32(arrInventory["boost"]["other"]["special"].ToString()) > 0)
+                specialBoost = $"**special:{Convert.ToInt32(arrInventory["boost"]["other"]["special"].ToString()) * 10}%**";
+
+            if (doremiBoost == "") doremiBoost = "No available boost for this card pack.";
+            if (hazukiBoost == "") hazukiBoost = "No available boost for this card pack.";
+            if (aikoBoost == "") aikoBoost = "No available boost for this card pack.";
+            if (onpuBoost == "") onpuBoost = "No available boost for this card pack.";
+            if (momokoBoost == "") momokoBoost = "No available boost for this card pack.";
+            if (specialBoost == "") specialBoost = "No available boost for this card pack.";
+
+            return new EmbedBuilder()
+                .WithColor(color)
+                .WithTitle($"**{username} Card Status Boost**\n")
+                .WithDescription("Note: Using a boost for any category on a card pack will remove all that boost status.")
+                .AddField("Doremi Boost", doremiBoost, true)
+                .AddField("Hazuki Boost", hazukiBoost, true)
+                .AddField("Aiko Boost", aikoBoost, true)
+                .AddField("Onpu Boost", onpuBoost, true)
+                .AddField("Momoko Boost", momokoBoost, true)
+                .AddField("Other Boost", specialBoost, true);
+        }
+
+
         public static EmbedBuilder printEmptyInventoryTemplate(Color color, string pack, string category, int maxAmount, string username)
         {
             return new EmbedBuilder()
@@ -108,8 +211,9 @@ namespace OjamajoBot
             var arrListAiko = ((JObject)jObjLeaderboard["aiko"]).Properties().ToList();
             var arrListOnpu = ((JObject)jObjLeaderboard["onpu"]).Properties().ToList();
             var arrListMomoko = ((JObject)jObjLeaderboard["momoko"]).Properties().ToList();
+            var arrListOther = ((JObject)jObjLeaderboard["other"]).Properties().ToList();
 
-            string doremiText=""; string hazukiText = ""; string aikoText = ""; string onpuText = ""; string momokoText = "";
+            string doremiText=""; string hazukiText = ""; string aikoText = ""; string onpuText = ""; string momokoText = ""; string otherText = "";
             for (int i = 0; i < arrListDoremi.Count; i++)
             {
                 if (i <= 4)
@@ -150,11 +254,20 @@ namespace OjamajoBot
                     break;
             }
 
+            for (int i = 0; i < arrListOther.Count; i++)
+            {
+                if (i <= 4)
+                    otherText += $"**{i + 1}. {MentionUtils.MentionUser(Convert.ToUInt64(arrListOther[i].Name))} : {arrListOther[i].Value}**";
+                else
+                    break;
+            }
+
             if (doremiText == "") doremiText = "No one has complete their Doremi card pack yet.";
             if (hazukiText == "") hazukiText = "No one has complete their Hazuki card pack yet.";
             if (aikoText == "") aikoText = "No one has complete their Aiko card pack yet.";
             if (onpuText == "") onpuText = "No one has complete their Onpu card pack yet.";
             if (momokoText == "") momokoText = "No one has complete their Momoko card pack yet.";
+            if (otherText == "") otherText = "No one has complete their Other card pack yet.";
             
             return new EmbedBuilder()
                 .WithTitle($"\uD83C\uDFC6 Top 5 Trading Card Leaderboard")
@@ -163,7 +276,8 @@ namespace OjamajoBot
                 .AddField("Hazuki Card Pack", hazukiText)
                 .AddField("Aiko Card Pack", aikoText)
                 .AddField("Onpu Card Pack", onpuText)
-                .AddField("Momoko Card Pack", momokoText);
+                .AddField("Momoko Card Pack", momokoText)
+                .AddField("Other Card Pack", otherText);
         }
 
         public static EmbedBuilder userCompleteTheirList(Color color, string parent, string congratulateText, string imgUrl, string guildId, string clientId)
@@ -215,32 +329,41 @@ namespace OjamajoBot
             var arrListAiko = playerData["aiko"];
             var arrListOnpu = playerData["onpu"];
             var arrListMomoko = playerData["momoko"];
+            var arrListOther = playerData["other"];
 
-            int totalSuccess = ((JArray)arrListDoremi["normal"]).Count + ((JArray)arrListDoremi["platinum"]).Count + ((JArray)arrListDoremi["metal"]).Count +
-                ((JArray)arrListHazuki["normal"]).Count + ((JArray)arrListHazuki["platinum"]).Count + ((JArray)arrListHazuki["metal"]).Count +
-                ((JArray)arrListAiko["normal"]).Count + ((JArray)arrListAiko["platinum"]).Count + ((JArray)arrListAiko["metal"]).Count +
-                ((JArray)arrListOnpu["normal"]).Count + ((JArray)arrListOnpu["platinum"]).Count + ((JArray)arrListOnpu["metal"]).Count +
-                ((JArray)arrListMomoko["normal"]).Count + ((JArray)arrListMomoko["platinum"]).Count + ((JArray)arrListMomoko["metal"]).Count;
+            int totalSuccess = ((JArray)arrListDoremi["normal"]).Count + ((JArray)arrListDoremi["platinum"]).Count + ((JArray)arrListDoremi["metal"]).Count + ((JArray)arrListDoremi["ojamajos"]).Count +
+                ((JArray)arrListHazuki["normal"]).Count + ((JArray)arrListHazuki["platinum"]).Count + ((JArray)arrListHazuki["metal"]).Count + ((JArray)arrListHazuki["ojamajos"]).Count +
+                ((JArray)arrListAiko["normal"]).Count + ((JArray)arrListAiko["platinum"]).Count + ((JArray)arrListAiko["metal"]).Count + ((JArray)arrListAiko["ojamajos"]).Count +
+                ((JArray)arrListOnpu["normal"]).Count + ((JArray)arrListOnpu["platinum"]).Count + ((JArray)arrListOnpu["metal"]).Count + ((JArray)arrListOnpu["ojamajos"]).Count +
+                ((JArray)arrListMomoko["normal"]).Count + ((JArray)arrListMomoko["platinum"]).Count + ((JArray)arrListMomoko["metal"]).Count + ((JArray)arrListMomoko["ojamajos"]).Count +
+                ((JArray)arrListOther["special"]).Count;
 
             string doremiText = $"**Normal: {((JArray)arrListDoremi["normal"]).Count}/{Doremi.maxNormal}**\n" +
                 $"**Platinum: {((JArray)arrListDoremi["platinum"]).Count}/{Doremi.maxPlatinum}**\n" +
-                $"**Metal: {((JArray)arrListDoremi["metal"]).Count}/{Doremi.maxMetal}**";
+                $"**Metal: {((JArray)arrListDoremi["metal"]).Count}/{Doremi.maxMetal}**\n" +
+                $"**Ojamajos: {((JArray)arrListDoremi["ojamajos"]).Count}/{Doremi.maxOjamajos}**";
 
             string hazukiText = $"**Normal: {((JArray)arrListHazuki["normal"]).Count}/{Hazuki.maxNormal}**\n" +
                 $"**Platinum: {((JArray)arrListHazuki["platinum"]).Count}/{Hazuki.maxPlatinum}**\n" +
-                $"**Metal: {((JArray)arrListHazuki["metal"]).Count}/{Hazuki.maxMetal}**";
+                $"**Metal: {((JArray)arrListHazuki["metal"]).Count}/{Hazuki.maxMetal}**\n" +
+                $"**Ojamajos: {((JArray)arrListHazuki["ojamajos"]).Count}/{Hazuki.maxOjamajos}**";
 
             string aikoText = $"**Normal: {((JArray)arrListAiko["normal"]).Count}/{Aiko.maxNormal}**\n" +
                 $"**Platinum: {((JArray)arrListAiko["platinum"]).Count}/{Aiko.maxPlatinum}**\n" +
-                $"**Metal: {((JArray)arrListAiko["metal"]).Count}/{Aiko.maxMetal}**";
+                $"**Metal: {((JArray)arrListAiko["metal"]).Count}/{Aiko.maxMetal}**\n" +
+                $"**Ojamajos: {((JArray)arrListAiko["ojamajos"]).Count}/{Aiko.maxOjamajos}**";
 
             string onpuText = $"**Normal: {((JArray)arrListOnpu["normal"]).Count}/{Onpu.maxNormal}**\n" +
                 $"**Platinum: {((JArray)arrListOnpu["platinum"]).Count}/{Onpu.maxPlatinum}**\n" +
-                $"**Metal: {((JArray)arrListOnpu["metal"]).Count}/{Onpu.maxMetal}**";
+                $"**Metal: {((JArray)arrListOnpu["metal"]).Count}/{Onpu.maxMetal}**\n" +
+                $"**Ojamajos: {((JArray)arrListOnpu["ojamajos"]).Count}/{Onpu.maxOjamajos}**";
 
             string momokoText = $"**Normal: {((JArray)arrListMomoko["normal"]).Count}/{Momoko.maxNormal}**\n" +
                 $"**Platinum: {((JArray)arrListMomoko["platinum"]).Count}/{Momoko.maxPlatinum}**\n" +
-                $"**Metal: {((JArray)arrListMomoko["metal"]).Count}/{Momoko.maxMetal}**";
+                $"**Metal: {((JArray)arrListMomoko["metal"]).Count}/{Momoko.maxMetal}**\n" +
+                $"**Ojamajos: {((JArray)arrListMomoko["ojamajos"]).Count}/{Momoko.maxOjamajos}**";
+
+            string otherText = $"**Special: {((JArray)arrListOther["special"]).Count}/{maxSpecial}**";
 
             return new EmbedBuilder()
                 .WithTitle($"{username} Card Status Report")
@@ -250,7 +373,8 @@ namespace OjamajoBot
                 .AddField("Hazuki Card Pack", hazukiText, true)
                 .AddField("Aiko Card Pack", aikoText, true)
                 .AddField("Onpu Card Pack", onpuText, true)
-                .AddField("Momoko Card Pack", momokoText, true);
+                .AddField("Momoko Card Pack", momokoText, true)
+                .AddField("Other Card Pack", otherText, true);
 
         }
 
@@ -414,6 +538,10 @@ namespace OjamajoBot
                 category = "onpu";
             else if (cardId.ToLower().Contains("mo"))
                 category = "momoko";
+            else if (cardId.ToLower().Contains("ot"))
+                category = "special";
+            else if (cardId.ToLower().Contains("oj"))
+                category = "ojamajos";
             else
                 category = "normal";
             return category;
@@ -426,6 +554,7 @@ namespace OjamajoBot
 
         public class Doremi {
             public static int maxNormal = 48; public static int maxPlatinum = 8; public static int maxMetal = 6;
+            public static int maxOjamajos = 5;
             public static string parent = "doremi";
             public static string emojiOk = "https://cdn.discordapp.com/attachments/706490547191152690/706511135788105728/143751262x.png";
             public static string emojiError = "https://cdn.discordapp.com/attachments/706490547191152690/706494009991757864/doremi.png";
@@ -449,6 +578,7 @@ namespace OjamajoBot
 
         public class Hazuki {
             public static int maxNormal = 46; public static int maxPlatinum = 9; public static int maxMetal = 6;
+            public static int maxOjamajos = 5;
             public static string emojiError = "https://cdn.discordapp.com/attachments/706490547191152690/706494023782629386/hazuki.png";
             public static string emojiCompleteAllCard = "https://cdn.discordapp.com/attachments/706490547191152690/707424248872042568/win1.jpg";
             public static string getCardCategory(string cardId)
@@ -467,6 +597,7 @@ namespace OjamajoBot
 
         public class Aiko{
             public static int maxNormal = 45; public static int maxPlatinum = 7; public static int maxMetal = 6;
+            public static int maxOjamajos = 5;
             public static string emojiError = "https://cdn.discordapp.com/attachments/706490547191152690/706494032976674856/aiko.jpg";
             public static string emojiCompleteAllCard = "https://cdn.discordapp.com/attachments/706490547191152690/707424297685090344/win1.jpg";
             public static string getCardCategory(string cardId)
@@ -485,6 +616,7 @@ namespace OjamajoBot
         public class Onpu
         {
             public static int maxNormal = 46; public static int maxPlatinum = 13; public static int maxMetal = 6;
+            public static int maxOjamajos = 6;
             public static string emojiError = "https://cdn.discordapp.com/attachments/706490547191152690/706494042631962666/onpu.jpg";
             public static string emojiCompleteAllCard = "https://cdn.discordapp.com/attachments/706490547191152690/707424375380508682/win2.jpg";
             public static string getCardCategory(string cardId)
@@ -504,6 +636,7 @@ namespace OjamajoBot
         public class Momoko
         {
             public static int maxNormal = 43; public static int maxPlatinum = 6; public static int maxMetal = 4;
+            public static int maxOjamajos = 5;
             public static string emojiError = "https://cdn.discordapp.com/attachments/706490547191152690/706769235019300945/Linesticker21.png";
             public static string emojiCompleteAllCard = "https://cdn.discordapp.com/attachments/706490547191152690/707424504120344576/win5.jpg";
 

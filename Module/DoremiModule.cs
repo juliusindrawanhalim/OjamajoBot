@@ -365,11 +365,11 @@ namespace OjamajoBot.Module
         {
             await ReplyAsync("Meet one of my fairy, Dodo.",
             embed: new EmbedBuilder()
-            .WithAuthor(Config.Doremi.EmbedName, Config.Doremi.EmbedAvatarUrl)
+            .WithAuthor("Dodo")
             .WithDescription("Dodo has fair skin and big mulberry eyes and blushed cheeks. She has pink antennae and short straightened bangs, and she has hair worn in large buns. Her dress is salmon-pink with a pale pink collar." +
             "In teen form, her hair buns grow smaller and she gains a full body.She wears a light pink dress with the shoulder cut out and a white collar.A salmon - pink top is worn under this, and at the chest is a pink gem.She also wears white booties and a white witch hat with a pale pink rim.")
             .WithColor(Config.Doremi.EmbedColor)
-            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/e/e2/No.076.jpg")
+            .WithThumbnailUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/e/e2/No.076.jpg")
             .WithFooter("[Ojamajo Witchling Wiki](https://ojamajowitchling.fandom.com/wiki/Dodo)")
             .Build());
         }
@@ -622,7 +622,7 @@ namespace OjamajoBot.Module
         {
             await ReplyAsync("Pirika pirilala poporina peperuto! Show my biography info!",
             embed: new EmbedBuilder()
-            .WithAuthor(Config.Doremi.EmbedName, Config.Doremi.EmbedAvatarUrl)
+            .WithAuthor("Doremi Harukaze", Config.Doremi.EmbedAvatarUrl)
             .WithDescription("Doremi Harukaze (春風どれみ, Harukaze Doremi) is the main protagonist and the titular character of Ojamajo Doremi. " +
             "She is an average, eight-year-old unlucky girl dealing with argumentative parents, a spiteful little sister, a lack of romance and terrible grades. " +
             "But after a particularly foul day, she learns the owner of Misora's Magical Shop is really a witch.")
@@ -634,7 +634,7 @@ namespace OjamajoBot.Module
             .AddField("Favorite Food", "Steak", true)
             .AddField("Debut", "[I'm Doremi! Becoming a Witch Apprentice!](https://ojamajowitchling.fandom.com/wiki/I%27m_Doremi!_Becoming_a_Witch_Apprentice!)", true)
             .WithColor(Config.Doremi.EmbedColor)
-            .WithImageUrl("https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcRBfCfThqVYdJWQzWJOvILjx-Acf-DgRQidfN1s11-fxc0ShEe3")
+            .WithThumbnailUrl("https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcRBfCfThqVYdJWQzWJOvILjx-Acf-DgRQidfN1s11-fxc0ShEe3")
             .WithFooter("Source: [Ojamajo Witchling Wiki](https://ojamajowitchling.fandom.com/wiki/Doremi_Harukaze)")
             .Build());
         }
@@ -702,8 +702,8 @@ namespace OjamajoBot.Module
             Random rnd = new Random();
             int rndIndex = rnd.Next(0, arrRandom.GetLength(0));
 
-            await ReplyAsync(arrRandom[rndIndex, 0]);
-            await base.ReplyAsync(embed: new EmbedBuilder()
+            await ReplyAsync(arrRandom[rndIndex, 0],
+                embed: new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
                 .WithImageUrl(arrRandom[rndIndex, 1])
                 .Build());
@@ -749,6 +749,73 @@ namespace OjamajoBot.Module
             .WithColor(Config.Doremi.EmbedColor)
             .WithFooter($"Last updated on {Config.Core.lastUpdate}")
             .Build());
+        }
+
+        [Command("daily"), Alias("claim"), Summary("Water the plant and receive daily magic seeds.")]
+        public async Task dailyClaimMagicalSeeds()
+        {
+            var guildId = Context.Guild.Id;
+            var clientId = Context.User.Id;
+            string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+            
+            if (!File.Exists(playerDataDirectory)) //not registered yet
+            {
+                await ReplyAsync(embed: new EmbedBuilder()
+                .WithColor(Config.Doremi.EmbedColor)
+                .WithDescription($":x: I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
+                .WithImageUrl(TradingCardCore.Doremi.emojiError).Build());
+            } else {
+                JObject arrInventory = JObject.Parse(File.ReadAllText(playerDataDirectory));
+                if((string)arrInventory["magic_seeds_last_claim"] == ""||
+                    (string)arrInventory["magic_seeds_last_claim"]!= DateTime.Now.ToString("dd"))
+                {
+                    int randomedReceive = new Random().Next(1, 6);
+                    int totalMagicSeeds = Convert.ToInt32(arrInventory["magic_seeds"]) + randomedReceive;
+                    await ReplyAsync(embed: new EmbedBuilder()
+                    .WithColor(Config.Doremi.EmbedColor)
+                    .WithDescription($":seedling: {MentionUtils.MentionUser(clientId)} have watered the plant and received {randomedReceive} magic seed that makes total of: **{totalMagicSeeds.ToString()}** magic seeds." +
+                    $"Thank you for watering it~")
+                    .WithImageUrl(TradingCardCore.imgMagicSeeds).Build());
+                    
+                    arrInventory["magic_seeds"] = totalMagicSeeds.ToString();
+                    arrInventory["magic_seeds_last_claim"] = DateTime.Now.ToString("dd");
+                    File.WriteAllText(playerDataDirectory, arrInventory.ToString());
+                } else
+                {
+                    var now = DateTime.Now;
+                    var tomorrow = now.AddDays(1).Date;
+                    double totalHours = (tomorrow - now).TotalHours;
+
+                    await ReplyAsync(embed: new EmbedBuilder()
+                    .WithColor(Config.Doremi.EmbedColor)
+                    .WithDescription($":x: Sorry, you have received your daily magic seeds.\nPlease wait for **{Math.Floor(totalHours)}** hour(s) " +
+                    $"**{Math.Ceiling(60*(totalHours - Math.Floor(totalHours)))}** more minute(s) until the next growing time.")
+                    .WithImageUrl(TradingCardCore.Doremi.emojiError).Build());
+                    
+                }
+            }
+        }
+
+        [Command("seeds"), Alias("magicseeds"), Summary("See the total of magic seeds that you have.")]
+        public async Task showTotalSeeds()
+        {
+            var guildId = Context.Guild.Id;
+            var clientId = Context.User.Id;
+            string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+
+            if (!File.Exists(playerDataDirectory)) //not registered yet
+            {
+                await ReplyAsync(embed: new EmbedBuilder()
+                .WithColor(Config.Doremi.EmbedColor)
+                .WithDescription($":x: I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
+                .WithImageUrl(TradingCardCore.Doremi.emojiError).Build());
+            } else {
+                JObject arrInventory = JObject.Parse(File.ReadAllText(playerDataDirectory));
+                await ReplyAsync(embed: new EmbedBuilder()
+                    .WithColor(Config.Doremi.EmbedColor)
+                    .WithDescription($":seedling: {MentionUtils.MentionUser(clientId)} have **{arrInventory["magic_seeds"]}** magic seeds.")
+                    .Build());
+            }
         }
 
         //event schedule/reminder
@@ -1344,9 +1411,17 @@ namespace OjamajoBot.Module
                 //start doremi card spawning timer
                 Config.Doremi._timerTradingCardSpawn[guildId.ToString()] = new Timer(async _ =>
                 {
+                    //0-2 | 3-7 | 8-10
+                    //9/5/2
+                    int randomParent = new Random().Next(0, 6);
                     int randomCategory = new Random().Next(11);
                     string chosenCategory = "";
-                    if (randomCategory <= TradingCardCore.spawnRateMetal)//0-2
+
+                    if (randomCategory <= TradingCardCore.spawnRateOjamajos)//0-1
+                    {//metal
+                        chosenCategory = "ojamajos";
+                    }
+                    else if (randomCategory <= TradingCardCore.spawnRateMetal)//0-2
                     {//metal
                         chosenCategory = "metal";
                     }
@@ -1359,50 +1434,59 @@ namespace OjamajoBot.Module
                         chosenCategory = "normal";
                     }
 
-                    int randomParent = new Random().Next(0, 5);
                     //int randomParent = 0; //don't forget to erase this, for testing purpose
                     string parent = ""; DiscordSocketClient client = socketClient;
-                    Discord.Color color= Config.Doremi.EmbedColor; string author=""; string embedAvatarUrl = "";
+                    Discord.Color color = Config.Doremi.EmbedColor; string author = ""; string embedAvatarUrl = "";
 
                     if (randomParent == 0)
                     {
-                        parent = "doremi"; author = $"Doremi {GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
-                        embedAvatarUrl = Config.Doremi.EmbedAvatarUrl;
+                        parent = "doremi"; embedAvatarUrl = Config.Doremi.EmbedAvatarUrl;
                     }
                     else if (randomParent == 1)
                     {
-                        client = Bot.Hazuki.client;
-                        parent = "hazuki"; author = $"Hazuki {GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
+                        client = Bot.Hazuki.client; parent = "hazuki";
                         color = Config.Hazuki.EmbedColor; embedAvatarUrl = Config.Hazuki.EmbedAvatarUrl;
                     }
                     else if (randomParent == 2)
                     {
-                        client = Bot.Aiko.client;
-                        parent = "aiko"; author = $"Aiko {GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
+                        client = Bot.Aiko.client; parent = "aiko";
                         color = Config.Aiko.EmbedColor; embedAvatarUrl = Config.Aiko.EmbedAvatarUrl;
                     }
                     else if (randomParent == 3)
                     {
-                        client = Bot.Onpu.client;
-                        parent = "onpu"; author = $"Onpu {GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
+                        client = Bot.Onpu.client; parent = "onpu";
                         color = Config.Onpu.EmbedColor; embedAvatarUrl = Config.Onpu.EmbedAvatarUrl;
                     }
-                    else if (randomParent >= 4)
+                    else if (randomParent == 4)
                     {
-                        client = Bot.Momoko.client;
-                        parent = "momoko"; author = $"Momoko {GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
+                        client = Bot.Momoko.client; parent = "momoko";
                         color = Config.Momoko.EmbedColor; embedAvatarUrl = Config.Momoko.EmbedAvatarUrl;
                     }
+                    else if (randomParent >= 5)
+                    {
+                        chosenCategory = "special"; parent = "other";
+                        color = Config.Doremi.EmbedColor; embedAvatarUrl = Config.Doremi.EmbedAvatarUrl;
+                    }
 
+                    if (chosenCategory == "ojamajos") {
+                        author = $"{GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
+                    } else if(chosenCategory == "special") {
+                        author = $"Other {GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
+                    } else {
+                        author = $"{GlobalFunctions.UppercaseFirst(parent)} {GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
+                    }
+
+                    string chosenId = ""; string chosenName = ""; string chosenUrl = "";
                     //start read json
                     var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
                     var key = JObject.Parse(jObjTradingCardList[parent][chosenCategory].ToString()).Properties().ToList();
-                    var randIndex = new Random().Next(0, key.Count);
+                    int randIndex = new Random().Next(0, key.Count);
 
                     //chosen data:
-                    string chosenId = key[randIndex].Name;
-                    string chosenName = jObjTradingCardList[parent][chosenCategory][key[randIndex].Name]["name"].ToString();
-                    string chosenUrl = jObjTradingCardList[parent][chosenCategory][key[randIndex].Name]["url"].ToString();
+                    chosenId = key[randIndex].Name;
+                    chosenName = jObjTradingCardList[parent][chosenCategory][key[randIndex].Name]["name"].ToString();
+                    chosenUrl = jObjTradingCardList[parent][chosenCategory][key[randIndex].Name]["url"].ToString();
+
                     Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyId, chosenId);
                     Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyCategory, chosenCategory);
                     Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyToken, GlobalFunctions.RandomString(8));
@@ -1414,11 +1498,13 @@ namespace OjamajoBot.Module
                         .WithFooter($"ID: {chosenId}")
                         .WithImageUrl(chosenUrl);
 
+                    if (chosenCategory == "ojamajos") parent = "";
+
                     await client
-                        .GetGuild(guildId)
-                        .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guildId, "trading_card_spawn")))
-                        .SendMessageAsync($":exclamation:A **{chosenCategory}** {parent} card has been spawned! Capture it with **<bot>!card capture/catch**", 
-                        embed:embed.Build());
+                    .GetGuild(guildId)
+                    .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guildId, "trading_card_spawn")))
+                    .SendMessageAsync($":exclamation:A **{chosenCategory}** {parent} card has appeared! Capture it with **<bot>!card capture/catch**",
+                    embed: embed.Build());
                 },
                 null,
                 TimeSpan.FromMinutes(Convert.ToInt32(Config.Guild.getPropertyValue(guildId, "trading_card_spawn_interval")) + new Random().Next(5, 11)), //time to wait before executing the timer for the first time
@@ -1583,20 +1669,22 @@ namespace OjamajoBot.Module
         }
 
         [Command("capture", RunMode = RunMode.Async), Alias("catch"), Summary("Capture spawned card with Doremi.")]
-        public async Task trading_card_doremi_capture()
+        public async Task trading_card_doremi_capture(string boost = "")
         {
             //reference: https://www.newtonsoft.com/json/help/html/ModifyJson.htm
             var guildId = Context.Guild.Id;
             var clientId = Context.User.Id;
             string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+            //start read json
+            var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
+
             string replyText = ""; string parent = "doremi";
 
             if (!File.Exists(playerDataDirectory))
             {
-                replyText = "I'm sorry, please register yourself first with **do!card register** command.";
                 await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
-                .WithDescription(replyText)
+                .WithDescription($"I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
                 .WithImageUrl(TradingCardCore.Doremi.emojiError).Build());
                 return;
             }
@@ -1605,9 +1693,58 @@ namespace OjamajoBot.Module
                 JObject arrInventory = JObject.Parse(File.ReadAllText(playerDataDirectory));
                 string spawnedCardId = Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyId);
                 string spawnedCardCategory = Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyCategory);
+
+                int boostNormal = 0; int boostPlatinum = 0; int boostMetal = 0;
+                int boostOjamajos = 0; int boostSpecial = 0;
+                if (spawnedCardCategory.ToLower() == "special") {
+                    parent = "other";
+                    boostSpecial = Convert.ToInt32(arrInventory["boost"]["other"]["special"].ToString());
+                } else {
+                    boostNormal = Convert.ToInt32(arrInventory["boost"][parent]["normal"].ToString());
+                    boostPlatinum = Convert.ToInt32(arrInventory["boost"][parent]["platinum"].ToString());
+                    boostMetal = Convert.ToInt32(arrInventory["boost"][parent]["metal"].ToString());
+                    boostOjamajos = Convert.ToInt32(arrInventory["boost"][parent]["ojamajos"].ToString());
+                }
+
+                //process booster
+                Boolean useBoost = false;
+                if (boost.ToLower() != "" && boost.ToLower() != "boost")
+                {
+                    await ReplyAsync(embed: new EmbedBuilder()
+                    .WithColor(Config.Doremi.EmbedColor)
+                    .WithDescription($":x: Sorry, that is not the valid card capture boost command. Use: **{Config.Doremi.PrefixParent[0]}card capture boost**")
+                    .WithImageUrl(TradingCardCore.Doremi.emojiError).Build());
+                    return;
+                }
+                else if ((boost.ToLower() == "boost" && spawnedCardCategory == "normal" && boostNormal <= 0)&&
+                    (boost.ToLower() == "boost" && spawnedCardCategory == "platinum" && boostPlatinum <= 0)&&
+                    (boost.ToLower() == "boost" && spawnedCardCategory == "metal" && boostMetal <= 0)&&
+                    (boost.ToLower() == "boost" && spawnedCardCategory == "ojamajos" && boostOjamajos <= 0)&&
+                    (boost.ToLower() == "boost" && spawnedCardCategory == "special" && boostSpecial <= 0))
+                {
+                    await ReplyAsync(embed: new EmbedBuilder()
+                    .WithColor(Config.Doremi.EmbedColor)
+                    .WithDescription($":x: Sorry, you have no {parent} {spawnedCardCategory} card capture boost that you can use.")
+                    .WithImageUrl(TradingCardCore.Doremi.emojiError).Build());
+                    return;
+                }
+                else if (boost.ToLower() == "boost") useBoost = true;
+
+                Boolean indexExists = false;
+                try
+                {
+                    var checking = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["name"];
+                    indexExists = true;
+                }
+                catch (Exception e) { }
+
+                Console.WriteLine(spawnedCardCategory.ToLower());
+
                 if (spawnedCardId != "" && spawnedCardCategory != "")
                 {
-                    if (spawnedCardId.Contains("do"))//check if the card is doremi/not
+                    if (spawnedCardId.Contains("do") ||
+                        (spawnedCardId.Contains("oj") && indexExists) ||
+                        spawnedCardCategory.ToLower() == "special")//check if the card is doremi/ojamajos/other
                     {
                         int catchState = 0;
 
@@ -1617,86 +1754,249 @@ namespace OjamajoBot.Module
                             if ((string)arrInventory["catch_token"] == "" ||
                                 (string)arrInventory["catch_token"] != Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyToken))
                             {
-                                int catchRate;
+                                int catchRate = new Random().Next(11);
+                                string name = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["name"].ToString();
+                                string imgUrl = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["url"].ToString();
+                                string rank = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["0"].ToString();
+                                string star = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["1"].ToString();
+                                string point = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["2"].ToString();
 
-                                //init RNG catch rate
-                                if (spawnedCardCategory.ToLower() == "normal")
-                                {
-                                    catchRate = new Random().Next(11);
-                                    if (catchRate <= TradingCardCore.spawnRateNormal) catchState = 1;
+                                //check inventory
+                                if (arrInventory[parent][spawnedCardCategory].ToString().Contains(spawnedCardId))
+                                {//card already exist on inventory
+                                    replyText = $":x: Sorry, I can't capture **{spawnedCardId} - {name}** because you have it already.";
                                 }
-                                else if (spawnedCardCategory.ToLower() == "platinum")
+                                else
                                 {
-                                    catchRate = new Random().Next(11);
-                                    if (catchRate <= TradingCardCore.spawnRatePlatinum) catchState = 1;
-                                }
-                                else if (spawnedCardCategory.ToLower() == "metal")
-                                {
-                                    catchRate = new Random().Next(11);
-                                    if (catchRate <= TradingCardCore.spawnRateMetal) catchState = 1;
-                                }
-
-                                if (catchState == 1)
-                                {
-                                    //start read json
-                                    var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
-
-                                    string name = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["name"].ToString();
-                                    string imgUrl = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["url"].ToString();
-                                    string rank = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["0"].ToString();
-                                    string star = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["1"].ToString();
-                                    string point = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["2"].ToString();
-
-                                    //check inventory
-                                    if (arrInventory[parent][spawnedCardCategory].ToString().Contains(spawnedCardId))
-                                    {//card already exist on inventory
-                                        replyText = $":x: Sorry, I can't capture **{spawnedCardId} - {name}** because you have it already.";
+                                    //init RNG catch rate
+                                    //if boost: change the TradingCardCore.captureRate
+                                    if (spawnedCardCategory.ToLower() == "normal")
+                                    {
+                                        if (!useBoost)
+                                        {
+                                            if (catchRate <= TradingCardCore.captureRateNormal) catchState = 1;
+                                        }
+                                        else
+                                        {
+                                            if (catchRate <= boostNormal) catchState = 1;
+                                        }
                                     }
-                                    else
-                                    {//card not exist yet
+                                    else if (spawnedCardCategory.ToLower() == "platinum")
+                                    {
+                                        if (!useBoost)
+                                        {
+                                            if (catchRate <= TradingCardCore.captureRatePlatinum) catchState = 1;
+                                        }
+                                        else
+                                        {
+                                            if (catchRate <= boostPlatinum) catchState = 1;
+                                        }
+                                    }
+                                    else if (spawnedCardCategory.ToLower() == "metal")
+                                    {
+                                        if (!useBoost)
+                                        {
+                                            if (catchRate <= TradingCardCore.captureRateMetal) catchState = 1;
+                                        }
+                                        else
+                                        {
+                                            if (catchRate <= boostMetal) catchState = 1;
+                                        }
+                                    }
+                                    else if (spawnedCardCategory.ToLower() == "ojamajos")
+                                    {
+                                        if (!useBoost)
+                                        {
+                                            if (catchRate <= TradingCardCore.captureRateOjamajos) catchState = 1;
+                                        }
+                                        else
+                                        {
+                                            if (catchRate <= boostOjamajos) catchState = 1;
+                                        }
+                                    }
+                                    else if (spawnedCardCategory.ToLower() == "special")
+                                    {
+                                        if (!useBoost)
+                                        {
+                                            if (catchRate <= TradingCardCore.captureRateSpecial) catchState = 1;
+                                        }
+                                        else
+                                        {
+                                            if (catchRate <= boostSpecial) catchState = 1;
+                                        }
+                                    }
+
+                                    if (catchState == 1)
+                                    {
+                                        //card not exist yet
+                                        if (useBoost)
+                                        {//reset boost
+                                            replyText = $":arrow_double_up: **{GlobalFunctions.UppercaseFirst(parent)} {GlobalFunctions.UppercaseFirst(spawnedCardCategory)}** Card Capture Boost has been used!\n";
+                                            if (spawnedCardCategory == "special")
+                                                arrInventory["boost"]["other"]["special"] = "0";
+                                            else
+                                            {
+                                                arrInventory["boost"][parent]["normal"] = "0";
+                                                arrInventory["boost"][parent]["platinum"] = "0";
+                                                arrInventory["boost"][parent]["metal"] = "0";
+                                                arrInventory["boost"][parent]["ojamajos"] = "0";
+                                            }
+                                        }
+
                                         //save data:
                                         arrInventory["catch_attempt"] = (Convert.ToInt32(arrInventory["catch_attempt"]) + 1).ToString();
                                         arrInventory["catch_token"] = Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyToken);
                                         JArray item = (JArray)arrInventory[parent][spawnedCardCategory];
                                         item.Add(spawnedCardId);
+
+                                        if (spawnedCardCategory == "ojamajos")
+                                        {
+                                            var related = (JArray)jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["related"];
+                                            for (int i = 0; i < related.Count; i++)
+                                            {
+                                                if (!arrInventory[related[i].ToString()][spawnedCardCategory].ToString().Contains(spawnedCardId))
+                                                {//check for duplicate on other card
+                                                    JArray itemRelated = (JArray)arrInventory[related[i].ToString()][spawnedCardCategory];
+                                                    itemRelated.Add(spawnedCardId);
+                                                }
+                                            }
+                                        }
+
                                         File.WriteAllText(playerDataDirectory, arrInventory.ToString());
 
                                         string[] arrRandomFirstSentence = {
                                             "Congratulations,","Nice Catch!","Nice one!","Yatta!"
                                         };
 
-                                        await ReplyAsync($":white_check_mark: {arrRandomFirstSentence[new Random().Next(0, arrRandomFirstSentence.Length)]} " +
+                                        await ReplyAsync(replyText + $":white_check_mark: {arrRandomFirstSentence[new Random().Next(0, arrRandomFirstSentence.Length)]} " +
                                             $"**{Context.User.Username}** have successfully capture **{spawnedCardCategory}** card: **{name}**",
                                             embed: TradingCardCore.printCardCaptureTemplate(Config.Doremi.EmbedColor, name, imgUrl,
                                             spawnedCardId, spawnedCardCategory, rank, star, point, Context.User.Username, Config.Doremi.EmbedAvatarUrl)
                                             .Build());
 
-                                        //check if player have captured all card/not
+                                        //check if player have captured all doremi card/not
                                         if (((JArray)arrInventory["doremi"]["normal"]).Count >= TradingCardCore.Doremi.maxNormal &&
                                             ((JArray)arrInventory["doremi"]["platinum"]).Count >= TradingCardCore.Doremi.maxPlatinum &&
-                                            ((JArray)arrInventory["doremi"]["metal"]).Count >= TradingCardCore.Doremi.maxMetal)
+                                            ((JArray)arrInventory["doremi"]["metal"]).Count >= TradingCardCore.Doremi.maxMetal &&
+                                            ((JArray)arrInventory["doremi"]["ojamajos"]).Count >= TradingCardCore.Doremi.maxOjamajos)
                                         {
-                                            await ReplyAsync(embed: TradingCardCore
-                                                .userCompleteTheirList(Config.Doremi.EmbedColor, "doremi",
-                                                $":clap: Congratulations, **{Context.User.Username}** have successfully capture all **Doremi Card Pack**!",
-                                                TradingCardCore.Doremi.emojiCompleteAllCard, guildId.ToString(),
-                                                Context.User.Id.ToString())
-                                                .Build());
+                                            await Bot.Doremi.client
+                                            .GetGuild(guildId)
+                                            .GetTextChannel(Context.Channel.Id)
+                                            .SendMessageAsync(embed: TradingCardCore
+                                            .userCompleteTheirList(Config.Doremi.EmbedColor, "doremi",
+                                            $":clap: Congratulations, **{Context.User.Username}** have complete all **Doremi Card Pack**!",
+                                            TradingCardCore.Doremi.emojiCompleteAllCard, guildId.ToString(),
+                                            Context.User.Id.ToString())
+                                            .Build());
                                         }
+
+                                        //check if player have captured all hazuki card/not
+                                        if (((JArray)arrInventory["hazuki"]["normal"]).Count >= TradingCardCore.Hazuki.maxNormal &&
+                                            ((JArray)arrInventory["hazuki"]["platinum"]).Count >= TradingCardCore.Hazuki.maxPlatinum &&
+                                            ((JArray)arrInventory["hazuki"]["metal"]).Count >= TradingCardCore.Hazuki.maxMetal &&
+                                            ((JArray)arrInventory["hazuki"]["ojamajos"]).Count >= TradingCardCore.Hazuki.maxOjamajos)
+                                        {
+                                            await Bot.Hazuki.client
+                                            .GetGuild(guildId)
+                                            .GetTextChannel(Context.Channel.Id)
+                                            .SendMessageAsync(embed: TradingCardCore
+                                            .userCompleteTheirList(Config.Hazuki.EmbedColor, "hazuki",
+                                            $":clap: Congratulations, **{Context.User.Username}** have complete all **Hazuki Card Pack**!",
+                                            TradingCardCore.Hazuki.emojiCompleteAllCard, guildId.ToString(),
+                                            Context.User.Id.ToString())
+                                            .Build());
+                                        }
+
+                                        //check if player have captured all aiko card/not
+                                        if (((JArray)arrInventory["aiko"]["normal"]).Count >= TradingCardCore.Aiko.maxNormal &&
+                                            ((JArray)arrInventory["aiko"]["platinum"]).Count >= TradingCardCore.Aiko.maxPlatinum &&
+                                            ((JArray)arrInventory["aiko"]["metal"]).Count >= TradingCardCore.Aiko.maxMetal &&
+                                            ((JArray)arrInventory["aiko"]["ojamajos"]).Count >= TradingCardCore.Aiko.maxOjamajos)
+                                        {
+                                            await Bot.Aiko.client
+                                            .GetGuild(guildId)
+                                            .GetTextChannel(Context.Channel.Id)
+                                            .SendMessageAsync(embed: TradingCardCore
+                                            .userCompleteTheirList(Config.Aiko.EmbedColor, "aiko",
+                                            $":clap: Congratulations, **{Context.User.Username}** have complete all **Aiko Card Pack**!",
+                                            TradingCardCore.Aiko.emojiCompleteAllCard, guildId.ToString(),
+                                            Context.User.Id.ToString())
+                                            .Build());
+                                        }
+
+                                        //check if player have captured all onpu card/not
+                                        if (((JArray)arrInventory["onpu"]["normal"]).Count >= TradingCardCore.Onpu.maxNormal &&
+                                            ((JArray)arrInventory["onpu"]["platinum"]).Count >= TradingCardCore.Onpu.maxPlatinum &&
+                                            ((JArray)arrInventory["onpu"]["metal"]).Count >= TradingCardCore.Onpu.maxMetal &&
+                                            ((JArray)arrInventory["onpu"]["ojamajos"]).Count >= TradingCardCore.Onpu.maxOjamajos)
+                                        {
+                                            await Bot.Onpu.client
+                                            .GetGuild(guildId)
+                                            .GetTextChannel(Context.Channel.Id)
+                                            .SendMessageAsync(embed: TradingCardCore
+                                            .userCompleteTheirList(Config.Onpu.EmbedColor, "onpu",
+                                            $":clap: Congratulations, **{Context.User.Username}** have complete all **Onpu Card Pack**!",
+                                            TradingCardCore.Onpu.emojiCompleteAllCard, guildId.ToString(),
+                                            Context.User.Id.ToString())
+                                            .Build());
+                                        }
+
+                                        //check if player have captured all momoko card/not
+                                        if (((JArray)arrInventory["momoko"]["normal"]).Count >= TradingCardCore.Momoko.maxNormal &&
+                                            ((JArray)arrInventory["momoko"]["platinum"]).Count >= TradingCardCore.Momoko.maxPlatinum &&
+                                            ((JArray)arrInventory["momoko"]["metal"]).Count >= TradingCardCore.Momoko.maxMetal &&
+                                            ((JArray)arrInventory["momoko"]["ojamajos"]).Count >= TradingCardCore.Momoko.maxOjamajos)
+                                        {
+                                            await Bot.Momoko.client
+                                            .GetGuild(guildId)
+                                            .GetTextChannel(Context.Channel.Id)
+                                            .SendMessageAsync(embed: TradingCardCore
+                                            .userCompleteTheirList(Config.Momoko.EmbedColor, "momoko",
+                                            $":clap: Congratulations, **{Context.User.Username}** have complete all **Momoko Card Pack**!",
+                                            TradingCardCore.Momoko.emojiCompleteAllCard, guildId.ToString(),
+                                            Context.User.Id.ToString())
+                                            .Build());
+                                        }
+
+                                        //check if player have captured all other special card/not
+                                        if (((JArray)arrInventory["other"]["special"]).Count >= TradingCardCore.maxSpecial)
+                                            await ReplyAsync(embed: TradingCardCore
+                                            .userCompleteTheirList(Config.Doremi.EmbedColor, "other",
+                                            $":clap: Congratulations, **{Context.User.Username}** have complete all **Other Special Card Pack**!",
+                                            TradingCardCore.Doremi.emojiCompleteAllCard, guildId.ToString(),
+                                            Context.User.Id.ToString())
+                                            .Build());
+
 
                                         //erase spawned instance
                                         TradingCardCore.resetSpawnInstance(guildId);
                                         return;
+
+                                    }
+                                    else
+                                    {
+                                        //save data:
+                                        arrInventory["catch_attempt"] = (Convert.ToInt32(arrInventory["catch_attempt"]) + 1).ToString();
+                                        arrInventory["catch_token"] = Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyToken);
+                                        if (useBoost)
+                                        {   //reset boost
+                                            replyText = $":arrow_double_up: **{GlobalFunctions.UppercaseFirst(parent)} {GlobalFunctions.UppercaseFirst(spawnedCardCategory)}** Card Capture Boost has been used!\n";
+                                            if (spawnedCardCategory.ToLower() == "special")
+                                                arrInventory["boost"]["other"]["special"] = "0";
+                                            else
+                                            {
+                                                arrInventory["boost"][parent]["normal"] = "0";
+                                                arrInventory["boost"][parent]["platinum"] = "0";
+                                                arrInventory["boost"][parent]["metal"] = "0";
+                                                arrInventory["boost"][parent]["ojamajos"] = "0";
+                                            }
+                                        }
+                                        File.WriteAllText(playerDataDirectory, arrInventory.ToString());
+                                        replyText += $":x: I'm sorry {Context.User.Username}, you **fail** to catch the card. Better luck next time.";
                                     }
                                 }
-                                else
-                                {
-                                    //save data:
-                                    arrInventory["catch_attempt"] = (Convert.ToInt32(arrInventory["catch_attempt"]) + 1).ToString();
-                                    arrInventory["catch_token"] = Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyToken);
-                                    File.WriteAllText(playerDataDirectory, arrInventory.ToString());
-                                    replyText = $":x: I'm sorry {Context.User.Username}, but you **fail** to catch the card. Better luck next time.";
-                                }
+
                             }
                             else
                             {
@@ -1726,7 +2026,7 @@ namespace OjamajoBot.Module
             await ReplyAsync(embed: new EmbedBuilder()
             .WithColor(Config.Doremi.EmbedColor)
             .WithDescription(replyText)
-            .WithImageUrl(TradingCardCore.Doremi.emojiError).Build());
+            .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build());
 
         }
 
@@ -1739,13 +2039,13 @@ namespace OjamajoBot.Module
             string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
             var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
 
-            string replyText; string parent = "doremi";
+            string parent = "doremi";
 
             if (!File.Exists(playerDataDirectory)) //not registered yet
             {
                 await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
-                .WithDescription("I'm sorry, please register yourself first with **do!card register** command.")
+                .WithDescription($":x: I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
                 .WithImageUrl(TradingCardCore.Doremi.emojiError).Build());
             }
             else
@@ -1803,6 +2103,36 @@ namespace OjamajoBot.Module
                             .Build());
                     }
 
+                    //ojamajos category
+                    category = "ojamajos"; arrList = (JArray)playerData[parent][category];
+                    if (arrList.Count >= 1)
+                    {
+                        await PagedReplyAsync(
+                            TradingCardCore.printInventoryTemplate("doremi", "doremi", category, jObjTradingCardList, arrList, TradingCardCore.Doremi.maxOjamajos, clientId)
+                        );
+                    }
+                    else
+                    {
+                        await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
+                            Config.Doremi.EmbedColor, "doremi", category, TradingCardCore.Doremi.maxOjamajos, Context.User.Username)
+                            .Build());
+                    }
+
+                    //special category
+                    category = "special"; arrList = (JArray)playerData["other"][category];
+                    if (arrList.Count >= 1)
+                    {
+                        await PagedReplyAsync(
+                            TradingCardCore.printInventoryTemplate("other", "other", category, jObjTradingCardList, arrList, TradingCardCore.maxSpecial, clientId)
+                        );
+                    }
+                    else
+                    {
+                        await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
+                            Config.Doremi.EmbedColor, "other", category, TradingCardCore.maxSpecial, Context.User.Username)
+                            .Build());
+                    }
+
                 }
                 catch (Exception e) { Console.WriteLine(e.ToString()); }
             }
@@ -1835,7 +2165,6 @@ namespace OjamajoBot.Module
 
                 if (arrInventory[parent][category].ToString().Contains(card_id))
                 {
-
                     string imgUrl = jObjTradingCardList[parent][category][card_id]["url"].ToString();
                     string rank = jObjTradingCardList[parent][category][card_id]["0"].ToString();
                     string star = jObjTradingCardList[parent][category][card_id]["1"].ToString();
@@ -1849,7 +2178,7 @@ namespace OjamajoBot.Module
                 {
                     await ReplyAsync(embed: new EmbedBuilder()
                     .WithColor(Config.Doremi.EmbedColor)
-                    .WithDescription($"Sorry, you don't have: **{card_id} - {name}** card yet. Try capture it to look at this card.")
+                    .WithDescription($":x: Sorry, you don't have: **{card_id} - {name}** card yet. Try capture it to look at this card.")
                     .WithImageUrl(TradingCardCore.Doremi.emojiError).Build());
                 }
             }
@@ -1857,7 +2186,7 @@ namespace OjamajoBot.Module
             {
                 await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
-                .WithDescription("Sorry, I can't find that card ID.")
+                .WithDescription(":x: Sorry, I can't find that card ID.")
                 .WithImageUrl(TradingCardCore.Doremi.emojiError).Build());
             }
 
@@ -1874,7 +2203,7 @@ namespace OjamajoBot.Module
             { //not registered yet
                 await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
-                .WithDescription("I'm sorry, please register yourself first with **do!card register** command.")
+                .WithDescription($"I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
                 .WithImageUrl(TradingCardCore.Doremi.emojiError).Build());
             }
             else
@@ -1920,7 +2249,7 @@ namespace OjamajoBot.Module
             {
                 await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
-                .WithDescription("I'm sorry, please register yourself first with **do!card register** command.")
+                .WithDescription($":x: I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
                 .WithImageUrl(TradingCardCore.Doremi.emojiError).Build());
                 return;
             }
@@ -1928,10 +2257,13 @@ namespace OjamajoBot.Module
             var playerData = JObject.Parse(File.ReadAllText(playerDataDirectory));
             int fileCount = Directory.GetFiles(userFolderDirectory).Length;
 
-            if (fileCount <= 1){
+            if (fileCount <= 1)
+            {
                 await ReplyAsync("Sorry, server need to have more than 1 user that register the trading card data.");
                 return;
-            } else {
+            }
+            else
+            {
                 try
                 {
                     //start read all user id
@@ -1945,7 +2277,7 @@ namespace OjamajoBot.Module
                     //selection variables
                     //other users
                     string selectionUserId = ""; string selectionOtherUserCardChoiceId = ""; string selectionOtherUserCardPack = "";
-                    string selectionOtherUserCardCategory = ""; 
+                    string selectionOtherUserCardCategory = "";
                     //your selection
                     string selectionYourCardChoiceId = ""; string selectionYourCardPack = "";
                     string selectionYourCardCategory = "";
@@ -1984,7 +2316,7 @@ namespace OjamajoBot.Module
                     Boolean isTrading = true;
                     var timeoutDuration = TimeSpan.FromSeconds(60);
                     string replyTimeout = ":stopwatch: I'm sorry, but you have reach your timeout. " +
-                        "Please use the `card trade` command again to retry the trade process.";
+                        $"Please use the `{Config.Doremi.PrefixParent[0]}card trade` command again to retry the trade process.";
                     int stepProcess = 1;//0/1:select the user,
                                         //2: select your card pack, 3: select card category, 4: select 
                                         //5:review process
@@ -2024,7 +2356,7 @@ namespace OjamajoBot.Module
                         //response = await NextMessageAsync(timeout: timeoutDuration);
                         //string responseText = response.Content.ToLower().ToString();
 
-                        if (response.Content.ToString().ToLower() == "cancel"||
+                        if (response.Content.ToString().ToLower() == "cancel" ||
                             response.Content.ToString().ToLower() == "exit")
                         {
                             await ReplyAsync(embed: new EmbedBuilder()
@@ -2208,7 +2540,7 @@ namespace OjamajoBot.Module
                             for (int i = 0; i < arrList.Count; i++)
                             {
                                 founded = 0;
-                                for(int j=0;j< arrYourList.Count; j++)
+                                for (int j = 0; j < arrYourList.Count; j++)
                                 {
                                     if (arrList[i].ToString().ToLower() == arrYourList[j].ToString().ToLower())
                                     {
@@ -2216,10 +2548,10 @@ namespace OjamajoBot.Module
                                         j = arrYourList.Count;
                                     }
                                 }
-                                if(founded == 0)
+                                if (founded == 0)
                                     arrUserOtherCardList.Add(arrList[i].ToString());
                             }
-                                
+
                             pageContent = TradingCardCore.printTradeCardListTemplate(selectionOtherUserCardPack, selectionOtherUserCardCategory,
                                 jObjTradingCardList, arrUserOtherCardList);
                             //end available list
@@ -2240,7 +2572,9 @@ namespace OjamajoBot.Module
                                     .Build());
                                     await PagedReplyAsync(pageContent);
                                     response = await NextMessageAsync(timeout: timeoutDuration);
-                                } else {
+                                }
+                                else
+                                {
                                     await ReplyAsync(embed: new EmbedBuilder()
                                         .WithTitle($"Step 3 - {GlobalFunctions.UppercaseFirst(selectionOtherUserCardPack)} {GlobalFunctions.UppercaseFirst(selectionOtherUserCardCategory)} Card Id Selection")
                                         .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
@@ -2422,7 +2756,8 @@ namespace OjamajoBot.Module
                             if (newStep)
                             {
                                 newStep = false;
-                                if (arrUserCardList.Count <=0) {
+                                if (arrUserCardList.Count <= 0)
+                                {
                                     await ReplyAsync(embed: new EmbedBuilder()
                                     .WithTitle("Step 5 - Card Id Selection")
                                     .WithDescription($":x: Sorry, there are no **{GlobalFunctions.UppercaseFirst(selectionYourCardPack)} {GlobalFunctions.UppercaseFirst(selectionYourCardCategory)}** card that you can choose.\n" +
@@ -2431,7 +2766,8 @@ namespace OjamajoBot.Module
                                     .WithColor(Config.Doremi.EmbedColor)
                                     .Build());
                                     response = await NextMessageAsync(timeout: timeoutDuration);
-                                } else
+                                }
+                                else
                                 {
                                     await ReplyAsync(embed: new EmbedBuilder()
                                     .WithTitle($"Step 5 - {GlobalFunctions.UppercaseFirst(selectionYourCardPack)} {GlobalFunctions.UppercaseFirst(selectionYourCardCategory)} Card Id Selection")
@@ -2443,7 +2779,7 @@ namespace OjamajoBot.Module
                                     await PagedReplyAsync(pageContent);
                                     response = await NextMessageAsync(timeout: timeoutDuration);
                                 }
-                                
+
                             }
                             else
                             {
@@ -2508,17 +2844,22 @@ namespace OjamajoBot.Module
                                 newStep = false;
                                 await ReplyAsync(embed: eb.Build());
                                 response = await NextMessageAsync(timeout: timeoutDuration);
-                            } else {
+                            }
+                            else
+                            {
                                 if (response.Content.ToString().ToLower() == "back")
                                 {
                                     stepProcess = 5;
                                     newStep = true;
-                                } else if(response.Content.ToString().ToLower() != "accept"&&
-                                    response.Content.ToString().ToLower() != "confirm") {
+                                }
+                                else if (response.Content.ToString().ToLower() != "accept" &&
+                                  response.Content.ToString().ToLower() != "confirm")
+                                {
                                     await ReplyAsync(":x: Please type with the valid choice: **accept/confirm**",
                                         embed: eb.Build());
                                     response = await NextMessageAsync(timeout: timeoutDuration);
-                                } else
+                                }
+                                else
                                 {
                                     await ReplyAsync(embed: new EmbedBuilder()
                                         .WithTitle("✅ Trade Completed")
@@ -2554,22 +2895,22 @@ namespace OjamajoBot.Module
                             }
                         }
 
-                            //What card pack do you want to trade? select with number/the name
+                        //What card pack do you want to trade? select with number/the name
 
-                            //Please type the card id that you want to trade
+                        //Please type the card id that you want to trade
 
-                            //Please type the 
-                            //
-                        }
+                        //Please type the 
+                        //
+                    }
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     Console.WriteLine(e.ToString());
                 }
-                
+
             }
 
-            
+
             //you only allowed to trade for 2x each day
             /*json format:
              * "trading_queue": {
@@ -2584,18 +2925,19 @@ namespace OjamajoBot.Module
             var guildId = Context.Guild.Id;
             var clientId = Context.User.Id;
             string userFolderDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}";
-
             string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
-            var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
 
             if (!File.Exists(playerDataDirectory)) //not registered yet
             {
                 await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
-                .WithDescription("I'm sorry, please register yourself first with **do!card register** command.")
+                .WithDescription($"I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
                 .WithImageUrl(TradingCardCore.Doremi.emojiError).Build());
                 return;
             }
+
+            var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
+
 
             var playerData = JObject.Parse(File.ReadAllText(playerDataDirectory));
             int fileCount = Directory.GetFiles(userFolderDirectory).Length;
@@ -2786,13 +3128,14 @@ namespace OjamajoBot.Module
                                 File.WriteAllText(yourUserDataDirectory, JUserData.ToString());
                                 isTrading = false;
                                 return;
-                            } else if (existsYours || existsOthers)
+                            }
+                            else if (existsYours || existsOthers)
                             {//check for duplicates
                                 await ReplyAsync(embed: new EmbedBuilder()
                                 .WithTitle("🗑️ Trade Process Cancelled")
                                 .WithColor(Config.Doremi.EmbedColor)
                                 .WithDescription($"Your trade with " +
-                                $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))} has been cancelled because one of you have the same card offer that being sent.\n"+
+                                $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))} has been cancelled because one of you have the same card offer that being sent.\n" +
                                 $"Please use the **{Config.Doremi.PrefixParent[0]}card trade process** again to process other card offer.")
                                 .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
                                 .Build());
@@ -2841,18 +3184,21 @@ namespace OjamajoBot.Module
                             }
                             else
                             {
-                                if (response.Content.ToString().ToLower() == "back") {
+                                if (response.Content.ToString().ToLower() == "back")
+                                {
                                     stepProcess = 1;
                                     newStep = true;
                                 }
                                 else if (response.Content.ToString().ToLower() != "accept" &&
                                   response.Content.ToString().ToLower() != "confirm" &&
-                                  response.Content.ToString().ToLower() != "reject") {
+                                  response.Content.ToString().ToLower() != "reject")
+                                {
                                     await ReplyAsync(":x: Please type with the valid choice: **accept/confirm/reject**.",
                                         embed: eb.Build());
                                     response = await NextMessageAsync(timeout: timeoutDuration);
                                 }
-                                else if (response.Content.ToString().ToLower() == "reject") {
+                                else if (response.Content.ToString().ToLower() == "reject")
+                                {
                                     await ReplyAsync(embed: new EmbedBuilder()
                                         .WithTitle("🗑️ Trade Process Rejected")
                                         .WithColor(Config.Doremi.EmbedColor)
@@ -2889,7 +3235,7 @@ namespace OjamajoBot.Module
                                     JArray arrInventoryYoursRemove = JArray.Parse(JYourData[selectionYourCardPack][selectionYourCardCategory].ToString());
                                     for (int i = 0; i < arrInventoryYoursRemove.Count; i++)
                                     {
-                                        if (arrInventoryYoursRemove[i].ToString() ==selectionYourCardChoiceId)
+                                        if (arrInventoryYoursRemove[i].ToString() == selectionYourCardChoiceId)
                                             arrInventoryYoursRemove[i].Remove();
                                     }
                                     JYourData[selectionYourCardPack][selectionYourCardCategory] = arrInventoryYoursRemove;
@@ -2936,6 +3282,633 @@ namespace OjamajoBot.Module
                 {
                     Console.WriteLine(e.ToString());
                 }
+            }
+        }
+
+        [Command("shop", RunMode = RunMode.Async), Summary("Open Doremi Card Shop Menu.")]
+        public async Task openShop()
+        {
+            var guildId = Context.Guild.Id;
+            var clientId = Context.User.Id;
+            string userFolderDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}";
+            string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+
+            if (!File.Exists(playerDataDirectory)) //not registered yet
+            {
+                await ReplyAsync(embed: new EmbedBuilder()
+                .WithColor(Config.Doremi.EmbedColor)
+                .WithDescription($":x: I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
+                .WithImageUrl(TradingCardCore.Doremi.emojiError).Build());
+                return;
+            }
+
+            JObject arrInventory = JObject.Parse(File.ReadAllText(playerDataDirectory));
+            var playerData = JObject.Parse(File.ReadAllText(playerDataDirectory));
+            string itemsListText = "1. Parara tap\n" +
+                "2. Peperuto Pollon\n" +
+                "3. Puwapuwa Pollon\n" +
+                "4. Poppun Pollon\n" +
+                "5. Apprentice Tap\n" +
+                "6. Rhythm Tap\n" +
+                "7. Kururu Pollon\n" +
+                "8. Picotto Pollon\n" +
+                "9. Patraine Call\n" +
+                "10. Wreath Pollon\n" +
+                "11. Jewelry Pollon";
+            Boolean isShopping = true; int stepProcess = 1;
+            int selectionItem = 0; int priceConfirmation = 0;
+            int magicSeeds = Convert.ToInt32(playerData["magic_seeds"].ToString());
+
+            var timeoutDuration = TimeSpan.FromSeconds(60);
+            string concatResponseSuccess = "";
+
+            await ReplyAsync(embed: new EmbedBuilder()
+                .WithAuthor("Doremi Card Shop", Config.Doremi.EmbedAvatarUrl)
+                .WithColor(Config.Doremi.EmbedColor)
+                .WithDescription("Welcome to Doremi Card Shop. Here you can purchase some items to help your card collecting progression.\n" +
+                "Type **exit** or **cancel** to close the shop menu.\n" +
+                "Select with numbers from these list to browse & purchase:")
+                .AddField("Item List", itemsListText)
+                .Build());
+
+            var response = await NextMessageAsync(timeout: timeoutDuration);
+            string replyTimeout = ":stopwatch: I'm sorry, but you have reach your timeout. " +
+            $"Please use the `{Config.Doremi.PrefixParent[0]}card shop` command to open shop menu again.";
+
+            while (isShopping)
+            {
+                try
+                {
+                    var checkNull = response.Content.ToLower().ToString();
+                }
+                catch
+                {
+                    await ReplyAsync(replyTimeout);
+                    isShopping = false;
+                    return;
+                }
+
+                if (response.Content.ToString().ToLower() == "cancel" || response.Content.ToString().ToLower() == "exit")
+                {
+                    await ReplyAsync(embed: new EmbedBuilder()
+                        .WithAuthor("Doremi Card Shop", Config.Doremi.EmbedAvatarUrl)
+                        .WithDescription($"Thank you for visiting the Doremi Card Shop.")
+                        .WithColor(Config.Doremi.EmbedColor)
+                        .Build());
+                    isShopping = false;
+                    return;
+                }
+
+                if (stepProcess == 1)
+                {
+                    var isNumeric = int.TryParse(response.Content.ToString().ToLower(), out int n);
+                    if (!isNumeric || Convert.ToInt32(response.Content.ToString()) <= 0 ||
+                        Convert.ToInt32(response.Content.ToString()) >= 12)
+                    {
+                        await ReplyAsync(embed: new EmbedBuilder()
+                        .WithColor(Config.Doremi.EmbedColor)
+                        .WithAuthor("Doremi Card Shop", Config.Doremi.EmbedAvatarUrl)
+                        .WithDescription(":x: Please re-select with valid number selection from these list to browse & purchase.\n" +
+                        "Type **exit** or **cancel** to close the shop menu.")
+                        .AddField("Item List", itemsListText)
+                        .Build());
+                        response = await NextMessageAsync(timeout: timeoutDuration);
+                    }
+                    else
+                    {
+                        selectionItem = Convert.ToInt32(response.Content.ToString());
+                        stepProcess = 2;
+                    }
+                }
+                else if (stepProcess == 2)
+                {
+
+                    if (selectionItem == 1)
+                    {
+                        priceConfirmation = 10;
+                        await ReplyAsync("Type **confirm** to proceed with the purchase. Type **back** to go back to previous menu.",
+                        embed: new EmbedBuilder()
+                        .WithColor(Config.Doremi.EmbedColor)
+                        .WithAuthor("Doremi Card Shop", Config.Doremi.EmbedAvatarUrl)
+                        .WithTitle("Parara Tap Card")
+                        .WithDescription("This card will give you another chance to catch card again.")
+                        .AddField("Price:", priceConfirmation, true)
+                        .AddField("Your Magic Seeds:", magicSeeds, true)
+                        .WithThumbnailUrl("https://cdn.discordapp.com/attachments/708332290446721066/709045172461240330/pararatap.jpg")
+                        .Build());
+                    }
+                    else if (selectionItem == 2)
+                    {
+                        priceConfirmation = 3;
+                        await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
+                            "Type **confirm** to proceed with the purchase. Type **back** to go back to previous menu.",
+                        embed: new EmbedBuilder()
+                        .WithColor(Config.Doremi.EmbedColor)
+                        .WithAuthor("Doremi Card Shop", Config.Doremi.EmbedAvatarUrl)
+                        .WithTitle("Peperuto Pollon Card")
+                        .WithDescription("This will give card boost for doremi card pack. Can only be used once.")
+                        .AddField("Price:", priceConfirmation, true)
+                        .AddField("Your Magic Seeds:", magicSeeds, true)
+                        .AddField("Doremi Capture Rate Boost:", "Normal: 100%")
+                        .WithThumbnailUrl("https://cdn.discordapp.com/attachments/708332290446721066/708332323489316964/poron1.jpg")
+                        .Build());
+                    }
+                    else if (selectionItem == 3)
+                    {
+                        priceConfirmation = 3;
+                        await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
+                            "Type **confirm** to proceed with the purchase. Type **back** to go back to previous menu.",
+                        embed: new EmbedBuilder()
+                        .WithColor(Config.Doremi.EmbedColor)
+                        .WithAuthor("Doremi Card Shop", Config.Doremi.EmbedAvatarUrl)
+                        .WithTitle("Puwapuwa Pollon Card")
+                        .WithDescription("This will give card boost for hazuki card pack. Can only be used once.")
+                        .AddField("Price:", priceConfirmation, true)
+                        .AddField("Your Magic Seeds:", magicSeeds, true)
+                        .AddField("Hazuki Capture Rate Boost:", "Normal: 100%")
+                        .WithThumbnailUrl("https://cdn.discordapp.com/attachments/708332290446721066/708683707585790072/poronhazuki.jpg")
+                        .Build());
+                    }
+                    else if (selectionItem == 4)
+                    {
+                        priceConfirmation = 3;
+                        await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
+                            "Type **confirm** to proceed with the purchase. Type **back** to go back to previous menu.",
+                        embed: new EmbedBuilder()
+                        .WithColor(Config.Doremi.EmbedColor)
+                        .WithAuthor("Doremi Card Shop", Config.Doremi.EmbedAvatarUrl)
+                        .WithTitle("Poppun Pollon Card")
+                        .WithDescription("This will give card boost for aiko card pack. Can only be used once.")
+                        .AddField("Price:", priceConfirmation, true)
+                        .AddField("Your Magic Seeds:", magicSeeds, true)
+                        .AddField("Aiko Capture Rate Boost:", "Normal: 100%")
+                        .WithThumbnailUrl("https://cdn.discordapp.com/attachments/708332290446721066/708332376505188502/poronaiko.jpg")
+                        .Build());
+                    }
+                    else if (selectionItem == 5)
+                    {
+                        priceConfirmation = 10;
+                        await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
+                            "Type **confirm** to proceed with the purchase. Type **back** to go back to previous menu.",
+                        embed: new EmbedBuilder()
+                        .WithColor(Config.Doremi.EmbedColor)
+                        .WithAuthor("Doremi Card Shop", Config.Doremi.EmbedAvatarUrl)
+                        .WithTitle("Apprentice Tap Pack Card")
+                        .WithDescription("This will give card boost **each once** for doremi, hazuki, aiko, onpu, momoko and other card pack. " +
+                        "Can only be used once with **each** card pack.")
+                        .AddField("Price:", priceConfirmation, true)
+                        .AddField("Your Magic Seeds:", magicSeeds, true)
+                        .AddField("Doremi Capture Rate Boost:", "Normal: 100%\nPlatinum:60%\nMetal:50%\nOjamajos:30%")
+                        .AddField("Hazuki Capture Rate Boost:", "Normal: 100%\nPlatinum:60%\nMetal:50%\nOjamajos:30%", true)
+                        .AddField("Aiko Capture Rate Boost:", "Normal: 100%\nPlatinum:60%\nMetal:50%\nOjamajos:30%", true)
+                        .AddField("Onpu Capture Rate Boost:", "Normal: 100%\nPlatinum:60%\nMetal:50%\nOjamajos:30%", true)
+                        .AddField("Momoko Capture Rate Boost:", "Normal: 100%\nPlatinum:60%\nMetal:50%\nOjamajos:30%", true)
+                        .AddField("Other Capture Rate Boost:", "Special: 60%", true)
+                        .WithThumbnailUrl("https://cdn.discordapp.com/attachments/708332290446721066/708332389591679017/tap1.jpg")
+                        .Build());
+                    }
+                    else if (selectionItem == 6)
+                    {
+                        priceConfirmation = 15;
+                        await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
+                            "Type **confirm** to proceed with the purchase. Type **back** to go back to previous menu.",
+                        embed: new EmbedBuilder()
+                        .WithColor(Config.Doremi.EmbedColor)
+                        .WithAuthor("Doremi Card Shop", Config.Doremi.EmbedAvatarUrl)
+                        .WithTitle("Rythm Tap Pack Card")
+                        .WithDescription("This will give card boost **each once** for doremi, hazuki, aiko, onpu, and other card pack. " +
+                        "Can only be used once with **each** card pack.")
+                        .AddField("Price:", priceConfirmation, true)
+                        .AddField("Your Magic Seeds:", magicSeeds, true)
+                        .AddField("Doremi Capture Rate Boost:", "Normal: 100%\nPlatinum:70%\nMetal:60%\nOjamajos:40%")
+                        .AddField("Hazuki Capture Rate Boost:", "Normal: 100%\nPlatinum:70%\nMetal:60%\nOjamajos:40%", true)
+                        .AddField("Aiko Capture Rate Boost:", "Normal: 100%\nPlatinum:70%\nMetal:60%\nOjamajos:40%", true)
+                        .AddField("Onpu Capture Rate Boost:", "Normal: 100%\nPlatinum:70%\nMetal:60%\nOjamajos:40%", true)
+                        .AddField("Other Capture Rate Boost:", "Special: 70%", true)
+                        .WithThumbnailUrl("https://cdn.discordapp.com/attachments/708332290446721066/708332399003697212/tap2.jpg")
+                        .Build());
+                    }
+                    else if (selectionItem == 7)
+                    {
+                        priceConfirmation = 25;
+                        await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
+                            "Type **confirm** to proceed with the purchase. Type **back** to go back to previous menu.",
+                        embed: new EmbedBuilder()
+                        .WithColor(Config.Doremi.EmbedColor)
+                        .WithAuthor("Doremi Card Shop", Config.Doremi.EmbedAvatarUrl)
+                        .WithTitle("Kururu Pollon Pack Card")
+                        .WithDescription("This will give card boost **each once** for doremi, hazuki, aiko, onpu, momoko and other card pack. " +
+                        "Can only be used once with **each** card pack.")
+                        .AddField("Price:", priceConfirmation, true)
+                        .AddField("Your Magic Seeds:", magicSeeds, true)
+                        .AddField("Doremi Capture Rate Boost:", "Normal: 100%\nPlatinum:70%\nMetal:70%\nOjamajos:50%")
+                        .AddField("Hazuki Capture Rate Boost:", "Normal: 100%\nPlatinum:70%\nMetal:70%\nOjamajos:50%", true)
+                        .AddField("Aiko Capture Rate Boost:", "Normal: 100%\nPlatinum:70%\nMetal:70%\nOjamajos:50%", true)
+                        .AddField("Onpu Capture Rate Boost:", "Normal: 100%\nPlatinum:70%\nMetal:70%\nOjamajos:50%", true)
+                        .AddField("Momoko Capture Rate Boost:", "Normal: 100%\nPlatinum:70%\nMetal:70%\nOjamajos:50%", true)
+                        .AddField("Other Capture Rate Boost:", "Special: 70%", true)
+                        .WithThumbnailUrl("https://cdn.discordapp.com/attachments/708332290446721066/708332357652054066/poron5.jpg")
+                        .Build());
+                    }
+                    else if (selectionItem == 8)
+                    {
+                        priceConfirmation = 30;
+                        await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
+                            "Type **confirm** to proceed with the purchase. Type **back** to go back to previous menu.",
+                        embed: new EmbedBuilder()
+                        .WithColor(Config.Doremi.EmbedColor)
+                        .WithAuthor("Doremi Card Shop", Config.Doremi.EmbedAvatarUrl)
+                        .WithTitle("Picotto Pollon Pack Card")
+                        .WithDescription("This will give card boost **each once** for doremi, hazuki, aiko, onpu, and other card pack. " +
+                        "Can only be used once with **each** card pack.")
+                        .AddField("Price:", priceConfirmation, true)
+                        .AddField("Your Magic Seeds:", magicSeeds, true)
+                        .AddField("Doremi Capture Rate Boost:", "Normal: 100%\nPlatinum:70%\nMetal:80%\nOjamajos:60%")
+                        .AddField("Hazuki Capture Rate Boost:", "Normal: 100%\nPlatinum:70%\nMetal:80%\nOjamajos:60%", true)
+                        .AddField("Aiko Capture Rate Boost:", "Normal: 100%\nPlatinum:70%\nMetal:80%\nOjamajos:60%", true)
+                        .AddField("Onpu Capture Rate Boost:", "Normal: 100%\nPlatinum:70%\nMetal:80%\nOjamajos:60%", true)
+                        .AddField("Other Capture Rate Boost:", "Special: 70%", true)
+                        .WithThumbnailUrl("https://cdn.discordapp.com/attachments/708332290446721066/709768272966320199/picotto.jpg")
+                        .Build());
+                    }
+                    else if (selectionItem == 9)
+                    {
+                        priceConfirmation = 30;
+                        await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
+                            "Type **confirm** to proceed with the purchase. Type **back** to go back to previous menu.",
+                        embed: new EmbedBuilder()
+                        .WithColor(Config.Doremi.EmbedColor)
+                        .WithAuthor("Doremi Card Shop", Config.Doremi.EmbedAvatarUrl)
+                        .WithTitle("Patraine Call Pack Card")
+                        .WithDescription("This will give card boost **each once** for doremi, hazuki, aiko, onpu, and other card pack. " +
+                        "Can only be used once with **each** card pack.")
+                        .AddField("Price:", priceConfirmation, true)
+                        .AddField("Your Magic Seeds:", magicSeeds, true)
+                        .AddField("Doremi Capture Rate Boost:", "Normal: 100%\nPlatinum:80%\nMetal:70%\nOjamajos:70%")
+                        .AddField("Hazuki Capture Rate Boost:", "Normal: 100%\nPlatinum:80%\nMetal:70%\nOjamajos:70%", true)
+                        .AddField("Aiko Capture Rate Boost:", "Normal: 100%\nPlatinum:80%\nMetal:70%\nOjamajos:70%", true)
+                        .AddField("Onpu Capture Rate Boost:", "Normal: 100%\nPlatinum:80%\nMetal:70%\nOjamajos:70%", true)
+                        .AddField("Other Capture Rate Boost:", "Special: 60%", true)
+                        .WithThumbnailUrl("https://cdn.discordapp.com/attachments/708332290446721066/708332428929794140/patraine_call.jpg")
+                        .Build());
+                    }
+                    else if (selectionItem == 10)
+                    {
+                        priceConfirmation = 35;
+                        await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
+                            "Type **confirm** to proceed with the purchase. Type **back** to go back to previous menu.",
+                        embed: new EmbedBuilder()
+                        .WithColor(Config.Doremi.EmbedColor)
+                        .WithAuthor("Doremi Card Shop", Config.Doremi.EmbedAvatarUrl)
+                        .WithTitle("Wreath Pollon Pack Card")
+                        .WithDescription("This will give card boost **each once** for doremi, hazuki, aiko, onpu, and other card pack. " +
+                        "Can only be used once with **each** card pack.")
+                        .AddField("Price:", priceConfirmation, true)
+                        .AddField("Your Magic Seeds:", magicSeeds, true)
+                        .AddField("Doremi Capture Rate Boost:", "Normal: 100%\nPlatinum:90%\nMetal:70%\nOjamajos:80%")
+                        .AddField("Hazuki Capture Rate Boost:", "Normal: 100%\nPlatinum:90%\nMetal:70%\nOjamajos:80%", true)
+                        .AddField("Aiko Capture Rate Boost:", "Normal: 100%\nPlatinum:90%\nMetal:70%\nOjamajos:80%", true)
+                        .AddField("Onpu Capture Rate Boost:", "Normal: 100%\nPlatinum:90%\nMetal:70%\nOjamajos:80%", true)
+                        .AddField("Other Capture Rate Boost:", "Special: 80%", true)
+                        .WithThumbnailUrl("https://cdn.discordapp.com/attachments/708332290446721066/708332406867755008/wreath.jpg")
+                        .Build());
+                    }
+                    else if (selectionItem == 11)
+                    {
+                        priceConfirmation = 45;
+                        await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
+                            "Type **confirm** to proceed with the purchase. Type **back** to go back to previous menu.",
+                        embed: new EmbedBuilder()
+                        .WithColor(Config.Doremi.EmbedColor)
+                        .WithAuthor("Doremi Card Shop", Config.Doremi.EmbedAvatarUrl)
+                        .WithTitle("Patraine Call Pack Card")
+                        .WithDescription("This will give card boost **each once** for doremi, hazuki, aiko, onpu, momoko and other card pack. " +
+                        "Can only be used once with **each** card pack.")
+                        .AddField("Price:", priceConfirmation, true)
+                        .AddField("Your Magic Seeds:", magicSeeds, true)
+                        .AddField("Doremi Capture Rate Boost:", "Normal: 100%\nPlatinum:90%\nMetal:80%\nOjamajos:80%")
+                        .AddField("Hazuki Capture Rate Boost:", "Normal: 100%\nPlatinum:90%\nMetal:80%\nOjamajos:80%", true)
+                        .AddField("Aiko Capture Rate Boost:", "Normal: 100%\nPlatinum:90%\nMetal:80%\nOjamajos:80%", true)
+                        .AddField("Onpu Capture Rate Boost:", "Normal: 100%\nPlatinum:90%\nMetal:80%\nOjamajos:80%", true)
+                        .AddField("Momoko Capture Rate Boost:", "Normal: 100%\nPlatinum:90%\nMetal:80%\nOjamajos:80%", true)
+                        .AddField("Other Capture Rate Boost:", "Special: 80%", true)
+                        .WithThumbnailUrl("https://cdn.discordapp.com/attachments/708332290446721066/709034102288023613/poronjewelry.jpg")
+                        .Build());
+                    }
+
+                    stepProcess = 3;
+                    response = await NextMessageAsync(timeout: timeoutDuration);
+
+                }
+                else if (stepProcess == 3)
+                {
+                    if (response.Content.ToString().ToLower() != "confirm" &&
+                        response.Content.ToString().ToLower() != "back")
+                    {
+                        await ReplyAsync("Sorry, that is not the valid **confirm/back** choices.");
+                        stepProcess = 2;
+                    }
+                    else if (response.Content.ToString().ToLower() == "back")
+                    {
+                        stepProcess = 1;
+                    }
+                    else if (response.Content.ToString().ToLower() == "confirm")
+                    {
+                        stepProcess = 4;
+                    }
+
+                }
+                else if (stepProcess == 4)
+                {
+                    //JArray item = (JArray)arrInventory[parent][spawnedCardCategory];
+                    //item.Add(spawnedCardId);
+
+                    if (magicSeeds >= priceConfirmation)
+                    {
+                        if (selectionItem >= 2)//reset all status boost
+                        {
+                            arrInventory["boost"]["doremi"]["normal"] = 0;
+                            arrInventory["boost"]["doremi"]["platinum"] = 0;
+                            arrInventory["boost"]["doremi"]["metal"] = 0;
+                            arrInventory["boost"]["doremi"]["ojamajos"] = 0;
+
+                            arrInventory["boost"]["hazuki"]["normal"] = 0;
+                            arrInventory["boost"]["hazuki"]["platinum"] = 0;
+                            arrInventory["boost"]["hazuki"]["metal"] = 0;
+                            arrInventory["boost"]["hazuki"]["ojamajos"] = 0;
+
+                            arrInventory["boost"]["aiko"]["normal"] = 0;
+                            arrInventory["boost"]["aiko"]["platinum"] = 0;
+                            arrInventory["boost"]["aiko"]["metal"] = 0;
+                            arrInventory["boost"]["aiko"]["ojamajos"] = 0;
+
+                            arrInventory["boost"]["onpu"]["normal"] = 0;
+                            arrInventory["boost"]["onpu"]["platinum"] = 0;
+                            arrInventory["boost"]["onpu"]["metal"] = 0;
+                            arrInventory["boost"]["onpu"]["ojamajos"] = 0;
+
+                            arrInventory["boost"]["momoko"]["normal"] = 0;
+                            arrInventory["boost"]["momoko"]["platinum"] = 0;
+                            arrInventory["boost"]["momoko"]["metal"] = 0;
+                            arrInventory["boost"]["momoko"]["ojamajos"] = 0;
+
+                            arrInventory["boost"]["other"]["special"] = 0;
+                        }
+
+                        if (selectionItem == 1)
+                        {
+                            arrInventory["catch_token"] = "";
+                            File.WriteAllText(playerDataDirectory, arrInventory.ToString());
+                            concatResponseSuccess = ":sparkles: You got 1 more catching attempt!";
+                        } 
+                        else if(selectionItem == 2)
+                        {
+                            arrInventory["boost"]["doremi"]["normal"] = 10;
+                            concatResponseSuccess = ":sparkles: You received **Peperuto Pollon Card** Boost!";
+                        } 
+                        else if (selectionItem == 3)
+                        {
+                            arrInventory["boost"]["hazuki"]["normal"] = 10;
+                            concatResponseSuccess = ":sparkles: You received **Puwapuwa Pollon Card** Boost!";
+                        }
+                        else if (selectionItem == 4)
+                        {
+                            arrInventory["boost"]["aiko"]["normal"] = 10;
+                            concatResponseSuccess = ":sparkles: You received **Poppun Pollon Card** Boost!";
+                        }
+                        else if (selectionItem == 5)
+                        {
+                            arrInventory["boost"]["doremi"]["normal"] = 10;
+                            arrInventory["boost"]["doremi"]["platinum"] = 6;
+                            arrInventory["boost"]["doremi"]["metal"] = 5;
+                            arrInventory["boost"]["doremi"]["ojamajos"] = 3;
+
+                            arrInventory["boost"]["hazuki"]["normal"] = 10;
+                            arrInventory["boost"]["hazuki"]["platinum"] = 6;
+                            arrInventory["boost"]["hazuki"]["metal"] = 5;
+                            arrInventory["boost"]["hazuki"]["ojamajos"] = 3;
+
+                            arrInventory["boost"]["aiko"]["normal"] = 10;
+                            arrInventory["boost"]["aiko"]["platinum"] = 6;
+                            arrInventory["boost"]["aiko"]["metal"] = 5;
+                            arrInventory["boost"]["aiko"]["ojamajos"] = 3;
+
+                            arrInventory["boost"]["onpu"]["normal"] = 10;
+                            arrInventory["boost"]["onpu"]["platinum"] = 6;
+                            arrInventory["boost"]["onpu"]["metal"] = 5;
+                            arrInventory["boost"]["onpu"]["ojamajos"] = 3;
+
+                            arrInventory["boost"]["momoko"]["normal"] = 10;
+                            arrInventory["boost"]["momoko"]["platinum"] = 6;
+                            arrInventory["boost"]["momoko"]["metal"] = 5;
+                            arrInventory["boost"]["momoko"]["ojamajos"] = 3;
+
+                            arrInventory["boost"]["other"]["special"] = 6;
+                            concatResponseSuccess = ":sparkles: You received **Apprentice Tap Card** Boost!";
+                        }
+                        else if (selectionItem == 6)
+                        {
+                            arrInventory["boost"]["doremi"]["normal"] = 10;
+                            arrInventory["boost"]["doremi"]["platinum"] = 7;
+                            arrInventory["boost"]["doremi"]["metal"] = 6;
+                            arrInventory["boost"]["doremi"]["ojamajos"] = 4;
+
+                            arrInventory["boost"]["hazuki"]["normal"] = 10;
+                            arrInventory["boost"]["hazuki"]["platinum"] = 7;
+                            arrInventory["boost"]["hazuki"]["metal"] = 6;
+                            arrInventory["boost"]["hazuki"]["ojamajos"] = 4;
+
+                            arrInventory["boost"]["aiko"]["normal"] = 10;
+                            arrInventory["boost"]["aiko"]["platinum"] = 7;
+                            arrInventory["boost"]["aiko"]["metal"] = 6;
+                            arrInventory["boost"]["aiko"]["ojamajos"] = 4;
+
+                            arrInventory["boost"]["onpu"]["normal"] = 10;
+                            arrInventory["boost"]["onpu"]["platinum"] = 7;
+                            arrInventory["boost"]["onpu"]["metal"] = 6;
+                            arrInventory["boost"]["onpu"]["ojamajos"] = 4;
+
+                            arrInventory["boost"]["other"]["special"] = 7;
+                            concatResponseSuccess = ":sparkles: You received **Rythm Tap Card** Boost!";
+                        }
+                        else if (selectionItem == 7)
+                        {
+                            arrInventory["boost"]["doremi"]["normal"] = 10;
+                            arrInventory["boost"]["doremi"]["platinum"] = 7;
+                            arrInventory["boost"]["doremi"]["metal"] = 7;
+                            arrInventory["boost"]["doremi"]["ojamajos"] = 5;
+
+                            arrInventory["boost"]["hazuki"]["normal"] = 10;
+                            arrInventory["boost"]["hazuki"]["platinum"] = 7;
+                            arrInventory["boost"]["hazuki"]["metal"] = 7;
+                            arrInventory["boost"]["hazuki"]["ojamajos"] = 5;
+
+                            arrInventory["boost"]["aiko"]["normal"] = 10;
+                            arrInventory["boost"]["aiko"]["platinum"] = 7;
+                            arrInventory["boost"]["aiko"]["metal"] = 7;
+                            arrInventory["boost"]["aiko"]["ojamajos"] = 5;
+
+                            arrInventory["boost"]["onpu"]["normal"] = 10;
+                            arrInventory["boost"]["onpu"]["platinum"] = 7;
+                            arrInventory["boost"]["onpu"]["metal"] = 7;
+                            arrInventory["boost"]["onpu"]["ojamajos"] = 5;
+
+                            arrInventory["boost"]["momoko"]["normal"] = 10;
+                            arrInventory["boost"]["momoko"]["platinum"] = 7;
+                            arrInventory["boost"]["momoko"]["metal"] = 7;
+                            arrInventory["boost"]["momoko"]["ojamajos"] = 5;
+
+                            arrInventory["boost"]["other"]["special"] = 7;
+                            concatResponseSuccess = ":sparkles: You received **Kururun Pollon Card** Boost!";
+                        }
+                        else if (selectionItem == 8)
+                        {
+                            arrInventory["boost"]["doremi"]["normal"] = 10;
+                            arrInventory["boost"]["doremi"]["platinum"] = 7;
+                            arrInventory["boost"]["doremi"]["metal"] = 8;
+                            arrInventory["boost"]["doremi"]["ojamajos"] = 6;
+
+                            arrInventory["boost"]["hazuki"]["normal"] = 10;
+                            arrInventory["boost"]["hazuki"]["platinum"] = 7;
+                            arrInventory["boost"]["hazuki"]["metal"] = 8;
+                            arrInventory["boost"]["hazuki"]["ojamajos"] = 6;
+
+                            arrInventory["boost"]["aiko"]["normal"] = 10;
+                            arrInventory["boost"]["aiko"]["platinum"] = 7;
+                            arrInventory["boost"]["aiko"]["metal"] = 8;
+                            arrInventory["boost"]["aiko"]["ojamajos"] = 6;
+
+                            arrInventory["boost"]["onpu"]["normal"] = 10;
+                            arrInventory["boost"]["onpu"]["platinum"] = 7;
+                            arrInventory["boost"]["onpu"]["metal"] = 8;
+                            arrInventory["boost"]["onpu"]["ojamajos"] = 6;
+
+                            arrInventory["boost"]["other"]["special"] = 7;
+                            concatResponseSuccess = ":sparkles: You received **Picotto Pollon Card** Boost!";
+                        }
+                        else if (selectionItem == 9)
+                        {
+                            arrInventory["boost"]["doremi"]["normal"] = 10;
+                            arrInventory["boost"]["doremi"]["platinum"] = 8;
+                            arrInventory["boost"]["doremi"]["metal"] = 7;
+                            arrInventory["boost"]["doremi"]["ojamajos"] = 7;
+
+                            arrInventory["boost"]["hazuki"]["normal"] = 10;
+                            arrInventory["boost"]["hazuki"]["platinum"] = 8;
+                            arrInventory["boost"]["hazuki"]["metal"] = 7;
+                            arrInventory["boost"]["hazuki"]["ojamajos"] = 7;
+
+                            arrInventory["boost"]["aiko"]["normal"] = 10;
+                            arrInventory["boost"]["aiko"]["platinum"] = 8;
+                            arrInventory["boost"]["aiko"]["metal"] = 7;
+                            arrInventory["boost"]["aiko"]["ojamajos"] = 7;
+
+                            arrInventory["boost"]["onpu"]["normal"] = 10;
+                            arrInventory["boost"]["onpu"]["platinum"] = 8;
+                            arrInventory["boost"]["onpu"]["metal"] = 7;
+                            arrInventory["boost"]["onpu"]["ojamajos"] = 7;
+
+                            arrInventory["boost"]["other"]["special"] = 6;
+                            concatResponseSuccess = ":sparkles: You received **Patraine Call Card** Boost!";
+                        }
+                        else if (selectionItem == 10)
+                        {
+                            arrInventory["boost"]["doremi"]["normal"] = 10;
+                            arrInventory["boost"]["doremi"]["platinum"] = 9;
+                            arrInventory["boost"]["doremi"]["metal"] = 7;
+                            arrInventory["boost"]["doremi"]["ojamajos"] = 8;
+
+                            arrInventory["boost"]["hazuki"]["normal"] = 10;
+                            arrInventory["boost"]["hazuki"]["platinum"] = 9;
+                            arrInventory["boost"]["hazuki"]["metal"] = 7;
+                            arrInventory["boost"]["hazuki"]["ojamajos"] = 8;
+
+                            arrInventory["boost"]["aiko"]["normal"] = 10;
+                            arrInventory["boost"]["aiko"]["platinum"] = 9;
+                            arrInventory["boost"]["aiko"]["metal"] = 7;
+                            arrInventory["boost"]["aiko"]["ojamajos"] = 8;
+
+                            arrInventory["boost"]["onpu"]["normal"] = 10;
+                            arrInventory["boost"]["onpu"]["platinum"] = 9;
+                            arrInventory["boost"]["onpu"]["metal"] = 7;
+                            arrInventory["boost"]["onpu"]["ojamajos"] = 8;
+
+                            arrInventory["boost"]["other"]["special"] = 8;
+                            concatResponseSuccess = ":sparkles: You received **Wreath Pollon Card** Boost!";
+                        }
+                        else if (selectionItem == 11)
+                        {
+                            arrInventory["boost"]["doremi"]["normal"] = 10;
+                            arrInventory["boost"]["doremi"]["platinum"] = 9;
+                            arrInventory["boost"]["doremi"]["metal"] = 8;
+                            arrInventory["boost"]["doremi"]["ojamajos"] = 8;
+
+                            arrInventory["boost"]["hazuki"]["normal"] = 10;
+                            arrInventory["boost"]["hazuki"]["platinum"] = 9;
+                            arrInventory["boost"]["hazuki"]["metal"] = 8;
+                            arrInventory["boost"]["hazuki"]["ojamajos"] = 8;
+
+                            arrInventory["boost"]["aiko"]["normal"] = 10;
+                            arrInventory["boost"]["aiko"]["platinum"] = 9;
+                            arrInventory["boost"]["aiko"]["metal"] = 8;
+                            arrInventory["boost"]["aiko"]["ojamajos"] = 8;
+
+                            arrInventory["boost"]["onpu"]["normal"] = 10;
+                            arrInventory["boost"]["onpu"]["platinum"] = 9;
+                            arrInventory["boost"]["onpu"]["metal"] = 8;
+                            arrInventory["boost"]["onpu"]["ojamajos"] = 8;
+
+                            arrInventory["boost"]["momoko"]["normal"] = 10;
+                            arrInventory["boost"]["momoko"]["platinum"] = 9;
+                            arrInventory["boost"]["momoko"]["metal"] = 8;
+                            arrInventory["boost"]["momoko"]["ojamajos"] = 8;
+
+                            arrInventory["boost"]["other"]["special"] = 8;
+                            concatResponseSuccess = ":sparkles: You received **Jewelry Pollon Card** Boost!";
+                        }
+
+
+                        arrInventory["magic_seeds"] = (magicSeeds - priceConfirmation).ToString();
+                        File.WriteAllText(playerDataDirectory, arrInventory.ToString());
+
+                        stepProcess = 5;
+                    }
+                    else
+                    {
+                        stepProcess = 2;
+                        await ReplyAsync(":x: Sorry, you don't have enough magic seeds.");
+                    }
+                }
+                else if (stepProcess == 5)
+                {
+                    await ReplyAsync(concatResponseSuccess + "\nThank you for purchasing the items. Please come again next time~");
+                    isShopping = false;
+                }
+
+
+            }
+
+            return;
+        }
+
+        [Command("boost", RunMode = RunMode.Async), Summary("Show card boost status.")]
+        public async Task showCardBoostStatus()
+        {
+            var guildId = Context.Guild.Id;
+            var clientId = Context.User.Id;
+            string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+
+            if (!File.Exists(playerDataDirectory)) //not registered yet
+            {
+                await ReplyAsync(embed: new EmbedBuilder()
+                .WithColor(Config.Doremi.EmbedColor)
+                .WithDescription($":x: I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
+                .WithImageUrl(TradingCardCore.Doremi.emojiError).Build());
+                return;
+            } else {
+                await ReplyAsync(embed: TradingCardCore
+                    .printCardBoostStatus(Config.Doremi.EmbedColor, guildId.ToString(), clientId,Context.User.Username)
+                    .Build());
             }
         }
     }

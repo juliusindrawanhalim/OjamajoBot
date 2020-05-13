@@ -396,7 +396,6 @@ namespace Config
         public static string hazuki = "<:Hazuki:651062978854125589>";
         public static string onpu = "<:Onpu:651063415514857492>";
         public static string dabzuki = "<:hazuki_dab:695162857222045737>";
-        public static string onpuyay = "<:onpu_yay:695162857544745011>";
         public static string drool = "\uD83E\uDD24";
         public static string steak = "\uD83E\uDD69";
         public static string school = "\uD83C\uDFEB";

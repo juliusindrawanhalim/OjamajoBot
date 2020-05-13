@@ -78,7 +78,7 @@ namespace Config
 
                 //trading_card_spawn_interval
                 if (!guildConfig.ContainsKey("trading_card_spawn_interval"))
-                    guildConfig.Add(new JProperty("trading_card_spawn_interval", "60"));
+                    guildConfig.Add(new JProperty("trading_card_spawn_interval", "40"));
 
                 //trading_card_spawn_id
                 if (!guildConfig.ContainsKey("trading_card_spawn_id"))
@@ -92,6 +92,10 @@ namespace Config
                 if (!guildConfig.ContainsKey("trading_card_spawn_token"))
                     guildConfig.Add(new JProperty("trading_card_spawn_token", ""));
 
+                //id_card_catcher for card catcher roles
+                if (!guildConfig.ContainsKey("id_card_catcher"))
+                    guildConfig.Add(new JProperty("id_card_catcher", ""));
+
                 File.WriteAllText($"{Core.headConfigGuildFolder}{id_guild}/{id_guild}.json", guildConfig.ToString());
 
             } else { //create json file if it's not existed
@@ -99,6 +103,7 @@ namespace Config
                 JObject guildConfig = new JObject(
                     new JProperty("id_random_event", ""),
                     new JProperty("id_birthday_announcement", ""),
+                    new JProperty("id_card_catcher", ""),
                     new JProperty("user_leaving_notification", "0"),
                     new JProperty("doremi_role_id", ""),
                     new JProperty("hazuki_role_id", ""),
@@ -106,7 +111,7 @@ namespace Config
                     new JProperty("onpu_role_id", ""),
                     new JProperty("momoko_role_id", ""),
                     new JProperty("trading_card_spawn", ""),
-                    new JProperty("trading_card_spawn_interval", "60"),
+                    new JProperty("trading_card_spawn_interval", "40"),
                     new JProperty("trading_card_spawn_id", ""),
                     new JProperty("trading_card_spawn_category", ""),
                     new JProperty("trading_card_spawn_token", ""),
