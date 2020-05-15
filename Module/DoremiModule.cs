@@ -763,7 +763,7 @@ namespace OjamajoBot.Module
                 await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
                 .WithDescription($":x: I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
-                .WithImageUrl(TradingCardCore.Doremi.emojiError).Build());
+                .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build());
             } else {
                 JObject arrInventory = JObject.Parse(File.ReadAllText(playerDataDirectory));
                 if((string)arrInventory["magic_seeds_last_claim"] == ""||
@@ -775,7 +775,7 @@ namespace OjamajoBot.Module
                     .WithColor(Config.Doremi.EmbedColor)
                     .WithDescription($":seedling: {MentionUtils.MentionUser(clientId)} have watered the plant and received {randomedReceive} magic seed that makes total of: **{totalMagicSeeds.ToString()}** magic seeds." +
                     $"Thank you for watering it~")
-                    .WithImageUrl(TradingCardCore.imgMagicSeeds).Build());
+                    .WithThumbnailUrl(TradingCardCore.imgMagicSeeds).Build());
                     
                     arrInventory["magic_seeds"] = totalMagicSeeds.ToString();
                     arrInventory["magic_seeds_last_claim"] = DateTime.Now.ToString("dd");
@@ -790,7 +790,7 @@ namespace OjamajoBot.Module
                     .WithColor(Config.Doremi.EmbedColor)
                     .WithDescription($":x: Sorry, you have received your daily magic seeds.\nPlease wait for **{Math.Floor(totalHours)}** hour(s) " +
                     $"**{Math.Ceiling(60*(totalHours - Math.Floor(totalHours)))}** more minute(s) until the next growing time.")
-                    .WithImageUrl(TradingCardCore.Doremi.emojiError).Build());
+                    .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build());
                     
                 }
             }
@@ -808,7 +808,7 @@ namespace OjamajoBot.Module
                 await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
                 .WithDescription($":x: I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
-                .WithImageUrl(TradingCardCore.Doremi.emojiError).Build());
+                .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build());
             } else {
                 JObject arrInventory = JObject.Parse(File.ReadAllText(playerDataDirectory));
                 await ReplyAsync(embed: new EmbedBuilder()
@@ -1243,7 +1243,7 @@ namespace OjamajoBot.Module
 
                         EmbedBuilder builder = new EmbedBuilder();
                         builder.Color = Config.Doremi.EmbedColor;
-                        builder.ImageUrl = "https://i.4pcdn.org/s4s/1508005628768.jpg";
+                        builder.ThumbnailUrl = "https://i.4pcdn.org/s4s/1508005628768.jpg";
 
                         var guildJsonFile = (JObject)JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json")).GetValue("user_birthday");
                         var jobjbirthday = guildJsonFile.Properties().ToList();
@@ -1415,23 +1415,23 @@ namespace OjamajoBot.Module
                     //9/5/2
                     int randomParent = new Random().Next(0, 6);
                     int randomCategory = new Random().Next(11);
-                    string chosenCategory = "";
+                    string chosenCategory = ""; string catchRate = "";
 
                     if (randomCategory <= TradingCardCore.spawnRateOjamajos)//0-1
                     {//metal
-                        chosenCategory = "ojamajos";
+                        chosenCategory = "ojamajos"; catchRate = (TradingCardCore.captureRateOjamajos * 10).ToString() + "%";
                     }
                     else if (randomCategory <= TradingCardCore.spawnRateMetal)//0-2
                     {//metal
-                        chosenCategory = "metal";
+                        chosenCategory = "metal"; catchRate = (TradingCardCore.captureRateMetal * 10).ToString() + "%";
                     }
                     else if (randomCategory <= TradingCardCore.spawnRatePlatinum)//0-5
                     {//platinum
-                        chosenCategory = "platinum";
+                        chosenCategory = "platinum"; catchRate = (TradingCardCore.captureRatePlatinum * 10).ToString() + "%";
                     }
                     else if (randomCategory <= TradingCardCore.spawnRateNormal)//0-10
                     {//normal
-                        chosenCategory = "normal";
+                        chosenCategory = "normal"; catchRate = (TradingCardCore.captureRateNormal * 10).ToString() + "%";
                     }
 
                     //int randomParent = 0; //don't forget to erase this, for testing purpose
@@ -1466,6 +1466,7 @@ namespace OjamajoBot.Module
                     {
                         chosenCategory = "special"; parent = "other";
                         color = Config.Doremi.EmbedColor; embedAvatarUrl = Config.Doremi.EmbedAvatarUrl;
+                        catchRate = (TradingCardCore.captureRateSpecial * 10).ToString() + "%";
                     }
 
                     if (chosenCategory == "ojamajos") {
@@ -1495,7 +1496,7 @@ namespace OjamajoBot.Module
                         .WithAuthor(author, embedAvatarUrl)
                         .WithColor(color)
                         .WithTitle($"{chosenName}")
-                        .WithFooter($"ID: {chosenId}")
+                        .WithFooter($"ID: {chosenId} | Catch Rate: {catchRate}")
                         .WithImageUrl(chosenUrl);
 
                     if (chosenCategory == "ojamajos") parent = "";
@@ -1507,8 +1508,8 @@ namespace OjamajoBot.Module
                     embed: embed.Build());
                 },
                 null,
-                TimeSpan.FromMinutes(Convert.ToInt32(Config.Guild.getPropertyValue(guildId, "trading_card_spawn_interval")) + new Random().Next(5, 11)), //time to wait before executing the timer for the first time
-                TimeSpan.FromMinutes(Convert.ToInt32(Config.Guild.getPropertyValue(guildId, "trading_card_spawn_interval")) + new Random().Next(5, 11)) //time to wait before executing the timer again
+                TimeSpan.FromMinutes(Convert.ToInt32(Config.Guild.getPropertyValue(guildId, "trading_card_spawn_interval"))), //time to wait before executing the timer for the first time
+                TimeSpan.FromMinutes(Convert.ToInt32(Config.Guild.getPropertyValue(guildId, "trading_card_spawn_interval"))) //time to wait before executing the timer again
                 );
             }
 
@@ -1685,7 +1686,7 @@ namespace OjamajoBot.Module
                 await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
                 .WithDescription($"I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
-                .WithImageUrl(TradingCardCore.Doremi.emojiError).Build());
+                .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build());
                 return;
             }
             else
@@ -1713,7 +1714,7 @@ namespace OjamajoBot.Module
                     await ReplyAsync(embed: new EmbedBuilder()
                     .WithColor(Config.Doremi.EmbedColor)
                     .WithDescription($":x: Sorry, that is not the valid card capture boost command. Use: **{Config.Doremi.PrefixParent[0]}card capture boost**")
-                    .WithImageUrl(TradingCardCore.Doremi.emojiError).Build());
+                    .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build());
                     return;
                 }
                 else if ((boost.ToLower() == "boost" && spawnedCardCategory == "normal" && boostNormal <= 0)&&
@@ -1725,7 +1726,7 @@ namespace OjamajoBot.Module
                     await ReplyAsync(embed: new EmbedBuilder()
                     .WithColor(Config.Doremi.EmbedColor)
                     .WithDescription($":x: Sorry, you have no {parent} {spawnedCardCategory} card capture boost that you can use.")
-                    .WithImageUrl(TradingCardCore.Doremi.emojiError).Build());
+                    .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build());
                     return;
                 }
                 else if (boost.ToLower() == "boost") useBoost = true;
@@ -2032,7 +2033,7 @@ namespace OjamajoBot.Module
 
         //list all cards that have been collected
         [Command("inventory", RunMode = RunMode.Async), Summary("List all **Doremi** trading cards that you have collected.")]
-        public async Task trading_card_open_inventory()
+        public async Task trading_card_open_inventory(string category="")
         {
             var guildId = Context.Guild.Id;
             var clientId = Context.User.Id;
@@ -2046,95 +2047,126 @@ namespace OjamajoBot.Module
                 await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
                 .WithDescription($":x: I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
-                .WithImageUrl(TradingCardCore.Doremi.emojiError).Build());
+                .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build());
             }
             else
             {
+                JArray arrList;
                 var playerData = JObject.Parse(File.ReadAllText(playerDataDirectory));
-
                 EmbedBuilder builder = new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor);
 
+                Boolean showAllInventory = true;
+                if (category.ToLower() != "normal" && category.ToLower() != "platinum" && category.ToLower() != "metal" &&
+                    category.ToLower() != "ojamajos" && category.ToLower() != "special" && category.ToLower() != "other" &&
+                    category.ToLower() != "")
+                {
+                    await ReplyAsync($":x: Sorry, that is not the valid pack/category. " +
+                    $"Valid category: **normal**/**platinum**/**metal**/**ojamajos**/**special**/**other**");
+                    return;
+                }
+                else if (category.ToLower() == "other")
+                {
+                    category = "special";
+                    showAllInventory = false;
+                }
+                else if (category.ToLower() != "")
+                    showAllInventory = false;
+                
                 try
                 {
                     //normal category
-                    string category = "normal"; var arrList = (JArray)playerData[parent][category];
-
-                    if (arrList.Count >= 1)
-                    {
-                        await PagedReplyAsync(
-                            TradingCardCore.printInventoryTemplate("doremi", "doremi", category, jObjTradingCardList, arrList, TradingCardCore.Doremi.maxNormal, clientId)
-                        );
-                    }
-                    else
-                    {
-                        await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                            Config.Doremi.EmbedColor, "doremi", category, TradingCardCore.Doremi.maxNormal, Context.User.Username)
-                            .Build());
+                    if (showAllInventory || category.ToLower() == "normal") {
+                        category = "normal"; arrList = (JArray)playerData[parent][category];
+                        if (arrList.Count >= 1)
+                        {
+                            await PagedReplyAsync(
+                                TradingCardCore.printInventoryTemplate("doremi", "doremi", category, jObjTradingCardList, arrList, TradingCardCore.Doremi.maxNormal, clientId)
+                            );
+                        }
+                        else
+                        {
+                            await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
+                                Config.Doremi.EmbedColor, "doremi", category, TradingCardCore.Doremi.maxNormal, Context.User.Username)
+                                .Build());
+                        }
                     }
 
                     //platinum category
-                    category = "platinum"; arrList = (JArray)playerData[parent][category];
-                    if (arrList.Count >= 1)
+                    if (showAllInventory || category.ToLower() == "platinum")
                     {
-                        await PagedReplyAsync(
-                            TradingCardCore.printInventoryTemplate("doremi", "doremi", category, jObjTradingCardList, arrList, TradingCardCore.Doremi.maxPlatinum, clientId)
-                        );
-                    }
-                    else
-                    {
-                        await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                            Config.Doremi.EmbedColor, "doremi", category, TradingCardCore.Doremi.maxPlatinum, Context.User.Username)
-                            .Build());
+                        category = "platinum"; arrList = (JArray)playerData[parent][category];
+                        if (arrList.Count >= 1)
+                        {
+                            await PagedReplyAsync(
+                                TradingCardCore.printInventoryTemplate("doremi", "doremi", category, jObjTradingCardList, arrList, TradingCardCore.Doremi.maxPlatinum, clientId)
+                            );
+                        }
+                        else
+                        {
+                            await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
+                                Config.Doremi.EmbedColor, "doremi", category, TradingCardCore.Doremi.maxPlatinum, Context.User.Username)
+                                .Build());
+                        }
                     }
 
                     //metal category
-                    category = "metal"; arrList = (JArray)playerData[parent][category];
-                    if (arrList.Count >= 1)
+                    if (showAllInventory || category.ToLower() == "metal")
                     {
-                        await PagedReplyAsync(
-                            TradingCardCore.printInventoryTemplate("doremi", "doremi", category, jObjTradingCardList, arrList, TradingCardCore.Doremi.maxMetal, clientId)
-                        );
-                    }
-                    else
-                    {
-                        await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                            Config.Doremi.EmbedColor, "doremi", category, TradingCardCore.Doremi.maxMetal, Context.User.Username)
-                            .Build());
+                        category = "metal"; arrList = (JArray)playerData[parent][category];
+                        if (arrList.Count >= 1)
+                        {
+                            await PagedReplyAsync(
+                                TradingCardCore.printInventoryTemplate("doremi", "doremi", category, jObjTradingCardList, arrList, TradingCardCore.Doremi.maxMetal, clientId)
+                            );
+                        }
+                        else
+                        {
+                            await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
+                                Config.Doremi.EmbedColor, "doremi", category, TradingCardCore.Doremi.maxMetal, Context.User.Username)
+                                .Build());
+                        }
                     }
 
                     //ojamajos category
-                    category = "ojamajos"; arrList = (JArray)playerData[parent][category];
-                    if (arrList.Count >= 1)
+                    if (showAllInventory || category.ToLower() == "ojamajos")
                     {
-                        await PagedReplyAsync(
-                            TradingCardCore.printInventoryTemplate("doremi", "doremi", category, jObjTradingCardList, arrList, TradingCardCore.Doremi.maxOjamajos, clientId)
-                        );
-                    }
-                    else
-                    {
-                        await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                            Config.Doremi.EmbedColor, "doremi", category, TradingCardCore.Doremi.maxOjamajos, Context.User.Username)
-                            .Build());
+                        category = "ojamajos"; arrList = (JArray)playerData[parent][category];
+                        if (arrList.Count >= 1)
+                        {
+                            await PagedReplyAsync(
+                                TradingCardCore.printInventoryTemplate("doremi", "doremi", category, jObjTradingCardList, arrList, TradingCardCore.Doremi.maxOjamajos, clientId)
+                            );
+                        }
+                        else
+                        {
+                            await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
+                                Config.Doremi.EmbedColor, "doremi", category, TradingCardCore.Doremi.maxOjamajos, Context.User.Username)
+                                .Build());
+                        }
                     }
 
                     //special category
-                    category = "special"; arrList = (JArray)playerData["other"][category];
-                    if (arrList.Count >= 1)
+                    if (showAllInventory || category.ToLower() == "special")
                     {
-                        await PagedReplyAsync(
-                            TradingCardCore.printInventoryTemplate("other", "other", category, jObjTradingCardList, arrList, TradingCardCore.maxSpecial, clientId)
-                        );
-                    }
-                    else
-                    {
-                        await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                            Config.Doremi.EmbedColor, "other", category, TradingCardCore.maxSpecial, Context.User.Username)
-                            .Build());
+                        category = "special"; arrList = (JArray)playerData["other"][category];
+                        if (arrList.Count >= 1)
+                        {
+                            await PagedReplyAsync(
+                                TradingCardCore.printInventoryTemplate("other", "other", category, jObjTradingCardList, arrList, TradingCardCore.maxSpecial, clientId)
+                            );
+                        }
+                        else
+                        {
+                            await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
+                                Config.Doremi.EmbedColor, "other", category, TradingCardCore.maxSpecial, Context.User.Username)
+                                .Build());
+                        }
                     }
 
                 }
                 catch (Exception e) { Console.WriteLine(e.ToString()); }
+                
             }
 
         }
@@ -2204,7 +2236,7 @@ namespace OjamajoBot.Module
                 await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
                 .WithDescription($"I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
-                .WithImageUrl(TradingCardCore.Doremi.emojiError).Build());
+                .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build());
             }
             else
             {
@@ -2250,7 +2282,7 @@ namespace OjamajoBot.Module
                 await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
                 .WithDescription($":x: I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
-                .WithImageUrl(TradingCardCore.Doremi.emojiError).Build());
+                .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build());
                 return;
             }
 
@@ -2932,7 +2964,7 @@ namespace OjamajoBot.Module
                 await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
                 .WithDescription($"I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
-                .WithImageUrl(TradingCardCore.Doremi.emojiError).Build());
+                .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build());
                 return;
             }
 
@@ -3298,7 +3330,7 @@ namespace OjamajoBot.Module
                 await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
                 .WithDescription($":x: I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
-                .WithImageUrl(TradingCardCore.Doremi.emojiError).Build());
+                .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build());
                 return;
             }
 
@@ -3903,13 +3935,33 @@ namespace OjamajoBot.Module
                 await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
                 .WithDescription($":x: I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
-                .WithImageUrl(TradingCardCore.Doremi.emojiError).Build());
+                .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build());
                 return;
             } else {
                 await ReplyAsync(embed: TradingCardCore
                     .printCardBoostStatus(Config.Doremi.EmbedColor, guildId.ToString(), clientId,Context.User.Username)
                     .Build());
             }
+        }
+
+        [Command("rate", RunMode = RunMode.Async), Summary("Show card spawn & catch rate.")]
+        public async Task showCardSpawnCatchRate()
+        {
+            await ReplyAsync(embed: new EmbedBuilder()
+            .WithColor(Config.Doremi.EmbedColor)
+            .WithTitle("Trading Card Catch Rate & Spawn Rate Information")
+            .AddField("Catch Rate",
+            $"**Normal: {TradingCardCore.captureRateNormal * 10}%\n" +
+            $"Platinum: {TradingCardCore.captureRatePlatinum * 10}%\n" +
+            $"Metal: {TradingCardCore.captureRateMetal * 10}%\n" +
+            $"Ojamajos: {TradingCardCore.captureRateOjamajos * 10}%\n" +
+            $"Special: {TradingCardCore.captureRateSpecial * 10}%**",true)
+            .AddField("Spawn Rate",
+            $"**Normal: {TradingCardCore.spawnRateNormal * 10}%\n" +
+            $"Platinum: {TradingCardCore.spawnRatePlatinum * 10}%\n" +
+            $"Metal: {TradingCardCore.spawnRateMetal * 10}%\n" +
+            $"Ojamajos: {TradingCardCore.spawnRateOjamajos * 10}%**", true)
+            .Build());
         }
     }
 
@@ -4233,10 +4285,10 @@ namespace OjamajoBot.Module
         public async Task RockPaperScissor(string guess = "")
         {
             if (guess == ""){
-                await ReplyAsync($"Please enter the valid parameter: **rock** or **paper** or **scissor**");
+                await ReplyAsync($":x: Please enter the valid parameter: **rock** or **paper** or **scissor**");
                 return;
             } else if (guess.ToLower() != "rock" && guess.ToLower() != "paper" && guess.ToLower() != "scissor") {
-                await ReplyAsync($"Sorry **{Context.User.Username}**. " +
+                await ReplyAsync($":x: Sorry **{Context.User.Username}**. " +
                     $"Please enter the valid parameter: **rock** or **paper** or **scissor**");
                 return;
             }

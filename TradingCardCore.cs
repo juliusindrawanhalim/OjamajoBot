@@ -11,7 +11,7 @@ namespace OjamajoBot
 {
     public class TradingCardCore
     {
-        public static string version = "1.03";
+        public static string version = "1.04";
         public static string propertyId = "trading_card_spawn_id";
         public static string propertyCategory = "trading_card_spawn_category";
         public static string propertyToken = "trading_card_spawn_token";
@@ -33,38 +33,13 @@ namespace OjamajoBot
 
         public static EmbedBuilder printUpdatesNote()
         {
-            //return new EmbedBuilder()
-            //    .WithColor(Config.Doremi.EmbedColor)
-            //    .WithTitle($"Doremi Trading Card - Update {version} - 06.05.20")
-            //    .WithDescription("-New optional capture command:`card info/card look`\n" +
-            //    "-New optional capture command: `card catch`\n" +
-            //    "-New command: `card status` [let you see all the cards & total that you own for all card pack]\n" +
-            //    "-`card status` command allow you to track down your catching attempt\n" +
-            //    "-New command: `card leaderboard` [let you see top 5 user that capture all the card for each pack]\n" +
-            //    "-Updates on card spawn display\n" +
-            //    "-Updates on spawn rate & catch rate\n" +
-            //    "-Dialogue updates on card capture\n" +
-            //    "-Additional randomized timer for spawn interval between 5-10 minutes");
-
-            //return new EmbedBuilder()
-            //    .WithColor(Config.Doremi.EmbedColor)
-            //    .WithTitle($"Doremi Trading Card - Update {version} - 08.05.20")
-            //    .WithDescription($"-New trading command with: **{Config.Doremi.PrefixParent[0]}card trade**\n" +
-            //    $"-You can process your trade with: **{Config.Doremi.PrefixParent[0]}card trade process**");
-
             return new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
-                .WithTitle($"Doremi Trading Card - Update {version} - 12.05.20")
-                .WithDescription($"-New Trading Card Category & Pack: **Ojamajos Category** & **Other Pack: Special Category**. These 2 cards can't be traded.\n" +
-                $"-Ojamajos card can be captured with any related bots. Example: Doremi & Hazuki can be captured with doremi/hazuki bots. Related card will be automatically placed into the valid card pack inventory.\n" +
-                $"-Other Special card can be captured with any bots and shared their same inventory.\n" +
-                $"-Ojamajos category card capture rate: **20%**\n" +
-                $"-Other-Special category card capture rate: **40%**\n" +
-                $"-Card Shop Feature: with **{Config.Doremi.PrefixParent[0]}card shop** command. " +
-                $"You can purchase items with the collected magic seeds daily.\n" +
-                $"-Card Capture Boost Feature with **<bot>!card capture boost**\n" +
-                $"-Card Boost Status with **<bot>!card boost**\n" +
-                $"-You will now receive daily random amount of magic seeds between 1-5");
+                .WithTitle($"Doremi Trading Card - Update {version} - 13.05.20")
+                .WithDescription($"-You can now select inventory category for each bot with additional inventory parameter. " +
+                $"Example: **{Config.Doremi.PrefixParent[0]}card inventory platinum**.\n" +
+                $"-Updated card display image layout\n" +
+                $"-Card catch &spawn rate can be displayed with **{Config.Doremi.PrefixParent[0]}card rate**");
         }
 
         public static List<string> printInventoryTemplate(string pack, string parent, string category,
@@ -186,7 +161,7 @@ namespace OjamajoBot
             return new EmbedBuilder()
                 .WithColor(color)
                 .WithTitle($"**{username}'s {GlobalFunctions.UppercaseFirst(pack)} {GlobalFunctions.UppercaseFirst(category)} Card (0/{maxAmount})**")
-                .WithDescription($"There are no {pack} - {category} cards that you have captured yet.");
+                .WithDescription($":x: There are no {pack} - {category} cards that you have captured yet.");
         }
 
         public static EmbedBuilder printCardDetailTemplate(Color color, string name, string imgUrl, string card_id,

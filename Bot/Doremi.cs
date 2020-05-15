@@ -324,7 +324,7 @@ namespace OjamajoBot.Bot
                     if (birthdayExisted)
                     {
                         EmbedBuilder builder = new EmbedBuilder();
-                        builder.ImageUrl = "https://i.4pcdn.org/s4s/1508005628768.jpg";
+                        builder.ThumbnailUrl = "https://i.4pcdn.org/s4s/1508005628768.jpg";
                         builder.Color = Config.Doremi.EmbedColor;
 
                         await client
@@ -379,23 +379,23 @@ namespace OjamajoBot.Bot
                     //9/5/2
                     int randomParent = new Random().Next(0, 6);
                     int randomCategory = new Random().Next(11);
-                    string chosenCategory = "";
+                    string chosenCategory = ""; string catchRate = "";
 
                     if (randomCategory <= TradingCardCore.spawnRateOjamajos)//0-1
                     {//metal
-                        chosenCategory = "ojamajos";
+                        chosenCategory = "ojamajos"; catchRate = (TradingCardCore.captureRateOjamajos * 10).ToString() + "%";
                     }
                     else if (randomCategory <=TradingCardCore.spawnRateMetal)//0-2
                     {//metal
-                        chosenCategory = "metal";
+                        chosenCategory = "metal"; catchRate = (TradingCardCore.captureRateMetal * 10).ToString() + "%";
                     }
                     else if (randomCategory <= TradingCardCore.spawnRatePlatinum)//0-5
                     {//platinum
-                        chosenCategory = "platinum";
+                        chosenCategory = "platinum"; catchRate = (TradingCardCore.captureRatePlatinum * 10).ToString() + "%";
                     }
                     else if (randomCategory <= TradingCardCore.spawnRateNormal)//0-10
                     {//normal
-                        chosenCategory = "normal";
+                        chosenCategory = "normal"; catchRate = (TradingCardCore.captureRateNormal * 10).ToString() + "%";
                     }
 
                     string parent = ""; DiscordSocketClient client = Bot.Doremi.client;
@@ -430,6 +430,7 @@ namespace OjamajoBot.Bot
                     {
                         chosenCategory = "special"; parent = "other";
                         color = Config.Doremi.EmbedColor; embedAvatarUrl = Config.Doremi.EmbedAvatarUrl;
+                        catchRate = (TradingCardCore.captureRateSpecial * 10).ToString() + "%";
                     }
 
                     if (chosenCategory == "ojamajos") {
@@ -459,7 +460,7 @@ namespace OjamajoBot.Bot
                         .WithAuthor(author, embedAvatarUrl)
                         .WithColor(color)
                         .WithTitle($"{chosenName}")
-                        .WithFooter($"ID: {chosenId}")
+                        .WithFooter($"ID: {chosenId} | Catch Rate: {catchRate}")
                         .WithImageUrl(chosenUrl);
 
                     if (chosenCategory == "ojamajos") parent = "";
@@ -471,8 +472,8 @@ namespace OjamajoBot.Bot
                     embed: embed.Build());
                 },
                 null,
-                TimeSpan.FromMinutes(Convert.ToInt32(Config.Guild.getPropertyValue(guild.Id, "trading_card_spawn_interval")) + new Random().Next(5,11)), //time to wait before executing the timer for the first time
-                TimeSpan.FromMinutes(Convert.ToInt32(Config.Guild.getPropertyValue(guild.Id, "trading_card_spawn_interval")) + new Random().Next(5, 11)) //time to wait before executing the timer again
+                TimeSpan.FromMinutes(Convert.ToInt32(Config.Guild.getPropertyValue(guild.Id, "trading_card_spawn_interval"))), //time to wait before executing the timer for the first time
+                TimeSpan.FromMinutes(Convert.ToInt32(Config.Guild.getPropertyValue(guild.Id, "trading_card_spawn_interval"))) //time to wait before executing the timer again
                 );
             }
 

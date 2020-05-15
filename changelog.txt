@@ -1,0 +1,36 @@
+Doremi Trading Card - Update 1.01 - 06.05.20
+=======================================================================
+-New optional capture command:`card info/card look`
+-New optional capture command: `card catch`\n" +
+-New command: `card status` [let you see all the cards & total that you own for all card pack]
+-`card status` command allow you to track down your catching attempt\n" +
+-New command: `card leaderboard` [let you see top 5 user that capture all the card for each pack]
+-Updates on card spawn display
+-Updates on spawn rate & catch rate
+-Dialogue updates on card capture
+-Additional randomized timer for spawn interval between 5-10 minutes
+
+Doremi Trading Card - Update 1.02 - 08.05.20
+=======================================================================
+-New trading command with: **do!card trade**
+-You can process your trade with: **do!card trade process**
+
+Doremi Trading Card - Update 1.03 - 12.05.20
+=======================================================================
+-New Trading Card Category & Pack: Ojamajos Category & Other Pack: Special Category. These 2 cards can't be traded.
+-Ojamajos card can be captured with any related bots. Example: Doremi & Hazuki can be captured with doremi/hazuki bots. Related card will be automatically placed into the valid card pack inventory.
+-Other Special card can be captured with any bots and shared their same inventory.
+-Ojamajos category card capture rate: 20%
+-Other-Special category card capture rate: 40%
+-Card Shop Feature: with do!card shop command.
+You can purchase items with the collected magic seeds daily.
+-Card Capture Boost Feature with <bot>!card capture boost
+-Card Boost Status with <bot>!card boost
+-You will now receive daily random amount of magic seeds between 1-5
+
+Doremi Trading Card - Update 1.04 - 12.05.20
+=======================================================================
+-You can now select inventory category for each bot with additional inventory parameter. Example: do!card inventory platinum.
+-Updated card display layout
+-Card catch & spawn rate can be displayed with do!card rate
+
