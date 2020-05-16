@@ -379,52 +379,171 @@ namespace OjamajoBot.Bot
                     //9/5/2
                     int randomParent = new Random().Next(0, 6);
                     int randomCategory = new Random().Next(11);
+                    int randomMystery = new Random().Next(0, 2);
                     string chosenCategory = ""; string catchRate = "";
+                    Boolean isMystery = false; if (randomMystery <= 0) isMystery = true;
 
+                    //for testing purpose:
+                    //randomParent = 1;
+                    //randomCategory = 2;
+                    //isMystery = true;
+                    
                     if (randomCategory <= TradingCardCore.spawnRateOjamajos)//0-1
-                    {//metal
+                    {//ojamajos
                         chosenCategory = "ojamajos"; catchRate = (TradingCardCore.captureRateOjamajos * 10).ToString() + "%";
                     }
                     else if (randomCategory <=TradingCardCore.spawnRateMetal)//0-2
                     {//metal
-                        chosenCategory = "metal"; catchRate = (TradingCardCore.captureRateMetal * 10).ToString() + "%";
+
+                        chosenCategory = "metal";
+                        if (isMystery)
+                            catchRate = ((TradingCardCore.captureRateMetal+2) * 10).ToString() + "%";
+                        else
+                            catchRate = (TradingCardCore.captureRateMetal * 10).ToString() + "%";
                     }
                     else if (randomCategory <= TradingCardCore.spawnRatePlatinum)//0-5
                     {//platinum
-                        chosenCategory = "platinum"; catchRate = (TradingCardCore.captureRatePlatinum * 10).ToString() + "%";
+                        chosenCategory = "platinum";
+                        if (isMystery)
+                            catchRate = ((TradingCardCore.captureRatePlatinum+1) * 10).ToString() + "%";
+                        else
+                            catchRate = (TradingCardCore.captureRatePlatinum * 10).ToString() + "%";
                     }
                     else if (randomCategory <= TradingCardCore.spawnRateNormal)//0-10
                     {//normal
-                        chosenCategory = "normal"; catchRate = (TradingCardCore.captureRateNormal * 10).ToString() + "%";
+                        chosenCategory = "normal";
+                        if (isMystery)
+                            catchRate = ((TradingCardCore.captureRateNormal+1) * 10).ToString() + "%";
+                        else
+                            catchRate = (TradingCardCore.captureRateNormal * 10).ToString() + "%";
                     }
 
                     string parent = ""; DiscordSocketClient client = Bot.Doremi.client;
+                    string descriptionMystery = "";
                     Discord.Color color = Config.Doremi.EmbedColor; string author = ""; string embedAvatarUrl = "";
                     //randomParent = 0; //don't forget to erase this, for testing purpose
                     //chosenCategory = "ojamajos";//for testing purpose
                     if (randomParent == 0)
                     {
                         parent = "doremi"; embedAvatarUrl = Config.Doremi.EmbedAvatarUrl;
+                        string[] arrMysteryDescription = {
+                            "July is my birthday",
+                            "Dodo is my fairy",
+                            "February, May, March and November are not my birthday",
+                            "My birthday was at 30th",
+                            "**Pirika** is one of my chanting spell",
+                            "**Pirilala** is one of my chanting spell",
+                            "**Poporina** is one of my chanting spell",
+                            "**Peperuto** is one of my chanting spell",
+                            "**Paipai Raruku Famifami Pon!** are not my spell",
+                            "**Puwapuwa Petton Pururun Rarirori!** are not my spell",
+                            "**Puu Raruku Purun Perutan!** are not my spell",
+                            "**Puu Poppun Faa Pon!** are not my spell",
+                            "**Ponpoi Pameruku Pururun Petton!** are not my spell",
+                            "**Famifami Rarirori Paipai Petton!** are not my spell"
+                        };
+                        descriptionMystery = arrMysteryDescription[new Random().Next(arrMysteryDescription.Length)];
                     }
                     else if (randomParent == 1)
                     {
-                        client = Bot.Hazuki.client; parent = "hazuki";
+                        if(!isMystery) client = Bot.Hazuki.client; 
+                        parent = "hazuki";
                         color = Config.Hazuki.EmbedColor; embedAvatarUrl = Config.Hazuki.EmbedAvatarUrl;
+                        string[] arrMysteryDescription = {
+                            "February is my birthday",
+                            "Rere is my fairy",
+                            "May, July, March and November are not my birthday",
+                            "My birthday was same with Aiko but I'm older",
+                            "My blood type was A",
+                            "One of my favorite food ends with **e**",
+                            "One of my favorite food start with **ch**",
+                            "**Paipai** is one of my chanting spell",
+                            "**Ponpoi** is one of my chanting spell",
+                            "**Puwapuwa** is one of my chanting spell",
+                            "**Puu** is one of my chanting spell",
+                            "**Pirika Raruku Famifami Pon!** are not my spell",
+                            "**Purun Pirilala Pararira Rarirori!** are not my spell",
+                            "**Peperuto Poppun Faa Pon!** are not my spell",
+                            "**Peperuto Purun Rarirori Perutan!** are not my spell"
+                        };
+                        descriptionMystery = arrMysteryDescription[new Random().Next(arrMysteryDescription.Length)];
                     }
                     else if (randomParent == 2)
                     {
-                        client = Bot.Aiko.client; parent = "aiko";
+                        if (!isMystery) client = Bot.Aiko.client; 
+                        parent = "aiko";
                         color = Config.Aiko.EmbedColor; embedAvatarUrl = Config.Aiko.EmbedAvatarUrl;
+                        string[] arrMysteryDescription = {
+                            "November is my birthday",
+                            "Mimi is my fairy",
+                            "July, February, March and May are not my birthday",
+                            "My birthday was same with Hazuki but I'm younger",
+                            "My blood type was O",
+                            "One of my favorite food ends with **i**",
+                            "One of my favorite food start with **t**",
+                            "**Pameruku** is one of my chanting spell",
+                            "**Raruku** is one of my chanting spell",
+                            "**Rarirori** is one of my chanting spell",
+                            "**Poppun** is one of my chanting spell",
+                            "**Pirika Ponpoi Famifami Pon!** are not my spell",
+                            "**Peperuto Puwapuwa Purun Perutan!** are not my spell",
+                            "**Ponpoi Purun Pirilala Petton!** are not my spell",
+                            "**Poporina Puwapuwa Famifami Pararira!** are not my spell",
+                            "**Paipai Pururun Pirika Perutan!** are not my spell",
+                            "**Puu Faa Peperuto Pon!** are not my spell"
+                        };
+                        descriptionMystery = arrMysteryDescription[new Random().Next(arrMysteryDescription.Length)];
                     }
                     else if (randomParent == 3)
                     {
-                        client = Bot.Onpu.client; parent = "onpu";
+                        if (!isMystery) client = Bot.Onpu.client; 
+                        parent = "onpu";
                         color = Config.Onpu.EmbedColor; embedAvatarUrl = Config.Onpu.EmbedAvatarUrl;
+                        string[] arrMysteryDescription = {
+                            "March is my birthday",
+                            "Roro is my fairy",
+                            "July, February, November and May are not my birthday",
+                            "My birthday was was at 3rd",
+                            "One of my favorite food ends with **s**",
+                            "One of my favorite food start with **cr**",
+                            "**Pururun** is one of my chanting spell",
+                            "**Purun** is one of my chanting spell",
+                            "**Famifami** is one of my chanting spell",
+                            "**Faa** is one of my chanting spell",
+                            "**Rarirori Ponpoi Pon Pirika!** are not my spell",
+                            "**Peperuto Puwapuwa Raruku Perutan!** are not my spell",
+                            "**Pirilala Ponpoi Raruku Petton!** are not my spell",
+                            "**Poporina Puwapuwa Rarirori Pararira!** are not my spell",
+                            "**Peperuto Puu Poppun Pon!** are not my spell",
+                            "**Paipai Pirika Pameruku Perutan!** are not my spell"
+                        };
+                        descriptionMystery = arrMysteryDescription[new Random().Next(arrMysteryDescription.Length)];
                     }
                     else if (randomParent == 4)
                     {
-                        client = Bot.Momoko.client; parent = "momoko";
+                        if (!isMystery) client = Bot.Momoko.client; 
+                        parent = "momoko";
                         color = Config.Momoko.EmbedColor; embedAvatarUrl = Config.Momoko.EmbedAvatarUrl;
+                        string[] arrMysteryDescription = {
+                            "May is my birthday",
+                            "Nini is my fairy",
+                            "My blood type was AB",
+                            "July, February, November and March are not my birthday",
+                            "My birthday was was at 6th",
+                            "One of my favorite food ends with **t**",
+                            "One of my favorite food start with **s**",
+                            "**Perutan** is one of my chanting spell",
+                            "**Petton** is one of my chanting spell",
+                            "**Pararira** is one of my chanting spell",
+                            "**Pon** is one of my chanting spell",
+                            "**Ponpoi Rarirori Pirika Faa!** are not my spell",
+                            "**Raruku Puwapuwa Peperuto Pururun!** are not my spell",
+                            "**Purun Ponpoi Raruku  Pirilala!** are not my spell",
+                            "**Rarirori Poporina Famifami Puwapuwa!** are not my spell",
+                            "**Faa Puu Poppun Peperuto!** are not my spell",
+                            "**Pururun Pirika Pameruku Paipai!** are not my spell"
+                        };
+                        descriptionMystery = arrMysteryDescription[new Random().Next(arrMysteryDescription.Length)];
                     }
                     else if (randomParent >= 5)
                     {
@@ -455,21 +574,41 @@ namespace OjamajoBot.Bot
                     Config.Guild.setPropertyValue(guild.Id, TradingCardCore.propertyId, chosenId);
                     Config.Guild.setPropertyValue(guild.Id, TradingCardCore.propertyCategory, chosenCategory);
                     Config.Guild.setPropertyValue(guild.Id, TradingCardCore.propertyToken, GlobalFunctions.RandomString(8));
+                    Config.Guild.setPropertyValue(guild.Id, TradingCardCore.propertyMystery, "0");
 
-                    var embed = new EmbedBuilder()
+                    if (!isMystery || chosenCategory == "ojamajos"|| chosenCategory == "special")
+                    {//not mystery
+                        var embed = new EmbedBuilder()
                         .WithAuthor(author, embedAvatarUrl)
                         .WithColor(color)
                         .WithTitle($"{chosenName}")
                         .WithFooter($"ID: {chosenId} | Catch Rate: {catchRate}")
                         .WithImageUrl(chosenUrl);
+                        if (chosenCategory == "ojamajos") parent = "";
 
-                    if (chosenCategory == "ojamajos") parent = "";
+                        await client
+                        .GetGuild(guild.Id)
+                        .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "trading_card_spawn")))
+                        .SendMessageAsync($":exclamation:A **{chosenCategory}** {parent} card has appeared! Capture it with **<bot>!card capture/catch**",
+                        embed: embed.Build());
+                    } else
+                    {//mystery card
+                        var embed = new EmbedBuilder()
+                        .WithAuthor("Mystery Card")
+                        .WithColor(Discord.Color.DarkerGrey)
+                        .WithTitle($"🔍 Revealed Hint:")
+                        .WithDescription(descriptionMystery)
+                        .WithImageUrl("https://cdn.discordapp.com/attachments/709293222387777626/710869697972797440/mystery.jpg")
+                        .WithFooter($"ID: ??? | Catch Rate: {catchRate}");
 
-                    await client
-                    .GetGuild(guild.Id)
-                    .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "trading_card_spawn")))
-                    .SendMessageAsync($":exclamation:A **{chosenCategory}** {parent} card has appeared! Capture it with **<bot>!card capture/catch**",
-                    embed: embed.Build());
+                        Config.Guild.setPropertyValue(guild.Id, TradingCardCore.propertyMystery, "1");
+                        await client
+                        .GetGuild(guild.Id)
+                        .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "trading_card_spawn")))
+                        .SendMessageAsync($":question:A **mystery** card has appeared! Can you guess who card is this belongs to?\n" +
+                        $"Reveal & capture it with **<bot>!card capture/catch**",
+                        embed: embed.Build());
+                    }
                 },
                 null,
                 TimeSpan.FromMinutes(Convert.ToInt32(Config.Guild.getPropertyValue(guild.Id, "trading_card_spawn_interval"))), //time to wait before executing the timer for the first time

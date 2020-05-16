@@ -341,7 +341,7 @@ namespace OjamajoBot.Module
             .WithDescription("Rere has fair skin with warm brown eyes and blushed cheeks. Her pale orange hair is shaped into four-points, reminiscent of a bow, and she has two tufts for bangs. " +
             "Like Hazuki she wears glasses, along with a pale orange dress that has a cream collar. In teen form, her hair points now stick out at each part of her head and she gains a full body. She wears a pale orange dress with the shoulder cut out and a white-collar. A pastel orange top is worn under this, and at the chest is an orange gem. She also wears white booties and a white witch hat with a cream rim.")
             .WithColor(Config.Hazuki.EmbedColor)
-            .WithThumbnailUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/d/dd/No.077.jpg")
+            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/d/dd/No.077.jpg")
             .WithFooter("[Ojamajo Witchling Wiki](https://ojamajowitchling.fandom.com/wiki/Rere)")
             .Build());
         }
@@ -476,7 +476,7 @@ namespace OjamajoBot.Module
             .AddField("Favorite Food", "Chiffon Cake", true)
             .AddField("Debut", "[I'm Doremi! Becoming a Witch Apprentice!](https://ojamajowitchling.fandom.com/wiki/I%27m_Doremi!_Becoming_a_Witch_Apprentice!)", true)
             .WithColor(Config.Hazuki.EmbedColor)
-            .WithThumbnailUrl("https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcSUFnwRpXhP__njQve5yVKjzr3AhhZSuYpi26lylHbHP64-cK5I")
+            .WithImageUrl("https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcSUFnwRpXhP__njQve5yVKjzr3AhhZSuYpi26lylHbHP64-cK5I")
             .WithFooter("Source: [Ojamajo Witchling Wiki](https://ojamajowitchling.fandom.com/wiki/Hazuki_Fujiwara)")
             .Build());
         }
@@ -854,6 +854,7 @@ namespace OjamajoBot.Module
                 JObject arrInventory = JObject.Parse(File.ReadAllText(playerDataDirectory));
                 string spawnedCardId = Config.Guild.getPropertyValue(guildId,TradingCardCore.propertyId);
                 string spawnedCardCategory = Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyCategory);
+                string spawnedMystery = Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyMystery);
 
                 int boostNormal = 0; int boostPlatinum = 0; int boostMetal = 0;
                 int boostOjamajos = 0; int boostSpecial = 0;
@@ -905,10 +906,32 @@ namespace OjamajoBot.Module
                 {
                     if (spawnedCardId.Contains("ha") ||
                         (spawnedCardId.Contains("oj") && indexExists) ||
-                        spawnedCardCategory.ToLower() == "special")//check if the card is hazuki/not
+                        spawnedCardCategory.ToLower() == "special"||
+                        spawnedMystery=="1")//check if the card is hazuki/not
                     {
                         
                         int catchState = 0;
+
+                        if ((string)arrInventory["catch_token"] == Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyToken))
+                        {
+                            await ReplyAsync(embed: new EmbedBuilder()
+                            .WithColor(Config.Hazuki.EmbedColor)
+                            .WithDescription($":x: Sorry, please wait for the next card spawn.")
+                            .WithThumbnailUrl(TradingCardCore.Hazuki.emojiError).Build());
+                            return;
+                        }
+                        else if (spawnedMystery == "1" && !indexExists)
+                        {
+                            arrInventory["catch_attempt"] = (Convert.ToInt32(arrInventory["catch_attempt"]) + 1).ToString();
+                            arrInventory["catch_token"] = Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyToken);
+                            File.WriteAllText(playerDataDirectory, arrInventory.ToString());
+
+                            await ReplyAsync(embed: new EmbedBuilder()
+                            .WithColor(Config.Hazuki.EmbedColor)
+                            .WithDescription($":x: Sorry, you guessed the wrong mystery card.")
+                            .WithThumbnailUrl(TradingCardCore.Hazuki.emojiError).Build());
+                            return;
+                        }
 
                         //check last capture time
                         try
@@ -916,7 +939,7 @@ namespace OjamajoBot.Module
                             if ((string)arrInventory["catch_token"] == "" ||
                                 (string)arrInventory["catch_token"] != Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyToken))
                             {
-                                int catchRate = new Random().Next(11);
+                                int catchRate = new Random().Next(10);
                                 string name = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["name"].ToString();
                                 string imgUrl = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["url"].ToString();
                                 string rank = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["0"].ToString();
@@ -926,64 +949,91 @@ namespace OjamajoBot.Module
                                 //check inventory
                                 if (arrInventory[parent][spawnedCardCategory].ToString().Contains(spawnedCardId))
                                 {//card already exist on inventory
-                                    replyText = $":x: Sorry, I can't capture **{spawnedCardId} - {name}** because you have it already.";
+                                    if (spawnedMystery != "1")
+                                        replyText = $":x: Sorry, I can't capture **{spawnedCardId} - {name}** because you have it already.";
+                                    else
+                                        replyText = $":x: You guess the mystery card correctly but I can't capture **{spawnedCardId} - {name}** because you have it already.";
                                 } else
                                 {
+                                    int maxCard = 0;
                                     //init RNG catch rate
                                     //if boost: change the TradingCardCore.captureRate
                                     if (spawnedCardCategory.ToLower() == "normal")
                                     {
+                                        maxCard = TradingCardCore.Hazuki.maxNormal;
                                         if (!useBoost)
                                         {
-                                            if (catchRate <= TradingCardCore.captureRateNormal) catchState = 1;
+                                            if (catchRate < TradingCardCore.captureRateNormal &&
+                                                spawnedMystery != "1") catchState = 1;
+                                            else if (catchRate < TradingCardCore.captureRateNormal + 1 &&
+                                                spawnedMystery == "1") catchState = 1;
                                         }
                                         else
                                         {
-                                            if (catchRate <= boostNormal) catchState = 1;
+                                            if (catchRate < boostNormal &&
+                                                spawnedMystery != "1") catchState = 1;
+                                            else if (catchRate < boostNormal + 1 &&
+                                                spawnedMystery == "1") catchState = 1;
                                         }
                                     }
                                     else if (spawnedCardCategory.ToLower() == "platinum")
                                     {
+                                        maxCard = TradingCardCore.Hazuki.maxPlatinum;
                                         if (!useBoost)
                                         {
-                                            if (catchRate <= TradingCardCore.captureRatePlatinum) catchState = 1;
+                                            if (catchRate < TradingCardCore.captureRatePlatinum &&
+                                                spawnedMystery != "1") catchState = 1;
+                                            else if (catchRate < TradingCardCore.captureRatePlatinum + 1 &&
+                                                spawnedMystery == "1") catchState = 1;
                                         }
                                         else
                                         {
-                                            if (catchRate <= boostPlatinum) catchState = 1;
+                                            if (catchRate < boostPlatinum &&
+                                                spawnedMystery != "1") catchState = 1;
+                                            else if (catchRate < boostPlatinum + 1 &&
+                                                spawnedMystery == "1") catchState = 1;
                                         }
                                     }
                                     else if (spawnedCardCategory.ToLower() == "metal")
                                     {
+                                        maxCard = TradingCardCore.Hazuki.maxMetal;
                                         if (!useBoost)
                                         {
-                                            if (catchRate <= TradingCardCore.captureRateMetal) catchState = 1;
+                                            if (catchRate < TradingCardCore.captureRateMetal &&
+                                                spawnedMystery != "1") catchState = 1;
+                                            else if (catchRate < TradingCardCore.captureRateMetal + 2 &&
+                                                spawnedMystery == "1") catchState = 1;
                                         }
                                         else
                                         {
-                                            if (catchRate <= boostMetal) catchState = 1;
+                                            if (catchRate < boostMetal &&
+                                                spawnedMystery != "1") catchState = 1;
+                                            else if (catchRate < boostMetal + 2 &&
+                                                spawnedMystery == "1") catchState = 1;
                                         }
                                     }
                                     else if (spawnedCardCategory.ToLower() == "ojamajos")
                                     {
+                                        maxCard = TradingCardCore.Hazuki.maxOjamajos;
                                         if (!useBoost)
                                         {
-                                            if (catchRate <= TradingCardCore.captureRateOjamajos) catchState = 1;
+                                            if (catchRate < TradingCardCore.captureRateOjamajos) catchState = 1;
                                         }
                                         else
                                         {
-                                            if (catchRate <= boostOjamajos) catchState = 1;
+                                            if (catchRate < boostOjamajos) catchState = 1;
                                         }
                                     }
                                     else if (spawnedCardCategory.ToLower() == "special")
                                     {
+                                        maxCard = TradingCardCore.maxSpecial;
                                         if (!useBoost)
                                         {
-                                            if (catchRate <= TradingCardCore.captureRateSpecial) catchState = 1;
+                                            if (catchRate < TradingCardCore.captureRateSpecial) catchState = 1;
                                         }
                                         else
                                         {
-                                            if (catchRate <= boostSpecial) catchState = 1;
+                                            if (catchRate < boostSpecial) catchState = 1;
                                         }
                                     }
 
@@ -1025,13 +1075,20 @@ namespace OjamajoBot.Module
                                         File.WriteAllText(playerDataDirectory, arrInventory.ToString());
 
                                         string[] arrRandomFirstSentence = {
-                                            "Congratulations,","Nice One!"
+                                            "Congratulations,","Nice Catch!"
                                         };
 
-                                        await ReplyAsync(replyText + $":white_check_mark: {arrRandomFirstSentence[new Random().Next(0, arrRandomFirstSentence.Length)]} " +
-                                            $"**{Context.User.Username}** have successfully capture **{spawnedCardCategory}** card: **{name}**",
+                                        if (spawnedMystery == "1")
+                                            replyText += $":white_check_mark: {arrRandomFirstSentence[new Random().Next(0, arrRandomFirstSentence.Length)]} " +
+                                            $"**{Context.User.Username}** have successfully revealed & captured **{spawnedCardCategory}** mystery card: **{name}**";
+                                        else
+                                            replyText += $":white_check_mark: {arrRandomFirstSentence[new Random().Next(0, arrRandomFirstSentence.Length)]} " +
+                                            $"**{Context.User.Username}** have successfully captured **{spawnedCardCategory}** card: **{name}**";
+
+                                        await ReplyAsync(replyText,
                                             embed: TradingCardCore.printCardCaptureTemplate(Config.Hazuki.EmbedColor, name, imgUrl,
-                                            spawnedCardId, spawnedCardCategory, rank, star, point, Context.User.Username, Config.Hazuki.EmbedAvatarUrl)
+                                            spawnedCardId, spawnedCardCategory, rank, star, point, Context.User.Username, Config.Hazuki.EmbedAvatarUrl,
+                                            item.Count,maxCard)
                                             .Build());
 
                                         //check if player have captured all doremi card/not
@@ -1152,7 +1209,10 @@ namespace OjamajoBot.Module
                                             }
                                         }
                                         File.WriteAllText(playerDataDirectory, arrInventory.ToString());
-                                        replyText += $":x: I'm sorry {Context.User.Username}, you **fail** to catch the card. Better luck next time.";
+                                        if (spawnedMystery == "1")
+                                            replyText += $":x: Card revealed correctly! But I'm sorry {Context.User.Username}, you **fail** to catch the mystery card. Better luck next time.";
+                                        else
+                                            replyText += $":x: I'm sorry {Context.User.Username}, you **fail** to catch the card. Better luck next time.";
                                     }
                                 }
 

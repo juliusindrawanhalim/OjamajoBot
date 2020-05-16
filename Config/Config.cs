@@ -137,7 +137,7 @@ namespace Config
         public static ulong Id = 655668640502251530;//original
         public static string Token { get; set; }
         public static double Randomeventinterval { get; set; }
-        public static Color EmbedColor = Color.Red;
+        public static Discord.Color EmbedColor = new Color(247, 140, 193);
         public static DateTime birthdayDate = DateTime.ParseExact("30/07/1990", "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None);
         public static int birthdayCalculatedYear = Convert.ToInt32(DateTime.Now.ToString("yyyy")) - Convert.ToInt32(birthdayDate.ToString("yyyy"));
 

@@ -11,10 +11,11 @@ namespace OjamajoBot
 {
     public class TradingCardCore
     {
-        public static string version = "1.04";
+        public static string version = "1.05";
         public static string propertyId = "trading_card_spawn_id";
         public static string propertyCategory = "trading_card_spawn_category";
         public static string propertyToken = "trading_card_spawn_token";
+        public static string propertyMystery = "trading_card_spawn_mystery";
 
         public static int captureRateNormal = 9;
         public static int captureRatePlatinum = 5;
@@ -33,13 +34,22 @@ namespace OjamajoBot
 
         public static EmbedBuilder printUpdatesNote()
         {
+            //return new EmbedBuilder()
+            //    .WithColor(Config.Doremi.EmbedColor)
+            //    .WithTitle($"Doremi Trading Card - Update {version} - 13.05.20")
+            //    .WithDescription($"-You can now select inventory category for each bot with additional inventory parameter. " +
+            //    $"Example: **{Config.Doremi.PrefixParent[0]}card inventory platinum**.\n" +
+            //    $"-Updated card display image layout\n" +
+            //    $"-Card catch &spawn rate can be displayed with **{Config.Doremi.PrefixParent[0]}card rate**");
+
             return new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
-                .WithTitle($"Doremi Trading Card - Update {version} - 13.05.20")
-                .WithDescription($"-You can now select inventory category for each bot with additional inventory parameter. " +
-                $"Example: **{Config.Doremi.PrefixParent[0]}card inventory platinum**.\n" +
-                $"-Updated card display image layout\n" +
-                $"-Card catch &spawn rate can be displayed with **{Config.Doremi.PrefixParent[0]}card rate**");
+                .WithTitle($"Doremi Trading Card - Update {version} - 16.05.20")
+                .WithDescription($"- :question: New Card Type: **Mystery Card**: " +
+                $"This card capture rate is increased more than the normal rate but you have to guess who card is this belongs to with appropriate " +
+                $"ojamajos bot. A specific hint will  be given upon spawn. " +
+                $"Mystery card will not appeared on **ojamajos** or **special** category card.\n" +
+                $"- :wrench: Update & fix on card capture rate.");
         }
 
         public static List<string> printInventoryTemplate(string pack, string parent, string category,
@@ -273,18 +283,19 @@ namespace OjamajoBot
         }
 
         public static EmbedBuilder printCardCaptureTemplate(Color color, string name, string imgUrl, string card_id,
-            string category, string rank, string star, string point, string username, string botIconUrl)
+            string category, string rank, string star, string point, string username, string botIconUrl,
+            int totalCaptured, int max)
         {
             return new EmbedBuilder()
                     .WithAuthor(name)
-                    .WithColor(Config.Doremi.EmbedColor)
+                    .WithColor(color)
                     .AddField("ID", card_id, true)
                     .AddField("Category", category, true)
                     .AddField("Rank", rank, true)
                     .AddField("⭐", star, true)
                     .AddField("Point", point, true)
                     .WithImageUrl(imgUrl)
-                    .WithFooter($"Captured by: {username}",botIconUrl);
+                    .WithFooter($"Captured by: {username} ({totalCaptured}/{max})",botIconUrl);
         }
 
         public static void resetSpawnInstance(ulong guildId)
@@ -292,6 +303,7 @@ namespace OjamajoBot
             Config.Guild.setPropertyValue(guildId, propertyId, "");
             Config.Guild.setPropertyValue(guildId, propertyCategory, "");
             Config.Guild.setPropertyValue(guildId, propertyToken, "");
+            Config.Guild.setPropertyValue(guildId, propertyMystery, "0");
         }
 
         public static EmbedBuilder printStatusTemplate(Color color, string username, string guildId, string clientId)

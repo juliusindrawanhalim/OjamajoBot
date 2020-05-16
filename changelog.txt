@@ -34,3 +34,8 @@ Doremi Trading Card - Update 1.04 - 12.05.20
 -Updated card display layout
 -Card catch & spawn rate can be displayed with do!card rate
 
+Doremi Trading Card - Update 1.05 - 12.05.20
+=======================================================================
+-Bug fix on card catch color
+-Bug fix on catch rate
+-Updates on card spawn embed layout

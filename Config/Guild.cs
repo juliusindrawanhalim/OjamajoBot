@@ -92,6 +92,10 @@ namespace Config
                 if (!guildConfig.ContainsKey("trading_card_spawn_token"))
                     guildConfig.Add(new JProperty("trading_card_spawn_token", ""));
 
+                //trading_card_spawn_mystery
+                if (!guildConfig.ContainsKey("trading_card_spawn_mystery"))
+                    guildConfig.Add(new JProperty("trading_card_spawn_mystery", "0"));
+
                 //id_card_catcher for card catcher roles
                 if (!guildConfig.ContainsKey("id_card_catcher"))
                     guildConfig.Add(new JProperty("id_card_catcher", ""));
@@ -115,6 +119,7 @@ namespace Config
                     new JProperty("trading_card_spawn_id", ""),
                     new JProperty("trading_card_spawn_category", ""),
                     new JProperty("trading_card_spawn_token", ""),
+                    new JProperty("trading_card_spawn_mystery", "0"),
                     new JProperty("user_birthday", new JObject()));
 
                 File.WriteAllText($"{Core.headConfigGuildFolder}{id_guild}/{id_guild}.json", guildConfig.ToString());
