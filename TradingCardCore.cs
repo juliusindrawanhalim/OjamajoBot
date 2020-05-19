@@ -11,7 +11,7 @@ namespace OjamajoBot
 {
     public class TradingCardCore
     {
-        public static string version = "1.05";
+        public static string version = "1.06";
         public static string propertyId = "trading_card_spawn_id";
         public static string propertyCategory = "trading_card_spawn_category";
         public static string propertyToken = "trading_card_spawn_token";
@@ -41,6 +41,15 @@ namespace OjamajoBot
             //    $"Example: **{Config.Doremi.PrefixParent[0]}card inventory platinum**.\n" +
             //    $"-Updated card display image layout\n" +
             //    $"-Card catch &spawn rate can be displayed with **{Config.Doremi.PrefixParent[0]}card rate**");
+
+            return new EmbedBuilder()
+                .WithColor(Config.Doremi.EmbedColor)
+                .WithTitle($"Doremi Trading Card - Update {version} - 16.05.20")
+                .WithDescription($"- :question: New Card Type: **Mystery Card**: " +
+                $"This card capture rate is increased more than the normal rate but you have to guess who card is this belongs to with appropriate " +
+                $"ojamajos bot. A specific hint will  be given upon spawn. " +
+                $"Mystery card will not appeared on **ojamajos** or **special** category card.\n" +
+                $"- :wrench: Update & fix on card capture rate.");
 
             return new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
@@ -174,18 +183,74 @@ namespace OjamajoBot
                 .WithDescription($":x: There are no {pack} - {category} cards that you have captured yet.");
         }
 
-        public static EmbedBuilder printCardDetailTemplate(Color color, string name, string imgUrl, string card_id,
-            string category, string rank, string star, string point)
+        public static EmbedBuilder printCardDetailTemplate(Color color, string guildId, string clientId, 
+            string card_id, string parent, string emojiError, string errorDescription)
         {
-            return new EmbedBuilder()
-                .WithAuthor(name)
+            string category = getCardCategory(card_id);
+
+            //start read json
+            string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+            JObject arrInventory = JObject.Parse(File.ReadAllText(playerDataDirectory));
+            var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
+
+            if (!File.Exists(playerDataDirectory)) //not registered yet
+            {
+                return new EmbedBuilder()
                 .WithColor(color)
-                .AddField("ID", card_id, true)
-                .AddField("Category", category, true)
-                .AddField("Rank", rank, true)
-                .AddField("⭐", star, true)
-                .AddField("Point", point, true)
-                .WithImageUrl(imgUrl);
+                .WithDescription($":x: I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
+                .WithThumbnailUrl(emojiError);
+            } else {
+                string name = "";
+                if (category != "special")
+                {
+                    try
+                    {
+                        name = jObjTradingCardList[parent][category][card_id]["name"].ToString();
+                    }
+                    catch (Exception e) { }
+                }
+                else if (category == "special")
+                {
+                    try
+                    {
+                        name = jObjTradingCardList["other"][category][card_id]["name"].ToString();
+                        parent = "other";
+                    }
+                    catch (Exception e) { }
+                }
+
+                if (name == "")
+                {
+                    return new EmbedBuilder()
+                    .WithColor(color)
+                    .WithDescription(errorDescription)
+                    .WithThumbnailUrl(emojiError);
+                }
+                else if (arrInventory[parent][category].ToString().Contains(card_id))
+                {
+                    string imgUrl = jObjTradingCardList[parent][category][card_id]["url"].ToString();
+                    string rank = jObjTradingCardList[parent][category][card_id]["0"].ToString();
+                    string star = jObjTradingCardList[parent][category][card_id]["1"].ToString();
+                    string point = jObjTradingCardList[parent][category][card_id]["2"].ToString();
+
+                    return new EmbedBuilder()
+                    .WithAuthor(name)
+                    .WithColor(color)
+                    .AddField("ID", card_id, true)
+                    .AddField("Category", category, true)
+                    .AddField("Rank", rank, true)
+                    .AddField("⭐", star, true)
+                    .AddField("Point", point, true)
+                    .WithImageUrl(imgUrl);
+                }
+                else
+                {
+                    return new EmbedBuilder()
+                    .WithColor(color)
+                    .WithDescription($":x: Sorry, you don't have: **{card_id} - {name}** card yet. Try to capture it to look at this card.")
+                    .WithThumbnailUrl(emojiError);
+                }
+            }
         }
 
         public static EmbedBuilder printLeaderboardTemplate(Color color, string username, string guildId, string clientId){
@@ -265,7 +330,7 @@ namespace OjamajoBot
                 .AddField("Other Card Pack", otherText);
         }
 
-        public static EmbedBuilder userCompleteTheirList(Color color, string parent, string congratulateText, string imgUrl, string guildId, string clientId)
+        public static EmbedBuilder userCompleteTheirList(Color color, string avatarEmbed, string parent, string congratulateText, string imgUrl, string guildId, string clientId)
         {
             //update & save leaderboard data
             string dateTimeNow = DateTime.Now.ToString("MM/dd/yyyy");
@@ -278,7 +343,7 @@ namespace OjamajoBot
             return new EmbedBuilder()
             .WithColor(color)
             .WithImageUrl(imgUrl)
-            .WithFooter($"Completed at: {dateTimeNow}")
+            .WithFooter($"Completed at: {dateTimeNow}", avatarEmbed)
             .WithDescription(congratulateText);
         }
 
@@ -306,63 +371,72 @@ namespace OjamajoBot
             Config.Guild.setPropertyValue(guildId, propertyMystery, "0");
         }
 
-        public static EmbedBuilder printStatusTemplate(Color color, string username, string guildId, string clientId)
+        public static EmbedBuilder printStatusTemplate(Color color, string username, string guildId, string clientId, string emojiError)
         {
             string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
-            var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
             var playerData = JObject.Parse(File.ReadAllText(playerDataDirectory));
-            var arrListDoremi = playerData["doremi"];
-            var arrListHazuki = playerData["hazuki"];
-            var arrListAiko = playerData["aiko"];
-            var arrListOnpu = playerData["onpu"];
-            var arrListMomoko = playerData["momoko"];
-            var arrListOther = playerData["other"];
 
-            int totalSuccess = ((JArray)arrListDoremi["normal"]).Count + ((JArray)arrListDoremi["platinum"]).Count + ((JArray)arrListDoremi["metal"]).Count + ((JArray)arrListDoremi["ojamajos"]).Count +
-                ((JArray)arrListHazuki["normal"]).Count + ((JArray)arrListHazuki["platinum"]).Count + ((JArray)arrListHazuki["metal"]).Count + ((JArray)arrListHazuki["ojamajos"]).Count +
-                ((JArray)arrListAiko["normal"]).Count + ((JArray)arrListAiko["platinum"]).Count + ((JArray)arrListAiko["metal"]).Count + ((JArray)arrListAiko["ojamajos"]).Count +
-                ((JArray)arrListOnpu["normal"]).Count + ((JArray)arrListOnpu["platinum"]).Count + ((JArray)arrListOnpu["metal"]).Count + ((JArray)arrListOnpu["ojamajos"]).Count +
-                ((JArray)arrListMomoko["normal"]).Count + ((JArray)arrListMomoko["platinum"]).Count + ((JArray)arrListMomoko["metal"]).Count + ((JArray)arrListMomoko["ojamajos"]).Count +
-                ((JArray)arrListOther["special"]).Count;
-
-            string doremiText = $"**Normal: {((JArray)arrListDoremi["normal"]).Count}/{Doremi.maxNormal}**\n" +
-                $"**Platinum: {((JArray)arrListDoremi["platinum"]).Count}/{Doremi.maxPlatinum}**\n" +
-                $"**Metal: {((JArray)arrListDoremi["metal"]).Count}/{Doremi.maxMetal}**\n" +
-                $"**Ojamajos: {((JArray)arrListDoremi["ojamajos"]).Count}/{Doremi.maxOjamajos}**";
-
-            string hazukiText = $"**Normal: {((JArray)arrListHazuki["normal"]).Count}/{Hazuki.maxNormal}**\n" +
-                $"**Platinum: {((JArray)arrListHazuki["platinum"]).Count}/{Hazuki.maxPlatinum}**\n" +
-                $"**Metal: {((JArray)arrListHazuki["metal"]).Count}/{Hazuki.maxMetal}**\n" +
-                $"**Ojamajos: {((JArray)arrListHazuki["ojamajos"]).Count}/{Hazuki.maxOjamajos}**";
-
-            string aikoText = $"**Normal: {((JArray)arrListAiko["normal"]).Count}/{Aiko.maxNormal}**\n" +
-                $"**Platinum: {((JArray)arrListAiko["platinum"]).Count}/{Aiko.maxPlatinum}**\n" +
-                $"**Metal: {((JArray)arrListAiko["metal"]).Count}/{Aiko.maxMetal}**\n" +
-                $"**Ojamajos: {((JArray)arrListAiko["ojamajos"]).Count}/{Aiko.maxOjamajos}**";
-
-            string onpuText = $"**Normal: {((JArray)arrListOnpu["normal"]).Count}/{Onpu.maxNormal}**\n" +
-                $"**Platinum: {((JArray)arrListOnpu["platinum"]).Count}/{Onpu.maxPlatinum}**\n" +
-                $"**Metal: {((JArray)arrListOnpu["metal"]).Count}/{Onpu.maxMetal}**\n" +
-                $"**Ojamajos: {((JArray)arrListOnpu["ojamajos"]).Count}/{Onpu.maxOjamajos}**";
-
-            string momokoText = $"**Normal: {((JArray)arrListMomoko["normal"]).Count}/{Momoko.maxNormal}**\n" +
-                $"**Platinum: {((JArray)arrListMomoko["platinum"]).Count}/{Momoko.maxPlatinum}**\n" +
-                $"**Metal: {((JArray)arrListMomoko["metal"]).Count}/{Momoko.maxMetal}**\n" +
-                $"**Ojamajos: {((JArray)arrListMomoko["ojamajos"]).Count}/{Momoko.maxOjamajos}**";
-
-            string otherText = $"**Special: {((JArray)arrListOther["special"]).Count}/{maxSpecial}**";
-
-            return new EmbedBuilder()
-                .WithTitle($"{username} Card Status Report")
+            if (!File.Exists(playerDataDirectory))
+            { //not registered yet
+                return new EmbedBuilder()
                 .WithColor(color)
-                .AddField("Catch Attempt", $"**{totalSuccess} / {playerData["catch_attempt"].ToString()}**", false)
-                .AddField("Doremi Card Pack", doremiText, true)
-                .AddField("Hazuki Card Pack", hazukiText, true)
-                .AddField("Aiko Card Pack", aikoText, true)
-                .AddField("Onpu Card Pack", onpuText, true)
-                .AddField("Momoko Card Pack", momokoText, true)
-                .AddField("Other Card Pack", otherText, true);
+                .WithDescription($"I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
+                .WithThumbnailUrl(emojiError);
+            }
+            else
+            {
+                var arrListDoremi = playerData["doremi"];
+                var arrListHazuki = playerData["hazuki"];
+                var arrListAiko = playerData["aiko"];
+                var arrListOnpu = playerData["onpu"];
+                var arrListMomoko = playerData["momoko"];
+                var arrListOther = playerData["other"];
 
+                int totalSuccess = ((JArray)arrListDoremi["normal"]).Count + ((JArray)arrListDoremi["platinum"]).Count + ((JArray)arrListDoremi["metal"]).Count + ((JArray)arrListDoremi["ojamajos"]).Count +
+                    ((JArray)arrListHazuki["normal"]).Count + ((JArray)arrListHazuki["platinum"]).Count + ((JArray)arrListHazuki["metal"]).Count + ((JArray)arrListHazuki["ojamajos"]).Count +
+                    ((JArray)arrListAiko["normal"]).Count + ((JArray)arrListAiko["platinum"]).Count + ((JArray)arrListAiko["metal"]).Count + ((JArray)arrListAiko["ojamajos"]).Count +
+                    ((JArray)arrListOnpu["normal"]).Count + ((JArray)arrListOnpu["platinum"]).Count + ((JArray)arrListOnpu["metal"]).Count + ((JArray)arrListOnpu["ojamajos"]).Count +
+                    ((JArray)arrListMomoko["normal"]).Count + ((JArray)arrListMomoko["platinum"]).Count + ((JArray)arrListMomoko["metal"]).Count + ((JArray)arrListMomoko["ojamajos"]).Count +
+                    ((JArray)arrListOther["special"]).Count;
+
+                string doremiText = $"**Normal: {((JArray)arrListDoremi["normal"]).Count}/{Doremi.maxNormal}**\n" +
+                    $"**Platinum: {((JArray)arrListDoremi["platinum"]).Count}/{Doremi.maxPlatinum}**\n" +
+                    $"**Metal: {((JArray)arrListDoremi["metal"]).Count}/{Doremi.maxMetal}**\n" +
+                    $"**Ojamajos: {((JArray)arrListDoremi["ojamajos"]).Count}/{Doremi.maxOjamajos}**";
+
+                string hazukiText = $"**Normal: {((JArray)arrListHazuki["normal"]).Count}/{Hazuki.maxNormal}**\n" +
+                    $"**Platinum: {((JArray)arrListHazuki["platinum"]).Count}/{Hazuki.maxPlatinum}**\n" +
+                    $"**Metal: {((JArray)arrListHazuki["metal"]).Count}/{Hazuki.maxMetal}**\n" +
+                    $"**Ojamajos: {((JArray)arrListHazuki["ojamajos"]).Count}/{Hazuki.maxOjamajos}**";
+
+                string aikoText = $"**Normal: {((JArray)arrListAiko["normal"]).Count}/{Aiko.maxNormal}**\n" +
+                    $"**Platinum: {((JArray)arrListAiko["platinum"]).Count}/{Aiko.maxPlatinum}**\n" +
+                    $"**Metal: {((JArray)arrListAiko["metal"]).Count}/{Aiko.maxMetal}**\n" +
+                    $"**Ojamajos: {((JArray)arrListAiko["ojamajos"]).Count}/{Aiko.maxOjamajos}**";
+
+                string onpuText = $"**Normal: {((JArray)arrListOnpu["normal"]).Count}/{Onpu.maxNormal}**\n" +
+                    $"**Platinum: {((JArray)arrListOnpu["platinum"]).Count}/{Onpu.maxPlatinum}**\n" +
+                    $"**Metal: {((JArray)arrListOnpu["metal"]).Count}/{Onpu.maxMetal}**\n" +
+                    $"**Ojamajos: {((JArray)arrListOnpu["ojamajos"]).Count}/{Onpu.maxOjamajos}**";
+
+                string momokoText = $"**Normal: {((JArray)arrListMomoko["normal"]).Count}/{Momoko.maxNormal}**\n" +
+                    $"**Platinum: {((JArray)arrListMomoko["platinum"]).Count}/{Momoko.maxPlatinum}**\n" +
+                    $"**Metal: {((JArray)arrListMomoko["metal"]).Count}/{Momoko.maxMetal}**\n" +
+                    $"**Ojamajos: {((JArray)arrListMomoko["ojamajos"]).Count}/{Momoko.maxOjamajos}**";
+
+                string otherText = $"**Special: {((JArray)arrListOther["special"]).Count}/{maxSpecial}**";
+
+                return new EmbedBuilder()
+                    .WithTitle($"{username} Card Status Report")
+                    .WithColor(color)
+                    .AddField("Catch Attempt", $"**{totalSuccess} / {playerData["catch_attempt"].ToString()}**", false)
+                    .AddField("Doremi Card Pack", doremiText, true)
+                    .AddField("Hazuki Card Pack", hazukiText, true)
+                    .AddField("Aiko Card Pack", aikoText, true)
+                    .AddField("Onpu Card Pack", onpuText, true)
+                    .AddField("Momoko Card Pack", momokoText, true)
+                    .AddField("Other Card Pack", otherText, true);
+            }
         }
 
         public static List<string> tradeListAllowed(JObject playerData)
@@ -410,6 +484,424 @@ namespace OjamajoBot
                 listAllowed.Add("momoko metal");
 
             return listAllowed;
+        }
+
+        public static Tuple<string, EmbedBuilder,IDictionary<string,Boolean>> cardCapture(Color color, ulong guildId, string clientId, string username, 
+            string emojiError, string parent, string boost, string errorPrefix, string containCardId,
+            int maxNormal, int maxPlatinum, int maxMetal, int maxOjamajos)
+        {
+            string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId.ToString()}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+            var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
+
+            EmbedBuilder returnEmbedBuilder;
+            string replyText = "";
+            IDictionary<string, Boolean> returnCompleted = new Dictionary<string,Boolean>();//state of completedCard
+            returnCompleted.Add("doremi", false); returnCompleted.Add("hazuki", false); returnCompleted.Add("aiko", false);
+            returnCompleted.Add("onpu", false); returnCompleted.Add("momoko", false); returnCompleted.Add("special", false);
+
+            if (!File.Exists(playerDataDirectory))
+            {
+                returnEmbedBuilder = new EmbedBuilder()
+                .WithColor(color)
+                .WithDescription($"I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
+                .WithThumbnailUrl(emojiError);
+                return Tuple.Create("", returnEmbedBuilder, returnCompleted);
+                //return;
+            }
+            else
+            {
+                JObject arrInventory = JObject.Parse(File.ReadAllText(playerDataDirectory));
+                string spawnedCardId = Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyId);
+                string spawnedCardCategory = Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyCategory);
+                string spawnedMystery = Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyMystery);
+
+                int boostNormal = 0; int boostPlatinum = 0; int boostMetal = 0;
+                int boostOjamajos = 0; int boostSpecial = 0;
+                if (spawnedCardCategory.ToLower() == "special")
+                {
+                    parent = "other";
+                    boostSpecial = Convert.ToInt32(arrInventory["boost"]["other"]["special"].ToString());
+                }
+                else
+                {
+                    boostNormal = Convert.ToInt32(arrInventory["boost"][parent]["normal"].ToString());
+                    boostPlatinum = Convert.ToInt32(arrInventory["boost"][parent]["platinum"].ToString());
+                    boostMetal = Convert.ToInt32(arrInventory["boost"][parent]["metal"].ToString());
+                    boostOjamajos = Convert.ToInt32(arrInventory["boost"][parent]["ojamajos"].ToString());
+                }
+
+                //process booster
+                Boolean useBoost = false;
+                if (boost.ToLower() != "" && boost.ToLower() != "boost")
+                {
+                    returnEmbedBuilder = new EmbedBuilder()
+                    .WithColor(color)
+                    .WithDescription($":x: Sorry, that is not the valid card capture boost command. " +
+                    $"Use: **{errorPrefix}card capture boost** to activate card boost.")
+                    .WithThumbnailUrl(emojiError);
+                    return Tuple.Create("", returnEmbedBuilder, returnCompleted);
+                }
+                else if ((boost.ToLower() == "boost" && spawnedCardCategory == "normal" && boostNormal <= 0) &&
+                    (boost.ToLower() == "boost" && spawnedCardCategory == "platinum" && boostPlatinum <= 0) &&
+                    (boost.ToLower() == "boost" && spawnedCardCategory == "metal" && boostMetal <= 0) &&
+                    (boost.ToLower() == "boost" && spawnedCardCategory == "ojamajos" && boostOjamajos <= 0) &&
+                    (boost.ToLower() == "boost" && spawnedCardCategory == "special" && boostSpecial <= 0))
+                {
+                    returnEmbedBuilder = new EmbedBuilder()
+                    .WithColor(color)
+                    .WithDescription($":x: Sorry, you have no {parent} {spawnedCardCategory} card capture boost that you can use.")
+                    .WithThumbnailUrl(emojiError);
+                    return Tuple.Create("", returnEmbedBuilder, returnCompleted);
+                }
+                else if (boost.ToLower() == "boost") useBoost = true;
+
+                Boolean indexExists = false;
+                try
+                {
+                    var cardExists = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["name"];
+                    indexExists = true;
+                } catch {
+
+                }
+                
+
+                if (spawnedCardId != "" && spawnedCardCategory != "")
+                {
+                    if (spawnedCardId.Contains(containCardId) ||
+                        (spawnedCardId.Contains("oj") && indexExists) ||
+                        spawnedCardCategory.ToLower() == "special" ||
+                        spawnedMystery == "1")//check if the card is doremi/ojamajos/other
+                    {
+                        int catchState = 0;
+
+                        if ((string)arrInventory["catch_token"] == Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyToken))
+                        {
+                            returnEmbedBuilder = new EmbedBuilder()
+                            .WithColor(color)
+                            .WithDescription($":x: Sorry, please wait for the next card spawn.")
+                            .WithThumbnailUrl(emojiError);
+                            return Tuple.Create("", returnEmbedBuilder, returnCompleted);
+                        }
+                        else if (spawnedMystery == "1" && !indexExists)
+                        {
+                            arrInventory["catch_attempt"] = (Convert.ToInt32(arrInventory["catch_attempt"]) + 1).ToString();
+                            arrInventory["catch_token"] = Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyToken);
+                            File.WriteAllText(playerDataDirectory, arrInventory.ToString());
+
+                            returnEmbedBuilder = new EmbedBuilder()
+                            .WithColor(color)
+                            .WithDescription($":x: Sorry, you guessed the wrong mystery card.")
+                            .WithThumbnailUrl(emojiError);
+                            return Tuple.Create("", returnEmbedBuilder, returnCompleted);
+                        }
+
+                        //check last capture time
+                        try
+                        {
+                            if ((string)arrInventory["catch_token"] == "" ||
+                                (string)arrInventory["catch_token"] != Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyToken))
+                            {
+                                int catchRate = new Random().Next(10);
+                                string name = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["name"].ToString();
+                                string imgUrl = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["url"].ToString();
+                                string rank = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["0"].ToString();
+                                string star = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["1"].ToString();
+                                string point = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["2"].ToString();
+
+                                //check inventory
+                                if (arrInventory[parent][spawnedCardCategory].ToString().Contains(spawnedCardId))
+                                {//card already exist on inventory
+                                    if (spawnedMystery != "1")
+                                        replyText = $":x: Sorry, I can't capture **{spawnedCardId} - {name}** because you have it already.";
+                                    else
+                                        replyText = $":x: You guess the mystery card correctly but I can't capture **{spawnedCardId} - {name}** because you have it already.";
+                                }
+                                else
+                                {
+                                    int maxCard = 0;
+                                    //init RNG catch rate
+                                    //if boost: change the TradingCardCore.captureRate
+                                    if (spawnedCardCategory.ToLower() == "normal")
+                                    {
+                                        maxCard = maxNormal;
+                                        if (!useBoost)
+                                        {
+                                            if ((catchRate < TradingCardCore.captureRateNormal && spawnedMystery != "1") ||
+                                                (catchRate < TradingCardCore.captureRateNormal + 1 && spawnedMystery == "1")) catchState = 1;
+                                        }
+                                        else
+                                        {
+                                            if ((catchRate < boostNormal && spawnedMystery != "1") ||
+                                                (catchRate < boostNormal + 1 && spawnedMystery == "1")) catchState = 1;
+                                        }
+                                    }
+                                    else if (spawnedCardCategory.ToLower() == "platinum")
+                                    {
+                                        maxCard = maxPlatinum;
+                                        if (!useBoost)
+                                        {
+                                            if ((catchRate < TradingCardCore.captureRatePlatinum && spawnedMystery != "1") ||
+                                                (catchRate < TradingCardCore.captureRatePlatinum + 1 && spawnedMystery == "1")) catchState = 1;
+                                        }
+                                        else
+                                        {
+                                            if ((catchRate < boostPlatinum && spawnedMystery != "1") ||
+                                                (catchRate < boostPlatinum + 1 && spawnedMystery == "1")) catchState = 1;
+                                        }
+                                    }
+                                    else if (spawnedCardCategory.ToLower() == "metal")
+                                    {
+                                        maxCard = maxMetal;
+                                        if (!useBoost)
+                                        {
+                                            if ((catchRate < TradingCardCore.captureRateMetal && spawnedMystery != "1") ||
+                                                (catchRate < TradingCardCore.captureRateMetal + 2 && spawnedMystery == "1")) catchState = 1;
+                                        }
+                                        else
+                                        {
+                                            if ((catchRate < boostMetal && spawnedMystery != "1") ||
+                                                (catchRate < boostMetal + 2 && spawnedMystery == "1")) catchState = 1;
+                                        }
+                                    }
+                                    else if (spawnedCardCategory.ToLower() == "ojamajos")
+                                    {
+                                        maxCard = maxOjamajos;
+                                        if (!useBoost && catchRate < TradingCardCore.captureRateOjamajos)
+                                            catchState = 1;
+                                        else if (useBoost && catchRate < boostOjamajos)
+                                            catchState = 1;
+
+                                    }
+                                    else if (spawnedCardCategory.ToLower() == "special")
+                                    {
+                                        maxCard = TradingCardCore.maxSpecial;
+                                        if (!useBoost && catchRate < TradingCardCore.captureRateSpecial)
+                                            catchState = 1;
+                                        else if (useBoost && catchRate < boostSpecial)
+                                            catchState = 1;
+                                    }
+
+                                    if (catchState == 1)
+                                    {
+                                        //card not exist yet
+                                        if (useBoost)
+                                        {//reset boost
+                                            replyText = $":arrow_double_up: **{GlobalFunctions.UppercaseFirst(parent)} {GlobalFunctions.UppercaseFirst(spawnedCardCategory)}** Card Capture Boost has been used!\n";
+                                            if (spawnedCardCategory == "special")
+                                                arrInventory["boost"]["other"]["special"] = "0";
+                                            else
+                                            {
+                                                arrInventory["boost"][parent]["normal"] = "0";
+                                                arrInventory["boost"][parent]["platinum"] = "0";
+                                                arrInventory["boost"][parent]["metal"] = "0";
+                                                arrInventory["boost"][parent]["ojamajos"] = "0";
+                                            }
+                                        }
+
+                                        //save data:
+                                        arrInventory["catch_attempt"] = (Convert.ToInt32(arrInventory["catch_attempt"]) + 1).ToString();
+                                        arrInventory["catch_token"] = Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyToken);
+                                        JArray item = (JArray)arrInventory[parent][spawnedCardCategory];
+                                        item.Add(spawnedCardId);
+
+                                        if (spawnedCardCategory == "ojamajos")
+                                        {
+                                            var related = (JArray)jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["related"];
+                                            for (int i = 0; i < related.Count; i++)
+                                            {
+                                                if (!arrInventory[related[i].ToString()][spawnedCardCategory].ToString().Contains(spawnedCardId))
+                                                {//check for duplicate on other card
+                                                    JArray itemRelated = (JArray)arrInventory[related[i].ToString()][spawnedCardCategory];
+                                                    itemRelated.Add(spawnedCardId);
+                                                }
+                                            }
+                                        }
+
+                                        File.WriteAllText(playerDataDirectory, arrInventory.ToString());
+
+                                        string[] arrRandomFirstSentence = {
+                                            "Congratulations,","Nice Catch!","Nice one!","Yatta!"
+                                        };
+
+                                        if (spawnedMystery == "1")
+                                            replyText += $":white_check_mark: {arrRandomFirstSentence[new Random().Next(0, arrRandomFirstSentence.Length)]} " +
+                                            $"**{username}** have successfully revealed & captured **{spawnedCardCategory}** mystery card: **{name}**";
+                                        else
+                                            replyText += $":white_check_mark: {arrRandomFirstSentence[new Random().Next(0, arrRandomFirstSentence.Length)]} " +
+                                            $"**{username}** have successfully captured **{spawnedCardCategory}** card: **{name}**";
+
+                                        returnEmbedBuilder = TradingCardCore.printCardCaptureTemplate(Config.Doremi.EmbedColor, name, imgUrl,
+                                        spawnedCardId, spawnedCardCategory, rank, star, point, username, Config.Doremi.EmbedAvatarUrl,
+                                        item.Count, maxCard);
+
+                                        //check if player have captured all doremi card/not
+                                        if (((JArray)arrInventory["doremi"]["normal"]).Count >= TradingCardCore.Doremi.maxNormal &&
+                                            ((JArray)arrInventory["doremi"]["platinum"]).Count >= TradingCardCore.Doremi.maxPlatinum &&
+                                            ((JArray)arrInventory["doremi"]["metal"]).Count >= TradingCardCore.Doremi.maxMetal &&
+                                            ((JArray)arrInventory["doremi"]["ojamajos"]).Count >= TradingCardCore.Doremi.maxOjamajos)
+                                            returnCompleted["doremi"] = true;
+
+                                        //check if player have captured all hazuki card/not
+                                        if (((JArray)arrInventory["hazuki"]["normal"]).Count >= TradingCardCore.Hazuki.maxNormal &&
+                                            ((JArray)arrInventory["hazuki"]["platinum"]).Count >= TradingCardCore.Hazuki.maxPlatinum &&
+                                            ((JArray)arrInventory["hazuki"]["metal"]).Count >= TradingCardCore.Hazuki.maxMetal &&
+                                            ((JArray)arrInventory["hazuki"]["ojamajos"]).Count >= TradingCardCore.Hazuki.maxOjamajos)
+                                            returnCompleted["hazuki"] = true;
+
+                                        //check if player have captured all aiko card/not
+                                        if (((JArray)arrInventory["aiko"]["normal"]).Count >= TradingCardCore.Aiko.maxNormal &&
+                                            ((JArray)arrInventory["aiko"]["platinum"]).Count >= TradingCardCore.Aiko.maxPlatinum &&
+                                            ((JArray)arrInventory["aiko"]["metal"]).Count >= TradingCardCore.Aiko.maxMetal &&
+                                            ((JArray)arrInventory["aiko"]["ojamajos"]).Count >= TradingCardCore.Aiko.maxOjamajos)
+                                            returnCompleted["aiko"] = true;
+
+                                        //check if player have captured all onpu card/not
+                                        if (((JArray)arrInventory["onpu"]["normal"]).Count >= TradingCardCore.Onpu.maxNormal &&
+                                            ((JArray)arrInventory["onpu"]["platinum"]).Count >= TradingCardCore.Onpu.maxPlatinum &&
+                                            ((JArray)arrInventory["onpu"]["metal"]).Count >= TradingCardCore.Onpu.maxMetal &&
+                                            ((JArray)arrInventory["onpu"]["ojamajos"]).Count >= TradingCardCore.Onpu.maxOjamajos)
+                                            returnCompleted["onpu"] = true;
+
+                                        //check if player have captured all momoko card/not
+                                        if (((JArray)arrInventory["momoko"]["normal"]).Count >= TradingCardCore.Momoko.maxNormal &&
+                                            ((JArray)arrInventory["momoko"]["platinum"]).Count >= TradingCardCore.Momoko.maxPlatinum &&
+                                            ((JArray)arrInventory["momoko"]["metal"]).Count >= TradingCardCore.Momoko.maxMetal &&
+                                            ((JArray)arrInventory["momoko"]["ojamajos"]).Count >= TradingCardCore.Momoko.maxOjamajos)
+                                            returnCompleted["momoko"] = true;
+
+                                        //check if player have captured all other special card/not
+                                        if (((JArray)arrInventory["other"]["special"]).Count >= TradingCardCore.maxSpecial)
+                                            returnCompleted["special"] = true;
+
+                                        //erase spawned instance
+                                        TradingCardCore.resetSpawnInstance(guildId);
+                                        return Tuple.Create(replyText, returnEmbedBuilder, returnCompleted);
+                                    }
+                                    else
+                                    {
+                                        //save data:
+                                        arrInventory["catch_attempt"] = (Convert.ToInt32(arrInventory["catch_attempt"]) + 1).ToString();
+                                        arrInventory["catch_token"] = Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyToken);
+                                        if (useBoost)
+                                        {   //reset boost
+                                            replyText = $":arrow_double_up: **{GlobalFunctions.UppercaseFirst(parent)} {GlobalFunctions.UppercaseFirst(spawnedCardCategory)}** Card Capture Boost has been used!\n";
+                                            if (spawnedCardCategory.ToLower() == "special")
+                                                arrInventory["boost"]["other"]["special"] = "0";
+                                            else
+                                            {
+                                                arrInventory["boost"][parent]["normal"] = "0";
+                                                arrInventory["boost"][parent]["platinum"] = "0";
+                                                arrInventory["boost"][parent]["metal"] = "0";
+                                                arrInventory["boost"][parent]["ojamajos"] = "0";
+                                            }
+                                        }
+                                        File.WriteAllText(playerDataDirectory, arrInventory.ToString());
+                                        if (spawnedMystery == "1")
+                                            replyText += $":x: Card revealed correctly! But I'm sorry {username}, you **fail** to catch the mystery card. Better luck next time.";
+                                        else
+                                            replyText += $":x: I'm sorry {username}, you **fail** to catch the card. Better luck next time.";
+                                    }
+                                }
+
+                            }
+                            else
+                            {
+                                replyText = ":x: Sorry, please wait for the next card spawn.";
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e.ToString());
+                        }
+
+                    }
+                    else
+                    {
+                        replyText = ":x: Sorry, I can't capture that card. Try to use the other ojamajo bot to capture this card.";
+                    }
+                }
+                else
+                {
+                    replyText = ":x: Sorry, either this card has been captured by someone or not spawned anymore. Please wait for the card to spawn again.";
+                }
+            }
+
+            //fail
+            returnEmbedBuilder = new EmbedBuilder()
+            .WithColor(color)
+            .WithDescription(replyText)
+            .WithThumbnailUrl(emojiError);
+            return Tuple.Create("", returnEmbedBuilder, returnCompleted);
+
+        }
+
+        public static Tuple<int,int> getCardCaptureState(string spawnedCardCategory,Boolean useBoost,
+            int catchRate,string spawnedMystery,
+            int maxNormal, int maxPlatinum, int maxMetal, int maxOjamajos,
+            int boostNormal,int boostPlatinum,int boostMetal, int boostOjamajos,
+            int boostSpecial)
+        {
+            int maxCard = 0; int catchState = 0;
+            if (spawnedCardCategory.ToLower() == "normal")
+            {
+                maxCard = maxNormal;
+                if (!useBoost)
+                {
+                    if ((catchRate < TradingCardCore.captureRateNormal && spawnedMystery != "1") ||
+                        (catchRate < TradingCardCore.captureRateNormal + 1 && spawnedMystery == "1")) catchState = 1;
+                }
+                else
+                {
+                    if ((catchRate < boostNormal && spawnedMystery != "1") ||
+                        (catchRate < boostNormal + 1 && spawnedMystery == "1")) catchState = 1;
+                }
+            }
+            else if (spawnedCardCategory.ToLower() == "platinum")
+            {
+                maxCard = maxPlatinum;
+                if (!useBoost)
+                {
+                    if ((catchRate < TradingCardCore.captureRatePlatinum && spawnedMystery != "1") ||
+                        (catchRate < TradingCardCore.captureRatePlatinum + 1 && spawnedMystery == "1")) catchState = 1;
+                }
+                else
+                {
+                    if ((catchRate < boostPlatinum && spawnedMystery != "1") ||
+                        (catchRate < boostPlatinum + 1 && spawnedMystery == "1")) catchState = 1;
+                }
+            }
+            else if (spawnedCardCategory.ToLower() == "metal")
+            {
+                maxCard = maxMetal;
+                if (!useBoost)
+                {
+                    if ((catchRate < TradingCardCore.captureRateMetal && spawnedMystery != "1") ||
+                        (catchRate < TradingCardCore.captureRateMetal + 2 && spawnedMystery == "1")) catchState = 1;
+                }
+                else
+                {
+                    if ((catchRate < boostMetal && spawnedMystery != "1") ||
+                        (catchRate < boostMetal + 2 && spawnedMystery == "1")) catchState = 1;
+                }
+            }
+            else if (spawnedCardCategory.ToLower() == "ojamajos")
+            {
+                maxCard = maxOjamajos;
+                if (!useBoost && catchRate < TradingCardCore.captureRateOjamajos)
+                    catchState = 1;
+                else if (useBoost && catchRate < boostOjamajos)
+                    catchState = 1;
+
+            }
+            else if (spawnedCardCategory.ToLower() == "special")
+            {
+                maxCard = TradingCardCore.maxSpecial;
+                if (!useBoost && catchRate < TradingCardCore.captureRateSpecial)
+                    catchState = 1;
+                else if (useBoost && catchRate < boostSpecial)
+                    catchState = 1;
+            }
+            return Tuple.Create(maxCard, catchState);
         }
 
         //parameter pass: 
@@ -486,7 +978,7 @@ namespace OjamajoBot
 
         public static string getCardCategory(string cardId)
         {
-            string category = "";
+            string category;
             if (cardId.ToLower().Contains("dop"))
                 category = "platinum";
             else if (cardId.ToLower().Contains("dom"))
@@ -507,6 +999,10 @@ namespace OjamajoBot
                 category = "platinum";
             else if (cardId.ToLower().Contains("mom"))
                 category = "metal";
+            else if (cardId.ToLower().Contains("oj"))
+                category = "ojamajos";
+            else if (cardId.ToLower().Contains("ot"))
+                category = "special";
             else
                 category = "normal";
             return category;
@@ -514,7 +1010,7 @@ namespace OjamajoBot
 
         public static string getCardParent(string cardId)
         {
-            string category = "";
+            string category;
             if (cardId.ToLower().Contains("do"))
                 category = "doremi";
             else if (cardId.ToLower().Contains("ha"))
@@ -527,10 +1023,8 @@ namespace OjamajoBot
                 category = "momoko";
             else if (cardId.ToLower().Contains("ot"))
                 category = "special";
-            else if (cardId.ToLower().Contains("oj"))
-                category = "ojamajos";
             else
-                category = "normal";
+                category = "doremi";
             return category;
         }
 
@@ -542,6 +1036,7 @@ namespace OjamajoBot
         public class Doremi {
             public static int maxNormal = 48; public static int maxPlatinum = 8; public static int maxMetal = 6;
             public static int maxOjamajos = 5;
+
             public static string parent = "doremi";
             public static string emojiOk = "https://cdn.discordapp.com/attachments/706490547191152690/706511135788105728/143751262x.png";
             public static string emojiError = "https://cdn.discordapp.com/attachments/706490547191152690/706494009991757864/doremi.png";
@@ -570,11 +1065,13 @@ namespace OjamajoBot
             public static string emojiCompleteAllCard = "https://cdn.discordapp.com/attachments/706490547191152690/707424248872042568/win1.jpg";
             public static string getCardCategory(string cardId)
             {
-                string category = "";
+                string category;
                 if (cardId.ToLower().Contains("hap"))
                     category = "platinum";
                 else if (cardId.ToLower().Contains("ham"))
                     category = "metal";
+                else if (cardId.ToLower().Contains("oj"))
+                    category = "ojamajos";
                 else
                     category = "normal";
                 return category;
@@ -589,11 +1086,13 @@ namespace OjamajoBot
             public static string emojiCompleteAllCard = "https://cdn.discordapp.com/attachments/706490547191152690/707424297685090344/win1.jpg";
             public static string getCardCategory(string cardId)
             {
-                string category = "";
+                string category;
                 if (cardId.ToLower().Contains("aip"))
                     category = "platinum";
                 else if (cardId.ToLower().Contains("aim"))
                     category = "metal";
+                else if (cardId.ToLower().Contains("oj"))
+                    category = "ojamajos";
                 else
                     category = "normal";
                 return category;
@@ -608,11 +1107,13 @@ namespace OjamajoBot
             public static string emojiCompleteAllCard = "https://cdn.discordapp.com/attachments/706490547191152690/707424375380508682/win2.jpg";
             public static string getCardCategory(string cardId)
             {
-                string category = "";
+                string category;
                 if (cardId.ToLower().Contains("onp"))
                     category = "platinum";
                 else if (cardId.ToLower().Contains("onm"))
                     category = "metal";
+                else if (cardId.ToLower().Contains("oj"))
+                    category = "ojamajos";
                 else
                     category = "normal";
                 return category;
@@ -629,11 +1130,13 @@ namespace OjamajoBot
 
             public static string getCardCategory(string cardId)
             {
-                string category = "";
+                string category;
                 if (cardId.ToLower().Contains("mop"))
                     category = "platinum";
                 else if (cardId.ToLower().Contains("mom"))
                     category = "metal";
+                else if (cardId.ToLower().Contains("oj"))
+                    category = "ojamajos";
                 else
                     category = "normal";
                 return category;

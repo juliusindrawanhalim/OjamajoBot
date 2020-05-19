@@ -39,3 +39,12 @@ Doremi Trading Card - Update 1.05 - 12.05.20
 -Bug fix on card catch color
 -Bug fix on catch rate
 -Updates on card spawn embed layout
+
+Doremi Trading Card - Update 1.06 - 16.05.20
+=======================================================================
+-New Card Type: Mystery Card
+
+Doremi Trading Card - Update 1.07 - 19.05.20
+=======================================================================
+-Bug fix on card detail command
+-Code & performance optimization for card capture & card detail commands

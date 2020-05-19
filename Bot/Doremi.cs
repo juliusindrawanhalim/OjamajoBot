@@ -453,7 +453,7 @@ namespace OjamajoBot.Bot
                             "February is my birthday",
                             "Rere is my fairy",
                             "May, July, March and November are not my birthday",
-                            "My birthday was same with Aiko but I'm older",
+                            "My birthday date was same with Aiko but I'm older",
                             "My blood type was A",
                             "One of my favorite food ends with **e**",
                             "One of my favorite food start with **ch**",
@@ -477,7 +477,7 @@ namespace OjamajoBot.Bot
                             "November is my birthday",
                             "Mimi is my fairy",
                             "July, February, March and May are not my birthday",
-                            "My birthday was same with Hazuki but I'm younger",
+                            "My birthday date was same with Hazuki but I'm younger",
                             "My blood type was O",
                             "One of my favorite food ends with **i**",
                             "One of my favorite food start with **t**",
@@ -589,7 +589,8 @@ namespace OjamajoBot.Bot
                         await client
                         .GetGuild(guild.Id)
                         .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "trading_card_spawn")))
-                        .SendMessageAsync($":exclamation:A **{chosenCategory}** {parent} card has appeared! Capture it with **<bot>!card capture/catch**",
+                        .SendMessageAsync($":exclamation:A **{chosenCategory}** {parent} card has appeared!\n" +
+                        $"Capture it with **<bot>!card capture** or **<bot>!card capture boost**",
                         embed: embed.Build());
                     } else
                     {//mystery card
@@ -605,8 +606,8 @@ namespace OjamajoBot.Bot
                         await client
                         .GetGuild(guild.Id)
                         .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "trading_card_spawn")))
-                        .SendMessageAsync($":question:A **mystery** card has appeared! Can you guess who card is this belongs to?\n" +
-                        $"Reveal & capture it with **<bot>!card capture/catch**",
+                        .SendMessageAsync($":question:A **mystery** card has appeared! Can you guess whose card is this belongs to?\n" +
+                        $"Reveal & capture it with **<bot>!card capture** or **<bot>!card capture boost**",
                         embed: embed.Build());
                     }
                 },

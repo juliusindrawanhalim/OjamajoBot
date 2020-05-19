@@ -1484,7 +1484,7 @@ namespace OjamajoBot.Module
                             "February is my birthday",
                             "Rere is my fairy",
                             "May, July, March and November are not my birthday",
-                            "My birthday was same with Aiko but I'm older",
+                            "My birthday date was same with Aiko but I'm older",
                             "My blood type was A",
                             "One of my favorite food ends with **e**",
                             "One of my favorite food start with **ch**",
@@ -1508,7 +1508,7 @@ namespace OjamajoBot.Module
                             "November is my birthday",
                             "Mimi is my fairy",
                             "July, February, March and May are not my birthday",
-                            "My birthday was same with Hazuki but I'm younger",
+                            "My birthday date was same with Hazuki but I'm younger",
                             "My blood type was O",
                             "One of my favorite food ends with **i**",
                             "One of my favorite food start with **t**",
@@ -1625,7 +1625,8 @@ namespace OjamajoBot.Module
                         await client
                         .GetGuild(guildId)
                         .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guildId, "trading_card_spawn")))
-                        .SendMessageAsync($":exclamation:A **{chosenCategory}** {parent} card has appeared! Capture it with **<bot>!card capture/catch**",
+                        .SendMessageAsync($":exclamation:A **{chosenCategory}** {parent} card has appeared!\n" +
+                        $"Capture it with **<bot>!card capture** or **<bot>!card capture boost**",
                         embed: embed.Build());
                     }
                     else
@@ -1642,8 +1643,8 @@ namespace OjamajoBot.Module
                         await client
                         .GetGuild(guildId)
                         .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guildId, "trading_card_spawn")))
-                        .SendMessageAsync($":question:A **mystery** card has appeared! Can you guess who card is this belongs to?\n" +
-                        $"Reveal & capture it with **<bot>!card capture/catch**",
+                        .SendMessageAsync($":question:A **mystery** card has appeared! Can you guess whose card is this belongs to?\n" +
+                        $"Reveal & capture it with **<bot>!card capture** or **<bot>!card capture boost**",
                         embed: embed.Build());
                     }
                 },
@@ -1815,418 +1816,95 @@ namespace OjamajoBot.Module
             //reference: https://www.newtonsoft.com/json/help/html/ModifyJson.htm
             var guildId = Context.Guild.Id;
             var clientId = Context.User.Id;
-            string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
-            //start read json
-            var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
 
-            string replyText = ""; string parent = "doremi";
+            var cardCaptureReturn = TradingCardCore.cardCapture(Config.Doremi.EmbedColor, guildId, clientId.ToString(), Context.User.Username,
+            TradingCardCore.Doremi.emojiError, "doremi", boost, Config.Doremi.PrefixParent[0], "do",
+            TradingCardCore.Doremi.maxNormal, TradingCardCore.Doremi.maxPlatinum, TradingCardCore.Doremi.maxMetal, TradingCardCore.Doremi.maxOjamajos);
 
-            if (!File.Exists(playerDataDirectory))
-            {
-                await ReplyAsync(embed: new EmbedBuilder()
-                .WithColor(Config.Doremi.EmbedColor)
-                .WithDescription($"I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
-                .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build());
-                return;
-            }
+            if (cardCaptureReturn.Item1 == "")
+                await ReplyAsync(embed: cardCaptureReturn.Item2.Build());
             else
+                await ReplyAsync(cardCaptureReturn.Item1,
+                    embed: cardCaptureReturn.Item2.Build());
+            
+
+            //check if player have captured all doremi card/not
+            if (cardCaptureReturn.Item3["doremi"])
+                await Bot.Doremi.client
+                .GetGuild(guildId)
+                .GetTextChannel(Context.Channel.Id)
+                .SendMessageAsync(embed: TradingCardCore
+                .userCompleteTheirList(Config.Doremi.EmbedColor, Config.Doremi.EmbedAvatarUrl , "doremi",
+                $":confetti_ball: Congratulations, **{Context.User.Username}** have complete all **Doremi Card Pack**!",
+                TradingCardCore.Doremi.emojiCompleteAllCard, guildId.ToString(),
+                Context.User.Id.ToString())
+                .Build());
+            
+
+            //check if player have captured all hazuki card/not
+            if (cardCaptureReturn.Item3["hazuki"])
             {
-                JObject arrInventory = JObject.Parse(File.ReadAllText(playerDataDirectory));
-                string spawnedCardId = Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyId);
-                string spawnedCardCategory = Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyCategory);
-                string spawnedMystery = Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyMystery);
-
-                int boostNormal = 0; int boostPlatinum = 0; int boostMetal = 0;
-                int boostOjamajos = 0; int boostSpecial = 0;
-                if (spawnedCardCategory.ToLower() == "special") {
-                    parent = "other";
-                    boostSpecial = Convert.ToInt32(arrInventory["boost"]["other"]["special"].ToString());
-                } else {
-                    boostNormal = Convert.ToInt32(arrInventory["boost"][parent]["normal"].ToString());
-                    boostPlatinum = Convert.ToInt32(arrInventory["boost"][parent]["platinum"].ToString());
-                    boostMetal = Convert.ToInt32(arrInventory["boost"][parent]["metal"].ToString());
-                    boostOjamajos = Convert.ToInt32(arrInventory["boost"][parent]["ojamajos"].ToString());
-                }
-                
-                //process booster
-                Boolean useBoost = false;
-                if (boost.ToLower() != "" && boost.ToLower() != "boost")
-                {
-                    await ReplyAsync(embed: new EmbedBuilder()
-                    .WithColor(Config.Doremi.EmbedColor)
-                    .WithDescription($":x: Sorry, that is not the valid card capture boost command. Use: **{Config.Doremi.PrefixParent[0]}card capture boost**")
-                    .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build());
-                    return;
-                }
-                else if ((boost.ToLower() == "boost" && spawnedCardCategory == "normal" && boostNormal <= 0)&&
-                    (boost.ToLower() == "boost" && spawnedCardCategory == "platinum" && boostPlatinum <= 0)&&
-                    (boost.ToLower() == "boost" && spawnedCardCategory == "metal" && boostMetal <= 0)&&
-                    (boost.ToLower() == "boost" && spawnedCardCategory == "ojamajos" && boostOjamajos <= 0)&&
-                    (boost.ToLower() == "boost" && spawnedCardCategory == "special" && boostSpecial <= 0))
-                {
-                    await ReplyAsync(embed: new EmbedBuilder()
-                    .WithColor(Config.Doremi.EmbedColor)
-                    .WithDescription($":x: Sorry, you have no {parent} {spawnedCardCategory} card capture boost that you can use.")
-                    .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build());
-                    return;
-                }
-                else if (boost.ToLower() == "boost") useBoost = true;
-
-                Boolean indexExists = false;
-                try
-                {
-                    var checking = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["name"];
-                    indexExists = true;
-                }
-                catch (Exception e) { }
-
-                if (spawnedCardId != "" && spawnedCardCategory != "")
-                {
-                    if (spawnedCardId.Contains("do") ||
-                        (spawnedCardId.Contains("oj") && indexExists) ||
-                        spawnedCardCategory.ToLower() == "special" ||
-                        spawnedMystery == "1")//check if the card is doremi/ojamajos/other
-                    {
-                        int catchState = 0;
-
-                        if((string)arrInventory["catch_token"] == Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyToken))
-                        {
-                            await ReplyAsync(embed: new EmbedBuilder()
-                            .WithColor(Config.Doremi.EmbedColor)
-                            .WithDescription($":x: Sorry, please wait for the next card spawn.")
-                            .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build());
-                            return;
-                        } else if(spawnedMystery == "1" && !indexExists)
-                        {
-                            arrInventory["catch_attempt"] = (Convert.ToInt32(arrInventory["catch_attempt"]) + 1).ToString();
-                            arrInventory["catch_token"] = Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyToken);
-                            File.WriteAllText(playerDataDirectory, arrInventory.ToString());
-
-                            await ReplyAsync(embed: new EmbedBuilder()
-                            .WithColor(Config.Doremi.EmbedColor)
-                            .WithDescription($":x: Sorry, you guessed the wrong mystery card.")
-                            .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build());
-                            return;
-                        }
-
-                        //check last capture time
-                        try
-                        {
-                            if ((string)arrInventory["catch_token"] == "" ||
-                                (string)arrInventory["catch_token"] != Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyToken))
-                            {
-                                int catchRate = new Random().Next(10);
-                                string name = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["name"].ToString();
-                                string imgUrl = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["url"].ToString();
-                                string rank = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["0"].ToString();
-                                string star = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["1"].ToString();
-                                string point = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["2"].ToString();
-
-                                //check inventory
-                                if (arrInventory[parent][spawnedCardCategory].ToString().Contains(spawnedCardId))
-                                {//card already exist on inventory
-                                    if (spawnedMystery != "1")
-                                        replyText = $":x: Sorry, I can't capture **{spawnedCardId} - {name}** because you have it already.";
-                                    else
-                                        replyText = $":x: You guess the mystery card correctly but I can't capture **{spawnedCardId} - {name}** because you have it already.";
-                                }
-                                else
-                                {
-                                    int maxCard = 0;
-                                    //init RNG catch rate
-                                    //if boost: change the TradingCardCore.captureRate
-                                    if (spawnedCardCategory.ToLower() == "normal")
-                                    {
-                                        maxCard = TradingCardCore.Doremi.maxNormal;
-                                        if (!useBoost)
-                                        {
-                                            if (catchRate < TradingCardCore.captureRateNormal &&
-                                                spawnedMystery != "1") catchState = 1;
-                                            else if (catchRate < TradingCardCore.captureRateNormal+1 &&
-                                                spawnedMystery == "1") catchState = 1;
-                                        }
-                                        else
-                                        {
-                                            if (catchRate < boostNormal &&
-                                                spawnedMystery != "1") catchState = 1;
-                                            else if (catchRate < boostNormal + 1 &&
-                                                spawnedMystery == "1") catchState = 1;
-                                        }
-                                    }
-                                    else if (spawnedCardCategory.ToLower() == "platinum")
-                                    {
-                                        maxCard = TradingCardCore.Doremi.maxPlatinum;
-                                        if (!useBoost)
-                                        {
-                                            if (catchRate < TradingCardCore.captureRatePlatinum &&
-                                                spawnedMystery != "1") catchState = 1;
-                                            else if (catchRate < TradingCardCore.captureRatePlatinum + 1 &&
-                                                spawnedMystery == "1") catchState = 1;
-                                        }
-                                        else
-                                        {
-                                            if (catchRate < boostPlatinum &&
-                                                spawnedMystery != "1") catchState = 1;
-                                            else if (catchRate < boostPlatinum + 1 &&
-                                                spawnedMystery == "1") catchState = 1;
-                                        }
-                                    }
-                                    else if (spawnedCardCategory.ToLower() == "metal")
-                                    {
-                                        maxCard = TradingCardCore.Doremi.maxMetal;
-                                        if (!useBoost)
-                                        {
-                                            if (catchRate < TradingCardCore.captureRateMetal &&
-                                                spawnedMystery != "1") catchState = 1;
-                                            else if (catchRate < TradingCardCore.captureRateMetal + 2 &&
-                                                spawnedMystery == "1") catchState = 1;
-                                        }
-                                        else
-                                        {
-                                            if (catchRate < boostMetal &&
-                                                spawnedMystery != "1") catchState = 1;
-                                            else if (catchRate < boostMetal + 2 &&
-                                                spawnedMystery == "1") catchState = 1;
-                                        }
-                                    }
-                                    else if (spawnedCardCategory.ToLower() == "ojamajos")
-                                    {
-                                        maxCard = TradingCardCore.Doremi.maxOjamajos;
-                                        if (!useBoost)
-                                        {
-                                            if (catchRate < TradingCardCore.captureRateOjamajos) catchState = 1;
-                                        }
-                                        else
-                                        {
-                                            if (catchRate < boostOjamajos) catchState = 1;
-                                        }
-                                    }
-                                    else if (spawnedCardCategory.ToLower() == "special")
-                                    {
-                                        maxCard = TradingCardCore.maxSpecial;
-                                        if (!useBoost)
-                                        {
-                                            if (catchRate < TradingCardCore.captureRateSpecial) catchState = 1;
-                                        }
-                                        else
-                                        {
-                                            if (catchRate < boostSpecial) catchState = 1;
-                                        }
-                                    }
-
-                                    if (catchState == 1)
-                                    {
-                                        //card not exist yet
-                                        if (useBoost)
-                                        {//reset boost
-                                            replyText = $":arrow_double_up: **{GlobalFunctions.UppercaseFirst(parent)} {GlobalFunctions.UppercaseFirst(spawnedCardCategory)}** Card Capture Boost has been used!\n";
-                                            if (spawnedCardCategory == "special")
-                                                arrInventory["boost"]["other"]["special"] = "0";
-                                            else
-                                            {
-                                                arrInventory["boost"][parent]["normal"] = "0";
-                                                arrInventory["boost"][parent]["platinum"] = "0";
-                                                arrInventory["boost"][parent]["metal"] = "0";
-                                                arrInventory["boost"][parent]["ojamajos"] = "0";
-                                            }
-                                        }
-
-                                        //save data:
-                                        arrInventory["catch_attempt"] = (Convert.ToInt32(arrInventory["catch_attempt"]) + 1).ToString();
-                                        arrInventory["catch_token"] = Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyToken);
-                                        JArray item = (JArray)arrInventory[parent][spawnedCardCategory];
-                                        item.Add(spawnedCardId);
-
-                                        if (spawnedCardCategory == "ojamajos")
-                                        {
-                                            var related = (JArray)jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["related"];
-                                            for (int i = 0; i < related.Count; i++)
-                                            {
-                                                if (!arrInventory[related[i].ToString()][spawnedCardCategory].ToString().Contains(spawnedCardId))
-                                                {//check for duplicate on other card
-                                                    JArray itemRelated = (JArray)arrInventory[related[i].ToString()][spawnedCardCategory];
-                                                    itemRelated.Add(spawnedCardId);
-                                                }
-                                            }
-                                        }
-
-                                        File.WriteAllText(playerDataDirectory, arrInventory.ToString());
-
-                                        string[] arrRandomFirstSentence = {
-                                            "Congratulations,","Nice Catch!","Nice one!","Yatta!"
-                                        };
-
-                                        if (spawnedMystery == "1")
-                                            replyText += $":white_check_mark: {arrRandomFirstSentence[new Random().Next(0, arrRandomFirstSentence.Length)]} " +
-                                            $"**{Context.User.Username}** have successfully revealed & captured **{spawnedCardCategory}** mystery card: **{name}**";
-                                        else
-                                            replyText += $":white_check_mark: {arrRandomFirstSentence[new Random().Next(0, arrRandomFirstSentence.Length)]} " +
-                                            $"**{Context.User.Username}** have successfully captured **{spawnedCardCategory}** card: **{name}**";
-                                        
-                                        await ReplyAsync(replyText,
-                                        embed: TradingCardCore.printCardCaptureTemplate(Config.Doremi.EmbedColor, name, imgUrl,
-                                        spawnedCardId, spawnedCardCategory, rank, star, point, Context.User.Username, Config.Doremi.EmbedAvatarUrl,
-                                        item.Count, maxCard)
-                                        .Build());
-
-
-                                        //check if player have captured all doremi card/not
-                                        if (((JArray)arrInventory["doremi"]["normal"]).Count >= TradingCardCore.Doremi.maxNormal &&
-                                            ((JArray)arrInventory["doremi"]["platinum"]).Count >= TradingCardCore.Doremi.maxPlatinum &&
-                                            ((JArray)arrInventory["doremi"]["metal"]).Count >= TradingCardCore.Doremi.maxMetal &&
-                                            ((JArray)arrInventory["doremi"]["ojamajos"]).Count >= TradingCardCore.Doremi.maxOjamajos)
-                                        {
-                                            await Bot.Doremi.client
-                                            .GetGuild(guildId)
-                                            .GetTextChannel(Context.Channel.Id)
-                                            .SendMessageAsync(embed: TradingCardCore
-                                            .userCompleteTheirList(Config.Doremi.EmbedColor, "doremi",
-                                            $":clap: Congratulations, **{Context.User.Username}** have complete all **Doremi Card Pack**!",
-                                            TradingCardCore.Doremi.emojiCompleteAllCard, guildId.ToString(),
-                                            Context.User.Id.ToString())
-                                            .Build());
-                                        }
-
-                                        //check if player have captured all hazuki card/not
-                                        if (((JArray)arrInventory["hazuki"]["normal"]).Count >= TradingCardCore.Hazuki.maxNormal &&
-                                            ((JArray)arrInventory["hazuki"]["platinum"]).Count >= TradingCardCore.Hazuki.maxPlatinum &&
-                                            ((JArray)arrInventory["hazuki"]["metal"]).Count >= TradingCardCore.Hazuki.maxMetal &&
-                                            ((JArray)arrInventory["hazuki"]["ojamajos"]).Count >= TradingCardCore.Hazuki.maxOjamajos)
-                                        {
-                                            await Bot.Hazuki.client
-                                            .GetGuild(guildId)
-                                            .GetTextChannel(Context.Channel.Id)
-                                            .SendMessageAsync(embed: TradingCardCore
-                                            .userCompleteTheirList(Config.Hazuki.EmbedColor, "hazuki",
-                                            $":clap: Congratulations, **{Context.User.Username}** have complete all **Hazuki Card Pack**!",
-                                            TradingCardCore.Hazuki.emojiCompleteAllCard, guildId.ToString(),
-                                            Context.User.Id.ToString())
-                                            .Build());
-                                        }
-
-                                        //check if player have captured all aiko card/not
-                                        if (((JArray)arrInventory["aiko"]["normal"]).Count >= TradingCardCore.Aiko.maxNormal &&
-                                            ((JArray)arrInventory["aiko"]["platinum"]).Count >= TradingCardCore.Aiko.maxPlatinum &&
-                                            ((JArray)arrInventory["aiko"]["metal"]).Count >= TradingCardCore.Aiko.maxMetal &&
-                                            ((JArray)arrInventory["aiko"]["ojamajos"]).Count >= TradingCardCore.Aiko.maxOjamajos)
-                                        {
-                                            await Bot.Aiko.client
-                                            .GetGuild(guildId)
-                                            .GetTextChannel(Context.Channel.Id)
-                                            .SendMessageAsync(embed: TradingCardCore
-                                            .userCompleteTheirList(Config.Aiko.EmbedColor, "aiko",
-                                            $":clap: Congratulations, **{Context.User.Username}** have complete all **Aiko Card Pack**!",
-                                            TradingCardCore.Aiko.emojiCompleteAllCard, guildId.ToString(),
-                                            Context.User.Id.ToString())
-                                            .Build());
-                                        }
-
-                                        //check if player have captured all onpu card/not
-                                        if (((JArray)arrInventory["onpu"]["normal"]).Count >= TradingCardCore.Onpu.maxNormal &&
-                                            ((JArray)arrInventory["onpu"]["platinum"]).Count >= TradingCardCore.Onpu.maxPlatinum &&
-                                            ((JArray)arrInventory["onpu"]["metal"]).Count >= TradingCardCore.Onpu.maxMetal &&
-                                            ((JArray)arrInventory["onpu"]["ojamajos"]).Count >= TradingCardCore.Onpu.maxOjamajos)
-                                        {
-                                            await Bot.Onpu.client
-                                            .GetGuild(guildId)
-                                            .GetTextChannel(Context.Channel.Id)
-                                            .SendMessageAsync(embed: TradingCardCore
-                                            .userCompleteTheirList(Config.Onpu.EmbedColor, "onpu",
-                                            $":clap: Congratulations, **{Context.User.Username}** have complete all **Onpu Card Pack**!",
-                                            TradingCardCore.Onpu.emojiCompleteAllCard, guildId.ToString(),
-                                            Context.User.Id.ToString())
-                                            .Build());
-                                        }
-
-                                        //check if player have captured all momoko card/not
-                                        if (((JArray)arrInventory["momoko"]["normal"]).Count >= TradingCardCore.Momoko.maxNormal &&
-                                            ((JArray)arrInventory["momoko"]["platinum"]).Count >= TradingCardCore.Momoko.maxPlatinum &&
-                                            ((JArray)arrInventory["momoko"]["metal"]).Count >= TradingCardCore.Momoko.maxMetal &&
-                                            ((JArray)arrInventory["momoko"]["ojamajos"]).Count >= TradingCardCore.Momoko.maxOjamajos)
-                                        {
-                                            await Bot.Momoko.client
-                                            .GetGuild(guildId)
-                                            .GetTextChannel(Context.Channel.Id)
-                                            .SendMessageAsync(embed: TradingCardCore
-                                            .userCompleteTheirList(Config.Momoko.EmbedColor, "momoko",
-                                            $":clap: Congratulations, **{Context.User.Username}** have complete all **Momoko Card Pack**!",
-                                            TradingCardCore.Momoko.emojiCompleteAllCard, guildId.ToString(),
-                                            Context.User.Id.ToString())
-                                            .Build());
-                                        }
-
-                                        //check if player have captured all other special card/not
-                                        if (((JArray)arrInventory["other"]["special"]).Count >= TradingCardCore.maxSpecial)
-                                            await ReplyAsync(embed: TradingCardCore
-                                            .userCompleteTheirList(Config.Doremi.EmbedColor, "other",
-                                            $":clap: Congratulations, **{Context.User.Username}** have complete all **Other Special Card Pack**!",
-                                            TradingCardCore.Doremi.emojiCompleteAllCard, guildId.ToString(),
-                                            Context.User.Id.ToString())
-                                            .Build());
-
-
-                                        //erase spawned instance
-                                        TradingCardCore.resetSpawnInstance(guildId);
-                                        return;
-
-                                    }
-                                    else
-                                    {
-                                        //save data:
-                                        arrInventory["catch_attempt"] = (Convert.ToInt32(arrInventory["catch_attempt"]) + 1).ToString();
-                                        arrInventory["catch_token"] = Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyToken);
-                                        if (useBoost)
-                                        {   //reset boost
-                                            replyText = $":arrow_double_up: **{GlobalFunctions.UppercaseFirst(parent)} {GlobalFunctions.UppercaseFirst(spawnedCardCategory)}** Card Capture Boost has been used!\n";
-                                            if (spawnedCardCategory.ToLower() == "special")
-                                                arrInventory["boost"]["other"]["special"] = "0";
-                                            else
-                                            {
-                                                arrInventory["boost"][parent]["normal"] = "0";
-                                                arrInventory["boost"][parent]["platinum"] = "0";
-                                                arrInventory["boost"][parent]["metal"] = "0";
-                                                arrInventory["boost"][parent]["ojamajos"] = "0";
-                                            }
-                                        }
-                                        File.WriteAllText(playerDataDirectory, arrInventory.ToString());
-                                        if (spawnedMystery == "1")
-                                            replyText += $":x: Card revealed correctly! But I'm sorry {Context.User.Username}, you **fail** to catch the mystery card. Better luck next time.";
-                                        else
-                                            replyText += $":x: I'm sorry {Context.User.Username}, you **fail** to catch the card. Better luck next time.";
-                                    }
-                                }
-
-                            }
-                            else
-                            {
-                                replyText = ":x: Sorry, please wait for the next card spawn.";
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            Console.WriteLine(e.ToString());
-                        }
-
-                    }
-                    else
-                    {
-                        replyText = ":x: Sorry, I can't capture that card. Try to use the other ojamajo bot to capture this card.";
-                    }
-                }
-                else
-                {
-                    replyText = ":x: Sorry, either this card has been captured by someone or not spawned anymore. Please wait for the card to spawn again.";
-                }
-
+                await Bot.Hazuki.client
+                .GetGuild(guildId)
+                .GetTextChannel(Context.Channel.Id)
+                .SendMessageAsync(embed: TradingCardCore
+                .userCompleteTheirList(Config.Hazuki.EmbedColor, Config.Hazuki.EmbedAvatarUrl, "hazuki",
+                $":confetti_ball: Congratulations, **{Context.User.Username}** have complete all **Hazuki Card Pack**!",
+                TradingCardCore.Hazuki.emojiCompleteAllCard, guildId.ToString(),
+                Context.User.Id.ToString())
+                .Build());
             }
 
+            //check if player have captured all aiko card/not
+            if (cardCaptureReturn.Item3["aiko"])
+            {
+                await Bot.Aiko.client
+                .GetGuild(guildId)
+                .GetTextChannel(Context.Channel.Id)
+                .SendMessageAsync(embed: TradingCardCore
+                .userCompleteTheirList(Config.Aiko.EmbedColor, Config.Aiko.EmbedAvatarUrl, "aiko",
+                $":confetti_ball: Congratulations, **{Context.User.Username}** have complete all **Aiko Card Pack**!",
+                TradingCardCore.Aiko.emojiCompleteAllCard, guildId.ToString(),
+                Context.User.Id.ToString())
+                .Build());
+            }
 
+            //check if player have captured all onpu card/not
+            if (cardCaptureReturn.Item3["onpu"])
+            {
+                await Bot.Onpu.client
+                .GetGuild(guildId)
+                .GetTextChannel(Context.Channel.Id)
+                .SendMessageAsync(embed: TradingCardCore
+                .userCompleteTheirList(Config.Onpu.EmbedColor, Config.Onpu.EmbedAvatarUrl, "onpu",
+                $":confetti_ball: Congratulations, **{Context.User.Username}** have complete all **Onpu Card Pack**!",
+                TradingCardCore.Onpu.emojiCompleteAllCard, guildId.ToString(),
+                Context.User.Id.ToString())
+                .Build());
+            }
 
-            //fail
-            await ReplyAsync(embed: new EmbedBuilder()
-            .WithColor(Config.Doremi.EmbedColor)
-            .WithDescription(replyText)
-            .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build());
+            //check if player have captured all momoko card/not
+            if (cardCaptureReturn.Item3["momoko"])
+            {
+                await Bot.Momoko.client
+                .GetGuild(guildId)
+                .GetTextChannel(Context.Channel.Id)
+                .SendMessageAsync(embed: TradingCardCore
+                .userCompleteTheirList(Config.Momoko.EmbedColor, Config.Momoko.EmbedAvatarUrl, "momoko",
+                $":confetti_ball: Congratulations, **{Context.User.Username}** have complete all **Momoko Card Pack**!",
+                TradingCardCore.Momoko.emojiCompleteAllCard, guildId.ToString(),
+                Context.User.Id.ToString())
+                .Build());
+            }
+
+            //check if player have captured all other special card/not
+            if (cardCaptureReturn.Item3["special"])
+                await ReplyAsync(embed: TradingCardCore
+                    .userCompleteTheirList(Config.Doremi.EmbedColor, Config.Doremi.EmbedAvatarUrl, "other",
+                    $":confetti_ball: Congratulations, **{Context.User.Username}** have complete all **Other Special Card Pack**!",
+                    TradingCardCore.Doremi.emojiCompleteAllCard, guildId.ToString(),
+                    Context.User.Id.ToString())
+                    .Build());
 
         }
 
@@ -2375,52 +2053,10 @@ namespace OjamajoBot.Module
         {
             var guildId = Context.Guild.Id;
             var clientId = Context.User.Id;
-            string parent = "doremi";
 
-            string category = "";
-
-            if (card_id.Contains("doP"))//platinum
-                category = "platinum";
-            else if (card_id.Contains("doM"))//metal
-                category = "metal";
-            else if (card_id.Contains("do"))
-                category = "normal";
-
-            try
-            {
-                //start read json
-                string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
-                JObject arrInventory = JObject.Parse(File.ReadAllText(playerDataDirectory));
-                var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
-                string name = jObjTradingCardList[parent][category][card_id]["name"].ToString();
-
-                if (arrInventory[parent][category].ToString().Contains(card_id))
-                {
-                    string imgUrl = jObjTradingCardList[parent][category][card_id]["url"].ToString();
-                    string rank = jObjTradingCardList[parent][category][card_id]["0"].ToString();
-                    string star = jObjTradingCardList[parent][category][card_id]["1"].ToString();
-                    string point = jObjTradingCardList[parent][category][card_id]["2"].ToString();
-
-                    await ReplyAsync(embed: TradingCardCore.printCardDetailTemplate(Config.Doremi.EmbedColor, name,
-                        imgUrl, card_id, category, rank, star, point)
-                        .Build());
-                }
-                else
-                {
-                    await ReplyAsync(embed: new EmbedBuilder()
-                    .WithColor(Config.Doremi.EmbedColor)
-                    .WithDescription($":x: Sorry, you don't have: **{card_id} - {name}** card yet. Try capture it to look at this card.")
-                    .WithImageUrl(TradingCardCore.Doremi.emojiError).Build());
-                }
-            }
-            catch (Exception e)
-            {
-                await ReplyAsync(embed: new EmbedBuilder()
-                .WithColor(Config.Doremi.EmbedColor)
-                .WithDescription(":x: Sorry, I can't find that card ID.")
-                .WithImageUrl(TradingCardCore.Doremi.emojiError).Build());
-            }
-
+            await ReplyAsync(embed: TradingCardCore.printCardDetailTemplate(Config.Doremi.EmbedColor, guildId.ToString(),
+                clientId.ToString(), card_id, "doremi", TradingCardCore.Doremi.emojiError, ":x: Sorry, I can't find that card ID.")
+                    .Build());
         }
 
         [Command("status", RunMode = RunMode.Async), Summary("Show your Trading Card Status report.")]
@@ -2428,21 +2064,10 @@ namespace OjamajoBot.Module
         {
             var guildId = Context.Guild.Id;
             var clientId = Context.User.Id;
-            string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
-
-            if (!File.Exists(playerDataDirectory))
-            { //not registered yet
-                await ReplyAsync(embed: new EmbedBuilder()
-                .WithColor(Config.Doremi.EmbedColor)
-                .WithDescription($"I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
-                .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build());
-            }
-            else
-            {
-                await ReplyAsync(embed: TradingCardCore.
-                    printStatusTemplate(Config.Doremi.EmbedColor, Context.User.Username, guildId.ToString(), clientId.ToString())
+            await ReplyAsync(embed: TradingCardCore.
+                    printStatusTemplate(Config.Doremi.EmbedColor, Context.User.Username, guildId.ToString(), clientId.ToString(),
+                    TradingCardCore.Doremi.emojiError)
                     .Build());
-            }
         }
 
         //show top 5 that capture each card pack
@@ -3894,17 +3519,17 @@ namespace OjamajoBot.Module
                         else if(selectionItem == 2)
                         {
                             arrInventory["boost"]["doremi"]["normal"] = 10;
-                            concatResponseSuccess = ":sparkles: You received **Peperuto Pollon Card** Boost!";
+                            concatResponseSuccess = ":sparkles: You received **Peperuto Pollon Card** Boost! Activate it on card spawn with **<bot>!card capture boost**";
                         } 
                         else if (selectionItem == 3)
                         {
                             arrInventory["boost"]["hazuki"]["normal"] = 10;
-                            concatResponseSuccess = ":sparkles: You received **Puwapuwa Pollon Card** Boost!";
+                            concatResponseSuccess = ":sparkles: You received **Puwapuwa Pollon Card** Boost! Activate it on card spawn with **<bot>!card capture boost**";
                         }
                         else if (selectionItem == 4)
                         {
                             arrInventory["boost"]["aiko"]["normal"] = 10;
-                            concatResponseSuccess = ":sparkles: You received **Poppun Pollon Card** Boost!";
+                            concatResponseSuccess = ":sparkles: You received **Poppun Pollon Card** Boost! Activate it on card spawn with **<bot>!card capture boost**";
                         }
                         else if (selectionItem == 5)
                         {
@@ -3934,7 +3559,7 @@ namespace OjamajoBot.Module
                             arrInventory["boost"]["momoko"]["ojamajos"] = 3;
 
                             arrInventory["boost"]["other"]["special"] = 6;
-                            concatResponseSuccess = ":sparkles: You received **Apprentice Tap Card** Boost!";
+                            concatResponseSuccess = ":sparkles: You received **Apprentice Tap Card** Boost! Activate it on card spawn with **<bot>!card capture boost**";
                         }
                         else if (selectionItem == 6)
                         {
@@ -3959,7 +3584,7 @@ namespace OjamajoBot.Module
                             arrInventory["boost"]["onpu"]["ojamajos"] = 4;
 
                             arrInventory["boost"]["other"]["special"] = 7;
-                            concatResponseSuccess = ":sparkles: You received **Rythm Tap Card** Boost!";
+                            concatResponseSuccess = ":sparkles: You received **Rythm Tap Card** Boost! Activate it on card spawn with **<bot>!card capture boost**";
                         }
                         else if (selectionItem == 7)
                         {
@@ -3989,7 +3614,7 @@ namespace OjamajoBot.Module
                             arrInventory["boost"]["momoko"]["ojamajos"] = 5;
 
                             arrInventory["boost"]["other"]["special"] = 7;
-                            concatResponseSuccess = ":sparkles: You received **Kururun Pollon Card** Boost!";
+                            concatResponseSuccess = ":sparkles: You received **Kururun Pollon Card** Boost! Activate it on card spawn with **<bot>!card capture boost**";
                         }
                         else if (selectionItem == 8)
                         {
@@ -4014,7 +3639,7 @@ namespace OjamajoBot.Module
                             arrInventory["boost"]["onpu"]["ojamajos"] = 6;
 
                             arrInventory["boost"]["other"]["special"] = 7;
-                            concatResponseSuccess = ":sparkles: You received **Picotto Pollon Card** Boost!";
+                            concatResponseSuccess = ":sparkles: You received **Picotto Pollon Card** Boost! Activate it on card spawn with **<bot>!card capture boost**";
                         }
                         else if (selectionItem == 9)
                         {
@@ -4039,7 +3664,7 @@ namespace OjamajoBot.Module
                             arrInventory["boost"]["onpu"]["ojamajos"] = 7;
 
                             arrInventory["boost"]["other"]["special"] = 6;
-                            concatResponseSuccess = ":sparkles: You received **Patraine Call Card** Boost!";
+                            concatResponseSuccess = ":sparkles: You received **Patraine Call Card** Boost! Activate it on card spawn with **<bot>!card capture boost**";
                         }
                         else if (selectionItem == 10)
                         {
@@ -4064,7 +3689,7 @@ namespace OjamajoBot.Module
                             arrInventory["boost"]["onpu"]["ojamajos"] = 8;
 
                             arrInventory["boost"]["other"]["special"] = 8;
-                            concatResponseSuccess = ":sparkles: You received **Wreath Pollon Card** Boost!";
+                            concatResponseSuccess = ":sparkles: You received **Wreath Pollon Card** Boost! Activate it on card spawn with **<bot>!card capture boost**";
                         }
                         else if (selectionItem == 11)
                         {
@@ -4094,7 +3719,7 @@ namespace OjamajoBot.Module
                             arrInventory["boost"]["momoko"]["ojamajos"] = 8;
 
                             arrInventory["boost"]["other"]["special"] = 8;
-                            concatResponseSuccess = ":sparkles: You received **Jewelry Pollon Card** Boost!";
+                            concatResponseSuccess = ":sparkles: You received **Jewelry Pollon Card** Boost! Activate it on card spawn with **<bot>!card capture boost**";
                         }
 
 
