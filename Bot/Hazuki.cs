@@ -194,12 +194,12 @@ namespace OjamajoBot.Bot
             int argPos = 0;
             if (Config.Guild.getPropertyValue(context.Guild.Id, "hazuki_role_id") != "" &&
                 message.HasStringPrefix($"<@&{Config.Guild.getPropertyValue(context.Guild.Id, "hazuki_role_id")}>", ref argPos)){
-                await message.Channel.SendMessageAsync($"I'm sorry {context.User.Username}, it seems you're calling me with the role prefix. " +
-                            "Please use the non role prefix.",
-                    embed: new EmbedBuilder()
+                await message.Channel.SendMessageAsync(embed: new EmbedBuilder()
                     .WithAuthor(Config.Hazuki.EmbedNameError)
+                    .WithDescription($"I'm sorry {context.User.Username}, it seems you're calling me with the role prefix. " +
+                            "Please use the non role prefix.")
                     .WithColor(Config.Hazuki.EmbedColor)
-                    .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/8/82/ODN-EP6-078.png")
+                    .WithThumbnailUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/8/82/ODN-EP6-078.png")
                     .Build());
             } else if (message.HasStringPrefix(Config.Hazuki.PrefixParent[0], ref argPos) ||
                 message.HasStringPrefix(Config.Hazuki.PrefixParent[1], ref argPos) ||
@@ -212,12 +212,12 @@ namespace OjamajoBot.Bot
                             $"See `{Config.Hazuki.PrefixParent[0]}help <commands or category>`for commands help.");
                         break;
                     case CommandError.UnknownCommand:
-                        await message.Channel.SendMessageAsync($"I'm sorry {context.User.Username}, I can't seem to understand your commands. " +
-                            $"See `{Config.Hazuki.PrefixParent[0]}help <commands or category>`for commands help.",
-                            embed: new EmbedBuilder()
+                        await message.Channel.SendMessageAsync(embed: new EmbedBuilder()
                             .WithColor(Config.Hazuki.EmbedColor)
+                            .WithDescription($"I'm sorry {context.User.Username}, I can't seem to understand your commands. " +
+                            $"See `{Config.Hazuki.PrefixParent[0]}help <commands or category>`for commands help.")
                             //.WithImageUrl("https://33.media.tumblr.com/28c2441a5655ecb1bd23df8275f3598f/tumblr_nfkjtbSQZg1r98a5go1_500.gif")
-                            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/8/82/ODN-EP6-078.png")
+                            .WithThumbnailUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/8/82/ODN-EP6-078.png")
                             .Build());
                         break;
                     case CommandError.ObjectNotFound:

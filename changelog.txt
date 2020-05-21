@@ -48,3 +48,11 @@ Doremi Trading Card - Update 1.07 - 19.05.20
 =======================================================================
 -Bug fix on card detail command
 -Code & performance optimization for card capture & card detail commands
+
+Doremi Trading Card - Update 1.08 - 21.05.20
+=======================================================================
+-Bug fix & updates on card inventory where paging cannot be used
+-Updates on card status report
+-Paging updates on card trade command
+-Added rank system which affect the catch rate
+-Card spawn appearance updates

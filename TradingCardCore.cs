@@ -1,4 +1,5 @@
 ﻿using Discord;
+using Discord.Addons.Interactive;
 using Lavalink4NET.Statistics;
 using Newtonsoft.Json.Linq;
 using System;
@@ -11,7 +12,7 @@ namespace OjamajoBot
 {
     public class TradingCardCore
     {
-        public static string version = "1.06";
+        public static string version = "1.08";
         public static string propertyId = "trading_card_spawn_id";
         public static string propertyCategory = "trading_card_spawn_category";
         public static string propertyToken = "trading_card_spawn_token";
@@ -34,39 +35,37 @@ namespace OjamajoBot
 
         public static EmbedBuilder printUpdatesNote()
         {
-            //return new EmbedBuilder()
-            //    .WithColor(Config.Doremi.EmbedColor)
-            //    .WithTitle($"Doremi Trading Card - Update {version} - 13.05.20")
-            //    .WithDescription($"-You can now select inventory category for each bot with additional inventory parameter. " +
-            //    $"Example: **{Config.Doremi.PrefixParent[0]}card inventory platinum**.\n" +
-            //    $"-Updated card display image layout\n" +
-            //    $"-Card catch &spawn rate can be displayed with **{Config.Doremi.PrefixParent[0]}card rate**");
-
             return new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
-                .WithTitle($"Doremi Trading Card - Update {version} - 16.05.20")
-                .WithDescription($"- :question: New Card Type: **Mystery Card**: " +
-                $"This card capture rate is increased more than the normal rate but you have to guess who card is this belongs to with appropriate " +
-                $"ojamajos bot. A specific hint will  be given upon spawn. " +
-                $"Mystery card will not appeared on **ojamajos** or **special** category card.\n" +
-                $"- :wrench: Update & fix on card capture rate.");
-
-            return new EmbedBuilder()
-                .WithColor(Config.Doremi.EmbedColor)
-                .WithTitle($"Doremi Trading Card - Update {version} - 16.05.20")
-                .WithDescription($"- :question: New Card Type: **Mystery Card**: " +
-                $"This card capture rate is increased more than the normal rate but you have to guess who card is this belongs to with appropriate " +
-                $"ojamajos bot. A specific hint will  be given upon spawn. " +
-                $"Mystery card will not appeared on **ojamajos** or **special** category card.\n" +
-                $"- :wrench: Update & fix on card capture rate.");
+                .WithTitle($"Doremi Trading Card - Update {version} - 21.05.20")
+                .WithDescription($"-:new: **Rank system:** For every 100 EXP, your rank increased by 1 and your catching rate increased by 10%. " +
+                $"Maximum rank are available up to 5.\n" +
+                $"-:wrench: Bug fix & updates on **card inventory** where paging cannot be used\n" +
+                $"-:new: Updates on **card status report**\n" +
+                $"-:new: Paging updates on **card trade**");
         }
 
-        public static List<string> printInventoryTemplate(string pack, string parent, string category,
-            JObject jObjTradingCardList, JArray arrData, int maxAmount,ulong userId)
+        public static int getPlayerRank(int exp)
         {
+            int rank = 1;
+            if (exp >= 100){
+                rank = (int)Math.Ceiling(Convert.ToDouble(exp)/100)+1;
+            }
+            if (exp == 100) rank = 2;
+            if (rank >= 5) rank = 5;
+            return rank;
+        }
+
+        public static PaginatedMessage printInventoryTemplate(Color color, string pack, string parent, string category,
+            JObject jObjTradingCardList, JArray arrData, int maxAmount,string username, string thumbnailUrl)
+        {
+            PaginatedAppearanceOptions pao = new PaginatedAppearanceOptions();
+            pao.JumpDisplayOptions = JumpDisplayOptions.Never;
+            pao.DisplayInformationIcon = false;
+
             List<string> pageContent = new List<string>();
             var arrList = (JArray)arrData;
-            string title = $"**{MentionUtils.MentionUser(Convert.ToUInt64(userId))} {GlobalFunctions.UppercaseFirst(pack)} {GlobalFunctions.UppercaseFirst(category)} Card ({arrList.Count}/{maxAmount})**\n";
+            string title = $"**Total: {arrList.Count}/{maxAmount}**\n";
 
             string tempVal = title;
             int currentIndex = 0;
@@ -77,7 +76,6 @@ namespace OjamajoBot
                 string url = jObjTradingCardList[parent][category][cardId]["url"].ToString();
                 tempVal += $"[{arrList[i]} - {name}]({url})\n";
 
-
                 if (currentIndex < 14) currentIndex++;
                 else
                 {
@@ -87,9 +85,22 @@ namespace OjamajoBot
                 }
 
                 if (i == arrList.Count - 1) pageContent.Add(tempVal);
-
             }
-            return pageContent;
+
+            var pager = new PaginatedMessage
+            {
+                Title = $"**{GlobalFunctions.UppercaseFirst(parent)} {GlobalFunctions.UppercaseFirst(category)} Card Inventory**\n",
+                Pages = pageContent,
+                Color = color,
+                Author = new EmbedAuthorBuilder()
+                {
+                    Name = GlobalFunctions.UppercaseFirst(username),
+                    IconUrl = thumbnailUrl
+                },
+                Options = pao
+            };
+
+            return pager;
 
         }
 
@@ -371,7 +382,8 @@ namespace OjamajoBot
             Config.Guild.setPropertyValue(guildId, propertyMystery, "0");
         }
 
-        public static EmbedBuilder printStatusTemplate(Color color, string username, string guildId, string clientId, string emojiError)
+        public static EmbedBuilder printStatusTemplate(Color color, string username, string guildId, string clientId, string emojiError,
+            string thumbnailUrl)
         {
             string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
             var playerData = JObject.Parse(File.ReadAllText(playerDataDirectory));
@@ -391,6 +403,7 @@ namespace OjamajoBot
                 var arrListOnpu = playerData["onpu"];
                 var arrListMomoko = playerData["momoko"];
                 var arrListOther = playerData["other"];
+                var playerExp = Convert.ToInt32(playerData["catch_attempt"].ToString());
 
                 int totalSuccess = ((JArray)arrListDoremi["normal"]).Count + ((JArray)arrListDoremi["platinum"]).Count + ((JArray)arrListDoremi["metal"]).Count + ((JArray)arrListDoremi["ojamajos"]).Count +
                     ((JArray)arrListHazuki["normal"]).Count + ((JArray)arrListHazuki["platinum"]).Count + ((JArray)arrListHazuki["metal"]).Count + ((JArray)arrListHazuki["ojamajos"]).Count +
@@ -427,9 +440,10 @@ namespace OjamajoBot
                 string otherText = $"**Special: {((JArray)arrListOther["special"]).Count}/{maxSpecial}**";
 
                 return new EmbedBuilder()
-                    .WithTitle($"{username} Card Status Report")
+                    .WithTitle($"📇 {username} Card Status | Rank: {getPlayerRank(playerExp)}")
                     .WithColor(color)
-                    .AddField("Catch Attempt", $"**{totalSuccess} / {playerData["catch_attempt"].ToString()}**", false)
+                    .WithThumbnailUrl(thumbnailUrl)
+                    .AddField("Total / EXP", $"**{totalSuccess} / {playerData["catch_attempt"].ToString()}**", false)
                     .AddField("Doremi Card Pack", doremiText, true)
                     .AddField("Hazuki Card Pack", hazukiText, true)
                     .AddField("Aiko Card Pack", aikoText, true)
@@ -486,7 +500,8 @@ namespace OjamajoBot
             return listAllowed;
         }
 
-        public static Tuple<string, EmbedBuilder,IDictionary<string,Boolean>> cardCapture(Color color, ulong guildId, string clientId, string username, 
+        public static Tuple<string, EmbedBuilder, string, IDictionary<string,Boolean>> cardCapture(Color color, string embedAvatarUrl, 
+            ulong guildId, string clientId, string username, 
             string emojiError, string parent, string boost, string errorPrefix, string containCardId,
             int maxNormal, int maxPlatinum, int maxMetal, int maxOjamajos)
         {
@@ -505,7 +520,7 @@ namespace OjamajoBot
                 .WithColor(color)
                 .WithDescription($"I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
                 .WithThumbnailUrl(emojiError);
-                return Tuple.Create("", returnEmbedBuilder, returnCompleted);
+                return Tuple.Create("", returnEmbedBuilder, "", returnCompleted);
                 //return;
             }
             else
@@ -516,7 +531,8 @@ namespace OjamajoBot
                 string spawnedMystery = Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyMystery);
 
                 int boostNormal = 0; int boostPlatinum = 0; int boostMetal = 0;
-                int boostOjamajos = 0; int boostSpecial = 0;
+                int boostOjamajos = 0; int boostSpecial = 0; 
+                int playerRank = getPlayerRank(Convert.ToInt32(arrInventory["catch_attempt"].ToString()));
                 if (spawnedCardCategory.ToLower() == "special")
                 {
                     parent = "other";
@@ -539,19 +555,19 @@ namespace OjamajoBot
                     .WithDescription($":x: Sorry, that is not the valid card capture boost command. " +
                     $"Use: **{errorPrefix}card capture boost** to activate card boost.")
                     .WithThumbnailUrl(emojiError);
-                    return Tuple.Create("", returnEmbedBuilder, returnCompleted);
+                    return Tuple.Create("", returnEmbedBuilder, "", returnCompleted);
                 }
-                else if ((boost.ToLower() == "boost" && spawnedCardCategory == "normal" && boostNormal <= 0) &&
-                    (boost.ToLower() == "boost" && spawnedCardCategory == "platinum" && boostPlatinum <= 0) &&
-                    (boost.ToLower() == "boost" && spawnedCardCategory == "metal" && boostMetal <= 0) &&
-                    (boost.ToLower() == "boost" && spawnedCardCategory == "ojamajos" && boostOjamajos <= 0) &&
+                else if ((boost.ToLower() == "boost" && spawnedCardCategory == "normal" && boostNormal <= 0) ||
+                    (boost.ToLower() == "boost" && spawnedCardCategory == "platinum" && boostPlatinum <= 0) ||
+                    (boost.ToLower() == "boost" && spawnedCardCategory == "metal" && boostMetal <= 0) || 
+                    (boost.ToLower() == "boost" && spawnedCardCategory == "ojamajos" && boostOjamajos <= 0) ||
                     (boost.ToLower() == "boost" && spawnedCardCategory == "special" && boostSpecial <= 0))
                 {
                     returnEmbedBuilder = new EmbedBuilder()
                     .WithColor(color)
-                    .WithDescription($":x: Sorry, you have no {parent} {spawnedCardCategory} card capture boost that you can use.")
+                    .WithDescription($":x: Sorry, you have no **{parent} {spawnedCardCategory}** card capture boost that you can use.")
                     .WithThumbnailUrl(emojiError);
-                    return Tuple.Create("", returnEmbedBuilder, returnCompleted);
+                    return Tuple.Create("", returnEmbedBuilder, "", returnCompleted);
                 }
                 else if (boost.ToLower() == "boost") useBoost = true;
 
@@ -580,7 +596,7 @@ namespace OjamajoBot
                             .WithColor(color)
                             .WithDescription($":x: Sorry, please wait for the next card spawn.")
                             .WithThumbnailUrl(emojiError);
-                            return Tuple.Create("", returnEmbedBuilder, returnCompleted);
+                            return Tuple.Create("", returnEmbedBuilder, "", returnCompleted);
                         }
                         else if (spawnedMystery == "1" && !indexExists)
                         {
@@ -592,7 +608,7 @@ namespace OjamajoBot
                             .WithColor(color)
                             .WithDescription($":x: Sorry, you guessed the wrong mystery card.")
                             .WithThumbnailUrl(emojiError);
-                            return Tuple.Create("", returnEmbedBuilder, returnCompleted);
+                            return Tuple.Create("", returnEmbedBuilder, "", returnCompleted);
                         }
 
                         //check last capture time
@@ -601,7 +617,9 @@ namespace OjamajoBot
                             if ((string)arrInventory["catch_token"] == "" ||
                                 (string)arrInventory["catch_token"] != Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyToken))
                             {
-                                int catchRate = new Random().Next(10);
+                                int boostPlayerRank = 0;
+                                if (playerRank >= 2) boostPlayerRank = playerRank;
+                                int catchRate = new Random().Next(10 - boostPlayerRank);
                                 string name = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["name"].ToString();
                                 string imgUrl = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["url"].ToString();
                                 string rank = jObjTradingCardList[parent][spawnedCardCategory][spawnedCardId]["0"].ToString();
@@ -618,7 +636,7 @@ namespace OjamajoBot
                                 }
                                 else
                                 {
-                                    int maxCard = 0;
+                                    int maxCard = 0; string boostRate = "";
                                     //init RNG catch rate
                                     //if boost: change the TradingCardCore.captureRate
                                     if (spawnedCardCategory.ToLower() == "normal")
@@ -631,6 +649,7 @@ namespace OjamajoBot
                                         }
                                         else
                                         {
+                                            boostRate = $"{boostNormal*10}%"; 
                                             if ((catchRate < boostNormal && spawnedMystery != "1") ||
                                                 (catchRate < boostNormal + 1 && spawnedMystery == "1")) catchState = 1;
                                         }
@@ -645,6 +664,7 @@ namespace OjamajoBot
                                         }
                                         else
                                         {
+                                            boostRate = $"{boostPlatinum * 10}%";
                                             if ((catchRate < boostPlatinum && spawnedMystery != "1") ||
                                                 (catchRate < boostPlatinum + 1 && spawnedMystery == "1")) catchState = 1;
                                         }
@@ -659,6 +679,7 @@ namespace OjamajoBot
                                         }
                                         else
                                         {
+                                            boostRate = $"{boostMetal * 10}%";
                                             if ((catchRate < boostMetal && spawnedMystery != "1") ||
                                                 (catchRate < boostMetal + 2 && spawnedMystery == "1")) catchState = 1;
                                         }
@@ -670,7 +691,7 @@ namespace OjamajoBot
                                             catchState = 1;
                                         else if (useBoost && catchRate < boostOjamajos)
                                             catchState = 1;
-
+                                        if(useBoost) boostRate = $"{boostOjamajos * 10}%";
                                     }
                                     else if (spawnedCardCategory.ToLower() == "special")
                                     {
@@ -679,6 +700,7 @@ namespace OjamajoBot
                                             catchState = 1;
                                         else if (useBoost && catchRate < boostSpecial)
                                             catchState = 1;
+                                        if (useBoost) boostRate = $"{boostSpecial * 10}%";
                                     }
 
                                     if (catchState == 1)
@@ -686,7 +708,8 @@ namespace OjamajoBot
                                         //card not exist yet
                                         if (useBoost)
                                         {//reset boost
-                                            replyText = $":arrow_double_up: **{GlobalFunctions.UppercaseFirst(parent)} {GlobalFunctions.UppercaseFirst(spawnedCardCategory)}** Card Capture Boost has been used!\n";
+                                            replyText = $":arrow_double_up: **{GlobalFunctions.UppercaseFirst(parent)} {GlobalFunctions.UppercaseFirst(spawnedCardCategory)}** Card Capture boost has been used and boosted into " +
+                                                $"**{boostRate}**!\n";
                                             if (spawnedCardCategory == "special")
                                                 arrInventory["boost"]["other"]["special"] = "0";
                                             else
@@ -719,6 +742,14 @@ namespace OjamajoBot
 
                                         File.WriteAllText(playerDataDirectory, arrInventory.ToString());
 
+                                        string returnLevelUp = "";
+                                        if ((int)arrInventory["catch_attempt"] == 100 || (int)arrInventory["catch_attempt"] == 200 ||
+                                            (int)arrInventory["catch_attempt"] == 300 || (int)arrInventory["catch_attempt"] == 400 ||
+                                            (int)arrInventory["catch_attempt"] == 500)
+                                        {
+                                            returnLevelUp = $":up: Congratulations! **{username}** is now rank {getPlayerRank((int)arrInventory["catch_attempt"])}!";
+                                        }
+
                                         string[] arrRandomFirstSentence = {
                                             "Congratulations,","Nice Catch!","Nice one!","Yatta!"
                                         };
@@ -730,8 +761,8 @@ namespace OjamajoBot
                                             replyText += $":white_check_mark: {arrRandomFirstSentence[new Random().Next(0, arrRandomFirstSentence.Length)]} " +
                                             $"**{username}** have successfully captured **{spawnedCardCategory}** card: **{name}**";
 
-                                        returnEmbedBuilder = TradingCardCore.printCardCaptureTemplate(Config.Doremi.EmbedColor, name, imgUrl,
-                                        spawnedCardId, spawnedCardCategory, rank, star, point, username, Config.Doremi.EmbedAvatarUrl,
+                                        returnEmbedBuilder = TradingCardCore.printCardCaptureTemplate(color, name, imgUrl,
+                                        spawnedCardId, spawnedCardCategory, rank, star, point, username, embedAvatarUrl, 
                                         item.Count, maxCard);
 
                                         //check if player have captured all doremi card/not
@@ -775,7 +806,7 @@ namespace OjamajoBot
 
                                         //erase spawned instance
                                         TradingCardCore.resetSpawnInstance(guildId);
-                                        return Tuple.Create(replyText, returnEmbedBuilder, returnCompleted);
+                                        return Tuple.Create(replyText, returnEmbedBuilder, returnLevelUp, returnCompleted);
                                     }
                                     else
                                     {
@@ -797,7 +828,7 @@ namespace OjamajoBot
                                         }
                                         File.WriteAllText(playerDataDirectory, arrInventory.ToString());
                                         if (spawnedMystery == "1")
-                                            replyText += $":x: Card revealed correctly! But I'm sorry {username}, you **fail** to catch the mystery card. Better luck next time.";
+                                            replyText += $":x: Card revealed correctly! But sorry {username}, you **fail** to catch the mystery card. Better luck next time.";
                                         else
                                             replyText += $":x: I'm sorry {username}, you **fail** to catch the card. Better luck next time.";
                                     }
@@ -831,7 +862,7 @@ namespace OjamajoBot
             .WithColor(color)
             .WithDescription(replyText)
             .WithThumbnailUrl(emojiError);
-            return Tuple.Create("", returnEmbedBuilder, returnCompleted);
+            return Tuple.Create("", returnEmbedBuilder, "", returnCompleted);
 
         }
 

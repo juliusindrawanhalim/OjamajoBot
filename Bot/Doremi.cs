@@ -427,20 +427,20 @@ namespace OjamajoBot.Bot
                     {
                         parent = "doremi"; embedAvatarUrl = Config.Doremi.EmbedAvatarUrl;
                         string[] arrMysteryDescription = {
-                            "July is my birthday",
+                            ":birthday: July is my birthday",
                             "Dodo is my fairy",
-                            "February, May, March and November are not my birthday",
-                            "My birthday was at 30th",
-                            "**Pirika** is one of my chanting spell",
-                            "**Pirilala** is one of my chanting spell",
-                            "**Poporina** is one of my chanting spell",
-                            "**Peperuto** is one of my chanting spell",
-                            "**Paipai Raruku Famifami Pon!** are not my spell",
-                            "**Puwapuwa Petton Pururun Rarirori!** are not my spell",
-                            "**Puu Raruku Purun Perutan!** are not my spell",
-                            "**Puu Poppun Faa Pon!** are not my spell",
-                            "**Ponpoi Pameruku Pururun Petton!** are not my spell",
-                            "**Famifami Rarirori Paipai Petton!** are not my spell"
+                            ":birthday: February, May, March and November are not my birthday",
+                            ":birthday: My birthday was at 30th",
+                            ":sparkles: **Pirika** is one of my chanting spell",
+                            ":sparkles: **Pirilala** is one of my chanting spell",
+                            ":sparkles: **Poporina** is one of my chanting spell",
+                            ":sparkles: **Peperuto** is one of my chanting spell",
+                            ":sparkles: **Paipai Raruku Famifami Pon!** are not my spell",
+                            ":sparkles: **Puwapuwa Petton Pururun Rarirori!** are not my spell",
+                            ":sparkles: **Puu Raruku Purun Perutan!** are not my spell",
+                            ":sparkles: **Puu Poppun Faa Pon!** are not my spell",
+                            ":sparkles: **Ponpoi Pameruku Pururun Petton!** are not my spell",
+                            ":sparkles: **Famifami Rarirori Paipai Petton!** are not my spell"
                         };
                         descriptionMystery = arrMysteryDescription[new Random().Next(arrMysteryDescription.Length)];
                     }
@@ -450,21 +450,21 @@ namespace OjamajoBot.Bot
                         parent = "hazuki";
                         color = Config.Hazuki.EmbedColor; embedAvatarUrl = Config.Hazuki.EmbedAvatarUrl;
                         string[] arrMysteryDescription = {
-                            "February is my birthday",
+                            ":birthday: February is my birthday",
                             "Rere is my fairy",
-                            "May, July, March and November are not my birthday",
-                            "My birthday date was same with Aiko but I'm older",
-                            "My blood type was A",
-                            "One of my favorite food ends with **e**",
-                            "One of my favorite food start with **ch**",
-                            "**Paipai** is one of my chanting spell",
-                            "**Ponpoi** is one of my chanting spell",
-                            "**Puwapuwa** is one of my chanting spell",
-                            "**Puu** is one of my chanting spell",
-                            "**Pirika Raruku Famifami Pon!** are not my spell",
-                            "**Purun Pirilala Pararira Rarirori!** are not my spell",
-                            "**Peperuto Poppun Faa Pon!** are not my spell",
-                            "**Peperuto Purun Rarirori Perutan!** are not my spell"
+                            ":birthday: May, July, March and November are not my birthday",
+                            ":birthday: My birthday date was same with Aiko but I'm older",
+                            ":drop_of_blood: My blood type was A",
+                            ":fork_and_knife: One of my favorite food ends with **e**",
+                            ":fork_and_knife: One of my favorite food start with **ch**",
+                            ":sparkles: **Paipai** is one of my chanting spell",
+                            ":sparkles: **Ponpoi** is one of my chanting spell",
+                            ":sparkles: **Puwapuwa** is one of my chanting spell",
+                            ":sparkles: **Puu** is one of my chanting spell",
+                            ":sparkles: **Pirika Raruku Famifami Pon!** are not my spell",
+                            ":sparkles: **Purun Pirilala Pararira Rarirori!** are not my spell",
+                            ":sparkles: **Peperuto Poppun Faa Pon!** are not my spell",
+                            ":sparkles: **Peperuto Purun Rarirori Perutan!** are not my spell"
                         };
                         descriptionMystery = arrMysteryDescription[new Random().Next(arrMysteryDescription.Length)];
                     }
@@ -474,23 +474,23 @@ namespace OjamajoBot.Bot
                         parent = "aiko";
                         color = Config.Aiko.EmbedColor; embedAvatarUrl = Config.Aiko.EmbedAvatarUrl;
                         string[] arrMysteryDescription = {
-                            "November is my birthday",
+                            ":birthday: November is my birthday",
                             "Mimi is my fairy",
-                            "July, February, March and May are not my birthday",
-                            "My birthday date was same with Hazuki but I'm younger",
-                            "My blood type was O",
-                            "One of my favorite food ends with **i**",
-                            "One of my favorite food start with **t**",
-                            "**Pameruku** is one of my chanting spell",
-                            "**Raruku** is one of my chanting spell",
-                            "**Rarirori** is one of my chanting spell",
-                            "**Poppun** is one of my chanting spell",
-                            "**Pirika Ponpoi Famifami Pon!** are not my spell",
-                            "**Peperuto Puwapuwa Purun Perutan!** are not my spell",
-                            "**Ponpoi Purun Pirilala Petton!** are not my spell",
-                            "**Poporina Puwapuwa Famifami Pararira!** are not my spell",
-                            "**Paipai Pururun Pirika Perutan!** are not my spell",
-                            "**Puu Faa Peperuto Pon!** are not my spell"
+                            ":birthday: July, February, March and May are not my birthday",
+                            ":birthday: My birthday date was same with Hazuki but I'm younger",
+                            ":drop_of_blood: My blood type was O",
+                            ":fork_and_knife: One of my favorite food ends with **i**",
+                            ":fork_and_knife: One of my favorite food start with **t**",
+                            ":sparkles: **Pameruku** is one of my chanting spell",
+                            ":sparkles: **Raruku** is one of my chanting spell",
+                            ":sparkles: **Rarirori** is one of my chanting spell",
+                            ":sparkles: **Poppun** is one of my chanting spell",
+                            ":sparkles: **Pirika Ponpoi Famifami Pon!** are not my spell",
+                            ":sparkles: **Peperuto Puwapuwa Purun Perutan!** are not my spell",
+                            ":sparkles: **Ponpoi Purun Pirilala Petton!** are not my spell",
+                            ":sparkles: **Poporina Puwapuwa Famifami Pararira!** are not my spell",
+                            ":sparkles: **Paipai Pururun Pirika Perutan!** are not my spell",
+                            ":sparkles: **Puu Faa Peperuto Pon!** are not my spell"
                         };
                         descriptionMystery = arrMysteryDescription[new Random().Next(arrMysteryDescription.Length)];
                     }
@@ -500,22 +500,22 @@ namespace OjamajoBot.Bot
                         parent = "onpu";
                         color = Config.Onpu.EmbedColor; embedAvatarUrl = Config.Onpu.EmbedAvatarUrl;
                         string[] arrMysteryDescription = {
-                            "March is my birthday",
+                            ":birthday: March is my birthday",
                             "Roro is my fairy",
-                            "July, February, November and May are not my birthday",
-                            "My birthday was was at 3rd",
-                            "One of my favorite food ends with **s**",
-                            "One of my favorite food start with **cr**",
-                            "**Pururun** is one of my chanting spell",
-                            "**Purun** is one of my chanting spell",
-                            "**Famifami** is one of my chanting spell",
-                            "**Faa** is one of my chanting spell",
-                            "**Rarirori Ponpoi Pon Pirika!** are not my spell",
-                            "**Peperuto Puwapuwa Raruku Perutan!** are not my spell",
-                            "**Pirilala Ponpoi Raruku Petton!** are not my spell",
-                            "**Poporina Puwapuwa Rarirori Pararira!** are not my spell",
-                            "**Peperuto Puu Poppun Pon!** are not my spell",
-                            "**Paipai Pirika Pameruku Perutan!** are not my spell"
+                            ":birthday: July, February, November and May are not my birthday",
+                            ":birthday: My birthday was at 3rd",
+                            ":fork_and_knife: One of my favorite food ends with **s**",
+                            ":fork_and_knife: One of my favorite food start with **cr**",
+                            ":sparkles: **Pururun** is one of my chanting spell",
+                            ":sparkles: **Purun** is one of my chanting spell",
+                            ":sparkles: **Famifami** is one of my chanting spell",
+                            ":sparkles: **Faa** is one of my chanting spell",
+                            ":sparkles: **Rarirori Ponpoi Pon Pirika!** are not my spell",
+                            ":sparkles: **Peperuto Puwapuwa Raruku Perutan!** are not my spell",
+                            ":sparkles: **Pirilala Ponpoi Raruku Petton!** are not my spell",
+                            ":sparkles: **Poporina Puwapuwa Rarirori Pararira!** are not my spell",
+                            ":sparkles: **Peperuto Puu Poppun Pon!** are not my spell",
+                            ":sparkles: **Paipai Pirika Pameruku Perutan!** are not my spell"
                         };
                         descriptionMystery = arrMysteryDescription[new Random().Next(arrMysteryDescription.Length)];
                     }
@@ -525,23 +525,23 @@ namespace OjamajoBot.Bot
                         parent = "momoko";
                         color = Config.Momoko.EmbedColor; embedAvatarUrl = Config.Momoko.EmbedAvatarUrl;
                         string[] arrMysteryDescription = {
-                            "May is my birthday",
+                            ":birthday: May is my birthday",
                             "Nini is my fairy",
-                            "My blood type was AB",
-                            "July, February, November and March are not my birthday",
-                            "My birthday was was at 6th",
-                            "One of my favorite food ends with **t**",
-                            "One of my favorite food start with **s**",
-                            "**Perutan** is one of my chanting spell",
-                            "**Petton** is one of my chanting spell",
-                            "**Pararira** is one of my chanting spell",
-                            "**Pon** is one of my chanting spell",
-                            "**Ponpoi Rarirori Pirika Faa!** are not my spell",
-                            "**Raruku Puwapuwa Peperuto Pururun!** are not my spell",
-                            "**Purun Ponpoi Raruku  Pirilala!** are not my spell",
-                            "**Rarirori Poporina Famifami Puwapuwa!** are not my spell",
-                            "**Faa Puu Poppun Peperuto!** are not my spell",
-                            "**Pururun Pirika Pameruku Paipai!** are not my spell"
+                            ":drop_of_blood: My blood type was AB",
+                            ":birthday: July, February, November and March are not my birthday",
+                            ":birthday: My birthday was at 6th",
+                            ":fork_and_knife: One of my favorite food ends with **t**",
+                            ":fork_and_knife: One of my favorite food start with **s**",
+                            ":sparkles: **Perutan** is one of my chanting spell",
+                            ":sparkles: **Petton** is one of my chanting spell",
+                            ":sparkles: **Pararira** is one of my chanting spell",
+                            ":sparkles: **Pon** is one of my chanting spell",
+                            ":sparkles: **Ponpoi Rarirori Pirika Faa!** are not my spell",
+                            ":sparkles: **Raruku Puwapuwa Peperuto Pururun!** are not my spell",
+                            ":sparkles: **Purun Ponpoi Raruku  Pirilala!** are not my spell",
+                            ":sparkles: **Rarirori Poporina Famifami Puwapuwa!** are not my spell",
+                            ":sparkles: **Faa Puu Poppun Peperuto!** are not my spell",
+                            ":sparkles: **Pururun Pirika Pameruku Paipai!** are not my spell"
                         };
                         descriptionMystery = arrMysteryDescription[new Random().Next(arrMysteryDescription.Length)];
                     }
@@ -578,12 +578,22 @@ namespace OjamajoBot.Bot
 
                     if (!isMystery || chosenCategory == "ojamajos"|| chosenCategory == "special")
                     {//not mystery
-                        var embed = new EmbedBuilder()
-                        .WithAuthor(author, embedAvatarUrl)
-                        .WithColor(color)
-                        .WithTitle($"{chosenName}")
-                        .WithFooter($"ID: {chosenId} | Catch Rate: {catchRate}")
-                        .WithImageUrl(chosenUrl);
+                        EmbedBuilder embed;
+                        if (chosenCategory == "ojamajos"||chosenCategory == "special")
+                            embed = new EmbedBuilder()
+                            .WithAuthor(author)
+                            .WithColor(Discord.Color.Gold)
+                            .WithTitle($"{chosenName}")
+                            .WithFooter($"ID: {chosenId} | Catch Rate: {catchRate}")
+                            .WithImageUrl(chosenUrl);
+                        else
+                            embed = new EmbedBuilder()
+                            .WithAuthor(author, embedAvatarUrl)
+                            .WithColor(color)
+                            .WithTitle($"{chosenName}")
+                            .WithFooter($"ID: {chosenId} | Catch Rate: {catchRate}")
+                            .WithImageUrl(chosenUrl);
+                        
                         if (chosenCategory == "ojamajos") parent = "";
 
                         await client
@@ -592,7 +602,8 @@ namespace OjamajoBot.Bot
                         .SendMessageAsync($":exclamation:A **{chosenCategory}** {parent} card has appeared!\n" +
                         $"Capture it with **<bot>!card capture** or **<bot>!card capture boost**",
                         embed: embed.Build());
-                    } else
+                    }
+                    else
                     {//mystery card
                         var embed = new EmbedBuilder()
                         .WithAuthor("Mystery Card")
@@ -830,12 +841,12 @@ namespace OjamajoBot.Bot
             if (Config.Guild.getPropertyValue(context.Guild.Id, "doremi_role_id") != ""&&
                 message.HasStringPrefix($"<@&{Config.Guild.getPropertyValue(context.Guild.Id, "doremi_role_id")}>", ref argPos))
             {
-                await message.Channel.SendMessageAsync($"Sorry {context.User.Username}, it seems you're calling me with the role prefix. " +
-                            "Please use the non role prefix.",
-                embed: new EmbedBuilder()
+                await message.Channel.SendMessageAsync(embed: new EmbedBuilder()
                 .WithAuthor(Config.Doremi.EmbedNameError)
+                .WithDescription($"Sorry {context.User.Username}, it seems you're calling me with the role prefix. " +
+                            "Please use the non role prefix.")
                 .WithColor(Config.Doremi.EmbedColor)
-                .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/d/d2/ODN-EP1-011.png")
+                .WithThumbnailUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/d/d2/ODN-EP1-011.png")
                 .Build());
             } else if (message.HasStringPrefix(Config.Doremi.PrefixParent[0], ref argPos) ||
                 message.HasStringPrefix(Config.Doremi.PrefixParent[1], ref argPos) ||
@@ -850,12 +861,12 @@ namespace OjamajoBot.Bot
                             $"See `{Config.Doremi.PrefixParent[0]}help <commands or category>` for commands help.");
                         break;
                     case CommandError.UnknownCommand:
-                        await message.Channel.SendMessageAsync("Sorry, I can't find that commands. " +
-                            $"See `{Config.Doremi.PrefixParent[0]}help <commands or category>` for commands help.",
-                            embed: new EmbedBuilder()
+                        await message.Channel.SendMessageAsync(embed: new EmbedBuilder()
                             .WithAuthor(Config.Doremi.EmbedNameError)
+                            .WithDescription("Sorry, I can't find that commands. " +
+                            $"See `{Config.Doremi.PrefixParent[0]}help <commands or category>` for commands help.")
                             .WithColor(Config.Doremi.EmbedColor)
-                            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/c/ca/ODN-EP11-041.png")
+                            .WithThumbnailUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/c/ca/ODN-EP11-041.png")
                             .Build());
                         break;
                     case CommandError.ObjectNotFound:

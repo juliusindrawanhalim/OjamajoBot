@@ -960,28 +960,50 @@ namespace OjamajoBot.Module
 
                 try
                 {
-                    string title = $"**{season.First().ToString().ToUpper() + season.Substring(1)} Season Episodes List**\n";
+                    string title = $"**{GlobalFunctions.UppercaseFirst(season)} Season Episodes List**\n";
                     var arrList = (JArray)Config.Core.jObjWiki.GetValue("episodes")[season];
-                    string tempVal = title;
-                    int currentIndex = 0;
+                    string tempVal = "";
+
+                    int currentIndex = 0; int indexPage = 0;
                     for (int i = 0; i < arrList.Count; i++)
                     {
                         string replacedUrl = arrList[i].ToString().Replace(" ", "_");
                         replacedUrl = Config.Core.wikiParentUrl + replacedUrl.ToString().Replace("?", "%3F");
                         tempVal += $"Ep {i + 1}: [{arrList[i]}]({replacedUrl})\n";
 
-                        if (currentIndex < 14) currentIndex++;
-                        else {
+                        if (currentIndex < 14)
+                        {
+                            currentIndex++;
+                        }
+                        else
+                        {
                             pageContent.Add(tempVal);
                             currentIndex = 0;
-                            tempVal = title;
-                        }
+                            tempVal = "";
 
-                        if (i == arrList.Count - 1) pageContent.Add(tempVal);
+                            if (i == arrList.Count - 1)
+                            {
+                                pageContent.Add(tempVal);
+                            };
+                            indexPage += 1;
+                        }
 
                     }
 
-                    await PagedReplyAsync(pageContent);
+                    PaginatedAppearanceOptions pao = new PaginatedAppearanceOptions();
+                    pao.JumpDisplayOptions = JumpDisplayOptions.Never;
+                    pao.DisplayInformationIcon = false;
+
+                    var pager = new PaginatedMessage
+                    {
+                        Title = title,
+                        Pages = pageContent,
+                        Color = Config.Doremi.EmbedColor,
+                        Options = pao
+                    };
+
+                    await PagedReplyAsync(pager);
+
                 }
                 catch (Exception e) { Console.WriteLine("Doremi wiki episodes error:" + e.ToString()); }
 
@@ -993,55 +1015,67 @@ namespace OjamajoBot.Module
 
         [Command("witches", RunMode = RunMode.Async), Alias("witch"), Summary("I will give all witches characters list. " +
             "Fill the optional <characters> parameter with the available witches characters name.")]
-        public async Task showCharactersWitches([Remainder]string characters = ""){
+        public async Task showCharactersWitches([Remainder]string characters = "")
+        {
             EmbedBuilder builder = new EmbedBuilder();
             builder.Color = Config.Doremi.EmbedColor;
 
-            if (characters==""){
-                try {
+            if (characters == "")
+            {
+                try
+                {
                     builder.Title = "Witches Characters List";
                     var arrList = ((JObject)Config.Core.jObjWiki.GetValue("witches")).Properties().ToList();
-                    for (int i = 0; i < arrList.Count; i++){
+                    for (int i = 0; i < arrList.Count; i++)
+                    {
                         builder.AddField(arrList[i].Name, $"[wiki link]({Config.Core.wikiParentUrl + arrList[i].Value["url"]})", true);
                     }
                     builder.WithFooter($"I found {arrList.Count} witches characters from ojamajo witchling wiki");
                     await ReplyAsync(embed: builder.Build());
                     return;
                 }
-                catch (Exception e){ Console.WriteLine("Doremi wiki witches characters error:" + e.ToString()); }
-            } else {
-                    if (((JObject)Config.Core.jObjWiki.GetValue("witches")).ContainsKey(characters)){
-                        var arrList = Config.Core.jObjWiki.GetValue("witches")[characters];
-                        var arrListDetails = ((JObject)arrList).Properties().ToList();
-                        builder.Title = characters.First().ToString().ToUpper()+ characters.Substring(1) + " Characters Info";
-                        builder.Description = arrList["description"].ToString();
-                        for (int i = 0; i < arrListDetails.Count; i++){
-                            if(arrListDetails[i].Name.ToLower()!="url"&&
-                               arrListDetails[i].Name.ToLower() != "img"&&
-                               arrListDetails[i].Name.ToLower() != "name"&&
-                               arrListDetails[i].Name.ToLower() != "description")
-                            builder.AddField(arrListDetails[i].Name.ToString().First().ToString().ToUpper()+ arrListDetails[i].Name.ToString().Substring(1),
-                                arrListDetails[i].Value.ToString().First().ToString().ToUpper()+ arrListDetails[i].Value.ToString().Substring(1), true);
-                        }
-                        builder.AddField("More info",
-                                $"[Click here]({Config.Core.wikiParentUrl+arrList["url"].ToString()})", true);
+                catch (Exception e) { Console.WriteLine("Doremi wiki witches characters error:" + e.ToString()); }
+            }
+            else
+            {
+                if (((JObject)Config.Core.jObjWiki.GetValue("witches")).ContainsKey(characters))
+                {
+                    var arrList = Config.Core.jObjWiki.GetValue("witches")[characters];
+                    var arrListDetails = ((JObject)arrList).Properties().ToList();
+                    builder.Title = characters.First().ToString().ToUpper() + characters.Substring(1) + " Characters Info";
+                    builder.Description = arrList["description"].ToString();
+                    for (int i = 0; i < arrListDetails.Count; i++)
+                    {
+                        if (arrListDetails[i].Name.ToLower() != "url" &&
+                           arrListDetails[i].Name.ToLower() != "img" &&
+                           arrListDetails[i].Name.ToLower() != "name" &&
+                           arrListDetails[i].Name.ToLower() != "description")
+                            builder.AddField(arrListDetails[i].Name.ToString().First().ToString().ToUpper() + arrListDetails[i].Name.ToString().Substring(1),
+                                arrListDetails[i].Value.ToString().First().ToString().ToUpper() + arrListDetails[i].Value.ToString().Substring(1), true);
+                    }
+                    builder.AddField("More info",
+                            $"[Click here]({Config.Core.wikiParentUrl + arrList["url"].ToString()})", true);
 
-                        builder.WithImageUrl(arrList["img"].ToString());
-                        await ReplyAsync(embed: builder.Build());
-                        return;
-                    } else await ReplyAsync("I'm sorry, but I can't find that witches characters. " +
-                        $"See `{Config.Doremi.PrefixParent[0]}wiki witches` to display all witches characters list.");
+                    builder.WithImageUrl(arrList["img"].ToString());
+                    await ReplyAsync(embed: builder.Build());
+                    return;
+                }
+                else await ReplyAsync("I'm sorry, but I can't find that witches characters. " +
+                  $"See `{Config.Doremi.PrefixParent[0]}wiki witches` to display all witches characters list.");
             }
         }
 
         [Command("wizards", RunMode = RunMode.Async), Alias("wizard"), Summary("I will give all wizards characters list. " +
             "Fill the optional <characters> parameter with the available wizards characters name.")]
-        public async Task showCharactersWizards([Remainder]string characters = ""){
+        public async Task showCharactersWizards([Remainder]string characters = "")
+        {
             EmbedBuilder builder = new EmbedBuilder();
             builder.Color = Config.Doremi.EmbedColor;
 
-            if (characters == ""){
-                try{
+            if (characters == "")
+            {
+                try
+                {
                     builder.Title = "Wizards Characters List";
                     var arrList = ((JObject)Config.Core.jObjWiki.GetValue("wizards")).Properties().ToList();
                     for (int i = 0; i < arrList.Count; i++)
@@ -1053,8 +1087,11 @@ namespace OjamajoBot.Module
                     return;
                 }
                 catch (Exception e) { Console.WriteLine("Doremi wiki wizards characters error:" + e.ToString()); }
-            } else {
-                if (((JObject)Config.Core.jObjWiki.GetValue("wizards")).ContainsKey(characters)){
+            }
+            else
+            {
+                if (((JObject)Config.Core.jObjWiki.GetValue("wizards")).ContainsKey(characters))
+                {
                     var arrList = Config.Core.jObjWiki.GetValue("wizards")[characters];
                     var arrListDetails = ((JObject)arrList).Properties().ToList();
                     builder.Title = characters.First().ToString().ToUpper() + characters.Substring(1) + " Characters Info";
@@ -1074,8 +1111,9 @@ namespace OjamajoBot.Module
                     builder.WithImageUrl(arrList["img"].ToString());
                     await ReplyAsync(embed: builder.Build());
                     return;
-                } else await ReplyAsync("I'm sorry, but I can't find that wizards characters. " +
-                  $"See `{Config.Doremi.PrefixParent[0]}wiki wizards` to display all wizards characters list.");
+                }
+                else await ReplyAsync("I'm sorry, but I can't find that wizards characters. " +
+                $"See `{Config.Doremi.PrefixParent[0]}wiki wizards` to display all wizards characters list.");
             }
         }
 
@@ -1458,20 +1496,20 @@ namespace OjamajoBot.Module
                     {
                         parent = "doremi"; embedAvatarUrl = Config.Doremi.EmbedAvatarUrl;
                         string[] arrMysteryDescription = {
-                            "July is my birthday",
+                            ":birthday: July is my birthday",
                             "Dodo is my fairy",
-                            "February, May, March and November are not my birthday",
-                            "My birthday was at 30th",
-                            "**Pirika** is one of my chanting spell",
-                            "**Pirilala** is one of my chanting spell",
-                            "**Poporina** is one of my chanting spell",
-                            "**Peperuto** is one of my chanting spell",
-                            "**Paipai Raruku Famifami Pon!** are not my spell",
-                            "**Puwapuwa Petton Pururun Rarirori!** are not my spell",
-                            "**Puu Raruku Purun Perutan!** are not my spell",
-                            "**Puu Poppun Faa Pon!** are not my spell",
-                            "**Ponpoi Pameruku Pururun Petton!** are not my spell",
-                            "**Famifami Rarirori Paipai Petton!** are not my spell"
+                            ":birthday: February, May, March and November are not my birthday",
+                            ":birthday: My birthday was at 30th",
+                            ":sparkles: **Pirika** is one of my chanting spell",
+                            ":sparkles: **Pirilala** is one of my chanting spell",
+                            ":sparkles: **Poporina** is one of my chanting spell",
+                            ":sparkles: **Peperuto** is one of my chanting spell",
+                            ":sparkles: **Paipai Raruku Famifami Pon!** are not my spell",
+                            ":sparkles: **Puwapuwa Petton Pururun Rarirori!** are not my spell",
+                            ":sparkles: **Puu Raruku Purun Perutan!** are not my spell",
+                            ":sparkles: **Puu Poppun Faa Pon!** are not my spell",
+                            ":sparkles: **Ponpoi Pameruku Pururun Petton!** are not my spell",
+                            ":sparkles: **Famifami Rarirori Paipai Petton!** are not my spell"
                         };
                         descriptionMystery = arrMysteryDescription[new Random().Next(arrMysteryDescription.Length)];
                     }
@@ -1481,21 +1519,21 @@ namespace OjamajoBot.Module
                         parent = "hazuki";
                         color = Config.Hazuki.EmbedColor; embedAvatarUrl = Config.Hazuki.EmbedAvatarUrl;
                         string[] arrMysteryDescription = {
-                            "February is my birthday",
+                            ":birthday: February is my birthday",
                             "Rere is my fairy",
-                            "May, July, March and November are not my birthday",
-                            "My birthday date was same with Aiko but I'm older",
-                            "My blood type was A",
-                            "One of my favorite food ends with **e**",
-                            "One of my favorite food start with **ch**",
-                            "**Paipai** is one of my chanting spell",
-                            "**Ponpoi** is one of my chanting spell",
-                            "**Puwapuwa** is one of my chanting spell",
-                            "**Puu** is one of my chanting spell",
-                            "**Pirika Raruku Famifami Pon!** are not my spell",
-                            "**Purun Pirilala Pararira Rarirori!** are not my spell",
-                            "**Peperuto Poppun Faa Pon!** are not my spell",
-                            "**Peperuto Purun Rarirori Perutan!** are not my spell"
+                            ":birthday: May, July, March and November are not my birthday",
+                            ":birthday: My birthday date was same with Aiko but I'm older",
+                            ":drop_of_blood: My blood type was A",
+                            ":fork_and_knife: One of my favorite food ends with **e**",
+                            ":fork_and_knife: One of my favorite food start with **ch**",
+                            ":sparkles: **Paipai** is one of my chanting spell",
+                            ":sparkles: **Ponpoi** is one of my chanting spell",
+                            ":sparkles: **Puwapuwa** is one of my chanting spell",
+                            ":sparkles: **Puu** is one of my chanting spell",
+                            ":sparkles: **Pirika Raruku Famifami Pon!** are not my spell",
+                            ":sparkles: **Purun Pirilala Pararira Rarirori!** are not my spell",
+                            ":sparkles: **Peperuto Poppun Faa Pon!** are not my spell",
+                            ":sparkles: **Peperuto Purun Rarirori Perutan!** are not my spell"
                         };
                         descriptionMystery = arrMysteryDescription[new Random().Next(arrMysteryDescription.Length)];
                     }
@@ -1505,23 +1543,23 @@ namespace OjamajoBot.Module
                         parent = "aiko";
                         color = Config.Aiko.EmbedColor; embedAvatarUrl = Config.Aiko.EmbedAvatarUrl;
                         string[] arrMysteryDescription = {
-                            "November is my birthday",
+                            ":birthday: November is my birthday",
                             "Mimi is my fairy",
-                            "July, February, March and May are not my birthday",
-                            "My birthday date was same with Hazuki but I'm younger",
-                            "My blood type was O",
-                            "One of my favorite food ends with **i**",
-                            "One of my favorite food start with **t**",
-                            "**Pameruku** is one of my chanting spell",
-                            "**Raruku** is one of my chanting spell",
-                            "**Rarirori** is one of my chanting spell",
-                            "**Poppun** is one of my chanting spell",
-                            "**Pirika Ponpoi Famifami Pon!** are not my spell",
-                            "**Peperuto Puwapuwa Purun Perutan!** are not my spell",
-                            "**Ponpoi Purun Pirilala Petton!** are not my spell",
-                            "**Poporina Puwapuwa Famifami Pararira!** are not my spell",
-                            "**Paipai Pururun Pirika Perutan!** are not my spell",
-                            "**Puu Faa Peperuto Pon!** are not my spell"
+                            ":birthday: July, February, March and May are not my birthday",
+                            ":birthday: My birthday date was same with Hazuki but I'm younger",
+                            ":drop_of_blood: My blood type was O",
+                            ":fork_and_knife: One of my favorite food ends with **i**",
+                            ":fork_and_knife: One of my favorite food start with **t**",
+                            ":sparkles: **Pameruku** is one of my chanting spell",
+                            ":sparkles: **Raruku** is one of my chanting spell",
+                            ":sparkles: **Rarirori** is one of my chanting spell",
+                            ":sparkles: **Poppun** is one of my chanting spell",
+                            ":sparkles: **Pirika Ponpoi Famifami Pon!** are not my spell",
+                            ":sparkles: **Peperuto Puwapuwa Purun Perutan!** are not my spell",
+                            ":sparkles: **Ponpoi Purun Pirilala Petton!** are not my spell",
+                            ":sparkles: **Poporina Puwapuwa Famifami Pararira!** are not my spell",
+                            ":sparkles: **Paipai Pururun Pirika Perutan!** are not my spell",
+                            ":sparkles: **Puu Faa Peperuto Pon!** are not my spell"
                         };
                         descriptionMystery = arrMysteryDescription[new Random().Next(arrMysteryDescription.Length)];
                     }
@@ -1531,22 +1569,22 @@ namespace OjamajoBot.Module
                         parent = "onpu";
                         color = Config.Onpu.EmbedColor; embedAvatarUrl = Config.Onpu.EmbedAvatarUrl;
                         string[] arrMysteryDescription = {
-                            "March is my birthday",
+                            ":birthday: March is my birthday",
                             "Roro is my fairy",
-                            "July, February, November and May are not my birthday",
-                            "My birthday was was at 3rd",
-                            "One of my favorite food ends with **s**",
-                            "One of my favorite food start with **cr**",
-                            "**Pururun** is one of my chanting spell",
-                            "**Purun** is one of my chanting spell",
-                            "**Famifami** is one of my chanting spell",
-                            "**Faa** is one of my chanting spell",
-                            "**Rarirori Ponpoi Pon Pirika!** are not my spell",
-                            "**Peperuto Puwapuwa Raruku Perutan!** are not my spell",
-                            "**Pirilala Ponpoi Raruku Petton!** are not my spell",
-                            "**Poporina Puwapuwa Rarirori Pararira!** are not my spell",
-                            "**Peperuto Puu Poppun Pon!** are not my spell",
-                            "**Paipai Pirika Pameruku Perutan!** are not my spell"
+                            ":birthday: July, February, November and May are not my birthday",
+                            ":birthday: My birthday was at 3rd",
+                            ":fork_and_knife: One of my favorite food ends with **s**",
+                            ":fork_and_knife: One of my favorite food start with **cr**",
+                            ":sparkles: **Pururun** is one of my chanting spell",
+                            ":sparkles: **Purun** is one of my chanting spell",
+                            ":sparkles: **Famifami** is one of my chanting spell",
+                            ":sparkles: **Faa** is one of my chanting spell",
+                            ":sparkles: **Rarirori Ponpoi Pon Pirika!** are not my spell",
+                            ":sparkles: **Peperuto Puwapuwa Raruku Perutan!** are not my spell",
+                            ":sparkles: **Pirilala Ponpoi Raruku Petton!** are not my spell",
+                            ":sparkles: **Poporina Puwapuwa Rarirori Pararira!** are not my spell",
+                            ":sparkles: **Peperuto Puu Poppun Pon!** are not my spell",
+                            ":sparkles: **Paipai Pirika Pameruku Perutan!** are not my spell"
                         };
                         descriptionMystery = arrMysteryDescription[new Random().Next(arrMysteryDescription.Length)];
                     }
@@ -1556,23 +1594,23 @@ namespace OjamajoBot.Module
                         parent = "momoko";
                         color = Config.Momoko.EmbedColor; embedAvatarUrl = Config.Momoko.EmbedAvatarUrl;
                         string[] arrMysteryDescription = {
-                            "May is my birthday",
+                            ":birthday: May is my birthday",
                             "Nini is my fairy",
-                            "My blood type was AB",
-                            "July, February, November and March are not my birthday",
-                            "My birthday was was at 6th",
-                            "One of my favorite food ends with **t**",
-                            "One of my favorite food start with **s**",
-                            "**Perutan** is one of my chanting spell",
-                            "**Petton** is one of my chanting spell",
-                            "**Pararira** is one of my chanting spell",
-                            "**Pon** is one of my chanting spell",
-                            "**Ponpoi Rarirori Pirika Faa!** are not my spell",
-                            "**Raruku Puwapuwa Peperuto Pururun!** are not my spell",
-                            "**Purun Ponpoi Raruku  Pirilala!** are not my spell",
-                            "**Rarirori Poporina Famifami Puwapuwa!** are not my spell",
-                            "**Faa Puu Poppun Peperuto!** are not my spell",
-                            "**Pururun Pirika Pameruku Paipai!** are not my spell"
+                            ":drop_of_blood: My blood type was AB",
+                            ":birthday: July, February, November and March are not my birthday",
+                            ":birthday: My birthday was at 6th",
+                            ":fork_and_knife: One of my favorite food ends with **t**",
+                            ":fork_and_knife: One of my favorite food start with **s**",
+                            ":sparkles: **Perutan** is one of my chanting spell",
+                            ":sparkles: **Petton** is one of my chanting spell",
+                            ":sparkles: **Pararira** is one of my chanting spell",
+                            ":sparkles: **Pon** is one of my chanting spell",
+                            ":sparkles: **Ponpoi Rarirori Pirika Faa!** are not my spell",
+                            ":sparkles: **Raruku Puwapuwa Peperuto Pururun!** are not my spell",
+                            ":sparkles: **Purun Ponpoi Raruku  Pirilala!** are not my spell",
+                            ":sparkles: **Rarirori Poporina Famifami Puwapuwa!** are not my spell",
+                            ":sparkles: **Faa Puu Poppun Peperuto!** are not my spell",
+                            ":sparkles: **Pururun Pirika Pameruku Paipai!** are not my spell"
                         };
                         descriptionMystery = arrMysteryDescription[new Random().Next(arrMysteryDescription.Length)];
                     }
@@ -1614,12 +1652,22 @@ namespace OjamajoBot.Module
 
                     if (!isMystery || chosenCategory == "ojamajos" || chosenCategory == "special")
                     {//not mystery
-                        var embed = new EmbedBuilder()
-                        .WithAuthor(author, embedAvatarUrl)
-                        .WithColor(color)
-                        .WithTitle($"{chosenName}")
-                        .WithFooter($"ID: {chosenId} | Catch Rate: {catchRate}")
-                        .WithImageUrl(chosenUrl);
+                        EmbedBuilder embed;
+                        if (chosenCategory == "ojamajos" || chosenCategory == "special")
+                            embed = new EmbedBuilder()
+                            .WithAuthor(author)
+                            .WithColor(Discord.Color.Gold)
+                            .WithTitle($"{chosenName}")
+                            .WithFooter($"ID: {chosenId} | Catch Rate: {catchRate}")
+                            .WithImageUrl(chosenUrl);
+                        else
+                            embed = new EmbedBuilder()
+                            .WithAuthor(author, embedAvatarUrl)
+                            .WithColor(color)
+                            .WithTitle($"{chosenName}")
+                            .WithFooter($"ID: {chosenId} | Catch Rate: {catchRate}")
+                            .WithImageUrl(chosenUrl);
+
                         if (chosenCategory == "ojamajos") parent = "";
 
                         await client
@@ -1817,7 +1865,7 @@ namespace OjamajoBot.Module
             var guildId = Context.Guild.Id;
             var clientId = Context.User.Id;
 
-            var cardCaptureReturn = TradingCardCore.cardCapture(Config.Doremi.EmbedColor, guildId, clientId.ToString(), Context.User.Username,
+            var cardCaptureReturn = TradingCardCore.cardCapture(Config.Doremi.EmbedColor, Context.Client.CurrentUser.GetAvatarUrl(), guildId, clientId.ToString(), Context.User.Username,
             TradingCardCore.Doremi.emojiError, "doremi", boost, Config.Doremi.PrefixParent[0], "do",
             TradingCardCore.Doremi.maxNormal, TradingCardCore.Doremi.maxPlatinum, TradingCardCore.Doremi.maxMetal, TradingCardCore.Doremi.maxOjamajos);
 
@@ -1826,10 +1874,17 @@ namespace OjamajoBot.Module
             else
                 await ReplyAsync(cardCaptureReturn.Item1,
                     embed: cardCaptureReturn.Item2.Build());
-            
+
+            //check if player is ranked up
+            if (cardCaptureReturn.Item3!="")
+                await ReplyAsync(embed: new EmbedBuilder()
+                    .WithColor(Config.Doremi.EmbedColor)
+                    .WithDescription(cardCaptureReturn.Item3)
+                    .WithThumbnailUrl(Context.User.GetAvatarUrl())
+                    .Build());
 
             //check if player have captured all doremi card/not
-            if (cardCaptureReturn.Item3["doremi"])
+            if (cardCaptureReturn.Item4["doremi"])
                 await Bot.Doremi.client
                 .GetGuild(guildId)
                 .GetTextChannel(Context.Channel.Id)
@@ -1842,7 +1897,7 @@ namespace OjamajoBot.Module
             
 
             //check if player have captured all hazuki card/not
-            if (cardCaptureReturn.Item3["hazuki"])
+            if (cardCaptureReturn.Item4["hazuki"])
             {
                 await Bot.Hazuki.client
                 .GetGuild(guildId)
@@ -1856,7 +1911,7 @@ namespace OjamajoBot.Module
             }
 
             //check if player have captured all aiko card/not
-            if (cardCaptureReturn.Item3["aiko"])
+            if (cardCaptureReturn.Item4["aiko"])
             {
                 await Bot.Aiko.client
                 .GetGuild(guildId)
@@ -1870,7 +1925,7 @@ namespace OjamajoBot.Module
             }
 
             //check if player have captured all onpu card/not
-            if (cardCaptureReturn.Item3["onpu"])
+            if (cardCaptureReturn.Item4["onpu"])
             {
                 await Bot.Onpu.client
                 .GetGuild(guildId)
@@ -1884,7 +1939,7 @@ namespace OjamajoBot.Module
             }
 
             //check if player have captured all momoko card/not
-            if (cardCaptureReturn.Item3["momoko"])
+            if (cardCaptureReturn.Item4["momoko"])
             {
                 await Bot.Momoko.client
                 .GetGuild(guildId)
@@ -1898,7 +1953,7 @@ namespace OjamajoBot.Module
             }
 
             //check if player have captured all other special card/not
-            if (cardCaptureReturn.Item3["special"])
+            if (cardCaptureReturn.Item4["special"])
                 await ReplyAsync(embed: TradingCardCore
                     .userCompleteTheirList(Config.Doremi.EmbedColor, Config.Doremi.EmbedAvatarUrl, "other",
                     $":confetti_ball: Congratulations, **{Context.User.Username}** have complete all **Other Special Card Pack**!",
@@ -1957,9 +2012,15 @@ namespace OjamajoBot.Module
                         category = "normal"; arrList = (JArray)playerData[parent][category];
                         if (arrList.Count >= 1)
                         {
+                            PaginatedAppearanceOptions pao = new PaginatedAppearanceOptions();
+                            pao.JumpDisplayOptions = JumpDisplayOptions.Never;
+                            pao.DisplayInformationIcon = false;
+
                             await PagedReplyAsync(
-                                TradingCardCore.printInventoryTemplate("doremi", "doremi", category, jObjTradingCardList, arrList, TradingCardCore.Doremi.maxNormal, clientId)
-                            );
+                                TradingCardCore.printInventoryTemplate(Config.Doremi.EmbedColor, "doremi", "doremi", category, jObjTradingCardList, arrList, TradingCardCore.Doremi.maxNormal, Context.User.Username,
+                                Context.User.GetAvatarUrl())
+                                );
+
                         }
                         else
                         {
@@ -1976,7 +2037,8 @@ namespace OjamajoBot.Module
                         if (arrList.Count >= 1)
                         {
                             await PagedReplyAsync(
-                                TradingCardCore.printInventoryTemplate("doremi", "doremi", category, jObjTradingCardList, arrList, TradingCardCore.Doremi.maxPlatinum, clientId)
+                                TradingCardCore.printInventoryTemplate(Config.Doremi.EmbedColor, "doremi", "doremi", category, jObjTradingCardList, arrList, TradingCardCore.Doremi.maxPlatinum, Context.User.Username,
+                                Context.User.GetAvatarUrl())
                             );
                         }
                         else
@@ -1994,7 +2056,8 @@ namespace OjamajoBot.Module
                         if (arrList.Count >= 1)
                         {
                             await PagedReplyAsync(
-                                TradingCardCore.printInventoryTemplate("doremi", "doremi", category, jObjTradingCardList, arrList, TradingCardCore.Doremi.maxMetal, clientId)
+                                TradingCardCore.printInventoryTemplate(Config.Doremi.EmbedColor, "doremi", "doremi", category, jObjTradingCardList, arrList, TradingCardCore.Doremi.maxMetal, Context.User.Username,
+                                Context.User.GetAvatarUrl())
                             );
                         }
                         else
@@ -2012,7 +2075,8 @@ namespace OjamajoBot.Module
                         if (arrList.Count >= 1)
                         {
                             await PagedReplyAsync(
-                                TradingCardCore.printInventoryTemplate("doremi", "doremi", category, jObjTradingCardList, arrList, TradingCardCore.Doremi.maxOjamajos, clientId)
+                                TradingCardCore.printInventoryTemplate(Config.Doremi.EmbedColor, "doremi", "doremi", category, jObjTradingCardList, arrList, TradingCardCore.Doremi.maxOjamajos, Context.User.Username,
+                                Context.User.GetAvatarUrl())
                             );
                         }
                         else
@@ -2030,7 +2094,8 @@ namespace OjamajoBot.Module
                         if (arrList.Count >= 1)
                         {
                             await PagedReplyAsync(
-                                TradingCardCore.printInventoryTemplate("other", "other", category, jObjTradingCardList, arrList, TradingCardCore.maxSpecial, clientId)
+                                TradingCardCore.printInventoryTemplate(Config.Doremi.EmbedColor, "other", "other", category, jObjTradingCardList, arrList, TradingCardCore.maxSpecial, Context.User.Username,
+                                Context.User.GetAvatarUrl())
                             );
                         }
                         else
@@ -2066,7 +2131,7 @@ namespace OjamajoBot.Module
             var clientId = Context.User.Id;
             await ReplyAsync(embed: TradingCardCore.
                     printStatusTemplate(Config.Doremi.EmbedColor, Context.User.Username, guildId.ToString(), clientId.ToString(),
-                    TradingCardCore.Doremi.emojiError)
+                    TradingCardCore.Doremi.emojiError,Context.User.GetAvatarUrl())
                     .Build());
         }
 
@@ -2100,6 +2165,10 @@ namespace OjamajoBot.Module
 
             string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
             var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
+
+            PaginatedAppearanceOptions pao = new PaginatedAppearanceOptions();
+            pao.JumpDisplayOptions = JumpDisplayOptions.Never;
+            pao.DisplayInformationIcon = false;
 
             if (!File.Exists(playerDataDirectory)) //not registered yet
             {
@@ -2167,6 +2236,13 @@ namespace OjamajoBot.Module
                             ctr++;
                         }
                     }
+
+                    var pagerUserList = new PaginatedMessage
+                    {
+                        Pages = pageContentUserList,
+                        Color = Config.Doremi.EmbedColor,
+                        Options = pao
+                    };
                     //end user selection
 
                     Boolean isTrading = true;
@@ -2189,7 +2265,7 @@ namespace OjamajoBot.Module
                         $"-You **cannot** trade card that you or that user already had.")
                         .WithColor(Config.Doremi.EmbedColor)
                         .Build());
-                    await PagedReplyAsync(pageContentUserList);
+                    await PagedReplyAsync(pagerUserList);
                     var response = await NextMessageAsync(timeout: timeoutDuration);
                     newStep = false;
                     while (isTrading)
@@ -2229,7 +2305,7 @@ namespace OjamajoBot.Module
                             if (newStep)
                             {
                                 newStep = false;
-                                await PagedReplyAsync(pageContentUserList);
+                                await PagedReplyAsync(pagerUserList);
                                 response = await NextMessageAsync(timeout: timeoutDuration);
                             }
                             else
@@ -2239,7 +2315,7 @@ namespace OjamajoBot.Module
                                     stepProcess = 1;
                                     selectionUserId = "";
                                     await ReplyAsync(":x: Please re-type the proper number selection.");
-                                    await PagedReplyAsync(pageContentUserList);
+                                    await PagedReplyAsync(pagerUserList);
                                     response = await NextMessageAsync(timeout: timeoutDuration);
                                 }
                                 //array length:2[0,1], selected:2
@@ -2249,7 +2325,7 @@ namespace OjamajoBot.Module
                                     stepProcess = 1;
                                     selectionUserId = "";
                                     await ReplyAsync(":x: That number choice is not on the list. Please re-type the proper number selection.");
-                                    await PagedReplyAsync(pageContentUserList);
+                                    await PagedReplyAsync(pagerUserList);
                                     response = await NextMessageAsync(timeout: timeoutDuration);
                                 }
                                 else
@@ -2265,7 +2341,7 @@ namespace OjamajoBot.Module
                                             .WithDescription($":x: Sorry, you cannot trade more than once with " +
                                             $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}.")
                                             .Build());
-                                        await PagedReplyAsync(pageContentUserList);
+                                        await PagedReplyAsync(pagerUserList);
                                         response = await NextMessageAsync(timeout: timeoutDuration);
                                     }
                                     else
@@ -2410,6 +2486,13 @@ namespace OjamajoBot.Module
 
                             pageContent = TradingCardCore.printTradeCardListTemplate(selectionOtherUserCardPack, selectionOtherUserCardCategory,
                                 jObjTradingCardList, arrUserOtherCardList);
+                            var pagerCardList = new PaginatedMessage
+                            {
+                                Pages = pageContent,
+                                Color = Config.Doremi.EmbedColor,
+                                Options = pao
+                            };
+
                             //end available list
 
                             if (newStep)
@@ -2426,7 +2509,7 @@ namespace OjamajoBot.Module
                                     .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
                                     .WithColor(Config.Doremi.EmbedColor)
                                     .Build());
-                                    await PagedReplyAsync(pageContent);
+                                    await PagedReplyAsync(pagerCardList);
                                     response = await NextMessageAsync(timeout: timeoutDuration);
                                 }
                                 else
@@ -2464,7 +2547,7 @@ namespace OjamajoBot.Module
                                 else if (!arrUserOtherCardList.Contains(response.Content.ToString(), StringComparer.Ordinal))
                                 {
                                     await ReplyAsync(":x: Please re-enter the correct **card id.**");
-                                    await PagedReplyAsync(pageContent);
+                                    await PagedReplyAsync(pagerCardList);
                                     response = await NextMessageAsync(timeout: timeoutDuration);
                                 }
                                 else
@@ -2606,6 +2689,12 @@ namespace OjamajoBot.Module
 
                             pageContent = TradingCardCore.printTradeCardListTemplate(selectionYourCardPack, selectionYourCardCategory,
                                 jObjTradingCardList, arrUserCardList);
+                            var pagerYourCardList = new PaginatedMessage
+                            {
+                                Pages = pageContent,
+                                Color = Config.Doremi.EmbedColor,
+                                Options = pao
+                            };
 
                             //end available list
 
@@ -2632,7 +2721,7 @@ namespace OjamajoBot.Module
                                     .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
                                     .WithColor(Config.Doremi.EmbedColor)
                                     .Build());
-                                    await PagedReplyAsync(pageContent);
+                                    await PagedReplyAsync(pagerYourCardList);
                                     response = await NextMessageAsync(timeout: timeoutDuration);
                                 }
 
@@ -2657,7 +2746,7 @@ namespace OjamajoBot.Module
                                 else if (!arrUserCardList.Contains(response.Content.ToString(), StringComparer.Ordinal))
                                 {
                                     await ReplyAsync(":x: Please re-enter the correct **card id.**");
-                                    await PagedReplyAsync(pageContent);
+                                    await PagedReplyAsync(pagerYourCardList);
                                     response = await NextMessageAsync(timeout: timeoutDuration);
                                 }
                                 else
@@ -2874,7 +2963,7 @@ namespace OjamajoBot.Module
                         .WithColor(Config.Doremi.EmbedColor)
                         .Build());
 
-                    await PagedReplyAsync(pageContentUserList);
+                    //await PagedReplyAsync(pageContentUserList);
                     var response = await NextMessageAsync(timeout: timeoutDuration);
                     newStep = false;
 
@@ -2909,7 +2998,7 @@ namespace OjamajoBot.Module
                             if (newStep)
                             {
                                 newStep = false;
-                                await PagedReplyAsync(pageContentUserList);
+                                //await PagedReplyAsync(pageContentUserList);
                                 response = await NextMessageAsync(timeout: timeoutDuration);
                             }
                             else
@@ -2919,7 +3008,7 @@ namespace OjamajoBot.Module
                                     stepProcess = 1;
                                     selectionUserId = "";
                                     await ReplyAsync(":x: Please re-type the proper number selection.");
-                                    await PagedReplyAsync(pageContentUserList);
+                                    //await PagedReplyAsync(pageContentUserList);
                                     response = await NextMessageAsync(timeout: timeoutDuration);
                                 }
                                 //array length:2[0,1], selected:2
@@ -2929,7 +3018,7 @@ namespace OjamajoBot.Module
                                     stepProcess = 1;
                                     selectionUserId = "";
                                     await ReplyAsync(":x: That number choice is not on the list. Please re-type the proper number selection.");
-                                    await PagedReplyAsync(pageContentUserList);
+                                    //await PagedReplyAsync(pageContentUserList);
                                     response = await NextMessageAsync(timeout: timeoutDuration);
                                 }
                                 else

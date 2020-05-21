@@ -208,12 +208,12 @@ namespace OjamajoBot.Bot
             int argPos = 0;
             if (Config.Guild.getPropertyValue(context.Guild.Id, "onpu_role_id") != "" &&
             message.HasStringPrefix($"<@&{Config.Guild.getPropertyValue(context.Guild.Id, "onpu_role_id")}>", ref argPos)){
-                await message.Channel.SendMessageAsync($"Sorry {context.User.Username}, it seems you're calling me with the role prefix. " +
-                "Please try to use the non role prefix.",
-                embed: new EmbedBuilder()
+                await message.Channel.SendMessageAsync(embed: new EmbedBuilder()
                 .WithAuthor(Config.Onpu.EmbedNameError)
+                .WithDescription($"Sorry {context.User.Username}, it seems you're calling me with the role prefix. " +
+                "Please try to use the non role prefix.")
                 .WithColor(Config.Onpu.EmbedColor)
-                .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/55/ODN-EP11-084.png")
+                .WithThumbnailUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/55/ODN-EP11-084.png")
                 .Build());
             } else if (message.HasStringPrefix(Config.Onpu.PrefixParent[0], ref argPos) ||
                 message.HasStringPrefix(Config.Onpu.PrefixParent[1], ref argPos) ||
@@ -226,12 +226,12 @@ namespace OjamajoBot.Bot
                             $"See `{Config.Onpu.PrefixParent[0]}help <commands or category>` for command help.");
                         break;
                     case CommandError.UnknownCommand:
-                        await message.Channel.SendMessageAsync("Onpu can't seems to understand your commands. " +
-                            $"See `{Config.Onpu.PrefixParent[0]}help <commands or category>` for command help.",
-                        embed: new EmbedBuilder()
+                        await message.Channel.SendMessageAsync(embed: new EmbedBuilder()
+                        .WithDescription("Onpu can't seems to understand your commands. " +
+                        $"See `{Config.Onpu.PrefixParent[0]}help <commands or category>` for command help.")
                         .WithAuthor(Config.Onpu.EmbedNameError)
                         .WithColor(Config.Onpu.EmbedColor)
-                        .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/7/7e/ODN-EP11-028.png")
+                        .WithThumbnailUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/7/7e/ODN-EP11-028.png")
                         .Build());
                         break;
                     case CommandError.ObjectNotFound:

@@ -190,10 +190,10 @@ namespace OjamajoBot.Bot
 
             if (Config.Guild.getPropertyValue(context.Guild.Id, "momoko_role_id") != "" &&
             message.HasStringPrefix($"<@&{Config.Guild.getPropertyValue(context.Guild.Id, "momoko_role_id")}>", ref argPos)){
-                await message.Channel.SendMessageAsync($"I'm sorry {context.User.Username}, it seems you're calling me with the role prefix. " +
-                "Please try to use the non role prefix.",
-                embed: new EmbedBuilder()
+                await message.Channel.SendMessageAsync(embed: new EmbedBuilder()
                 .WithAuthor(Config.Momoko.EmbedNameError)
+                .WithDescription($"I'm sorry {context.User.Username}, it seems you're calling me with the role prefix. " +
+                "Please try to use the non role prefix.")
                 .WithColor(Config.Momoko.EmbedColor)
                 .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/55/ODN-EP11-084.png")
                 .Build());
@@ -208,14 +208,13 @@ namespace OjamajoBot.Bot
                             $"Please see `{Config.Momoko.PrefixParent[0]}help` for command help.");
                         break;
                     case CommandError.UnknownCommand:
-                        await message.Channel.SendMessageAsync($"I'm sorry {context.User.Username}, but I can't seems to understand your commands. " +
-                            $"Please see `{Config.Momoko.PrefixParent[0]}help` for command help.",
-                        embed: new EmbedBuilder()
+                        await message.Channel.SendMessageAsync(embed: new EmbedBuilder()
+                        .WithDescription($"I'm sorry {context.User.Username}, but I can't seems to understand your commands. " +
+                        $"Please see `{Config.Momoko.PrefixParent[0]}help` for command help.")
                         .WithAuthor(Config.Momoko.EmbedNameError)
                         .WithColor(Config.Momoko.EmbedColor)
-                        .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/52/ODN-EP9-025.png")
+                        .WithThumbnailUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/52/ODN-EP9-025.png")
                         .Build());
-                        Console.WriteLine(result.ErrorReason);
                         break;
                     case CommandError.ObjectNotFound:
                         await message.Channel.SendMessageAsync($"I'm sorry {context.User.Username}, {result.ErrorReason} " +

@@ -836,7 +836,7 @@ namespace OjamajoBot.Module
             var guildId = Context.Guild.Id;
             var clientId = Context.User.Id;
 
-            var cardCaptureReturn = TradingCardCore.cardCapture(Config.Hazuki.EmbedColor, guildId, clientId.ToString(), Context.User.Username,
+            var cardCaptureReturn = TradingCardCore.cardCapture(Config.Hazuki.EmbedColor, Context.Client.CurrentUser.GetAvatarUrl(), guildId, clientId.ToString(), Context.User.Username,
             TradingCardCore.Hazuki.emojiError, "hazuki", boost, Config.Hazuki.PrefixParent[0], "ha",
             TradingCardCore.Hazuki.maxNormal, TradingCardCore.Hazuki.maxPlatinum, TradingCardCore.Hazuki.maxMetal, TradingCardCore.Hazuki.maxOjamajos);
 
@@ -846,9 +846,16 @@ namespace OjamajoBot.Module
                 await ReplyAsync(cardCaptureReturn.Item1,
                     embed: cardCaptureReturn.Item2.Build());
 
+            //check if player is ranked up
+            if (cardCaptureReturn.Item3 != "")
+                await ReplyAsync(embed: new EmbedBuilder()
+                    .WithColor(Config.Hazuki.EmbedColor)
+                    .WithDescription(cardCaptureReturn.Item3)
+                    .WithThumbnailUrl(Context.User.GetAvatarUrl())
+                    .Build());
 
             //check if player have captured all doremi card/not
-            if (cardCaptureReturn.Item3["doremi"])
+            if (cardCaptureReturn.Item4["doremi"])
                 await Bot.Doremi.client
                 .GetGuild(guildId)
                 .GetTextChannel(Context.Channel.Id)
@@ -861,7 +868,7 @@ namespace OjamajoBot.Module
 
 
             //check if player have captured all hazuki card/not
-            if (cardCaptureReturn.Item3["hazuki"])
+            if (cardCaptureReturn.Item4["hazuki"])
             {
                 await Bot.Hazuki.client
                 .GetGuild(guildId)
@@ -875,7 +882,7 @@ namespace OjamajoBot.Module
             }
 
             //check if player have captured all aiko card/not
-            if (cardCaptureReturn.Item3["aiko"])
+            if (cardCaptureReturn.Item4["aiko"])
             {
                 await Bot.Aiko.client
                 .GetGuild(guildId)
@@ -889,7 +896,7 @@ namespace OjamajoBot.Module
             }
 
             //check if player have captured all onpu card/not
-            if (cardCaptureReturn.Item3["onpu"])
+            if (cardCaptureReturn.Item4["onpu"])
             {
                 await Bot.Onpu.client
                 .GetGuild(guildId)
@@ -903,7 +910,7 @@ namespace OjamajoBot.Module
             }
 
             //check if player have captured all momoko card/not
-            if (cardCaptureReturn.Item3["momoko"])
+            if (cardCaptureReturn.Item4["momoko"])
             {
                 await Bot.Momoko.client
                 .GetGuild(guildId)
@@ -917,7 +924,7 @@ namespace OjamajoBot.Module
             }
 
             //check if player have captured all other special card/not
-            if (cardCaptureReturn.Item3["special"])
+            if (cardCaptureReturn.Item4["special"])
                 await ReplyAsync(embed: TradingCardCore
                     .userCompleteTheirList(Config.Hazuki.EmbedColor, Config.Hazuki.EmbedAvatarUrl, "other",
                     $":confetti_ball: Congratulations, **{Context.User.Username}** have complete all **Other Special Card Pack**!",
@@ -934,7 +941,7 @@ namespace OjamajoBot.Module
             var clientId = Context.User.Id;
             await ReplyAsync(embed: TradingCardCore.
                     printStatusTemplate(Config.Hazuki.EmbedColor, Context.User.Username, guildId.ToString(), clientId.ToString(),
-                    TradingCardCore.Hazuki.emojiError)
+                    TradingCardCore.Hazuki.emojiError, Context.User.GetAvatarUrl())
                     .Build());
         }
 
@@ -989,7 +996,8 @@ namespace OjamajoBot.Module
                         if (arrList.Count >= 1)
                         {
                             await PagedReplyAsync(
-                                TradingCardCore.printInventoryTemplate("hazuki", "hazuki", category, jObjTradingCardList, arrList, TradingCardCore.Hazuki.maxNormal, clientId)
+                                TradingCardCore.printInventoryTemplate(Config.Hazuki.EmbedColor, "hazuki", "hazuki", category, jObjTradingCardList, arrList, TradingCardCore.Hazuki.maxNormal, Context.User.Username,
+                                Context.User.GetAvatarUrl())
                             );
                         }
                         else
@@ -1008,7 +1016,8 @@ namespace OjamajoBot.Module
                         if (arrList.Count >= 1)
                         {
                             await PagedReplyAsync(
-                                TradingCardCore.printInventoryTemplate("hazuki", "hazuki", category, jObjTradingCardList, arrList, TradingCardCore.Hazuki.maxPlatinum, clientId)
+                                TradingCardCore.printInventoryTemplate(Config.Hazuki.EmbedColor, "hazuki", "hazuki", category, jObjTradingCardList, arrList, TradingCardCore.Hazuki.maxPlatinum, Context.User.Username,
+                                Context.User.GetAvatarUrl())
                             );
                         }
                         else
@@ -1027,7 +1036,8 @@ namespace OjamajoBot.Module
                         if (arrList.Count >= 1)
                         {
                             await PagedReplyAsync(
-                                TradingCardCore.printInventoryTemplate("hazuki", "hazuki", category, jObjTradingCardList, arrList, TradingCardCore.Hazuki.maxMetal, clientId)
+                                TradingCardCore.printInventoryTemplate(Config.Hazuki.EmbedColor, "hazuki", "hazuki", category, jObjTradingCardList, arrList, TradingCardCore.Hazuki.maxMetal, Context.User.Username,
+                                Context.User.GetAvatarUrl())
                             );
                         }
                         else
@@ -1046,7 +1056,8 @@ namespace OjamajoBot.Module
                         if (arrList.Count >= 1)
                         {
                             await PagedReplyAsync(
-                                TradingCardCore.printInventoryTemplate("hazuki", "hazuki", category, jObjTradingCardList, arrList, TradingCardCore.Hazuki.maxOjamajos, clientId)
+                                TradingCardCore.printInventoryTemplate(Config.Hazuki.EmbedColor, "hazuki", "hazuki", category, jObjTradingCardList, arrList, TradingCardCore.Hazuki.maxOjamajos, Context.User.Username,
+                                Context.User.GetAvatarUrl())
                             );
                         }
                         else
@@ -1065,7 +1076,8 @@ namespace OjamajoBot.Module
                         if (arrList.Count >= 1)
                         {
                             await PagedReplyAsync(
-                                TradingCardCore.printInventoryTemplate("other", "other", category, jObjTradingCardList, arrList, TradingCardCore.maxSpecial, clientId)
+                                TradingCardCore.printInventoryTemplate(Config.Hazuki.EmbedColor, "other", "other", category, jObjTradingCardList, arrList, TradingCardCore.maxSpecial, Context.User.Username,
+                                Context.User.GetAvatarUrl())
                             );
                         }
                         else

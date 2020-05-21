@@ -198,12 +198,12 @@ namespace OjamajoBot.Bot
             int argPos = 0;
             if (Config.Guild.getPropertyValue(context.Guild.Id, "aiko_role_id") != "" &&
                 message.HasStringPrefix($"<@&{Config.Guild.getPropertyValue(context.Guild.Id, "aiko_role_id")}>", ref argPos)){
-                await message.Channel.SendMessageAsync($"Gomen ne {context.User.Username}, it seems you're calling me with the role prefix. " +
-                "Please use the non role prefix.",
-                embed: new EmbedBuilder()
+                await message.Channel.SendMessageAsync(embed: new EmbedBuilder()
                 .WithAuthor(Config.Aiko.EmbedNameError)
+                .WithDescription($"Gomen ne {context.User.Username}, it seems you're calling me with the role prefix. " +
+                "Please use the non role prefix.")
                 .WithColor(Config.Aiko.EmbedColor)
-                .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/55/ODN-EP11-084.png")
+                .WithThumbnailUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/55/ODN-EP11-084.png")
                 .Build());
             } else if (message.HasStringPrefix(Config.Aiko.PrefixParent[0], ref argPos) ||
                 message.HasStringPrefix(Config.Aiko.PrefixParent[1], ref argPos) ||
@@ -216,12 +216,12 @@ namespace OjamajoBot.Bot
                             $"See `{Config.Aiko.PrefixParent[0]}help <commands or category>`for commands help.");
                         break;
                     case CommandError.UnknownCommand:
-                        await message.Channel.SendMessageAsync($"Gomen ne {context.User.Username}, I can't seem to understand your commands. " +
-                                $"See `{Config.Aiko.PrefixParent[0]}help <commands or category>`for command help.",
-                        embed: new EmbedBuilder()
+                        await message.Channel.SendMessageAsync(embed: new EmbedBuilder()
+                        .WithDescription($"Gomen ne {context.User.Username}, I can't seem to understand your commands. " +
+                            $"See `{Config.Aiko.PrefixParent[0]}help <commands or category>`for command help.")
                         .WithAuthor(Config.Aiko.EmbedNameError)
                         .WithColor(Config.Aiko.EmbedColor)
-                        .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/6/63/ODN-EP3-006.png")
+                        .WithThumbnailUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/6/63/ODN-EP3-006.png")
                         .Build());
                         break;
                     case CommandError.ObjectNotFound:
