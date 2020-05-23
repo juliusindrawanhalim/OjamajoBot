@@ -64,7 +64,7 @@ namespace OjamajoBot.Module
 
             await ReplyAsync(embed: new EmbedBuilder()
                 .WithAuthor("Doremi Movie Countdown",Config.Doremi.EmbedAvatarUrl)
-                .WithTitle("Countdown to: Ojamajo Doremi: Majo Minarai o Sagashite")
+                .WithTitle(":alarm_clock: Countdown to: Ojamajo Doremi: Majo Minarai o Sagashite")
                 .WithColor(Config.Doremi.EmbedColor)
                 //.WithDescription($"[Only **{timeLeft}** left until Doremi Movie!](https://www.lookingfor-magical-doremi.com/)")
                 .WithDescription($"[Coming soon!](https://www.lookingfor-magical-doremi.com/news/67/)")
@@ -1495,124 +1495,35 @@ namespace OjamajoBot.Module
                     if (randomParent == 0)
                     {
                         parent = "doremi"; embedAvatarUrl = Config.Doremi.EmbedAvatarUrl;
-                        string[] arrMysteryDescription = {
-                            ":birthday: July is my birthday",
-                            "Dodo is my fairy",
-                            ":birthday: February, May, March and November are not my birthday",
-                            ":birthday: My birthday was at 30th",
-                            ":sparkles: **Pirika** is one of my chanting spell",
-                            ":sparkles: **Pirilala** is one of my chanting spell",
-                            ":sparkles: **Poporina** is one of my chanting spell",
-                            ":sparkles: **Peperuto** is one of my chanting spell",
-                            ":sparkles: **Paipai Raruku Famifami Pon!** are not my spell",
-                            ":sparkles: **Puwapuwa Petton Pururun Rarirori!** are not my spell",
-                            ":sparkles: **Puu Raruku Purun Perutan!** are not my spell",
-                            ":sparkles: **Puu Poppun Faa Pon!** are not my spell",
-                            ":sparkles: **Ponpoi Pameruku Pururun Petton!** are not my spell",
-                            ":sparkles: **Famifami Rarirori Paipai Petton!** are not my spell"
-                        };
-                        descriptionMystery = arrMysteryDescription[new Random().Next(arrMysteryDescription.Length)];
+                        descriptionMystery = TradingCardCore.Doremi.arrMysteryDescription[new Random().Next(TradingCardCore.Doremi.arrMysteryDescription.Length)];
                     }
                     else if (randomParent == 1)
                     {
                         if (!isMystery) client = Bot.Hazuki.client;
                         parent = "hazuki";
                         color = Config.Hazuki.EmbedColor; embedAvatarUrl = Config.Hazuki.EmbedAvatarUrl;
-                        string[] arrMysteryDescription = {
-                            ":birthday: February is my birthday",
-                            "Rere is my fairy",
-                            ":birthday: May, July, March and November are not my birthday",
-                            ":birthday: My birthday date was same with Aiko but I'm older",
-                            ":drop_of_blood: My blood type was A",
-                            ":fork_and_knife: One of my favorite food ends with **e**",
-                            ":fork_and_knife: One of my favorite food start with **ch**",
-                            ":sparkles: **Paipai** is one of my chanting spell",
-                            ":sparkles: **Ponpoi** is one of my chanting spell",
-                            ":sparkles: **Puwapuwa** is one of my chanting spell",
-                            ":sparkles: **Puu** is one of my chanting spell",
-                            ":sparkles: **Pirika Raruku Famifami Pon!** are not my spell",
-                            ":sparkles: **Purun Pirilala Pararira Rarirori!** are not my spell",
-                            ":sparkles: **Peperuto Poppun Faa Pon!** are not my spell",
-                            ":sparkles: **Peperuto Purun Rarirori Perutan!** are not my spell"
-                        };
-                        descriptionMystery = arrMysteryDescription[new Random().Next(arrMysteryDescription.Length)];
+                        descriptionMystery = TradingCardCore.Hazuki.arrMysteryDescription[new Random().Next(TradingCardCore.Hazuki.arrMysteryDescription.Length)];
                     }
                     else if (randomParent == 2)
                     {
                         if (!isMystery) client = Bot.Aiko.client;
                         parent = "aiko";
                         color = Config.Aiko.EmbedColor; embedAvatarUrl = Config.Aiko.EmbedAvatarUrl;
-                        string[] arrMysteryDescription = {
-                            ":birthday: November is my birthday",
-                            "Mimi is my fairy",
-                            ":birthday: July, February, March and May are not my birthday",
-                            ":birthday: My birthday date was same with Hazuki but I'm younger",
-                            ":drop_of_blood: My blood type was O",
-                            ":fork_and_knife: One of my favorite food ends with **i**",
-                            ":fork_and_knife: One of my favorite food start with **t**",
-                            ":sparkles: **Pameruku** is one of my chanting spell",
-                            ":sparkles: **Raruku** is one of my chanting spell",
-                            ":sparkles: **Rarirori** is one of my chanting spell",
-                            ":sparkles: **Poppun** is one of my chanting spell",
-                            ":sparkles: **Pirika Ponpoi Famifami Pon!** are not my spell",
-                            ":sparkles: **Peperuto Puwapuwa Purun Perutan!** are not my spell",
-                            ":sparkles: **Ponpoi Purun Pirilala Petton!** are not my spell",
-                            ":sparkles: **Poporina Puwapuwa Famifami Pararira!** are not my spell",
-                            ":sparkles: **Paipai Pururun Pirika Perutan!** are not my spell",
-                            ":sparkles: **Puu Faa Peperuto Pon!** are not my spell"
-                        };
-                        descriptionMystery = arrMysteryDescription[new Random().Next(arrMysteryDescription.Length)];
+                        descriptionMystery = TradingCardCore.Aiko.arrMysteryDescription[new Random().Next(TradingCardCore.Aiko.arrMysteryDescription.Length)];
                     }
                     else if (randomParent == 3)
                     {
                         if (!isMystery) client = Bot.Onpu.client;
                         parent = "onpu";
                         color = Config.Onpu.EmbedColor; embedAvatarUrl = Config.Onpu.EmbedAvatarUrl;
-                        string[] arrMysteryDescription = {
-                            ":birthday: March is my birthday",
-                            "Roro is my fairy",
-                            ":birthday: July, February, November and May are not my birthday",
-                            ":birthday: My birthday was at 3rd",
-                            ":fork_and_knife: One of my favorite food ends with **s**",
-                            ":fork_and_knife: One of my favorite food start with **cr**",
-                            ":sparkles: **Pururun** is one of my chanting spell",
-                            ":sparkles: **Purun** is one of my chanting spell",
-                            ":sparkles: **Famifami** is one of my chanting spell",
-                            ":sparkles: **Faa** is one of my chanting spell",
-                            ":sparkles: **Rarirori Ponpoi Pon Pirika!** are not my spell",
-                            ":sparkles: **Peperuto Puwapuwa Raruku Perutan!** are not my spell",
-                            ":sparkles: **Pirilala Ponpoi Raruku Petton!** are not my spell",
-                            ":sparkles: **Poporina Puwapuwa Rarirori Pararira!** are not my spell",
-                            ":sparkles: **Peperuto Puu Poppun Pon!** are not my spell",
-                            ":sparkles: **Paipai Pirika Pameruku Perutan!** are not my spell"
-                        };
-                        descriptionMystery = arrMysteryDescription[new Random().Next(arrMysteryDescription.Length)];
+                        descriptionMystery = TradingCardCore.Onpu.arrMysteryDescription[new Random().Next(TradingCardCore.Onpu.arrMysteryDescription.Length)];
                     }
                     else if (randomParent == 4)
                     {
                         if (!isMystery) client = Bot.Momoko.client;
                         parent = "momoko";
                         color = Config.Momoko.EmbedColor; embedAvatarUrl = Config.Momoko.EmbedAvatarUrl;
-                        string[] arrMysteryDescription = {
-                            ":birthday: May is my birthday",
-                            "Nini is my fairy",
-                            ":drop_of_blood: My blood type was AB",
-                            ":birthday: July, February, November and March are not my birthday",
-                            ":birthday: My birthday was at 6th",
-                            ":fork_and_knife: One of my favorite food ends with **t**",
-                            ":fork_and_knife: One of my favorite food start with **s**",
-                            ":sparkles: **Perutan** is one of my chanting spell",
-                            ":sparkles: **Petton** is one of my chanting spell",
-                            ":sparkles: **Pararira** is one of my chanting spell",
-                            ":sparkles: **Pon** is one of my chanting spell",
-                            ":sparkles: **Ponpoi Rarirori Pirika Faa!** are not my spell",
-                            ":sparkles: **Raruku Puwapuwa Peperuto Pururun!** are not my spell",
-                            ":sparkles: **Purun Ponpoi Raruku  Pirilala!** are not my spell",
-                            ":sparkles: **Rarirori Poporina Famifami Puwapuwa!** are not my spell",
-                            ":sparkles: **Faa Puu Poppun Peperuto!** are not my spell",
-                            ":sparkles: **Pururun Pirika Pameruku Paipai!** are not my spell"
-                        };
-                        descriptionMystery = arrMysteryDescription[new Random().Next(arrMysteryDescription.Length)];
+                        descriptionMystery = TradingCardCore.Momoko.arrMysteryDescription[new Random().Next(TradingCardCore.Momoko.arrMysteryDescription.Length)];
                     }
                     else if (randomParent >= 5)
                     {

@@ -45,8 +45,8 @@ namespace OjamajoBot.Bot
                 .AddSingleton(new InteractiveService(client))
                 .AddSingleton(audioservice)
                 //victoria
-                .AddSingleton<LavaConfig>()
                 .AddSingleton<LavaNode>()
+                .AddSingleton<LavaConfig>()
                 .BuildServiceProvider();
 
             client.Log += client_log;
@@ -134,7 +134,9 @@ namespace OjamajoBot.Bot
             client.Ready += () =>
             {
                 Console.WriteLine("Onpu Connected!");
-                _lavaNode.ConnectAsync();
+                if (!_lavaNode.IsConnected)
+                    _lavaNode.ConnectAsync();
+
                 return Task.CompletedTask;
             };
 

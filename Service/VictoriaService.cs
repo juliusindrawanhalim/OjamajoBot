@@ -19,7 +19,7 @@ namespace OjamajoBot.Service
 
         public VictoriaService(LavaNode lavaNode, DiscordSocketClient socketClient)
         {
-            socketClient.Ready += OnReady;
+            //socketClient.Ready += OnReady;
             _lavaNode = lavaNode;
             _lavaNode.OnPlayerUpdated += OnPlayerUpdated;
             _lavaNode.OnStatsReceived += OnStatsReceived;

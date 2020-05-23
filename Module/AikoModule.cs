@@ -474,12 +474,13 @@ namespace OjamajoBot.Module
                     "I'm not letting you get the spooky Aiko this time!",
                     "Oy! Stop using this command!",
                     "Oy! Stop making fun of the spooky aiko!",
-                    "No!I won't let you use this command!",
+                    "No! I won't let you use this command!",
                     "I don't think you'll get spooky aiko this time!",
                     "You think it was spooky Aiko? You get this one instead!",
                     "You think it was spooky Aiko? It was me, the real Aiko!",
                     "I'm preventing you from getting the spooky Aiko!",
-                    "Oy! At least use another nice commands for me, instead using the spooky aiko!"
+                    "Oy! At least use another nice commands for me, instead using the spooky aiko!",
+                    "Stop using the spooky Aiko!"
                 };
 
                 await base.ReplyAsync(embed: new EmbedBuilder()
@@ -565,7 +566,8 @@ namespace OjamajoBot.Module
                     {"Letter Three","https://cdn.discordapp.com/attachments/643722270447239169/687159873682669722/unknown.png"},
                     {"Letter Three","https://cdn.discordapp.com/attachments/644383823286763544/694792672023674910/SPOILER_unknown.png" },
                     {"Letter Three","https://cdn.discordapp.com/attachments/653690054912507914/702682994632163349/SPOILER_unknown.png" },
-                    {"Letter Three","https://cdn.discordapp.com/attachments/644383823286763544/709622495891685416/SPOILER_unknown.png" }
+                    {"Letter Three","https://cdn.discordapp.com/attachments/644383823286763544/709622495891685416/SPOILER_unknown.png" },
+                    {"Letter Three","https://cdn.discordapp.com/attachments/662953139011452929/713637641957933066/nightmare_onpu.png" },
                 };
 
                 string[] arrRandomTextCameo = {
@@ -583,7 +585,7 @@ namespace OjamajoBot.Module
                     .WithFooter($"Contributed by: {arrRandomCameo[randomedResultCameo, 0]}")
                     .Build());
 
-                if (new Random().Next(0, 2) == 1){
+                if (new Random().Next(0, 10) == 5){
                     //trigger self executing commands
                     if (!Config.Aiko.hasSpookyAikoInvader.ContainsKey(Context.User.Id.ToString()))
                         Config.Aiko.hasSpookyAikoInvader.Add(Context.User.Id.ToString(), false);

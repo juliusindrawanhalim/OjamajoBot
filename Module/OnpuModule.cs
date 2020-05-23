@@ -185,9 +185,7 @@ namespace OjamajoBot.Module
 
                 });
             }
-
         }
-
         public string GetAliases(CommandInfo command)
         {
             StringBuilder output = new StringBuilder();
@@ -1465,7 +1463,7 @@ namespace OjamajoBot.Module
 
             var track = player.Track;
 
-            await ReplyAsync($"🗑️ Ok, I've skipped **{oldTrack}**.", 
+            await ReplyAsync($"⏭️ Ok, I've skipped: **{oldTrack}**.", 
                 embed: new EmbedBuilder()
                 .WithAuthor("Now Playing")
                 .WithTitle(track.Title)
@@ -1522,7 +1520,7 @@ namespace OjamajoBot.Module
                 if (_lavaNode.HasPlayer(Context.Guild))
                 {
                     var player = _lavaNode.GetPlayer(Context.Guild);
-                    var itemsQueue = player.Queue.Items;
+                    //var itemsQueue = player.Queue.Items.Cast<LavaTrack>().ToList();
 
                     var allTracks = player.Queue.Items.Cast<LavaTrack>().ToList();
                     String musiclist = "";
