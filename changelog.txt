@@ -56,3 +56,7 @@ Doremi Trading Card - Update 1.08 - 21.05.20
 -Paging updates on card trade command
 -Added rank system which affect the catch rate
 -Card spawn appearance updates
+
+Doremi Trading Card - Update 1.09 - 27.05.20
+=======================================================================
+-Added Role & Badge Updates for user that have completed all the card

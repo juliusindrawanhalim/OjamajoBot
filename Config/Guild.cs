@@ -100,6 +100,27 @@ namespace Config
                 if (!guildConfig.ContainsKey("id_card_catcher"))
                     guildConfig.Add(new JProperty("id_card_catcher", ""));
 
+                //trading_card_role_doremi_completionist
+                //if (!guildConfig.ContainsKey("trading_card_role_doremi_completionist"))
+                //    guildConfig.Add(new JProperty("trading_card_role_doremi_completionist", ""));
+
+                ////trading_card_role_hazuki_completionist
+                //if (!guildConfig.ContainsKey("trading_card_role_hazuki_completionist"))
+                //    guildConfig.Add(new JProperty("trading_card_role_hazuki_completionist", ""));
+
+                //// trading_card_role_aiko_completionist
+                //if (!guildConfig.ContainsKey("trading_card_role_aiko_completionist"))
+                //    guildConfig.Add(new JProperty("trading_card_role_aiko_completionist", ""));
+
+                //// trading_card_role_onpu_completionist
+                //if (!guildConfig.ContainsKey("trading_card_role_onpu_completionist"))
+                //    guildConfig.Add(new JProperty("trading_card_role_onpu_completionist", ""));
+
+                //// trading_card_role_momoko_completionist
+                //if (!guildConfig.ContainsKey("trading_card_role_momoko_completionist"))
+                //    guildConfig.Add(new JProperty("trading_card_role_momoko_completionist", ""));
+
+
                 File.WriteAllText($"{Core.headConfigGuildFolder}{id_guild}/{id_guild}.json", guildConfig.ToString());
 
             } else { //create json file if it's not existed
@@ -120,6 +141,11 @@ namespace Config
                     new JProperty("trading_card_spawn_category", ""),
                     new JProperty("trading_card_spawn_token", ""),
                     new JProperty("trading_card_spawn_mystery", "0"),
+                    //new JProperty("trading_card_role_doremi_completionist", ""),
+                    //new JProperty("trading_card_role_hazuki_completionist", ""),
+                    //new JProperty("trading_card_role_aiko_completionist", ""),
+                    //new JProperty("trading_card_role_onpu_completionist", ""),
+                    //new JProperty("trading_card_role_momoko_completionist", ""),
                     new JProperty("user_birthday", new JObject()));
 
                 File.WriteAllText($"{Core.headConfigGuildFolder}{id_guild}/{id_guild}.json", guildConfig.ToString());

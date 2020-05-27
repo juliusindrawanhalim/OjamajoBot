@@ -1198,7 +1198,7 @@ namespace OjamajoBot.Module
                 await ReplyAsync($"{guildChannel.Id}");
         }
 
-        [Name("mod channels"), Group("channels"), Summary("These commands require `manage channels` permissions.")]
+        [Name("mod channels"), Group("channels"), Summary("These commands require `Manage Channels` permissions.")]
         public class DoremiModeratorChannels : ModuleBase<SocketCommandContext>
         {
             [Command("birthday"), Summary("Set Doremi Bot to make birthday announcement on <channel_name>.")]
@@ -1434,9 +1434,101 @@ namespace OjamajoBot.Module
 
             }
 
+            [Command("random event"), Summary("Schedule Doremi Bot to make random event message on <channel_name> for every 24 hours.")]
+            public async Task assignRandomEventChannel(IGuildChannel channel_name)
+            {
+                Config.Guild.setPropertyValue(channel_name.GuildId, "id_random_event", channel_name.Id.ToString());
+
+                if (Config.Doremi._timerRandomEvent.ContainsKey(channel_name.GuildId.ToString()))
+                    Config.Doremi._timerRandomEvent[channel_name.GuildId.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
+
+                Config.Doremi._timerRandomEvent[$"{channel_name.GuildId.ToString()}"] = new Timer(async _ =>
+                {
+                    int rndIndex = new Random().Next(0, Config.Doremi.listRandomEvent.Count); //random the list value
+                    Console.WriteLine("Doremi Random Event : " + Config.Doremi.listRandomEvent[rndIndex]);
+
+                    var socketClient = Context.Client;
+                    try
+                    {
+                        await socketClient
+                        .GetGuild(channel_name.GuildId)
+                        .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(channel_name.GuildId, "id_random_event")))
+                        .SendMessageAsync(Config.Doremi.listRandomEvent[rndIndex]);
+                    }
+                    catch
+                    {
+                        Console.WriteLine($"Doremi Random Event Exception: Send message permissions has been missing {channel_name.Guild.Name} : {channel_name.Name}");
+                    }
+                },
+                    null,
+                    TimeSpan.FromHours(Config.Doremi.Randomeventinterval), //time to wait before executing the timer for the first time
+                    TimeSpan.FromHours(Config.Doremi.Randomeventinterval) //time to wait before executing the timer again
+                );
+
+                await ReplyAsync($"**Random Event Channels** has been assigned into: {MentionUtils.MentionChannel(channel_name.Id)}");
+            }
+
+            //[Command("online")]
+            //public async Task assignNotifOnline(IGuildChannel iguild)
+            //{
+            //    Config.Guild.assignId(iguild.GuildId, "id_notif_online", iguild.Id.ToString());
+            //    await ReplyAsync($"**Bot Online Notification Channels** has been assigned into: {MentionUtils.MentionChannel(iguild.Id)}");
+            //}
+
+            [Command("remove settings"), Summary("Remove the settings on the assigned channels. " +
+                "Current available settings: `birthday`/`random event`/`trading card spawn`")]
+            public async Task removeChannelSettings([Remainder]string settings)
+            {
+                string property; Boolean propertyValueExisted = false;
+                var guildId = Context.Guild.Id;
+                
+                if (settings.ToLower() == "birthday"){
+                    property = $"{Config.Emoji.birthdayCake} Birthday Announcement";
+                    if (Config.Guild.hasPropertyValues(guildId.ToString(), "id_birthday_announcement"))
+                    {
+                        propertyValueExisted = true;
+                        Config.Guild.setPropertyValue(Context.Guild.Id, "id_birthday_announcement", "");
+                        if (Config.Doremi._timerBirthdayAnnouncement.ContainsKey(Context.Guild.Id.ToString()))
+                            Config.Doremi._timerBirthdayAnnouncement[Context.Guild.Id.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
+                        if (Config.Hazuki._timerBirthdayAnnouncement.ContainsKey(Context.Guild.Id.ToString()))
+                            Config.Hazuki._timerBirthdayAnnouncement[Context.Guild.Id.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
+                        if (Config.Aiko._timerBirthdayAnnouncement.ContainsKey(Context.Guild.Id.ToString()))
+                            Config.Aiko._timerBirthdayAnnouncement[Context.Guild.Id.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
+                        if (Config.Onpu._timerBirthdayAnnouncement.ContainsKey(Context.Guild.Id.ToString()))
+                            Config.Onpu._timerBirthdayAnnouncement[Context.Guild.Id.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
+                        if (Config.Momoko._timerBirthdayAnnouncement.ContainsKey(Context.Guild.Id.ToString()))
+                            Config.Momoko._timerBirthdayAnnouncement[Context.Guild.Id.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
+                    }
+                } else if (settings.ToLower() == "random event")
+                {
+                    property = "Random Event";
+                    if (Config.Guild.hasPropertyValues(guildId.ToString(),"id_random_event"))
+                    {
+                        propertyValueExisted = true;
+                        Config.Guild.setPropertyValue(Context.Guild.Id, "id_random_event", "");
+                        if (Config.Doremi._timerRandomEvent.ContainsKey(Context.Guild.Id.ToString()))
+                            Config.Doremi._timerRandomEvent[Context.Guild.Id.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
+                    }
+                }
+                else
+                {
+                    await ReplyAsync($"Sorry, I can't found that channel settings"); return;
+                }
+
+                if (propertyValueExisted)
+                    await ReplyAsync($"**{property} Channels** settings has been removed.");
+                else
+                    await ReplyAsync($"**{property} Channels** has no settings yet.");
+            }
+
+        }
+
+        [Name("mod trading card"), Group("trading card"), Summary("These commands require `Manage Card`|`Manage Roles` permissions.")]
+        public class DoremiModeratorTradingCards : ModuleBase<SocketCommandContext>
+        {
             //trading card configuration section
             //assign trading card spawning channel
-            [Command("trading card spawn"), Summary("Set Doremi Bot to make the trading card to be spawned at <channel_name>.")]
+            [Command("spawn"), Summary("Set Doremi Bot and the others to make the trading card spawned at <channel_name>.")]
             public async Task assignTradingCardSpawnChannel(SocketGuildChannel channel_name)
             {
                 var guildId = channel_name.Guild.Id;
@@ -1585,7 +1677,7 @@ namespace OjamajoBot.Module
                         await client
                         .GetGuild(guildId)
                         .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guildId, "trading_card_spawn")))
-                        .SendMessageAsync($":exclamation:A **{chosenCategory}** {parent} card has appeared!\n" +
+                        .SendMessageAsync($":exclamation:A **{chosenCategory}** {parent} card has appeared! " +
                         $"Capture it with **<bot>!card capture** or **<bot>!card capture boost**",
                         embed: embed.Build());
                     }
@@ -1615,130 +1707,86 @@ namespace OjamajoBot.Module
             }
 
             //set spawning interval
-            [Command("trading card spawn interval"), Summary("Set the trading card spawn interval (in minutes).")]
+            [Command("interval"), Summary("Set the trading card spawn interval (in minutes).")]
             public async Task setTradingCardSpawnInterval(int interval_minutes)
             {
-                if (interval_minutes <= 4 || interval_minutes >= 1441) await ReplyAsync($"Please enter interval between 5-1440 (in minutes)");
-                else {
+                if (interval_minutes <= 4 || interval_minutes >= 1441) await ReplyAsync($"Please enter the interval between 5-1440 (in minutes)");
+                else
+                {
                     var guildId = Context.Guild.Id;
                     Config.Guild.setPropertyValue(guildId, "trading_card_spawn_interval", interval_minutes.ToString());
-                    await ReplyAsync($"**Trading Card Spawning interval** has been set into **{interval_minutes}** minute(s)");
+                    await ReplyAsync($"**Trading Card Spawn interval** has been set into **{interval_minutes}** minute(s)");
 
                     if (Config.Doremi._timerTradingCardSpawn.ContainsKey(guildId.ToString()))
                         Config.Doremi._timerTradingCardSpawn[guildId.ToString()].Change(
-                            TimeSpan.FromMinutes(Convert.ToInt32(Config.Guild.getPropertyValue(guildId, "trading_card_spawn_interval")) + new Random().Next(5, 11)), 
-                            TimeSpan.FromMinutes(Convert.ToInt32(Config.Guild.getPropertyValue(guildId, "trading_card_spawn_interval")) + new Random().Next(5, 11)));
+                            TimeSpan.FromMinutes(Convert.ToInt32(Config.Guild.getPropertyValue(guildId, "trading_card_spawn_interval"))),
+                            TimeSpan.FromMinutes(Convert.ToInt32(Config.Guild.getPropertyValue(guildId, "trading_card_spawn_interval"))));
                 }
-                    
-            }   
-
-            //TRADING CARD CONFIGURATION ENDS
-
-            [Command("random event"), Summary("Schedule Doremi Bot to make random event message on <channel_name> for every 24 hours.")]
-            public async Task assignRandomEventChannel(IGuildChannel channel_name)
-            {
-                Config.Guild.setPropertyValue(channel_name.GuildId, "id_random_event", channel_name.Id.ToString());
-
-                if (Config.Doremi._timerRandomEvent.ContainsKey(channel_name.GuildId.ToString()))
-                    Config.Doremi._timerRandomEvent[channel_name.GuildId.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
-
-                Config.Doremi._timerRandomEvent[$"{channel_name.GuildId.ToString()}"] = new Timer(async _ =>
-                {
-                    int rndIndex = new Random().Next(0, Config.Doremi.listRandomEvent.Count); //random the list value
-                    Console.WriteLine("Doremi Random Event : " + Config.Doremi.listRandomEvent[rndIndex]);
-
-                    var socketClient = Context.Client;
-                    try
-                    {
-                        await socketClient
-                        .GetGuild(channel_name.GuildId)
-                        .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(channel_name.GuildId, "id_random_event")))
-                        .SendMessageAsync(Config.Doremi.listRandomEvent[rndIndex]);
-                    }
-                    catch
-                    {
-                        Console.WriteLine($"Doremi Random Event Exception: Send message permissions has been missing {channel_name.Guild.Name} : {channel_name.Name}");
-                    }
-                },
-                    null,
-                    TimeSpan.FromHours(Config.Doremi.Randomeventinterval), //time to wait before executing the timer for the first time
-                    TimeSpan.FromHours(Config.Doremi.Randomeventinterval) //time to wait before executing the timer again
-                );
-
-                await ReplyAsync($"**Random Event Channels** has been assigned into: {MentionUtils.MentionChannel(channel_name.Id)}");
             }
 
-            //[Command("online")]
-            //public async Task assignNotifOnline(IGuildChannel iguild)
-            //{
-            //    Config.Guild.assignId(iguild.GuildId, "id_notif_online", iguild.Id.ToString());
-            //    await ReplyAsync($"**Bot Online Notification Channels** has been assigned into: {MentionUtils.MentionChannel(iguild.Id)}");
-            //}
-
-            [Command("remove settings"), Summary("Remove the settings on the assigned channels. " +
-                "Current available settings: `birthday`/`random event`/`trading card spawn`")]
-            public async Task removeChannelSettings([Remainder]string settings)
+            [Command("badge role create"), Summary("Register the trading card role completionist.")]
+            public async Task initTradingCardRoleCompletionist()
             {
-                string property = ""; Boolean propertyValueExisted = false;
+                var roleDoremi = Context.Guild.Roles.Where(x=>x.Name==TradingCardCore.Doremi.roleCompletionist).ToList();
+                var roleHazuki = Context.Guild.Roles.Where(x=>x.Name==TradingCardCore.Hazuki.roleCompletionist).ToList();
+                var roleAiko = Context.Guild.Roles.Where(x=>x.Name==TradingCardCore.Aiko.roleCompletionist).ToList();
+                var roleOnpu = Context.Guild.Roles.Where(x=>x.Name==TradingCardCore.Onpu.roleCompletionist).ToList();
+                var roleMomoko = Context.Guild.Roles.Where(x=>x.Name==TradingCardCore.Momoko.roleCompletionist).ToList();
+                var roleSpecial = Context.Guild.Roles.Where(x=>x.Name==TradingCardCore.roleCompletionistSpecial).ToList();
+
+                if (roleDoremi.Count <= 0)
+                    await Context.Guild.CreateRoleAsync(
+                        TradingCardCore.Doremi.roleCompletionist, null, color: Config.Doremi.EmbedColor,false,false
+                    );
+                
+                
+                if (roleHazuki.Count <= 0)
+                    await Context.Guild.CreateRoleAsync(
+                        TradingCardCore.Hazuki.roleCompletionist, null, color: Config.Hazuki.EmbedColor, false, false
+                    );
+
+                if (roleAiko.Count <= 0)
+                    await Context.Guild.CreateRoleAsync(
+                        TradingCardCore.Aiko.roleCompletionist, null, color: Config.Aiko.EmbedColor, false, false
+                    );
+
+                if (roleOnpu.Count <= 0)
+                    await Context.Guild.CreateRoleAsync(
+                        TradingCardCore.Onpu.roleCompletionist, null, color: Config.Onpu.EmbedColor, false, false
+                    );
+
+                if (roleMomoko.Count <= 0)
+                    await Context.Guild.CreateRoleAsync(
+                        TradingCardCore.Momoko.roleCompletionist, null, color: Config.Momoko.EmbedColor, false, false
+                    );
+
+                if (roleSpecial.Count <= 0)
+                    await Context.Guild.CreateRoleAsync(
+                        TradingCardCore.roleCompletionistSpecial, null, color: TradingCardCore.roleCompletionistColor, false, false
+                    );
+
+                await ReplyAsync($":white_check_mark: **Trading Card Badge Role** has been created!");
+
+            }
+
+            [Command("remove"), Summary("Remove the trading card spawn settings.")]
+            public async Task removeTradingCardSpawn()
+            {
                 var guildId = Context.Guild.Id;
-                var guildJsonFile = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json"));
-
-                if (settings.ToLower() == "birthday"){
-                    property = $"{Config.Emoji.birthdayCake} Birthday Announcement";
-                    if (Config.Guild.hasPropertyValues(guildId.ToString(), "id_birthday_announcement"))
-                    {
-                        propertyValueExisted = true;
-                        Config.Guild.setPropertyValue(Context.Guild.Id, "id_birthday_announcement", "");
-                        if (Config.Doremi._timerBirthdayAnnouncement.ContainsKey(Context.Guild.Id.ToString()))
-                            Config.Doremi._timerBirthdayAnnouncement[Context.Guild.Id.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
-                        if (Config.Hazuki._timerBirthdayAnnouncement.ContainsKey(Context.Guild.Id.ToString()))
-                            Config.Hazuki._timerBirthdayAnnouncement[Context.Guild.Id.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
-                        if (Config.Aiko._timerBirthdayAnnouncement.ContainsKey(Context.Guild.Id.ToString()))
-                            Config.Aiko._timerBirthdayAnnouncement[Context.Guild.Id.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
-                        if (Config.Onpu._timerBirthdayAnnouncement.ContainsKey(Context.Guild.Id.ToString()))
-                            Config.Onpu._timerBirthdayAnnouncement[Context.Guild.Id.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
-                        if (Config.Momoko._timerBirthdayAnnouncement.ContainsKey(Context.Guild.Id.ToString()))
-                            Config.Momoko._timerBirthdayAnnouncement[Context.Guild.Id.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
-                    }
-                } else if (settings.ToLower() == "random event")
+                if (Config.Guild.hasPropertyValues(guildId.ToString(), "trading_card_spawn"))
                 {
-                    property = "Random Event";
-                    if (Config.Guild.hasPropertyValues(guildId.ToString(),"id_random_event"))
-                    {
-                        propertyValueExisted = true;
-                        Config.Guild.setPropertyValue(Context.Guild.Id, "id_random_event", "");
-                        if (Config.Doremi._timerRandomEvent.ContainsKey(Context.Guild.Id.ToString()))
-                            Config.Doremi._timerRandomEvent[Context.Guild.Id.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
-                    }
-                }
-                else if (settings.ToLower() == "trading card spawn")
-                {
-                    property = "Trading Card Spawn";
-                    if (Config.Guild.hasPropertyValues(guildId.ToString(), "trading_card_spawn"))
-                    {
-                        propertyValueExisted = true;
-                        Config.Guild.setPropertyValue(Context.Guild.Id, "trading_card_spawn", "");
-                        if (Config.Doremi._timerTradingCardSpawn.ContainsKey(Context.Guild.Id.ToString()))
-                            Config.Doremi._timerTradingCardSpawn[Context.Guild.Id.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
+                    Config.Guild.setPropertyValue(Context.Guild.Id, "trading_card_spawn", "");
+                    if (Config.Doremi._timerTradingCardSpawn.ContainsKey(Context.Guild.Id.ToString()))
+                        Config.Doremi._timerTradingCardSpawn[Context.Guild.Id.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
 
-                        //reset spawn settings
-                        Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyId, "");
-                        Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyCategory, "");
-                        Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyToken, "");
-
-                    }
-                }
-                else
-                {
-                    await ReplyAsync($"Sorry, I can't found that channel settings"); return;
-                }
-
-                if (propertyValueExisted)
-                    await ReplyAsync($"**{property} Channels** settings has been removed.");
-                else
-                    await ReplyAsync($"**{property} Channels** has no settings yet.");
+                    //reset spawn settings
+                    Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyId, "");
+                    Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyCategory, "");
+                    Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyToken, "");
+                    await ReplyAsync($"**Trading Card Spawn Channels** settings has been removed.");
+                } else
+                    await ReplyAsync($"**Trading Card Spawn Channels** has no settings yet.");
             }
-
         }
 
     }
@@ -1790,6 +1838,7 @@ namespace OjamajoBot.Module
             //check if player is ranked up
             if (cardCaptureReturn.Item3!="")
                 await ReplyAsync(embed: new EmbedBuilder()
+                    .WithTitle("Rank Up!")
                     .WithColor(Config.Doremi.EmbedColor)
                     .WithDescription(cardCaptureReturn.Item3)
                     .WithThumbnailUrl(Context.User.GetAvatarUrl())
@@ -1797,82 +1846,131 @@ namespace OjamajoBot.Module
 
             //check if player have captured all doremi card/not
             if (cardCaptureReturn.Item4["doremi"])
-                await Bot.Doremi.client
-                .GetGuild(guildId)
-                .GetTextChannel(Context.Channel.Id)
-                .SendMessageAsync(embed: TradingCardCore
-                .userCompleteTheirList(Config.Doremi.EmbedColor, Config.Doremi.EmbedAvatarUrl , "doremi",
-                $":confetti_ball: Congratulations, **{Context.User.Username}** have complete all **Doremi Card Pack**!",
-                TradingCardCore.Doremi.emojiCompleteAllCard, guildId.ToString(),
-                Context.User.Id.ToString())
-                .Build());
-            
+            {
+                if (Context.Guild.Roles.Where(x => x.Name == TradingCardCore.Doremi.roleCompletionist).ToList().Count >= 1)
+                {
+                    await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
+                        Context.Guild.Roles.First(x => x.Name == TradingCardCore.Doremi.roleCompletionist)
+                    );
 
-            //check if player have captured all hazuki card/not
+                    await Bot.Doremi.client
+                    .GetGuild(Context.Guild.Id)
+                    .GetTextChannel(Context.Channel.Id)
+                    .SendFileAsync(TradingCardCore.Doremi.imgCompleteAllCard, null, embed: TradingCardCore
+                    .userCompleteTheirList(Config.Doremi.EmbedColor, Context.Client.CurrentUser.GetAvatarUrl(), "doremi",
+                    $"Congratulations, **{Context.User.Username}** have completed all **Doremi Card Pack**!",
+                    TradingCardCore.Doremi.imgCompleteAllCard, Context.Guild.Id.ToString(),
+                    Context.User.Id.ToString(), TradingCardCore.Doremi.roleCompletionist, Context.User.Username, Context.User.GetAvatarUrl())
+                    .Build());
+                }
+            }
+
+            ////check if player have captured all hazuki card/not
             if (cardCaptureReturn.Item4["hazuki"])
             {
-                await Bot.Hazuki.client
-                .GetGuild(guildId)
-                .GetTextChannel(Context.Channel.Id)
-                .SendMessageAsync(embed: TradingCardCore
-                .userCompleteTheirList(Config.Hazuki.EmbedColor, Config.Hazuki.EmbedAvatarUrl, "hazuki",
-                $":confetti_ball: Congratulations, **{Context.User.Username}** have complete all **Hazuki Card Pack**!",
-                TradingCardCore.Hazuki.emojiCompleteAllCard, guildId.ToString(),
-                Context.User.Id.ToString())
-                .Build());
+                if (Context.Guild.Roles.Where(x => x.Name == TradingCardCore.Hazuki.roleCompletionist).ToList().Count >= 1)
+                {
+                    await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
+                        Context.Guild.Roles.First(x => x.Name == TradingCardCore.Hazuki.roleCompletionist)
+                        );
+
+                    await Bot.Hazuki.client
+                    .GetGuild(Context.Guild.Id)
+                    .GetTextChannel(Context.Channel.Id)
+                    .SendFileAsync(TradingCardCore.Hazuki.imgCompleteAllCard, null, embed: TradingCardCore
+                    .userCompleteTheirList(Config.Hazuki.EmbedColor, Context.Client.CurrentUser.GetAvatarUrl(), "hazuki",
+                    $"Congratulations, **{Context.User.Username}** have completed all **Hazuki Card Pack**!",
+                    TradingCardCore.Hazuki.imgCompleteAllCard, Context.Guild.Id.ToString(),
+                    Context.User.Id.ToString(), TradingCardCore.Hazuki.roleCompletionist, Context.User.Username, Context.User.GetAvatarUrl())
+                    .Build());
+                }
             }
 
-            //check if player have captured all aiko card/not
+            ////check if player have captured all aiko card/not
             if (cardCaptureReturn.Item4["aiko"])
             {
-                await Bot.Aiko.client
-                .GetGuild(guildId)
-                .GetTextChannel(Context.Channel.Id)
-                .SendMessageAsync(embed: TradingCardCore
-                .userCompleteTheirList(Config.Aiko.EmbedColor, Config.Aiko.EmbedAvatarUrl, "aiko",
-                $":confetti_ball: Congratulations, **{Context.User.Username}** have complete all **Aiko Card Pack**!",
-                TradingCardCore.Aiko.emojiCompleteAllCard, guildId.ToString(),
-                Context.User.Id.ToString())
-                .Build());
+                if (Context.Guild.Roles.Where(x => x.Name == TradingCardCore.Aiko.roleCompletionist).ToList().Count >= 1)
+                {
+                    await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
+                        Context.Guild.Roles.First(x => x.Name == TradingCardCore.Aiko.roleCompletionist)
+                        );
+
+                    await Bot.Aiko.client
+                    .GetGuild(Context.Guild.Id)
+                    .GetTextChannel(Context.Channel.Id)
+                    .SendFileAsync(TradingCardCore.Aiko.imgCompleteAllCard, null, embed: TradingCardCore
+                    .userCompleteTheirList(Config.Aiko.EmbedColor, Context.Client.CurrentUser.GetAvatarUrl(), "aiko",
+                    $"Congratulations, **{Context.User.Username}** have completed all **Aiko Card Pack**!",
+                    TradingCardCore.Aiko.imgCompleteAllCard, Context.Guild.Id.ToString(),
+                    Context.User.Id.ToString(), TradingCardCore.Aiko.roleCompletionist, Context.User.Username, Context.User.GetAvatarUrl())
+                    .Build());
+                }
             }
 
-            //check if player have captured all onpu card/not
+            ////check if player have captured all onpu card/not
             if (cardCaptureReturn.Item4["onpu"])
             {
-                await Bot.Onpu.client
-                .GetGuild(guildId)
-                .GetTextChannel(Context.Channel.Id)
-                .SendMessageAsync(embed: TradingCardCore
-                .userCompleteTheirList(Config.Onpu.EmbedColor, Config.Onpu.EmbedAvatarUrl, "onpu",
-                $":confetti_ball: Congratulations, **{Context.User.Username}** have complete all **Onpu Card Pack**!",
-                TradingCardCore.Onpu.emojiCompleteAllCard, guildId.ToString(),
-                Context.User.Id.ToString())
-                .Build());
+                if (Context.Guild.Roles.Where(x => x.Name == TradingCardCore.Onpu.roleCompletionist).ToList().Count >= 1)
+                {
+                    await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
+                        Context.Guild.Roles.First(x => x.Name == TradingCardCore.Onpu.roleCompletionist)
+                        );
+
+                    await Bot.Onpu.client
+                    .GetGuild(Context.Guild.Id)
+                    .GetTextChannel(Context.Channel.Id)
+                    .SendFileAsync(TradingCardCore.Onpu.imgCompleteAllCard, null, embed: TradingCardCore
+                    .userCompleteTheirList(Config.Onpu.EmbedColor, Context.Client.CurrentUser.GetAvatarUrl(), "onpu",
+                    $"Congratulations, **{Context.User.Username}** have completed all **Onpu Card Pack**!",
+                    TradingCardCore.Onpu.imgCompleteAllCard, Context.Guild.Id.ToString(),
+                    Context.User.Id.ToString(), TradingCardCore.Onpu.roleCompletionist, Context.User.Username, Context.User.GetAvatarUrl())
+                    .Build());
+                }
             }
 
-            //check if player have captured all momoko card/not
+            ////check if player have captured all momoko card/not
             if (cardCaptureReturn.Item4["momoko"])
             {
-                await Bot.Momoko.client
-                .GetGuild(guildId)
-                .GetTextChannel(Context.Channel.Id)
-                .SendMessageAsync(embed: TradingCardCore
-                .userCompleteTheirList(Config.Momoko.EmbedColor, Config.Momoko.EmbedAvatarUrl, "momoko",
-                $":confetti_ball: Congratulations, **{Context.User.Username}** have complete all **Momoko Card Pack**!",
-                TradingCardCore.Momoko.emojiCompleteAllCard, guildId.ToString(),
-                Context.User.Id.ToString())
-                .Build());
+                if (Context.Guild.Roles.Where(x => x.Name == TradingCardCore.Momoko.roleCompletionist).ToList().Count >= 1)
+                {
+                    await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
+                        Context.Guild.Roles.First(x => x.Name == TradingCardCore.Momoko.roleCompletionist)
+                        );
+
+                    await Bot.Momoko.client
+                    .GetGuild(Context.Guild.Id)
+                    .GetTextChannel(Context.Channel.Id)
+                    .SendFileAsync(TradingCardCore.Momoko.imgCompleteAllCard, null, embed: TradingCardCore
+                    .userCompleteTheirList(Config.Momoko.EmbedColor, Context.Client.CurrentUser.GetAvatarUrl(), "momoko",
+                    $"Congratulations, **{Context.User.Username}** have completed all **Momoko Card Pack**!",
+                    TradingCardCore.Momoko.imgCompleteAllCard, Context.Guild.Id.ToString(),
+                    Context.User.Id.ToString(), TradingCardCore.Momoko.roleCompletionist, Context.User.Username, Context.User.GetAvatarUrl())
+                    .Build());
+                }
             }
 
-            //check if player have captured all other special card/not
+            ////check if player have captured all other special card/not
             if (cardCaptureReturn.Item4["special"])
-                await ReplyAsync(embed: TradingCardCore
-                    .userCompleteTheirList(Config.Doremi.EmbedColor, Config.Doremi.EmbedAvatarUrl, "other",
-                    $":confetti_ball: Congratulations, **{Context.User.Username}** have complete all **Other Special Card Pack**!",
-                    TradingCardCore.Doremi.emojiCompleteAllCard, guildId.ToString(),
-                    Context.User.Id.ToString())
-                    .Build());
+            {
+                if (Context.Guild.Roles.Where(x => x.Name == TradingCardCore.roleCompletionistSpecial).ToList().Count >= 1)
+                {
+                    await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
+                        Context.Guild.Roles.First(x => x.Name == TradingCardCore.roleCompletionistSpecial)
+                        );
 
+                    await Bot.Doremi.client
+                        .GetGuild(Context.Guild.Id)
+                        .GetTextChannel(Context.Channel.Id)
+                        .SendFileAsync(TradingCardCore.imgCompleteAllCardSpecial, null, embed: TradingCardCore
+                        .userCompleteTheirList(Config.Doremi.EmbedColor, Context.Client.CurrentUser.GetAvatarUrl(), "other",
+                        $"Congratulations, **{Context.User.Username}** have completed all **Special Card Pack**!",
+                        TradingCardCore.Doremi.imgCompleteAllCard, Context.Guild.Id.ToString(),
+                        Context.User.Id.ToString(), TradingCardCore.roleCompletionistSpecial, Context.User.Username, Context.User.GetAvatarUrl())
+                        .Build());
+
+                }
+            }
+            
         }
 
         //list all cards that have been collected
@@ -4071,37 +4169,8 @@ namespace OjamajoBot.Module
             var guildId = Context.Guild.Id;
             var userId = Context.User.Id;
 
-            var quizJsonFile = (JObject)JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.minigameDataFileName}")).GetValue("score");
-
-            string finalText = "";
-            EmbedBuilder builder = new EmbedBuilder();
-            builder.Title = "\uD83C\uDFC6 Minigame Leaderboard";
-            
-            builder.Color = Config.Doremi.EmbedColor;
-
-            if (quizJsonFile.Count >= 1){
-                builder.Description = "Here are the top 10 player score points for minigame leaderboard:";
-                
-                var convertedToList = quizJsonFile.Properties().OrderByDescending(p => (int)p.Value).ToList();
-                int ctrExists = 0;
-                for (int i = 0; i < quizJsonFile.Count; i++)
-                {
-                    SocketGuildUser userExists = Context.Guild.GetUser(Convert.ToUInt64(convertedToList[i].Name));
-                    if (userExists != null)
-                    {
-                        finalText += $"{i + 1}. {MentionUtils.MentionUser(Convert.ToUInt64(convertedToList[i].Name))} : {convertedToList[i].Value} \n";
-                        ctrExists++;
-                    }
-                    if (ctrExists >= 9) break;
-                }
-                builder.AddField("[Rank]. Name & Score", finalText);
-            }
-            else
-            {
-                builder.Description = "Currently there's no minigame leaderboard yet.";
-            }
-
-            await ReplyAsync(embed: builder.Build());
+            await ReplyAsync(embed: MinigameCore.printLeaderboard(Context,Config.Doremi.EmbedColor,
+                guildId.ToString(),userId.ToString()).Build());
 
         }
 

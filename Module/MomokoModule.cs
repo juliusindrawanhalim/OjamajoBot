@@ -518,38 +518,8 @@ namespace OjamajoBot.Module
             var guildId = Context.Guild.Id;
             var userId = Context.User.Id;
 
-            var quizJsonFile = (JObject)JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.minigameDataFileName}")).GetValue("score");
-
-            string finalText = "";
-            EmbedBuilder builder = new EmbedBuilder();
-            builder.Title = "\uD83C\uDFC6 Minigame Leaderboard";
-
-            builder.Color = Config.Momoko.EmbedColor;
-
-            if (quizJsonFile.Count >= 1)
-            {
-                builder.Description = "Here are the top 10 player score points for minigame leaderboard:";
-
-                var convertedToList = quizJsonFile.Properties().OrderByDescending(p => (int)p.Value).ToList();
-                int ctrExists = 0;
-                for (int i = 0; i < quizJsonFile.Count; i++)
-                {
-                    SocketGuildUser userExists = Context.Guild.GetUser(Convert.ToUInt64(convertedToList[i].Name));
-                    if (userExists != null)
-                    {
-                        finalText += $"{i + 1}. {MentionUtils.MentionUser(Convert.ToUInt64(convertedToList[i].Name))} : {convertedToList[i].Value} \n";
-                        ctrExists++;
-                    }
-                    if (ctrExists >= 9) break;
-                }
-                builder.AddField("[Rank]. Name & Score", finalText);
-            }
-            else
-            {
-                builder.Description = "Currently there's no minigame leaderboard yet.";
-            }
-
-            await ReplyAsync(embed: builder.Build());
+            await ReplyAsync(embed: MinigameCore.printLeaderboard(Context, Config.Momoko.EmbedColor,
+                guildId.ToString(), userId.ToString()).Build());
 
         }
 
@@ -779,80 +749,130 @@ namespace OjamajoBot.Module
 
             //check if player have captured all doremi card/not
             if (cardCaptureReturn.Item4["doremi"])
-                await Bot.Doremi.client
-                .GetGuild(guildId)
-                .GetTextChannel(Context.Channel.Id)
-                .SendMessageAsync(embed: TradingCardCore
-                .userCompleteTheirList(Config.Doremi.EmbedColor, Config.Doremi.EmbedAvatarUrl, "doremi",
-                $":confetti_ball: Congratulations, **{Context.User.Username}** have complete all **Doremi Card Pack**!",
-                TradingCardCore.Doremi.emojiCompleteAllCard, guildId.ToString(),
-                Context.User.Id.ToString())
-                .Build());
+            {
+                if (Context.Guild.Roles.Where(x => x.Name == TradingCardCore.Doremi.roleCompletionist).ToList().Count >= 1)
+                {
+                    await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
+                        Context.Guild.Roles.First(x => x.Name == TradingCardCore.Doremi.roleCompletionist)
+                    );
 
-            //check if player have captured all hazuki card/not
+                    await Bot.Doremi.client
+                    .GetGuild(Context.Guild.Id)
+                    .GetTextChannel(Context.Channel.Id)
+                    .SendFileAsync(TradingCardCore.Doremi.imgCompleteAllCard, null, embed: TradingCardCore
+                    .userCompleteTheirList(Config.Doremi.EmbedColor, Context.Client.CurrentUser.GetAvatarUrl(), "doremi",
+                    $"Congratulations, **{Context.User.Username}** have completed all **Doremi Card Pack**!",
+                    TradingCardCore.Doremi.imgCompleteAllCard, Context.Guild.Id.ToString(),
+                    Context.User.Id.ToString(), TradingCardCore.Doremi.roleCompletionist, Context.User.Username, Context.User.GetAvatarUrl())
+                    .Build());
+                }
+            }
+
+            ////check if player have captured all hazuki card/not
             if (cardCaptureReturn.Item4["hazuki"])
             {
-                await Bot.Hazuki.client
-                .GetGuild(guildId)
-                .GetTextChannel(Context.Channel.Id)
-                .SendMessageAsync(embed: TradingCardCore
-                .userCompleteTheirList(Config.Hazuki.EmbedColor, Config.Hazuki.EmbedAvatarUrl, "hazuki",
-                $":confetti_ball: Congratulations, **{Context.User.Username}** have complete all **Hazuki Card Pack**!",
-                TradingCardCore.Hazuki.emojiCompleteAllCard, guildId.ToString(),
-                Context.User.Id.ToString())
-                .Build());
+                if (Context.Guild.Roles.Where(x => x.Name == TradingCardCore.Hazuki.roleCompletionist).ToList().Count >= 1)
+                {
+                    await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
+                        Context.Guild.Roles.First(x => x.Name == TradingCardCore.Hazuki.roleCompletionist)
+                        );
+
+                    await Bot.Hazuki.client
+                    .GetGuild(Context.Guild.Id)
+                    .GetTextChannel(Context.Channel.Id)
+                    .SendFileAsync(TradingCardCore.Hazuki.imgCompleteAllCard, null, embed: TradingCardCore
+                    .userCompleteTheirList(Config.Hazuki.EmbedColor, Context.Client.CurrentUser.GetAvatarUrl(), "hazuki",
+                    $"Congratulations, **{Context.User.Username}** have completed all **Hazuki Card Pack**!",
+                    TradingCardCore.Hazuki.imgCompleteAllCard, Context.Guild.Id.ToString(),
+                    Context.User.Id.ToString(), TradingCardCore.Hazuki.roleCompletionist, Context.User.Username, Context.User.GetAvatarUrl())
+                    .Build());
+                }
             }
 
-            //check if player have captured all aiko card/not
+            ////check if player have captured all aiko card/not
             if (cardCaptureReturn.Item4["aiko"])
             {
-                await Bot.Aiko.client
-                .GetGuild(guildId)
-                .GetTextChannel(Context.Channel.Id)
-                .SendMessageAsync(embed: TradingCardCore
-                .userCompleteTheirList(Config.Aiko.EmbedColor, Config.Aiko.EmbedAvatarUrl, "aiko",
-                $":confetti_ball: Congratulations, **{Context.User.Username}** have complete all **Aiko Card Pack**!",
-                TradingCardCore.Aiko.emojiCompleteAllCard, guildId.ToString(),
-                Context.User.Id.ToString())
-                .Build());
+                if (Context.Guild.Roles.Where(x => x.Name == TradingCardCore.Aiko.roleCompletionist).ToList().Count >= 1)
+                {
+                    await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
+                        Context.Guild.Roles.First(x => x.Name == TradingCardCore.Aiko.roleCompletionist)
+                        );
+
+                    await Bot.Aiko.client
+                    .GetGuild(Context.Guild.Id)
+                    .GetTextChannel(Context.Channel.Id)
+                    .SendFileAsync(TradingCardCore.Aiko.imgCompleteAllCard, null, embed: TradingCardCore
+                    .userCompleteTheirList(Config.Aiko.EmbedColor, Context.Client.CurrentUser.GetAvatarUrl(), "aiko",
+                    $"Congratulations, **{Context.User.Username}** have completed all **Aiko Card Pack**!",
+                    TradingCardCore.Aiko.imgCompleteAllCard, Context.Guild.Id.ToString(),
+                    Context.User.Id.ToString(), TradingCardCore.Aiko.roleCompletionist, Context.User.Username, Context.User.GetAvatarUrl())
+                    .Build());
+                }
             }
 
-            //check if player have captured all onpu card/not
+            ////check if player have captured all onpu card/not
             if (cardCaptureReturn.Item4["onpu"])
             {
-                await Bot.Onpu.client
-                .GetGuild(guildId)
-                .GetTextChannel(Context.Channel.Id)
-                .SendMessageAsync(embed: TradingCardCore
-                .userCompleteTheirList(Config.Onpu.EmbedColor, Config.Onpu.EmbedAvatarUrl, "onpu",
-                $":confetti_ball: Congratulations, **{Context.User.Username}** have complete all **Onpu Card Pack**!",
-                TradingCardCore.Onpu.emojiCompleteAllCard, guildId.ToString(),
-                Context.User.Id.ToString())
-                .Build());
+                if (Context.Guild.Roles.Where(x => x.Name == TradingCardCore.Onpu.roleCompletionist).ToList().Count >= 1)
+                {
+                    await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
+                        Context.Guild.Roles.First(x => x.Name == TradingCardCore.Onpu.roleCompletionist)
+                        );
+
+                    await Bot.Onpu.client
+                    .GetGuild(Context.Guild.Id)
+                    .GetTextChannel(Context.Channel.Id)
+                    .SendFileAsync(TradingCardCore.Onpu.imgCompleteAllCard, null, embed: TradingCardCore
+                    .userCompleteTheirList(Config.Onpu.EmbedColor, Context.Client.CurrentUser.GetAvatarUrl(), "onpu",
+                    $"Congratulations, **{Context.User.Username}** have completed all **Onpu Card Pack**!",
+                    TradingCardCore.Onpu.imgCompleteAllCard, Context.Guild.Id.ToString(),
+                    Context.User.Id.ToString(), TradingCardCore.Onpu.roleCompletionist, Context.User.Username, Context.User.GetAvatarUrl())
+                    .Build());
+                }
             }
 
-            //check if player have captured all momoko card/not
+            ////check if player have captured all momoko card/not
             if (cardCaptureReturn.Item4["momoko"])
             {
-                await Bot.Momoko.client
-                .GetGuild(guildId)
-                .GetTextChannel(Context.Channel.Id)
-                .SendMessageAsync(embed: TradingCardCore
-                .userCompleteTheirList(Config.Momoko.EmbedColor, Config.Momoko.EmbedAvatarUrl, "momoko",
-                $":confetti_ball: Congratulations, **{Context.User.Username}** have complete all **Momoko Card Pack**!",
-                TradingCardCore.Momoko.emojiCompleteAllCard, guildId.ToString(),
-                Context.User.Id.ToString())
-                .Build());
+                if (Context.Guild.Roles.Where(x => x.Name == TradingCardCore.Momoko.roleCompletionist).ToList().Count >= 1)
+                {
+                    await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
+                        Context.Guild.Roles.First(x => x.Name == TradingCardCore.Momoko.roleCompletionist)
+                        );
+
+                    await Bot.Momoko.client
+                    .GetGuild(Context.Guild.Id)
+                    .GetTextChannel(Context.Channel.Id)
+                    .SendFileAsync(TradingCardCore.Momoko.imgCompleteAllCard, null, embed: TradingCardCore
+                    .userCompleteTheirList(Config.Momoko.EmbedColor, Context.Client.CurrentUser.GetAvatarUrl(), "momoko",
+                    $"Congratulations, **{Context.User.Username}** have completed all **Momoko Card Pack**!",
+                    TradingCardCore.Momoko.imgCompleteAllCard, Context.Guild.Id.ToString(),
+                    Context.User.Id.ToString(), TradingCardCore.Momoko.roleCompletionist, Context.User.Username, Context.User.GetAvatarUrl())
+                    .Build());
+                }
             }
 
-            //check if player have captured all other special card/not
+            ////check if player have captured all other special card/not
             if (cardCaptureReturn.Item4["special"])
-                await ReplyAsync(embed: TradingCardCore
-                    .userCompleteTheirList(Config.Momoko.EmbedColor, Config.Momoko.EmbedAvatarUrl, "other",
-                    $":confetti_ball: Congratulations, **{Context.User.Username}** have complete all **Other Special Card Pack**!",
-                    TradingCardCore.Momoko.emojiCompleteAllCard, guildId.ToString(),
-                    Context.User.Id.ToString())
-                    .Build());
+            {
+                if (Context.Guild.Roles.Where(x => x.Name == TradingCardCore.roleCompletionistSpecial).ToList().Count >= 1)
+                {
+                    await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
+                        Context.Guild.Roles.First(x => x.Name == TradingCardCore.roleCompletionistSpecial)
+                        );
+
+                    await Bot.Doremi.client
+                        .GetGuild(Context.Guild.Id)
+                        .GetTextChannel(Context.Channel.Id)
+                        .SendFileAsync(TradingCardCore.imgCompleteAllCardSpecial, null, embed: TradingCardCore
+                        .userCompleteTheirList(Config.Doremi.EmbedColor, Context.Client.CurrentUser.GetAvatarUrl(), "other",
+                        $"Congratulations, **{Context.User.Username}** have completed all **Special Card Pack**!",
+                        TradingCardCore.Doremi.imgCompleteAllCard, Context.Guild.Id.ToString(),
+                        Context.User.Id.ToString(), TradingCardCore.roleCompletionistSpecial, Context.User.Username, Context.User.GetAvatarUrl())
+                        .Build());
+
+                }
+            }
 
         }
 

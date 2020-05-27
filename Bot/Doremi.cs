@@ -510,7 +510,7 @@ namespace OjamajoBot.Bot
                         await client
                         .GetGuild(guild.Id)
                         .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "trading_card_spawn")))
-                        .SendMessageAsync($":exclamation:A **{chosenCategory}** {parent} card has appeared!\n" +
+                        .SendMessageAsync($":exclamation:A **{chosenCategory}** {parent} card has appeared! " +
                         $"Capture it with **<bot>!card capture** or **<bot>!card capture boost**",
                         embed: embed.Build());
                     }
@@ -539,10 +539,11 @@ namespace OjamajoBot.Bot
                 );
             }
 
-                //var channel = client.GetChannel(guild.SystemChannel.Id) as SocketTextChannel;
-                //await channel.SendMessageAsync(guild.SystemChannel.Id.ToString());
+            //var channel = client.GetChannel(guild.SystemChannel.Id) as SocketTextChannel;
+            //await channel.SendMessageAsync(guild.SystemChannel.Id.ToString());
 
-                Config.Guild.init(guild.Id);
+
+            Config.Guild.init(guild.Id);
             //Config.Music.storedLavaTrack[guild.Id.ToString()] = new List<LavaTrack>();
         }
 
@@ -554,8 +555,9 @@ namespace OjamajoBot.Bot
         public async Task AnnounceJoinedUser(SocketGuildUser user) //Welcomes the new user
         {
             var channel = client.GetChannel(user.Guild.SystemChannel.Id) as SocketTextChannel; // Gets the channel to send the message in
+            //var uses = invites.First(x => x.Code == inviteID).Uses.Value;
 
-            if(user.Id != Config.Hazuki.Id && user.Id != Config.Aiko.Id &&
+            if (user.Id != Config.Hazuki.Id && user.Id != Config.Aiko.Id &&
                 user.Id != Config.Onpu.Id && user.Id!= Config.Momoko.Id) { 
                 string[] arrRandomWelcomeMessage = {
                     $"Hi there {user.Mention}, welcome to the {channel.Guild.Name}. We hope you enjoy and happy with all of us.",

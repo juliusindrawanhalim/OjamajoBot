@@ -1,8 +1,11 @@
 ﻿using Discord;
+using Discord.Commands;
+using Discord.WebSocket;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace OjamajoBot
@@ -110,6 +113,40 @@ namespace OjamajoBot
 
                 //return arrResult;
             }
+        }
+
+        public static EmbedBuilder printLeaderboard(SocketCommandContext Context, Color color, string guildId, string userId)
+        {
+            var quizJsonFile = (JObject)JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.minigameDataFileName}")).GetValue("score");
+            string finalText = "";
+            EmbedBuilder builder = new EmbedBuilder();
+            builder.Title = "\uD83C\uDFC6 Minigame Leaderboard";
+
+            builder.Color = color;
+
+            if (quizJsonFile.Count >= 1)
+            {
+                builder.Description = "Here are the top 10 player score points for minigame leaderboard:";
+
+                var convertedToList = quizJsonFile.Properties().OrderByDescending(p => (int)p.Value).ToList();
+                int ctrExists = 0;
+                for (int i = 0; i < quizJsonFile.Count; i++)
+                {
+                    SocketGuildUser userExists = Context.Guild.GetUser(Convert.ToUInt64(convertedToList[i].Name));
+                    if (userExists != null)
+                    {
+                        finalText += $"{i + 1}. {MentionUtils.MentionUser(Convert.ToUInt64(convertedToList[i].Name))} : {convertedToList[i].Value} \n";
+                        ctrExists++;
+                    }
+                    if (ctrExists >= 9) break;
+                }
+                builder.AddField("[Rank]. Name & Score", finalText);
+            }
+            else
+            {
+                builder.Description = "Currently there's no minigame leaderboard yet.";
+            }
+            return builder;
         }
 
         public static void updateScore(string guildId, string userId, int scoreValue)

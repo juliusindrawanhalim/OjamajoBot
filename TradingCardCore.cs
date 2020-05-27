@@ -12,7 +12,7 @@ namespace OjamajoBot
 {
     public class TradingCardCore
     {
-        public static string version = "1.08";
+        public static string version = "1.09";
         public static string propertyId = "trading_card_spawn_id";
         public static string propertyCategory = "trading_card_spawn_category";
         public static string propertyToken = "trading_card_spawn_token";
@@ -32,17 +32,16 @@ namespace OjamajoBot
         public static int maxSpecial = 37;
 
         public static string imgMagicSeeds = "https://cdn.discordapp.com/attachments/706770454697738300/709013040518922260/magic_seeds.jpg";
+        public static string roleCompletionistSpecial = "Ojamajo Card Special Badge";
+        public static Color roleCompletionistColor = new Discord.Color(4, 173, 18);
+        public static string imgCompleteAllCardSpecial = $"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/badge/badge_special.png";
 
         public static EmbedBuilder printUpdatesNote()
         {
             return new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
-                .WithTitle($"Doremi Trading Card - Update {version} - 21.05.20")
-                .WithDescription($"-:new: **Rank system:** For every 100 EXP, your rank increased by 1 and your catching rate increased by 10%. " +
-                $"Maximum rank are available up to 5.\n" +
-                $"-:wrench: Bug fix & updates on **card inventory** where paging cannot be used\n" +
-                $"-:new: Updates on **card status report**\n" +
-                $"-:new: Paging updates on **card trade**");
+                .WithTitle($"Ojamajo Trading Card - Update {version} - 27.05.20")
+                .WithDescription($"-:new: Added Role & Badge Updates for user that have completed all their card pack.");
         }
 
         public static int getPlayerRank(int exp)
@@ -341,7 +340,8 @@ namespace OjamajoBot
                 .AddField("Other Card Pack", otherText);
         }
 
-        public static EmbedBuilder userCompleteTheirList(Color color, string avatarEmbed, string parent, string congratulateText, string imgUrl, string guildId, string clientId)
+        public static EmbedBuilder userCompleteTheirList(Color color, string avatarEmbed, string parent, string congratulateText, string imgUrl, string guildId, string clientId,
+            string unlockText, string username, string userAvatarUrl)
         {
             //update & save leaderboard data
             string dateTimeNow = DateTime.Now.ToString("MM/dd/yyyy");
@@ -350,12 +350,22 @@ namespace OjamajoBot
             ((JObject)jObjLeaderboard[parent]).Add(clientId, dateTimeNow);
             File.WriteAllText(leaderboardDataDirectory, jObjLeaderboard.ToString());
 
+            EmbedBuilder eb = new EmbedBuilder()
+                .WithAuthor(new EmbedAuthorBuilder
+                {
+                    Name = username,
+                    IconUrl = userAvatarUrl
+                })
+                .WithTitle($"{GlobalFunctions.UppercaseFirst(parent)} Card Pack Completed!")
+                .WithDescription(congratulateText)
+                .WithColor(color)
+                .WithImageUrl($"attachment://{Path.GetFileName(imgUrl)}")
+                .WithFooter($"Completed at: {dateTimeNow}", avatarEmbed)
+                .WithDescription(congratulateText);
+                eb.AddField("Role & Badge Unlocked:", unlockText);
+
             //return congratulate embed
-            return new EmbedBuilder()
-            .WithColor(color)
-            .WithImageUrl(imgUrl)
-            .WithFooter($"Completed at: {dateTimeNow}", avatarEmbed)
-            .WithDescription(congratulateText);
+            return eb;
         }
 
         public static EmbedBuilder printCardCaptureTemplate(Color color, string name, string imgUrl, string card_id,
@@ -632,7 +642,7 @@ namespace OjamajoBot
                                     if (spawnedMystery != "1")
                                         replyText = $":x: Sorry, I can't capture **{spawnedCardId} - {name}** because you have it already.";
                                     else
-                                        replyText = $":x: You guess the mystery card correctly but I can't capture **{spawnedCardId} - {name}** because you have it already.";
+                                        replyText = $":x: You guessed the mystery card correctly but I can't capture **{spawnedCardId} - {name}** because you have it already.";
                                 }
                                 else
                                 {
@@ -1071,9 +1081,10 @@ namespace OjamajoBot
             public static string parent = "doremi";
             public static string emojiOk = "https://cdn.discordapp.com/attachments/706490547191152690/706511135788105728/143751262x.png";
             public static string emojiError = "https://cdn.discordapp.com/attachments/706490547191152690/706494009991757864/doremi.png";
-            public static string emojiCompleteAllCard = "https://cdn.discordapp.com/attachments/706490547191152690/707424151723311154/win1.jpg";
+            public static string imgCompleteAllCard = $"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/badge/badge_doremi.png";
 
             public static string embedName = "Doremi Trading Card Hub";
+            public static string roleCompletionist = "Doremi Card Badge";
 
             public static string getCardCategory(string cardId)
             {
@@ -1110,7 +1121,10 @@ namespace OjamajoBot
             public static int maxNormal = 46; public static int maxPlatinum = 9; public static int maxMetal = 6;
             public static int maxOjamajos = 5;
             public static string emojiError = "https://cdn.discordapp.com/attachments/706490547191152690/706494023782629386/hazuki.png";
-            public static string emojiCompleteAllCard = "https://cdn.discordapp.com/attachments/706490547191152690/707424248872042568/win1.jpg";
+            public static string imgCompleteAllCard = $"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/badge/badge_hazuki.png";
+
+            public static string roleCompletionist = "Hazuki Card Badge";
+
             public static string getCardCategory(string cardId)
             {
                 string category;
@@ -1149,7 +1163,10 @@ namespace OjamajoBot
             public static int maxNormal = 45; public static int maxPlatinum = 7; public static int maxMetal = 6;
             public static int maxOjamajos = 5;
             public static string emojiError = "https://cdn.discordapp.com/attachments/706490547191152690/706494032976674856/aiko.jpg";
-            public static string emojiCompleteAllCard = "https://cdn.discordapp.com/attachments/706490547191152690/707424297685090344/win1.jpg";
+            public static string imgCompleteAllCard = $"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/badge/badge_aiko.png";
+
+            public static string roleCompletionist = "Aiko Card Badge";
+
             public static string getCardCategory(string cardId)
             {
                 string category;
@@ -1191,7 +1208,10 @@ namespace OjamajoBot
             public static int maxNormal = 46; public static int maxPlatinum = 13; public static int maxMetal = 6;
             public static int maxOjamajos = 6;
             public static string emojiError = "https://cdn.discordapp.com/attachments/706490547191152690/706494042631962666/onpu.jpg";
-            public static string emojiCompleteAllCard = "https://cdn.discordapp.com/attachments/706490547191152690/707424375380508682/win2.jpg";
+            public static string imgCompleteAllCard = $"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/badge/badge_onpu.png";
+
+            public static string roleCompletionist = "Onpu Card Badge";
+
             public static string getCardCategory(string cardId)
             {
                 string category;
@@ -1232,7 +1252,9 @@ namespace OjamajoBot
             public static int maxNormal = 43; public static int maxPlatinum = 6; public static int maxMetal = 4;
             public static int maxOjamajos = 5;
             public static string emojiError = "https://cdn.discordapp.com/attachments/706490547191152690/706769235019300945/Linesticker21.png";
-            public static string emojiCompleteAllCard = "https://cdn.discordapp.com/attachments/706490547191152690/707424504120344576/win5.jpg";
+            public static string imgCompleteAllCard = $"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/badge/badge_momoko.png";
+
+            public static string roleCompletionist = "Momoko Card Badge";
 
             public static string getCardCategory(string cardId)
             {
