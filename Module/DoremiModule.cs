@@ -9,6 +9,7 @@ using OjamajoBot.Service;
 using Spectacles.NET.Types;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -4126,41 +4127,11 @@ namespace OjamajoBot.Module
                 "Oh no, looks like I lose the game."};//bot lose
             string[] arrDrawReaction = { "Ehh, it's a draw!","We got a draw this time." };//bot draw
 
-            string textTemplate = $"emojicontext Doremi landed her **{MinigameCore.rockPaperScissor(randomGuess,guess)["randomResult"]}** against your **{guess}**. ";
-            
-            string picReactionFolderDir = "config/rps_reaction/doremi/";
+            Tuple<string, EmbedBuilder> result = MinigameCore.rockPaperScissor.rpsResults(Config.Doremi.EmbedColor, Config.Doremi.EmbedAvatarUrl, randomGuess, guess, "doremi", Context.User.Username,
+                arrWinReaction, arrLoseReaction, arrDrawReaction,
+                Context.Guild.Id, Context.User.Id);
 
-            if (MinigameCore.rockPaperScissor(randomGuess,guess)["gameState"] == "win"){ // player win
-                int rndIndex = new Random().Next(0, arrLoseReaction.Length);
-
-                picReactionFolderDir += "lose";
-                textTemplate = textTemplate.Replace("emojicontext", ":clap:");
-                textTemplate += $"{Context.User.Username} **win** the game! You got **20** score points.\n" +
-                    $"\"{arrLoseReaction[rndIndex]}\"";
-
-                var guildId = Context.Guild.Id;
-                var userId = Context.User.Id;
-
-                //save the data
-                MinigameCore.updateScore(guildId.ToString(), userId.ToString(), 10);
-
-            } else if (MinigameCore.rockPaperScissor(randomGuess,guess)["gameState"] == "draw"){ // player draw
-                int rndIndex = new Random().Next(0, arrDrawReaction.Length);
-                picReactionFolderDir += "draw";
-                textTemplate = textTemplate.Replace("emojicontext", ":x:");
-                textTemplate += $"**The game is draw!**\n" +
-                    $"\"{arrDrawReaction[rndIndex]}\"";
-            } else  { //player lose
-                int rndIndex = new Random().Next(0, arrWinReaction.Length);
-                picReactionFolderDir += "win";
-                textTemplate = textTemplate.Replace("emojicontext", ":x:");
-                textTemplate += $"{Context.User.Username} **lose** the game!\n" +
-                    $"\"{arrWinReaction[rndIndex]}\"";
-            }
-
-            string randomPathFile = GlobalFunctions.getRandomFile(picReactionFolderDir, new string[] { ".png", ".jpg", ".gif", ".webm" });
-            await ReplyAsync(textTemplate);
-            await Context.Channel.SendFileAsync($"{randomPathFile}");
+            await Context.Channel.SendFileAsync(result.Item1, embed: result.Item2.Build());
         }
         
         [Command("hangman", RunMode = RunMode.Async), Summary("Play the hangman game with the available category.\n**Available category:** `random`/`characters`/`color`/`fruit`/`animal`\n" +
@@ -4240,6 +4211,19 @@ namespace OjamajoBot.Module
                     if (loweredResponse == "exit"){
                         Config.Doremi.isRunningMinigame.Remove(Context.User.Id.ToString());
                         await ReplyAsync($"**{Context.User.Username}** has left the hangman minigame.");
+                        return;
+                    }
+                    else if (loweredResponse == randomedAnswer)
+                    {
+                        Config.Doremi.isRunningMinigame.Remove(Context.User.Id.ToString());
+
+                        await ReplyAsync($"\uD83D\uDC4F Congratulations **{Context.User.Username}**, you guess the correct answer: **{randomedAnswer}**. Your **score+{scoreValue}**");
+
+                        var guildId = Context.Guild.Id;
+                        var userId = Context.User.Id;
+
+                        //save the data
+                        MinigameCore.updateScore(guildId.ToString(), userId.ToString(), scoreValue);
                         return;
                     }
                     else if (loweredResponse.Length > 1)

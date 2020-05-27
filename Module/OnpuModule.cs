@@ -614,46 +614,11 @@ namespace OjamajoBot.Module
             string[] arrLoseReaction = { "I lose from the game." };//bot lose
             string[] arrDrawReaction = { "Well, it's a draw." };//bot draw
 
-            string textTemplate = $"emojicontext Onpu landed her **{MinigameCore.rockPaperScissor(randomGuess, guess)["randomResult"]}** against your **{guess}**. ";
+            Tuple<string, EmbedBuilder> result = MinigameCore.rockPaperScissor.rpsResults(Config.Onpu.EmbedColor, Config.Onpu.EmbedAvatarUrl, randomGuess, guess, "onpu", Context.User.Username,
+                arrWinReaction, arrLoseReaction, arrDrawReaction,
+                Context.Guild.Id, Context.User.Id);
 
-            string picReactionFolderDir = "config/rps_reaction/onpu/";
-
-            if (MinigameCore.rockPaperScissor(randomGuess, guess)["gameState"] == "win")
-            { // player win
-                int rndIndex = new Random().Next(0, arrLoseReaction.Length);
-
-                picReactionFolderDir += "lose";
-                textTemplate = textTemplate.Replace("emojicontext", ":clap:");
-                textTemplate += $"{Context.User.Username} **win** the game! You got **20** score points.\n" +
-                    $"\"{arrLoseReaction[rndIndex]}\"";
-
-                var guildId = Context.Guild.Id;
-                var userId = Context.User.Id;
-
-                //save the data
-                MinigameCore.updateScore(guildId.ToString(), userId.ToString(), 10);
-
-            }
-            else if (MinigameCore.rockPaperScissor(randomGuess, guess)["gameState"] == "draw")
-            { // player draw
-                int rndIndex = new Random().Next(0, arrDrawReaction.Length);
-                picReactionFolderDir += "draw";
-                textTemplate = textTemplate.Replace("emojicontext", ":x:");
-                textTemplate += $"**The game is draw!**\n" +
-                    $"\"{arrDrawReaction[rndIndex]}\"";
-            }
-            else
-            { //player lose
-                int rndIndex = new Random().Next(0, arrWinReaction.Length);
-                picReactionFolderDir += "win";
-                textTemplate = textTemplate.Replace("emojicontext", ":x:");
-                textTemplate += $"{Context.User.Username} **lose** the game!\n" +
-                    $"\"{arrWinReaction[rndIndex]}\"";
-            }
-
-            string randomPathFile = GlobalFunctions.getRandomFile(picReactionFolderDir, new string[] { ".png", ".jpg", ".gif", ".webm" });
-            await ReplyAsync(textTemplate);
-            await Context.Channel.SendFileAsync($"{randomPathFile}");
+            await Context.Channel.SendFileAsync(result.Item1, embed: result.Item2.Build());
         }
 
     }
@@ -1522,7 +1487,7 @@ namespace OjamajoBot.Module
                     var player = _lavaNode.GetPlayer(Context.Guild);
                     //var itemsQueue = player.Queue.Items.Cast<LavaTrack>().ToList();
 
-                    var allTracks = player.Queue.Items.Cast<LavaTrack>().ToList();
+                    var allTracks = player.Queue.Cast<LavaTrack>().ToList();
                     String musiclist = "";
                     musiclist += $"**1**. **[{player.Track.Title}]({player.Track.Url})** [Now Playing]\n";
 
@@ -1532,7 +1497,7 @@ namespace OjamajoBot.Module
                             musiclist += $"**{i + 2}**. **[{allTracks[i].Title}]({allTracks[i].Url})**\n";
                     }
 
-                    await base.ReplyAsync(embed: new EmbedBuilder()
+                    await ReplyAsync(embed: new EmbedBuilder()
                             .WithColor(Config.Onpu.EmbedColor)
                             .WithThumbnailUrl($"https://i.ytimg.com/vi/{player.Track.Id}/hqdefault.jpg")
                             .WithTitle("⬇️ Current music in queue:")

@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Discord;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,42 +9,107 @@ namespace OjamajoBot
 {
     public class MinigameCore
     {
-        public static IDictionary<string,string> rockPaperScissor(int randomGuess, string guess)
-        {
-            IDictionary<string, string> arrResult = new Dictionary<string, string>();
-            guess = guess.ToLower();
+        public class rockPaperScissor{
 
-            if (randomGuess == 0) { //rock
-                arrResult["randomResult"] = "rock";
-                
-                if (guess == "rock")
-                    arrResult["gameState"] = "draw";
-                else if (guess == "paper")
-                    arrResult["gameState"] = "win";
+            public static Tuple<string,EmbedBuilder> rpsResults(Color color, string embedIcon, int randomGuess, string guess, string parent, string username,
+                string[] arrWinReaction, string[] arrLoseReaction, string[] arrDrawReaction, 
+                ulong guildId, ulong userId)
+            {
+                //IDictionary<string, string> arrResult = new Dictionary<string, string>();
+                string randomResult; string gameState;
+                string picReactionFolderDir = $"config/rps_reaction/{parent}/";
+                string embedTitle; string textTemplate = "";
+
+                guess = guess.ToLower();
+
+                if (randomGuess == 0)
+                { //rock
+                    randomResult = "🥌 rock";
+
+                    if (guess == "rock")
+                        gameState = "draw";
+                    else if (guess == "paper")
+                        gameState = "win";
+                    else
+                        gameState = "lose";
+                }
+                else if (randomGuess == 1)
+                {  //paper
+                    randomResult = "📜 paper";
+
+                    if (guess == "paper")
+                        gameState = "draw";
+                    else if (guess == "scissor")
+                        gameState = "win";
+                    else
+                        gameState = "lose";
+                }
                 else
-                    arrResult["gameState"] = "lose";
-            } else if (randomGuess == 1) {  //paper
-                arrResult["randomResult"] = "paper";
+                { //scissor
+                    randomResult = "✂️ scissor";
 
-                if (guess == "paper")
-                    arrResult["gameState"] = "draw";
-                else if (guess == "scissor")
-                    arrResult["gameState"] = "win";
+                    if (guess == "scissor")
+                        gameState = "draw";
+                    else if (guess == "rock")
+                        gameState = "win";
+                    else
+                        gameState = "lose";
+                }
+
+                if (gameState == "win")
+                { // player win
+                    int rndIndex = new Random().Next(0, arrLoseReaction.Length);
+
+                    picReactionFolderDir += "lose";
+                    embedTitle = $"👏 {username} win the game!";
+                    textTemplate = $"\"{arrLoseReaction[rndIndex]}\" You got 10 minigame score points!";
+
+                    //save the data
+                    MinigameCore.updateScore(guildId.ToString(), userId.ToString(), 10);
+
+                }
+                else if (gameState == "draw")
+                { // player draw
+                    int rndIndex = new Random().Next(0, arrDrawReaction.Length);
+                    embedTitle = "❌ The game is draw!";
+                    picReactionFolderDir += "draw";
+                    textTemplate = $"\"{arrDrawReaction[rndIndex]}\"";
+                }
                 else
-                    arrResult["gameState"] = "lose";
-
-            } else { //scissor
-                arrResult["randomResult"] = "scissor";
+                { //player lose
+                    int rndIndex = new Random().Next(0, arrWinReaction.Length);
+                    picReactionFolderDir += "win";
+                    embedTitle = $"❌ {username} lose the game!";
+                    textTemplate = $"\"{arrWinReaction[rndIndex]}\"";
+                }
 
                 if (guess == "scissor")
-                    arrResult["gameState"] = "draw";
+                    guess = guess.Replace("scissor", "✂️ scissor");
+                else if (guess == "paper")
+                    guess = guess.Replace("paper", "📜 paper");
                 else if (guess == "rock")
-                    arrResult["gameState"] = "win";
-                else
-                    arrResult["gameState"] = "lose";
-            }
+                    guess = guess.Replace("rock", "🥌 rock");
 
-                return arrResult;
+                string randomPathFile = GlobalFunctions.getRandomFile(picReactionFolderDir, new string[] { ".png", ".jpg", ".gif", ".webm" });
+                EmbedBuilder eb = new EmbedBuilder
+                {
+                    Color = color,
+                    Author = new EmbedAuthorBuilder
+                    {
+                        Name = "Rock Paper Scissor!",
+                        IconUrl = embedIcon
+                    },
+                    Title = embedTitle,
+                    Description = textTemplate,
+                    ThumbnailUrl = $"attachment://{Path.GetFileName(randomPathFile)}"
+                };
+                eb.AddField(GlobalFunctions.UppercaseFirst(username) + " used:", guess, true);
+                eb.AddField(GlobalFunctions.UppercaseFirst(parent) + " used:", randomResult, true);
+
+                return Tuple.Create($"{randomPathFile}", eb);
+
+                //return arrResult;
+            }
         }
 
         public static void updateScore(string guildId, string userId, int scoreValue)

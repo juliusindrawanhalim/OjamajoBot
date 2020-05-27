@@ -782,46 +782,11 @@ namespace OjamajoBot.Module
             string[] arrLoseReaction = { "Oh no, looks like I lose the game." };//bot lose
             string[] arrDrawReaction = { "We both landed a draw." };//bot draw
 
-            string textTemplate = $"emojicontext Hazuki landed her **{MinigameCore.rockPaperScissor(randomGuess, guess)["randomResult"]}** against your **{guess}**. ";
+            Tuple<string, EmbedBuilder> result = MinigameCore.rockPaperScissor.rpsResults(Config.Hazuki.EmbedColor, Config.Hazuki.EmbedAvatarUrl, randomGuess, guess, "hazuki", Context.User.Username,
+                arrWinReaction, arrLoseReaction, arrDrawReaction,
+                Context.Guild.Id, Context.User.Id);
 
-            string picReactionFolderDir = "config/rps_reaction/hazuki/";
-
-            if (MinigameCore.rockPaperScissor(randomGuess, guess)["gameState"] == "win")
-            { // player win
-                int rndIndex = new Random().Next(0, arrLoseReaction.Length);
-
-                picReactionFolderDir += "lose";
-                textTemplate = textTemplate.Replace("emojicontext", ":clap:");
-                textTemplate += $"{Context.User.Username} **win** the game! You got **20** score points.\n" +
-                    $"\"{arrLoseReaction[rndIndex]}\"";
-
-                var guildId = Context.Guild.Id;
-                var userId = Context.User.Id;
-
-                //save the data
-                MinigameCore.updateScore(guildId.ToString(), userId.ToString(), 10);
-
-            }
-            else if (MinigameCore.rockPaperScissor(randomGuess, guess)["gameState"] == "draw")
-            { // player draw
-                int rndIndex = new Random().Next(0, arrDrawReaction.Length);
-                picReactionFolderDir += "draw";
-                textTemplate = textTemplate.Replace("emojicontext", ":x:");
-                textTemplate += $"**The game is draw!**\n" +
-                    $"\"{arrDrawReaction[rndIndex]}\"";
-            }
-            else
-            { //player lose
-                int rndIndex = new Random().Next(0, arrWinReaction.Length);
-                picReactionFolderDir += "win";
-                textTemplate = textTemplate.Replace("emojicontext", ":x:");
-                textTemplate += $"{Context.User.Username} **lose** the game!\n" +
-                    $"\"{arrWinReaction[rndIndex]}\"";
-            }
-
-            string randomPathFile = GlobalFunctions.getRandomFile(picReactionFolderDir, new string[] { ".png", ".jpg", ".gif", ".webm" });
-            await ReplyAsync(textTemplate);
-            await Context.Channel.SendFileAsync($"{randomPathFile}");
+            await Context.Channel.SendFileAsync(result.Item1, embed: result.Item2.Build());
         }
 
     }
