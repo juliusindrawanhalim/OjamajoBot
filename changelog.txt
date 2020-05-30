@@ -60,3 +60,14 @@ Doremi Trading Card - Update 1.08 - 21.05.20
 Doremi Trading Card - Update 1.09 - 27.05.20
 =======================================================================
 -Added Role & Badge Updates for user that have completed all the card
+
+Doremi Trading Card - Update 1.1 - 30.05.20
+=======================================================================
+-Added bad cards & pureleine command
+
+Doremi Trading Card - Update 1.11 - 30.05.20
+=======================================================================
+-Bad cards curse effect is now only steal "normal" card category
+-Bad cards reward is now only rewarded with "normal" card category
+-Bad cards seed reward is now rewarded with 1-5 magic seeds
+-Added bad cards & pureleine command

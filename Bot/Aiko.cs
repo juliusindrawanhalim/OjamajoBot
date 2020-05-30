@@ -127,12 +127,13 @@ namespace OjamajoBot.Bot
                 //.SendMessageAsync("Pretty Witchy Aiko Chi~");
 
                 Console.WriteLine("Aiko Connected!");
+                //new Onpu().RunBotAsync().GetAwaiter().GetResult();
                 return Task.CompletedTask;
             };
 
 
             //// Block this task until the program is closed.
-            await Task.Delay(0);
+            await Task.Delay(3000);
         }
 
         public async Task JoinedGuild(SocketGuild guild)

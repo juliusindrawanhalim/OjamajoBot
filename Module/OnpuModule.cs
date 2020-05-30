@@ -742,6 +742,27 @@ namespace OjamajoBot.Module
 
         }
 
+        [Command("pureleine", RunMode = RunMode.Async), Alias("pureline"), Summary("Detect the bad card with the help from oyajide & pureleine computer. " +
+            "Insert the answer as parameter to remove the bad cards if it's existed. Example: ha!card pureleine 10")]
+        public async Task trading_card_pureleine(string answer = "")
+        {
+            var guildId = Context.Guild.Id;
+            var clientId = Context.User.Id;
+            string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+
+            if (!File.Exists(playerDataDirectory)) //not registered yet
+            {
+                await ReplyAsync(embed: new EmbedBuilder()
+                .WithColor(Config.Doremi.EmbedColor)
+                .WithDescription($":x: I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
+                .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build());
+            }
+            else
+            {
+                await ReplyAsync(embed: TradingCardCore.activatePureleine(guildId, clientId.ToString(), answer).Build());
+            }
+        }
+
         //list all cards that have been collected
         [Command("inventory", RunMode = RunMode.Async), Summary("List all **Onpu** trading cards that you have collected.")]
         public async Task trading_card_open_inventory(string category = "")

@@ -170,13 +170,14 @@ namespace OjamajoBot.Bot
             client.Ready += () => {
 
                 Console.WriteLine("Doremi Connected!");
+                //new Hazuki().RunBotAsync().GetAwaiter().GetResult();
                 //_lavaNode.ConnectAsync();
 
                 return Task.CompletedTask;
             };
 
             //// Block this task until the program is closed.
-            await Task.Delay(0);
+            await Task.Delay(1000);
         }
 
 
@@ -375,163 +376,7 @@ namespace OjamajoBot.Bot
             {
                 Config.Doremi._timerTradingCardSpawn[guild.Id.ToString()] = new Timer(async _ =>
                 {
-                    //0-2 | 3-7 | 8-10
-                    //9/5/2
-                    int randomParent = new Random().Next(0, 6);
-                    int randomCategory = new Random().Next(11);
-                    int randomMystery = new Random().Next(0, 2);
-                    string chosenCategory = ""; string catchRate = "";
-                    Boolean isMystery = false; if (randomMystery <= 0) isMystery = true;
-
-                    //for testing purpose:
-                    //randomParent = 1;
-                    //randomCategory = 2;
-                    //isMystery = true;
-                    
-                    if (randomCategory <= TradingCardCore.spawnRateOjamajos)//0-1
-                    {//ojamajos
-                        chosenCategory = "ojamajos"; catchRate = (TradingCardCore.captureRateOjamajos * 10).ToString() + "%";
-                    }
-                    else if (randomCategory <=TradingCardCore.spawnRateMetal)//0-2
-                    {//metal
-
-                        chosenCategory = "metal";
-                        if (isMystery)
-                            catchRate = ((TradingCardCore.captureRateMetal+2) * 10).ToString() + "%";
-                        else
-                            catchRate = (TradingCardCore.captureRateMetal * 10).ToString() + "%";
-                    }
-                    else if (randomCategory <= TradingCardCore.spawnRatePlatinum)//0-5
-                    {//platinum
-                        chosenCategory = "platinum";
-                        if (isMystery)
-                            catchRate = ((TradingCardCore.captureRatePlatinum+1) * 10).ToString() + "%";
-                        else
-                            catchRate = (TradingCardCore.captureRatePlatinum * 10).ToString() + "%";
-                    }
-                    else if (randomCategory <= TradingCardCore.spawnRateNormal)//0-10
-                    {//normal
-                        chosenCategory = "normal";
-                        if (isMystery)
-                            catchRate = ((TradingCardCore.captureRateNormal+1) * 10).ToString() + "%";
-                        else
-                            catchRate = (TradingCardCore.captureRateNormal * 10).ToString() + "%";
-                    }
-
-                    string parent = ""; DiscordSocketClient client = Bot.Doremi.client;
-                    string descriptionMystery = "";
-                    Discord.Color color = Config.Doremi.EmbedColor; string author = ""; string embedAvatarUrl = "";
-                    //randomParent = 0; //don't forget to erase this, for testing purpose
-                    //chosenCategory = "ojamajos";//for testing purpose
-                    if (randomParent == 0)
-                    {
-                        parent = "doremi"; embedAvatarUrl = Config.Doremi.EmbedAvatarUrl;
-                        descriptionMystery = TradingCardCore.Doremi.arrMysteryDescription[new Random().Next(TradingCardCore.Doremi.arrMysteryDescription.Length)];
-                    }
-                    else if (randomParent == 1)
-                    {
-                        if(!isMystery) client = Bot.Hazuki.client; 
-                        parent = "hazuki";
-                        color = Config.Hazuki.EmbedColor; embedAvatarUrl = Config.Hazuki.EmbedAvatarUrl;
-                        descriptionMystery = TradingCardCore.Hazuki.arrMysteryDescription[new Random().Next(TradingCardCore.Hazuki.arrMysteryDescription.Length)];
-                    }
-                    else if (randomParent == 2)
-                    {
-                        if (!isMystery) client = Bot.Aiko.client; 
-                        parent = "aiko";
-                        color = Config.Aiko.EmbedColor; embedAvatarUrl = Config.Aiko.EmbedAvatarUrl;
-                        descriptionMystery = TradingCardCore.Aiko.arrMysteryDescription[new Random().Next(TradingCardCore.Aiko.arrMysteryDescription.Length)];
-                    }
-                    else if (randomParent == 3)
-                    {
-                        if (!isMystery) client = Bot.Onpu.client; 
-                        parent = "onpu";
-                        color = Config.Onpu.EmbedColor; embedAvatarUrl = Config.Onpu.EmbedAvatarUrl;
-                        descriptionMystery = TradingCardCore.Onpu.arrMysteryDescription[new Random().Next(TradingCardCore.Onpu.arrMysteryDescription.Length)];
-                    }
-                    else if (randomParent == 4)
-                    {
-                        if (!isMystery) client = Bot.Momoko.client; 
-                        parent = "momoko";
-                        color = Config.Momoko.EmbedColor; embedAvatarUrl = Config.Momoko.EmbedAvatarUrl;
-                        descriptionMystery = TradingCardCore.Momoko.arrMysteryDescription[new Random().Next(TradingCardCore.Momoko.arrMysteryDescription.Length)];
-                    }
-                    else if (randomParent >= 5)
-                    {
-                        chosenCategory = "special"; parent = "other";
-                        color = Config.Doremi.EmbedColor; embedAvatarUrl = Config.Doremi.EmbedAvatarUrl;
-                        catchRate = (TradingCardCore.captureRateSpecial * 10).ToString() + "%";
-                    }
-
-                    if (chosenCategory == "ojamajos") {
-                        author = $"{GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
-                    } else if (chosenCategory == "special") {
-                        author = $"Other {GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
-                    } else {
-                        author = $"{GlobalFunctions.UppercaseFirst(parent)} {GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
-                    }
-
-                    string chosenId = ""; string chosenName = ""; string chosenUrl = "";
-                    //start read json
-                    var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
-                    var key = JObject.Parse(jObjTradingCardList[parent][chosenCategory].ToString()).Properties().ToList();
-                    int randIndex = new Random().Next(0, key.Count);
-
-                    //chosen data:
-                    chosenId = key[randIndex].Name;
-                    chosenName = jObjTradingCardList[parent][chosenCategory][key[randIndex].Name]["name"].ToString();
-                    chosenUrl = jObjTradingCardList[parent][chosenCategory][key[randIndex].Name]["url"].ToString();
-                    
-                    Config.Guild.setPropertyValue(guild.Id, TradingCardCore.propertyId, chosenId);
-                    Config.Guild.setPropertyValue(guild.Id, TradingCardCore.propertyCategory, chosenCategory);
-                    Config.Guild.setPropertyValue(guild.Id, TradingCardCore.propertyToken, GlobalFunctions.RandomString(8));
-                    Config.Guild.setPropertyValue(guild.Id, TradingCardCore.propertyMystery, "0");
-
-                    if (!isMystery || chosenCategory == "ojamajos"|| chosenCategory == "special")
-                    {//not mystery
-                        EmbedBuilder embed;
-                        if (chosenCategory == "ojamajos"||chosenCategory == "special")
-                            embed = new EmbedBuilder()
-                            .WithAuthor(author)
-                            .WithColor(Discord.Color.Gold)
-                            .WithTitle($"{chosenName}")
-                            .WithFooter($"ID: {chosenId} | Catch Rate: {catchRate}")
-                            .WithImageUrl(chosenUrl);
-                        else
-                            embed = new EmbedBuilder()
-                            .WithAuthor(author, embedAvatarUrl)
-                            .WithColor(color)
-                            .WithTitle($"{chosenName}")
-                            .WithFooter($"ID: {chosenId} | Catch Rate: {catchRate}")
-                            .WithImageUrl(chosenUrl);
-                        
-                        if (chosenCategory == "ojamajos") parent = "";
-
-                        await client
-                        .GetGuild(guild.Id)
-                        .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "trading_card_spawn")))
-                        .SendMessageAsync($":exclamation:A **{chosenCategory}** {parent} card has appeared! " +
-                        $"Capture it with **<bot>!card capture** or **<bot>!card capture boost**",
-                        embed: embed.Build());
-                    }
-                    else
-                    {//mystery card
-                        var embed = new EmbedBuilder()
-                        .WithAuthor("Mystery Card")
-                        .WithColor(Discord.Color.DarkerGrey)
-                        .WithTitle($"🔍 Revealed Hint:")
-                        .WithDescription(descriptionMystery)
-                        .WithImageUrl("https://cdn.discordapp.com/attachments/709293222387777626/710869697972797440/mystery.jpg")
-                        .WithFooter($"ID: ??? | Catch Rate: {catchRate}");
-
-                        Config.Guild.setPropertyValue(guild.Id, TradingCardCore.propertyMystery, "1");
-                        await client
-                        .GetGuild(guild.Id)
-                        .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "trading_card_spawn")))
-                        .SendMessageAsync($":question:A **mystery** card has appeared! Can you guess whose card is this belongs to?\n" +
-                        $"Reveal & capture it with **<bot>!card capture** or **<bot>!card capture boost**",
-                        embed: embed.Build());
-                    }
+                    await TradingCardCore.generateCardSpawn(guild.Id);
                 },
                 null,
                 TimeSpan.FromMinutes(Convert.ToInt32(Config.Guild.getPropertyValue(guild.Id, "trading_card_spawn_interval"))), //time to wait before executing the timer for the first time

@@ -125,12 +125,13 @@ namespace OjamajoBot.Bot
                 //.SendMessageAsync("Pretty Witchy Hazuki Chi~");
 
                 Console.WriteLine("Hazuki Connected!");
+                //new Aiko().RunBotAsync().GetAwaiter().GetResult();
                 return Task.CompletedTask;
             };
 
 
             //// Block this task until the program is closed.
-            await Task.Delay(0);
+            await Task.Delay(2000);
 
         }
 

@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Addons.Interactive;
+using Discord.WebSocket;
 using Lavalink4NET.Statistics;
 using Newtonsoft.Json.Linq;
 using System;
@@ -7,12 +8,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace OjamajoBot
 {
     public class TradingCardCore
     {
-        public static string version = "1.09";
+        public static string version = "1.11";
         public static string propertyId = "trading_card_spawn_id";
         public static string propertyCategory = "trading_card_spawn_category";
         public static string propertyToken = "trading_card_spawn_token";
@@ -38,18 +40,35 @@ namespace OjamajoBot
 
         public static EmbedBuilder printUpdatesNote()
         {
+            //return new EmbedBuilder()
+            //    .WithColor(Config.Doremi.EmbedColor)
+            //    .WithTitle($"Ojamajo Trading Card - Update {version} - 30.05.20")
+            //    .WithDescription($"-:new: Added bad cards. This card are attached upon card spawn and extremely **dangerous**. It need to be removed first before using card capture commands!")
+            //    .AddField("How many type of bad cards?","There are 3 type of bad cards:\n" +
+            //    "-curse: Steal one of your card after catch attempt. A bonus card will be rewarded upon removed.\n" +
+            //    "-failure: Dropped your card catch rate into 0%. A bonus card will be rewarded upon removed.\n" +
+            //    "-seeds: Steal your magic seeds after catch attempt. A magic seeds will be rewarded upon removed.")
+            //    .AddField("How to remove bad cards?", "You can remove the bad cards with **do!card pureleine**. After seeing the question you need to answer with **do!card pureleine <answer>** commands.")
+            //    .AddField("How to notice bad cards?", " Bad cards are marked on the bottom part where there'll be a logo marked and id written and followed by the bad card type. An example of bad card marker will be shown below:")
+            //    .WithImageUrl("https://cdn.discordapp.com/attachments/706770454697738300/716045344135315566/unknown.png");
+
             return new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
-                .WithTitle($"Ojamajo Trading Card - Update {version} - 27.05.20")
-                .WithDescription($"-:new: Added Role & Badge Updates for user that have completed all their card pack.");
+                .WithTitle($"Ojamajo Trading Card - Update {version} - 30.05.20")
+                .WithDescription($"-Bad card display updates: now bad card mark will be shown as thumbnail\n" +
+                $"-Bad card penalty & reward has been limited into **normal** category only\n" +
+                $"-You can now use the pureleine command from 5 of the ojamajos bot.");
         }
 
         public static int getPlayerRank(int exp)
         {
+            //0 = 1
+            //100 = 2
+            //200 = 3
+            //300 = 4
             int rank = 1;
-            if (exp >= 100){
-                rank = (int)Math.Ceiling(Convert.ToDouble(exp)/100)+1;
-            }
+            if (exp >= 100) rank = (int)Math.Ceiling(Convert.ToDouble(exp)/100);
+            
             if (exp == 100) rank = 2;
             if (rank >= 5) rank = 5;
             return rank;
@@ -510,6 +529,139 @@ namespace OjamajoBot
             return listAllowed;
         }
 
+        public static EmbedBuilder activatePureleine(ulong guildId,string clientId, string answer)
+        {
+            string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+
+            EmbedBuilder embed;
+            if (Config.Guild.getPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCard) != "")
+            {
+                string badCardType = TradingCardCore.BadCards.getType(
+                    Convert.ToInt32(Config.Guild.getPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCard))
+                    );
+                int number1 = Convert.ToInt32(Config.Guild.getPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardNumber1));
+                int number2 = Convert.ToInt32(Config.Guild.getPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardNumber2));
+                string equation = Config.Guild.getPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardEquation);
+                string correctAnswer = "";
+                if (equation == "+") correctAnswer = (number1 + number2).ToString();
+                else if (equation == "-") correctAnswer = (number1 - number2).ToString();
+
+                if (answer == "")
+                {
+                    embed = new EmbedBuilder()
+                    .WithAuthor(TradingCardCore.BadCards.embedPureleineName, TradingCardCore.BadCards.embedPureleineAvatar)
+                    .WithColor(TradingCardCore.BadCards.embedPureleineColor)
+                    .WithTitle("Bad card detected!")
+                    .WithDescription($"I'm detecting a great amount of bad card energy! You need to remove it with **<bot>!card pureleine <answer>** commands from the question below:")
+                    .WithThumbnailUrl(TradingCardCore.BadCards.imgPureleineFound);
+                    embed.AddField("Question:", $"{number1}{equation}{number2} = ?");
+                }
+                else if (answer != correctAnswer)
+                {
+                    embed = new EmbedBuilder()
+                    .WithAuthor(TradingCardCore.BadCards.embedPureleineName, TradingCardCore.BadCards.embedPureleineAvatar)
+                    .WithColor(TradingCardCore.BadCards.embedPureleineColor)
+                    .WithTitle("Wrong answer!")
+                    .WithDescription($":x: That answer is wrong!")
+                    .WithThumbnailUrl(TradingCardCore.BadCards.imgAnswerWrong);
+                }
+                else
+                {
+                    JObject arrInventory = JObject.Parse(File.ReadAllText(playerDataDirectory));
+
+                    embed = new EmbedBuilder()
+                    .WithAuthor(TradingCardCore.BadCards.embedPureleineName, TradingCardCore.BadCards.embedPureleineAvatar)
+                    .WithColor(TradingCardCore.BadCards.embedPureleineColor)
+                    .WithTitle("Bad cards effect has been removed!")
+                    .WithDescription($":white_check_mark: I've successfully removed the bad cards effect! You may now safely capture the spawned card again.\n")
+                    .WithThumbnailUrl(TradingCardCore.BadCards.imgAnswerCorrect);
+                    Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCard, "");
+                    Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardEquation, "");
+                    Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardNumber1, "");
+                    Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardNumber2, "");
+                    //isRemoved = true;
+
+                    if (badCardType == "curse" || badCardType == "failure")
+                    {
+                        //generate random card
+                        int randomParent = new Random().Next(0, 6);
+                        int randomCategory = new Random().Next(100);
+                        string chosenCategory = "normal";
+
+                        if (randomCategory <= 5)//0-1 //platinum
+                            chosenCategory = "platinum";
+                        
+                        string parent = "doremi";
+                        if (randomParent == 1)
+                            parent = "hazuki";
+                        else if (randomParent == 2)
+                            parent = "aiko";
+                        else if (randomParent == 3)
+                            parent = "onpu";
+                        else if (randomParent == 4)
+                            parent = "momoko";
+
+                        //start read json
+                        var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
+                        var key = JObject.Parse(jObjTradingCardList[parent][chosenCategory].ToString()).Properties().ToList();
+                        int randIndex = new Random().Next(0, key.Count);
+                        string chosenId = key[randIndex].Name;
+
+
+                        //chosen data:
+                        //chosenId = "do004"; chosenCategory = "normal"; parent = "doremi"; //for debug only
+                        string chosenName = jObjTradingCardList[parent][chosenCategory][chosenId]["name"].ToString();
+
+                        try
+                        {
+                            if (arrInventory[parent][chosenCategory].ToString().Contains(chosenId))
+                                embed.Description += $"But I can't give you **{chosenId} - {chosenName}** because you have it already...";
+                            else
+                            {
+                                string chosenUrl = jObjTradingCardList[parent][chosenCategory][chosenId]["url"].ToString();
+                                embed.Description += $"You have been rewarded with a bonus card!";
+                                embed.AddField($"{chosenCategory} {parent} Bonus Card Reward:", $"**{chosenId} - {chosenName}**");
+                                embed.WithImageUrl(chosenUrl);
+
+                                arrInventory["catch_attempt"] = (Convert.ToInt32(arrInventory["catch_attempt"]) + 1).ToString();
+                                JArray item = (JArray)arrInventory[parent][chosenCategory];
+                                item.Add(chosenId);
+                                File.WriteAllText(playerDataDirectory, arrInventory.ToString());
+
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e.ToString());
+
+                        }
+
+                    }
+                    else if (badCardType == "seeds")
+                    {
+                        int randomedMagicSeeds = new Random().Next(1, 6);
+                        embed.Description += "You have been rewarded with some magic seeds!";
+                        embed.AddField("Rewards:", $"{randomedMagicSeeds} magic seeds.");
+                        embed.WithImageUrl("https://cdn.discordapp.com/attachments/706770454697738300/709013040518922260/magic_seeds.jpg");
+                        arrInventory["magic_seeds"] = (Convert.ToInt32(arrInventory["magic_seeds"]) + randomedMagicSeeds).ToString();
+                        File.WriteAllText(playerDataDirectory, arrInventory.ToString());
+                    }
+                }
+            }
+            else
+                embed = new EmbedBuilder()
+                .WithAuthor(TradingCardCore.BadCards.embedPureleineName, TradingCardCore.BadCards.embedPureleineAvatar)
+                .WithColor(TradingCardCore.BadCards.embedPureleineColor)
+                .WithThumbnailUrl(null)
+                .WithDescription(":x: I didn't sense any bad cards energy right now...")
+                .WithThumbnailUrl(TradingCardCore.BadCards.imgPureleineNotFound);
+
+            return embed;
+
+            //if (isRemoved) await TradingCardCore.printCardSpawned(guildId);
+            
+        }
+
         public static Tuple<string, EmbedBuilder, string, IDictionary<string,Boolean>> cardCapture(Color color, string embedAvatarUrl, 
             ulong guildId, string clientId, string username, 
             string emojiError, string parent, string boost, string errorPrefix, string containCardId,
@@ -539,6 +691,7 @@ namespace OjamajoBot
                 string spawnedCardId = Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyId);
                 string spawnedCardCategory = Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyCategory);
                 string spawnedMystery = Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyMystery);
+                string spawnedBadCards = Config.Guild.getPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCard);
 
                 int boostNormal = 0; int boostPlatinum = 0; int boostMetal = 0;
                 int boostOjamajos = 0; int boostSpecial = 0; 
@@ -590,7 +743,6 @@ namespace OjamajoBot
 
                 }
                 
-
                 if (spawnedCardId != "" && spawnedCardCategory != "")
                 {
                     if (spawnedCardId.Contains(containCardId) ||
@@ -713,7 +865,58 @@ namespace OjamajoBot
                                         if (useBoost) boostRate = $"{boostSpecial * 10}%";
                                     }
 
-                                    if (catchState == 1)
+                                    if (spawnedBadCards != "")
+                                    {
+                                        //bad card trigger
+                                        if (spawnedBadCards != "")
+                                        {
+                                            spawnedBadCards = BadCards.getType(Convert.ToInt32(spawnedBadCards));
+                                            emojiError = BadCards.imgBadCardActivated;
+
+                                            if (spawnedBadCards == "seeds")
+                                            {
+                                                int randomLost = new Random().Next(1, 11);
+                                                replyText = $":skull: Oh no, **{spawnedBadCards}** bad card effect has activated! You lost {randomLost} magic seeds!";
+                                                int currentMagicSeeds = Convert.ToInt32(arrInventory["magic_seeds"]);
+                                                if (currentMagicSeeds >= 10)
+                                                {
+                                                    arrInventory["magic_seeds"] = Convert.ToInt32(arrInventory["magic_seeds"]) - randomLost;
+                                                    File.WriteAllText(playerDataDirectory, arrInventory.ToString());
+                                                } else
+                                                {
+                                                    arrInventory["magic_seeds"] = 0;
+                                                    File.WriteAllText(playerDataDirectory, arrInventory.ToString());
+                                                }
+                                            }
+                                            else if (spawnedBadCards == "curse")
+                                            {
+                                                string parentLost = parent;
+                                                if (parent != "doremi" && parent != "hazuki" && parent != "aiko" && parent != "onpu" && parent != "momoko")
+                                                    parentLost = "doremi";
+                                                
+                                                if (arrInventory[parentLost]["normal"].Count() >= 1)
+                                                {
+                                                    JArray item = (JArray)arrInventory[parentLost]["normal"];
+                                                    string stolenCard = item[0].ToString();//[a,b]
+                                                    string stolenName = jObjTradingCardList[parentLost]["normal"][stolenCard]["name"].ToString();
+                                                    item.Remove(item[0]);
+                                                    File.WriteAllText(playerDataDirectory, arrInventory.ToString());
+                                                    replyText = $":skull: Oh no, **{spawnedBadCards}** bad card effect has activated! You just lost **{parentLost} normal** card: **{stolenCard} - {stolenName}**!";
+                                                }
+                                                else
+                                                {
+                                                    replyText = $":skull: Oh no, **{spawnedBadCards}** bad card effect has activated! You don't have any card to lose!";
+                                                }
+                                            } else if(spawnedBadCards=="failure")
+                                            {//failure
+                                                replyText = $":skull: Oh no, **{spawnedBadCards}** bad card effect has activated! You fail and lost a chance to catch a card!";
+                                                arrInventory["catch_token"] = Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyToken);
+                                                File.WriteAllText(playerDataDirectory, arrInventory.ToString());
+                                            }
+                                        }
+                                        //bad card ends
+                                    }
+                                    else if (catchState == 1)
                                     {
                                         //card not exist yet
                                         if (useBoost)
@@ -836,6 +1039,7 @@ namespace OjamajoBot
                                                 arrInventory["boost"][parent]["ojamajos"] = "0";
                                             }
                                         }
+
                                         File.WriteAllText(playerDataDirectory, arrInventory.ToString());
                                         if (spawnedMystery == "1")
                                             replyText += $":x: Card revealed correctly! But sorry {username}, you **fail** to catch the mystery card. Better luck next time.";
@@ -1051,22 +1255,365 @@ namespace OjamajoBot
 
         public static string getCardParent(string cardId)
         {
-            string category;
+            string parent;
             if (cardId.ToLower().Contains("do"))
-                category = "doremi";
+                parent = "doremi";
             else if (cardId.ToLower().Contains("ha"))
-                category = "hazuki";
+                parent = "hazuki";
             else if (cardId.ToLower().Contains("ai"))
-                category = "aiko";
+                parent = "aiko";
             else if (cardId.ToLower().Contains("on"))
-                category = "onpu";
+                parent = "onpu";
             else if (cardId.ToLower().Contains("mo"))
-                category = "momoko";
+                parent = "momoko";
             else if (cardId.ToLower().Contains("ot"))
-                category = "special";
+                parent = "special";
             else
-                category = "doremi";
-            return category;
+                parent = "doremi";
+            return parent;
+        }
+
+        public static async Task generateCardSpawn(ulong guildId)
+        {
+            int randomParent = new Random().Next(0, 6);
+            int randomCategory = new Random().Next(11);
+            int randomMystery = new Random().Next(0, 2);
+            int randomBadCard = new Random().Next(0, 5);
+
+            string chosenCategory = ""; string catchRate = ""; string badCardIcon = null;
+            Boolean isMystery = false; if (randomMystery <= 0) isMystery = true;
+
+            if (randomCategory <= TradingCardCore.spawnRateOjamajos)//0-1
+            {//ojamajos
+                chosenCategory = "ojamajos"; catchRate = (TradingCardCore.captureRateOjamajos * 10).ToString() + "%";
+            }
+            else if (randomCategory <= TradingCardCore.spawnRateMetal)//0-2
+            {//metal
+
+                chosenCategory = "metal";
+                if (isMystery)
+                    catchRate = ((TradingCardCore.captureRateMetal + 2) * 10).ToString() + "%";
+                else
+                    catchRate = (TradingCardCore.captureRateMetal * 10).ToString() + "%";
+            }
+            else if (randomCategory <= TradingCardCore.spawnRatePlatinum)//0-5
+            {//platinum
+                chosenCategory = "platinum";
+                if (isMystery)
+                    catchRate = ((TradingCardCore.captureRatePlatinum + 1) * 10).ToString() + "%";
+                else
+                    catchRate = (TradingCardCore.captureRatePlatinum * 10).ToString() + "%";
+            }
+            else if (randomCategory <= TradingCardCore.spawnRateNormal)//0-10
+            {//normal
+                chosenCategory = "normal";
+                if (isMystery)
+                    catchRate = ((TradingCardCore.captureRateNormal + 1) * 10).ToString() + "%";
+                else
+                    catchRate = (TradingCardCore.captureRateNormal * 10).ToString() + "%";
+            }
+
+            string parent = "doremi"; DiscordSocketClient client = Bot.Doremi.client;
+            string descriptionMystery = "";
+            Discord.Color color = Config.Doremi.EmbedColor; 
+            string embedAvatarUrl = "";
+            //randomParent = 0; //don't forget to erase this, for testing purpose
+            //chosenCategory = "ojamajos";//for testing purpose
+            if (randomParent == 0)
+            {
+                embedAvatarUrl = Config.Doremi.EmbedAvatarUrl;
+                descriptionMystery = TradingCardCore.Doremi.arrMysteryDescription[new Random().Next(TradingCardCore.Doremi.arrMysteryDescription.Length)];
+            }
+            else if (randomParent == 1)
+            {
+                if (!isMystery) client = Bot.Hazuki.client;
+                parent = "hazuki";
+                color = Config.Hazuki.EmbedColor; embedAvatarUrl = Config.Hazuki.EmbedAvatarUrl;
+                descriptionMystery = TradingCardCore.Hazuki.arrMysteryDescription[new Random().Next(TradingCardCore.Hazuki.arrMysteryDescription.Length)];
+            }
+            else if (randomParent == 2)
+            {
+                if (!isMystery) client = Bot.Aiko.client;
+                parent = "aiko";
+                color = Config.Aiko.EmbedColor; embedAvatarUrl = Config.Aiko.EmbedAvatarUrl;
+                descriptionMystery = TradingCardCore.Aiko.arrMysteryDescription[new Random().Next(TradingCardCore.Aiko.arrMysteryDescription.Length)];
+            }
+            else if (randomParent == 3)
+            {
+                if (!isMystery) client = Bot.Onpu.client;
+                parent = "onpu";
+                color = Config.Onpu.EmbedColor; embedAvatarUrl = Config.Onpu.EmbedAvatarUrl;
+                descriptionMystery = TradingCardCore.Onpu.arrMysteryDescription[new Random().Next(TradingCardCore.Onpu.arrMysteryDescription.Length)];
+            }
+            else if (randomParent == 4)
+            {
+                if (!isMystery) client = Bot.Momoko.client;
+                parent = "momoko";
+                color = Config.Momoko.EmbedColor; embedAvatarUrl = Config.Momoko.EmbedAvatarUrl;
+                descriptionMystery = TradingCardCore.Momoko.arrMysteryDescription[new Random().Next(TradingCardCore.Momoko.arrMysteryDescription.Length)];
+            }
+            else if (randomParent >= 5)
+            {
+                chosenCategory = "special"; parent = "other";
+                color = Config.Doremi.EmbedColor; embedAvatarUrl = Config.Doremi.EmbedAvatarUrl;
+                catchRate = (TradingCardCore.captureRateSpecial * 10).ToString() + "%";
+            }
+
+
+            string author = $"{GlobalFunctions.UppercaseFirst(parent)} {GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
+            if (chosenCategory == "ojamajos")
+                author = $"{GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
+            else if (chosenCategory == "special")
+                author = $"Other {GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
+            
+
+            string footerBadCard = "";
+            //start read json
+            var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
+            var key = JObject.Parse(jObjTradingCardList[parent][chosenCategory].ToString()).Properties().ToList();
+            int randIndex = new Random().Next(0, key.Count);
+
+            //chosen data:
+            string chosenId = key[randIndex].Name;
+            string chosenName = jObjTradingCardList[parent][chosenCategory][key[randIndex].Name]["name"].ToString();
+            string chosenUrl = jObjTradingCardList[parent][chosenCategory][key[randIndex].Name]["url"].ToString();
+
+            //reset default & assign all
+            Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyId, chosenId);
+            Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyCategory, chosenCategory);
+            Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyToken, GlobalFunctions.RandomString(8));
+            Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyMystery, "0");
+            Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCard, "");
+            Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardEquation, "");
+            Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardNumber1, "");
+            Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardNumber2, "");
+
+            //bad card trigger
+            if (randomBadCard <= 1)
+            {
+                int randomBadCardType = new Random().Next(0, 3);
+                badCardIcon = TradingCardCore.BadCards.embedFooterUrl;
+                Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCard, $"{randomBadCardType}");
+                int randomEquation = new Random().Next(0, 2);
+                int randomNumber1 = new Random().Next(1, 100);//48
+                int randomNumber2 = new Random().Next(1, 100);//50
+
+                if (randomNumber1 < randomNumber2)
+                {
+                    int tempNumbers = randomNumber1;
+                    randomNumber1 = randomNumber2;
+                    randomNumber2 = tempNumbers;
+                }
+
+                if (randomEquation == 0)
+                    Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardEquation, "+");
+                else
+                    Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardEquation, "-");
+
+                Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardNumber1, randomNumber1.ToString());
+                Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardNumber2, randomNumber2.ToString());
+                footerBadCard += $"-{TradingCardCore.BadCards.getType(randomBadCardType)}";
+            }
+
+            if (!isMystery || chosenCategory == "ojamajos" || chosenCategory == "special")
+            {//not mystery
+                EmbedBuilder embed;
+                if (chosenCategory == "ojamajos" || chosenCategory == "special")
+                    embed = new EmbedBuilder()
+                    .WithAuthor(author)
+                    .WithColor(Discord.Color.Gold)
+                    .WithTitle($"{chosenName}")
+                    .WithFooter($"ID: {chosenId}{footerBadCard} | Catch Rate: {catchRate}")
+                    .WithThumbnailUrl(badCardIcon)
+                    .WithImageUrl(chosenUrl);
+                else
+                    embed = new EmbedBuilder()
+                    .WithAuthor(author, embedAvatarUrl)
+                    .WithColor(color)
+                    .WithTitle($"{chosenName}")
+                    .WithFooter($"ID: {chosenId}{footerBadCard} | Catch Rate: {catchRate}")
+                    .WithThumbnailUrl(badCardIcon)
+                    .WithImageUrl(chosenUrl);
+
+                if (chosenCategory == "ojamajos") parent = "";
+
+                await client
+                .GetGuild(guildId)
+                .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guildId, "trading_card_spawn")))
+                .SendMessageAsync($":exclamation:A **{chosenCategory}** {parent} card has appeared! " +
+                $"Capture it with **<bot>!card capture** or **<bot>!card capture boost**",
+                embed: embed.Build());
+            }
+            else
+            {//mystery card
+                var embed = new EmbedBuilder()
+                .WithAuthor("Mystery Card")
+                .WithColor(Discord.Color.DarkerGrey)
+                .WithTitle($"🔍 Revealed Hint:")
+                .WithDescription(descriptionMystery)
+                .WithImageUrl("https://cdn.discordapp.com/attachments/709293222387777626/710869697972797440/mystery.jpg")
+                .WithThumbnailUrl(badCardIcon)
+                .WithFooter($"ID: ???{footerBadCard} | Catch Rate: {catchRate}");
+
+                Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyMystery, "1");
+                await client
+                .GetGuild(guildId)
+                .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guildId, "trading_card_spawn")))
+                .SendMessageAsync($":question:A **mystery** card has appeared! Can you guess whose card is this belongs to?\n" +
+                $"Reveal & capture it with **<bot>!card capture** or **<bot>!card capture boost**",
+                embed: embed.Build());
+            }
+        }
+
+        public static async Task printCardSpawned(ulong guildId)
+        {
+            string chosenId = Config.Guild.getPropertyValue(guildId, propertyId);
+            string chosenCategory = getCardCategory(Config.Guild.getPropertyValue(guildId, propertyCategory)); 
+            string catchRate = ""; string footerIconUrl = null;
+            Boolean isMystery = false;
+            if(Config.Guild.getPropertyValue(guildId,propertyMystery) == "1") isMystery = true;
+
+            if (chosenCategory == "ojamajos")//0-1
+            {//ojamajos
+                catchRate = (TradingCardCore.captureRateOjamajos * 10).ToString() + "%";
+            }
+            else if (chosenCategory == "metal")//0-2
+            {//metal
+                if (isMystery)
+                    catchRate = ((TradingCardCore.captureRateMetal + 2) * 10).ToString() + "%";
+                else
+                    catchRate = (TradingCardCore.captureRateMetal * 10).ToString() + "%";
+            }
+            else if (chosenCategory == "platinum")//0-5
+            {//platinum
+                if (isMystery)
+                    catchRate = ((TradingCardCore.captureRatePlatinum + 1) * 10).ToString() + "%";
+                else
+                    catchRate = (TradingCardCore.captureRatePlatinum * 10).ToString() + "%";
+            }
+            else if (chosenCategory == "normal")//0-10
+            {//normal
+                if (isMystery)
+                    catchRate = ((TradingCardCore.captureRateNormal + 1) * 10).ToString() + "%";
+                else
+                    catchRate = (TradingCardCore.captureRateNormal * 10).ToString() + "%";
+            }
+
+            string parent = getCardParent(Config.Guild.getPropertyValue(guildId, propertyId)); 
+            DiscordSocketClient client = Bot.Doremi.client;
+            string descriptionMystery = "";
+            Discord.Color color = Config.Doremi.EmbedColor;
+            string author = $"{GlobalFunctions.UppercaseFirst(parent)} {GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
+            string embedAvatarUrl = "";
+            if (parent == "doremi")
+            {
+                embedAvatarUrl = Config.Doremi.EmbedAvatarUrl;
+                descriptionMystery = TradingCardCore.Doremi.arrMysteryDescription[new Random().Next(TradingCardCore.Doremi.arrMysteryDescription.Length)];
+            }
+            else if (parent == "hazuki")
+            {
+                if (!isMystery) client = Bot.Hazuki.client;
+                color = Config.Hazuki.EmbedColor; embedAvatarUrl = Config.Hazuki.EmbedAvatarUrl;
+                descriptionMystery = TradingCardCore.Hazuki.arrMysteryDescription[new Random().Next(TradingCardCore.Hazuki.arrMysteryDescription.Length)];
+            }
+            else if (parent == "aiko")
+            {
+                if (!isMystery) client = Bot.Aiko.client;
+                color = Config.Aiko.EmbedColor; embedAvatarUrl = Config.Aiko.EmbedAvatarUrl;
+                descriptionMystery = TradingCardCore.Aiko.arrMysteryDescription[new Random().Next(TradingCardCore.Aiko.arrMysteryDescription.Length)];
+            }
+            else if (parent == "onpu")
+            {
+                if (!isMystery) client = Bot.Onpu.client;
+                color = Config.Onpu.EmbedColor; embedAvatarUrl = Config.Onpu.EmbedAvatarUrl;
+                descriptionMystery = TradingCardCore.Onpu.arrMysteryDescription[new Random().Next(TradingCardCore.Onpu.arrMysteryDescription.Length)];
+            }
+            else if (parent == "momoko")
+            {
+                if (!isMystery) client = Bot.Momoko.client;
+                color = Config.Momoko.EmbedColor; embedAvatarUrl = Config.Momoko.EmbedAvatarUrl;
+                descriptionMystery = TradingCardCore.Momoko.arrMysteryDescription[new Random().Next(TradingCardCore.Momoko.arrMysteryDescription.Length)];
+            }
+            else if (parent == "other")
+            {
+                chosenCategory = "special"; parent = "other";
+                color = Config.Doremi.EmbedColor; embedAvatarUrl = Config.Doremi.EmbedAvatarUrl;
+                catchRate = (TradingCardCore.captureRateSpecial * 10).ToString() + "%";
+            }
+
+            if (chosenCategory == "ojamajos")
+                author = $"{GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
+            else if (chosenCategory == "special")            
+                author = $"Other {GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
+
+            string footerBadCard = "-";
+            //start read json
+            var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
+
+            //chosen data:
+            string chosenName = ""; string chosenUrl = "";
+            try
+            {
+                chosenName = jObjTradingCardList[parent][chosenCategory][chosenId]["name"].ToString();
+                chosenUrl = jObjTradingCardList[parent][chosenCategory][chosenId]["url"].ToString();
+            } catch(Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
+              
+            int badCard = Convert.ToInt32(Config.Guild.getPropertyValue(guildId, BadCards.propertyBadCard));
+
+            if (badCard <= 2)
+            {
+                footerIconUrl = BadCards.embedFooterUrl;
+                footerBadCard += $"{BadCards.getType(badCard)}";
+            }
+
+            if (!isMystery || chosenCategory == "ojamajos" || chosenCategory == "special")
+            {//not mystery
+                EmbedBuilder embed;
+                if (chosenCategory == "ojamajos" || chosenCategory == "special")
+                    embed = new EmbedBuilder()
+                    .WithAuthor(author)
+                    .WithColor(Discord.Color.Gold)
+                    .WithTitle($"{chosenName}")
+                    .WithFooter($"ID: {chosenId}{footerBadCard} | Catch Rate: {catchRate}", footerIconUrl)
+                    .WithImageUrl(chosenUrl);
+                else
+                    embed = new EmbedBuilder()
+                    .WithAuthor(author, embedAvatarUrl)
+                    .WithColor(color)
+                    .WithTitle($"{chosenName}")
+                    .WithFooter($"ID: {chosenId}{footerBadCard} | Catch Rate: {catchRate}", footerIconUrl)
+                    .WithImageUrl(chosenUrl);
+
+                if (chosenCategory == "ojamajos") parent = "";
+
+                await client
+                .GetGuild(guildId)
+                .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guildId, "trading_card_spawn")))
+                .SendMessageAsync($":exclamation:A **{chosenCategory}** {parent} card has appeared! " +
+                $"Capture it with **<bot>!card capture** or **<bot>!card capture boost**",
+                embed: embed.Build());
+            }
+            else
+            {//mystery card
+                var embed = new EmbedBuilder()
+                .WithAuthor("Mystery Card")
+                .WithColor(Discord.Color.DarkerGrey)
+                .WithTitle($"🔍 Revealed Hint:")
+                .WithDescription(descriptionMystery)
+                .WithImageUrl("https://cdn.discordapp.com/attachments/709293222387777626/710869697972797440/mystery.jpg")
+                .WithFooter($"ID: ???{footerBadCard} | Catch Rate: {catchRate}", footerIconUrl);
+
+                Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyMystery, "1");
+                await client
+                .GetGuild(guildId)
+                .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guildId, "trading_card_spawn")))
+                .SendMessageAsync($":question:A **mystery** card has appeared! Can you guess whose card is this belongs to?\n" +
+                $"Reveal & capture it with **<bot>!card capture** or **<bot>!card capture boost**",
+                embed: embed.Build());
+            }
         }
 
         //json format:
@@ -1289,6 +1836,36 @@ namespace OjamajoBot
                 ":sparkles: **Faa Puu Poppun Peperuto!** are not my spell",
                 ":sparkles: **Pururun Pirika Pameruku Paipai!** are not my spell"
             };
+
+        }
+
+        public class BadCards
+        {
+            public static string embedFooterUrl = "https://cdn.discordapp.com/attachments/706770454697738300/715945298370887722/latest.png";
+            public static string embedPureleineAvatar = "https://cdn.discordapp.com/attachments/706770454697738300/715959473889476698/oyajide.jpg";
+            public static string imgPureleineFound = "https://cdn.discordapp.com/attachments/706770454697738300/715951866768261180/found.jpg";
+            public static string imgPureleineNotFound = "https://cdn.discordapp.com/attachments/706770454697738300/715951867561246820/not-found.jpg";
+            public static string imgAnswerWrong = "https://cdn.discordapp.com/attachments/706770454697738300/715951862964158464/error.jpg";
+            public static string imgAnswerCorrect = "https://cdn.discordapp.com/attachments/706770454697738300/715951861781233785/correct.jpg";
+            public static string imgBadCardActivated = "https://cdn.discordapp.com/attachments/706770454697738300/716029107938525285/latest.png";
+
+            public static string propertyBadCard = "trading_card_spawn_badcard";
+            public static string propertyBadCardNumber1 = "trading_card_spawn_badcard_number1";
+            public static string propertyBadCardEquation = "trading_card_spawn_badcard_equation";
+            public static string propertyBadCardNumber2 = "trading_card_spawn_badcard_number2";
+
+            public static string embedPureleineName = "Oyajide";
+            public static Color embedPureleineColor = new Discord.Color(196, 156, 9);
+
+            public static string getType(int type)
+            {
+                string returnType = "seeds";
+                if (type == 0)
+                    returnType = "curse";
+                else if (type == 1)
+                    returnType = "failure";
+                return returnType;
+            }
 
         }
 

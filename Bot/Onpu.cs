@@ -134,6 +134,7 @@ namespace OjamajoBot.Bot
             client.Ready += () =>
             {
                 Console.WriteLine("Onpu Connected!");
+                //new Momoko().RunBotAsync().GetAwaiter().GetResult();
                 if (!_lavaNode.IsConnected)
                     _lavaNode.ConnectAsync();
 
@@ -142,7 +143,7 @@ namespace OjamajoBot.Bot
 
 
             //// Block this task until the program is closed.
-            await Task.Delay(0);
+            await Task.Delay(4000);
 
         }
 
