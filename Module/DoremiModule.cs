@@ -1724,8 +1724,8 @@ namespace OjamajoBot.Module
             //check if player is ranked up
             if (cardCaptureReturn.Item3!="")
                 await ReplyAsync(embed: new EmbedBuilder()
-                    .WithTitle("Rank Up!")
                     .WithColor(Config.Doremi.EmbedColor)
+                    .WithTitle("Rank Up!")
                     .WithDescription(cardCaptureReturn.Item3)
                     .WithThumbnailUrl(Context.User.GetAvatarUrl())
                     .Build());
@@ -1744,14 +1744,13 @@ namespace OjamajoBot.Module
                     .GetTextChannel(Context.Channel.Id)
                     .SendFileAsync(TradingCardCore.Doremi.imgCompleteAllCard, null, embed: TradingCardCore
                     .userCompleteTheirList(Config.Doremi.EmbedColor, Context.Client.CurrentUser.GetAvatarUrl(), "doremi",
-                    $"Congratulations, **{Context.User.Username}** have completed all **Doremi Card Pack**!",
                     TradingCardCore.Doremi.imgCompleteAllCard, Context.Guild.Id.ToString(),
                     Context.User.Id.ToString(), TradingCardCore.Doremi.roleCompletionist, Context.User.Username, Context.User.GetAvatarUrl())
                     .Build());
                 }
             }
 
-            ////check if player have captured all hazuki card/not
+            //check if player have captured all hazuki card/not
             if (cardCaptureReturn.Item4["hazuki"])
             {
                 if (Context.Guild.Roles.Where(x => x.Name == TradingCardCore.Hazuki.roleCompletionist).ToList().Count >= 1)
@@ -1765,14 +1764,13 @@ namespace OjamajoBot.Module
                     .GetTextChannel(Context.Channel.Id)
                     .SendFileAsync(TradingCardCore.Hazuki.imgCompleteAllCard, null, embed: TradingCardCore
                     .userCompleteTheirList(Config.Hazuki.EmbedColor, Context.Client.CurrentUser.GetAvatarUrl(), "hazuki",
-                    $"Congratulations, **{Context.User.Username}** have completed all **Hazuki Card Pack**!",
                     TradingCardCore.Hazuki.imgCompleteAllCard, Context.Guild.Id.ToString(),
                     Context.User.Id.ToString(), TradingCardCore.Hazuki.roleCompletionist, Context.User.Username, Context.User.GetAvatarUrl())
                     .Build());
                 }
             }
 
-            ////check if player have captured all aiko card/not
+            //check if player have captured all aiko card/not
             if (cardCaptureReturn.Item4["aiko"])
             {
                 if (Context.Guild.Roles.Where(x => x.Name == TradingCardCore.Aiko.roleCompletionist).ToList().Count >= 1)
@@ -1786,14 +1784,13 @@ namespace OjamajoBot.Module
                     .GetTextChannel(Context.Channel.Id)
                     .SendFileAsync(TradingCardCore.Aiko.imgCompleteAllCard, null, embed: TradingCardCore
                     .userCompleteTheirList(Config.Aiko.EmbedColor, Context.Client.CurrentUser.GetAvatarUrl(), "aiko",
-                    $"Congratulations, **{Context.User.Username}** have completed all **Aiko Card Pack**!",
                     TradingCardCore.Aiko.imgCompleteAllCard, Context.Guild.Id.ToString(),
                     Context.User.Id.ToString(), TradingCardCore.Aiko.roleCompletionist, Context.User.Username, Context.User.GetAvatarUrl())
                     .Build());
                 }
             }
 
-            ////check if player have captured all onpu card/not
+            //check if player have captured all onpu card/not
             if (cardCaptureReturn.Item4["onpu"])
             {
                 if (Context.Guild.Roles.Where(x => x.Name == TradingCardCore.Onpu.roleCompletionist).ToList().Count >= 1)
@@ -1807,14 +1804,13 @@ namespace OjamajoBot.Module
                     .GetTextChannel(Context.Channel.Id)
                     .SendFileAsync(TradingCardCore.Onpu.imgCompleteAllCard, null, embed: TradingCardCore
                     .userCompleteTheirList(Config.Onpu.EmbedColor, Context.Client.CurrentUser.GetAvatarUrl(), "onpu",
-                    $"Congratulations, **{Context.User.Username}** have completed all **Onpu Card Pack**!",
                     TradingCardCore.Onpu.imgCompleteAllCard, Context.Guild.Id.ToString(),
                     Context.User.Id.ToString(), TradingCardCore.Onpu.roleCompletionist, Context.User.Username, Context.User.GetAvatarUrl())
                     .Build());
                 }
             }
 
-            ////check if player have captured all momoko card/not
+            //check if player have captured all momoko card/not
             if (cardCaptureReturn.Item4["momoko"])
             {
                 if (Context.Guild.Roles.Where(x => x.Name == TradingCardCore.Momoko.roleCompletionist).ToList().Count >= 1)
@@ -1828,14 +1824,13 @@ namespace OjamajoBot.Module
                     .GetTextChannel(Context.Channel.Id)
                     .SendFileAsync(TradingCardCore.Momoko.imgCompleteAllCard, null, embed: TradingCardCore
                     .userCompleteTheirList(Config.Momoko.EmbedColor, Context.Client.CurrentUser.GetAvatarUrl(), "momoko",
-                    $"Congratulations, **{Context.User.Username}** have completed all **Momoko Card Pack**!",
                     TradingCardCore.Momoko.imgCompleteAllCard, Context.Guild.Id.ToString(),
                     Context.User.Id.ToString(), TradingCardCore.Momoko.roleCompletionist, Context.User.Username, Context.User.GetAvatarUrl())
                     .Build());
                 }
             }
 
-            ////check if player have captured all other special card/not
+            //check if player have captured all other special card/not
             if (cardCaptureReturn.Item4["special"])
             {
                 if (Context.Guild.Roles.Where(x => x.Name == TradingCardCore.roleCompletionistSpecial).ToList().Count >= 1)
@@ -1848,9 +1843,8 @@ namespace OjamajoBot.Module
                         .GetGuild(Context.Guild.Id)
                         .GetTextChannel(Context.Channel.Id)
                         .SendFileAsync(TradingCardCore.imgCompleteAllCardSpecial, null, embed: TradingCardCore
-                        .userCompleteTheirList(Config.Doremi.EmbedColor, Context.Client.CurrentUser.GetAvatarUrl(), "other",
-                        $"Congratulations, **{Context.User.Username}** have completed all **Special Card Pack**!",
-                        TradingCardCore.Doremi.imgCompleteAllCard, Context.Guild.Id.ToString(),
+                        .userCompleteTheirList(TradingCardCore.roleCompletionistColor, Context.Client.CurrentUser.GetAvatarUrl(), "other",
+                        TradingCardCore.imgCompleteAllCardSpecial, Context.Guild.Id.ToString(),
                         Context.User.Id.ToString(), TradingCardCore.roleCompletionistSpecial, Context.User.Username, Context.User.GetAvatarUrl())
                         .Build());
 

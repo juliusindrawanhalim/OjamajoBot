@@ -14,7 +14,7 @@ namespace OjamajoBot
 {
     public class TradingCardCore
     {
-        public static string version = "1.11";
+        public static string version = "1.12";
         public static string propertyId = "trading_card_spawn_id";
         public static string propertyCategory = "trading_card_spawn_category";
         public static string propertyToken = "trading_card_spawn_token";
@@ -33,7 +33,7 @@ namespace OjamajoBot
 
         public static int maxSpecial = 37;
 
-        public static string imgMagicSeeds = "https://cdn.discordapp.com/attachments/706770454697738300/709013040518922260/magic_seeds.jpg";
+        public static string imgMagicSeeds = "https://cdn.discordapp.com/attachments/706770454697738300/716673416479899729/magic_seeds.jpg";
         public static string roleCompletionistSpecial = "Ojamajo Card Special Badge";
         public static Color roleCompletionistColor = new Discord.Color(4, 173, 18);
         public static string imgCompleteAllCardSpecial = $"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/badge/badge_special.png";
@@ -54,10 +54,13 @@ namespace OjamajoBot
 
             return new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
-                .WithTitle($"Ojamajo Trading Card - Update {version} - 30.05.20")
-                .WithDescription($"-Bad card display updates: now bad card mark will be shown as thumbnail\n" +
-                $"-Bad card penalty & reward has been limited into **normal** category only\n" +
-                $"-You can now use the pureleine command from 5 of the ojamajos bot.");
+                .WithTitle($"Ojamajo Trading Card - Update {version} - 31.05.20")
+                .WithDescription("-Bad card spawn rate has been lowered down\n" +
+                "-Entering new month: June [New card spawn will appear]\n" +
+                "-Pureleine command update: question difficulty has been increased\n" +
+                "-Pureleine command update: seeds reward are now randomized between 1 - 3\n" +
+                "-Pureleine command update: answering the wrong question will losing up a capture chance on that spawn turn\n" +
+                "-Magic seeds reward image has been resized");
         }
 
         public static int getPlayerRank(int exp)
@@ -341,12 +344,12 @@ namespace OjamajoBot
                     break;
             }
 
-            if (doremiText == "") doremiText = "No one has complete their Doremi card pack yet.";
-            if (hazukiText == "") hazukiText = "No one has complete their Hazuki card pack yet.";
-            if (aikoText == "") aikoText = "No one has complete their Aiko card pack yet.";
-            if (onpuText == "") onpuText = "No one has complete their Onpu card pack yet.";
-            if (momokoText == "") momokoText = "No one has complete their Momoko card pack yet.";
-            if (otherText == "") otherText = "No one has complete their Other card pack yet.";
+            if (doremiText == "") doremiText = "No one has complete Doremi card pack yet.";
+            if (hazukiText == "") hazukiText = "No one has complete Hazuki card pack yet.";
+            if (aikoText == "") aikoText = "No one has complete Aiko card pack yet.";
+            if (onpuText == "") onpuText = "No one has complete Onpu card pack yet.";
+            if (momokoText == "") momokoText = "No one has complete Momoko card pack yet.";
+            if (otherText == "") otherText = "No one has complete Other card pack yet.";
             
             return new EmbedBuilder()
                 .WithTitle($"\uD83C\uDFC6 Top 5 Trading Card Leaderboard")
@@ -359,7 +362,7 @@ namespace OjamajoBot
                 .AddField("Other Card Pack", otherText);
         }
 
-        public static EmbedBuilder userCompleteTheirList(Color color, string avatarEmbed, string parent, string congratulateText, string imgUrl, string guildId, string clientId,
+        public static EmbedBuilder userCompleteTheirList(Color color, string avatarEmbed, string parent, string imgUrl, string guildId, string clientId,
             string unlockText, string username, string userAvatarUrl)
         {
             //update & save leaderboard data
@@ -376,12 +379,11 @@ namespace OjamajoBot
                     IconUrl = userAvatarUrl
                 })
                 .WithTitle($"{GlobalFunctions.UppercaseFirst(parent)} Card Pack Completed!")
-                .WithDescription(congratulateText)
+                .WithDescription($"Congratulations, **{username}** have completed all **{GlobalFunctions.UppercaseFirst(parent)} Card Pack**!")
                 .WithColor(color)
                 .WithImageUrl($"attachment://{Path.GetFileName(imgUrl)}")
-                .WithFooter($"Completed at: {dateTimeNow}", avatarEmbed)
-                .WithDescription(congratulateText);
-                eb.AddField("Role & Badge Unlocked:", unlockText);
+                .WithFooter($"Completed at: {dateTimeNow}", avatarEmbed);
+                eb.AddField("Role & Badge Reward:", unlockText);
 
             //return congratulate embed
             return eb;
@@ -529,7 +531,7 @@ namespace OjamajoBot
             return listAllowed;
         }
 
-        public static EmbedBuilder activatePureleine(ulong guildId,string clientId, string answer)
+        public static EmbedBuilder activatePureleine(ulong guildId, string clientId, string answer)
         {
             string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
 
@@ -562,8 +564,11 @@ namespace OjamajoBot
                     .WithAuthor(TradingCardCore.BadCards.embedPureleineName, TradingCardCore.BadCards.embedPureleineAvatar)
                     .WithColor(TradingCardCore.BadCards.embedPureleineColor)
                     .WithTitle("Wrong answer!")
-                    .WithDescription($":x: That answer is wrong!")
+                    .WithDescription($":x: That answer is wrong! You also lost a capture chance for this turn...")
                     .WithThumbnailUrl(TradingCardCore.BadCards.imgAnswerWrong);
+                    JObject arrInventory = JObject.Parse(File.ReadAllText(playerDataDirectory));
+                    arrInventory["catch_token"] = Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyToken);
+                    File.WriteAllText(playerDataDirectory, arrInventory.ToString());
                 }
                 else
                 {
@@ -633,13 +638,12 @@ namespace OjamajoBot
                         catch (Exception e)
                         {
                             Console.WriteLine(e.ToString());
-
                         }
 
                     }
                     else if (badCardType == "seeds")
                     {
-                        int randomedMagicSeeds = new Random().Next(1, 6);
+                        int randomedMagicSeeds = new Random().Next(1, 4);
                         embed.Description += "You have been rewarded with some magic seeds!";
                         embed.AddField("Rewards:", $"{randomedMagicSeeds} magic seeds.");
                         embed.WithImageUrl("https://cdn.discordapp.com/attachments/706770454697738300/709013040518922260/magic_seeds.jpg");
@@ -1278,7 +1282,7 @@ namespace OjamajoBot
             int randomParent = new Random().Next(0, 6);
             int randomCategory = new Random().Next(11);
             int randomMystery = new Random().Next(0, 2);
-            int randomBadCard = new Random().Next(0, 5);
+            int randomBadCard = new Random().Next(0, 21);
 
             string chosenCategory = ""; string catchRate = ""; string badCardIcon = null;
             Boolean isMystery = false; if (randomMystery <= 0) isMystery = true;
@@ -1389,14 +1393,14 @@ namespace OjamajoBot
             Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardNumber2, "");
 
             //bad card trigger
-            if (randomBadCard <= 1)
+            if (randomBadCard <= 0)
             {
                 int randomBadCardType = new Random().Next(0, 3);
                 badCardIcon = TradingCardCore.BadCards.embedFooterUrl;
                 Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCard, $"{randomBadCardType}");
                 int randomEquation = new Random().Next(0, 2);
-                int randomNumber1 = new Random().Next(1, 100);//48
-                int randomNumber2 = new Random().Next(1, 100);//50
+                int randomNumber1 = new Random().Next(50, 201);
+                int randomNumber2 = new Random().Next(50, 201);
 
                 if (randomNumber1 < randomNumber2)
                 {
