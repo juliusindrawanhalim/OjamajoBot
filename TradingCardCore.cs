@@ -646,7 +646,7 @@ namespace OjamajoBot
                         int randomedMagicSeeds = new Random().Next(1, 4);
                         embed.Description += "You have been rewarded with some magic seeds!";
                         embed.AddField("Rewards:", $"{randomedMagicSeeds} magic seeds.");
-                        embed.WithImageUrl("https://cdn.discordapp.com/attachments/706770454697738300/709013040518922260/magic_seeds.jpg");
+                        embed.WithImageUrl(TradingCardCore.imgMagicSeeds);
                         arrInventory["magic_seeds"] = (Convert.ToInt32(arrInventory["magic_seeds"]) + randomedMagicSeeds).ToString();
                         File.WriteAllText(playerDataDirectory, arrInventory.ToString());
                     }
