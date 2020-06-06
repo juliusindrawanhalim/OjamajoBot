@@ -1196,14 +1196,14 @@ namespace OjamajoBot.Module
         }
 
         [Command("set"), Summary("Set your roles with given role parameter. Use `do!role list` to display all self assignable roles list.")]
-        public async Task setRole(string role)
+        public async Task setRole([Remainder] string role)
         {
             var guildId = Context.Guild.Id;
             var guildJsonFile = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json"));
             var embed = new EmbedBuilder().WithColor(Config.Doremi.EmbedColor);
 
-            var roleSearch = Context.Guild.Roles.FirstOrDefault(x => x.Name == role);
-            var userRoles = Context.Guild.GetUser(Context.User.Id).Roles.FirstOrDefault(x => x.Name == role);
+            var roleSearch = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == role.ToLower());
+            var userRoles = Context.Guild.GetUser(Context.User.Id).Roles.FirstOrDefault(x => x.Name.ToLower() == role.ToLower());
 
             if (roleSearch == null)
                 await ReplyAsync($"Sorry, I can't find that role.");
@@ -1234,13 +1234,13 @@ namespace OjamajoBot.Module
         }
 
         [Command("remove"), Summary("Remove your roles from given role parameter.")]
-        public async Task removeRole(string role)
+        public async Task removeRole([Remainder] string role)
         {
             var guildId = Context.Guild.Id;
             var embed = new EmbedBuilder().WithColor(Config.Doremi.EmbedColor);
 
-            var roleSearch = Context.Guild.Roles.FirstOrDefault(x => x.Name == role);
-            var userRoles = Context.Guild.GetUser(Context.User.Id).Roles.FirstOrDefault(x => x.Name == role);
+            var roleSearch = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == role.ToLower());
+            var userRoles = Context.Guild.GetUser(Context.User.Id).Roles.FirstOrDefault(x => x.Name.ToLower() == role.ToLower());
 
             if (roleSearch == null)
             {
