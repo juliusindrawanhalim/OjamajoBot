@@ -138,7 +138,7 @@ namespace OjamajoBot.Bot
                 $"You can ask me with `{Config.Momoko.PrefixParent[0]}help` for all commands list.",
             embed: new EmbedBuilder()
             .WithColor(Config.Momoko.EmbedColor)
-            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/3/3d/09.07.JPG")
+            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/0/04/Momomo.png/revision/latest?cb=20190421173909")
             .Build());
         }
 

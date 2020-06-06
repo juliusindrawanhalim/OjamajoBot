@@ -457,14 +457,14 @@ namespace OjamajoBot.Module
             .AddField("Aiko Bot", "[Invite Aiko Bot](https://discordapp.com/api/oauth2/authorize?client_id=" + Config.Aiko.Id + "&permissions=238419008&scope=bot)", true)
             .AddField("Onpu Bot", "[Invite Onpu Bot](https://discordapp.com/api/oauth2/authorize?client_id=" + Config.Onpu.Id + "&permissions=238419008&scope=bot)", true)
             .AddField("Momoko Bot", "[Invite Momoko Bot](https://discordapp.com/api/oauth2/authorize?client_id=" + Config.Momoko.Id + "&permissions=238419008&scope=bot)", true)
-            .AddField("Pop Bot", "[Invite Pop Bot](https://discordapp.com/api/oauth2/authorize?client_id=" + Config.Pop.Id + "&permissions=238419008&scope=bot)", true)
+            //.AddField("Pop Bot", "[Invite Pop Bot](https://discordapp.com/api/oauth2/authorize?client_id=" + Config.Pop.Id + "&permissions=238419008&scope=bot)", true)
             .Build());
         }
 
         [Command("magical stage"), Alias("magicalstage"), Summary("I will perform magical stage along with the other and make a <wishes>")]
-        public async Task magicalStage([Remainder] string wishes)
+        public async Task magicalStage([Remainder] string wishes="")
         {
-            if (wishes != null)
+            if (wishes != "")
             {
                 Config.Doremi.MagicalStageWishes = wishes;
                 await ReplyAsync($"{MentionUtils.MentionUser(Config.Hazuki.Id)} Pirika pirilala, Nobiyaka ni!",
@@ -475,7 +475,7 @@ namespace OjamajoBot.Module
             }
             else
             {
-                await ReplyAsync($"Please enter your wishes.");
+                await ReplyAsync($"Please type your wishes.");
             }
         }
 
@@ -650,7 +650,7 @@ namespace OjamajoBot.Module
         [Command("star"), Summary("I will pin this messsages if it has 5 stars reaction")]
         [RequireBotPermission(ChannelPermission.ManageMessages, 
             ErrorMessage = "Oops, I need `manage channels` permission to use this command")]
-        public async Task starMessages([Remainder] string MessagesOrWithAttachment)
+        public async Task starMessages([Remainder] string MessagesOrWithAttachment="")
         {
             try
             {
@@ -673,7 +673,14 @@ namespace OjamajoBot.Module
                 await Context.Message.DeleteAsync();
                 var sentMessage = await ReplyAsync($"{MentionUtils.MentionUser(Context.User.Id)} has a star messages:\n{MessagesOrWithAttachment}");
                 var sentAttachment = await Context.Channel.SendFileAsync(completePath);
-                await sentMessage.AddReactionAsync(new Discord.Emoji("\u2B50"));
+                if (sentAttachment != null)
+                {
+                    await sentAttachment.AddReactionAsync(new Discord.Emoji("\u2B50"));
+                } else
+                {
+                    await sentMessage.AddReactionAsync(new Discord.Emoji("\u2B50"));
+                }
+                
                 File.Delete(completePath);
                 return;
 
@@ -687,6 +694,11 @@ namespace OjamajoBot.Module
                 //Console.WriteLine(e.ToString());
             }
 
+            if (MessagesOrWithAttachment == "")
+            {
+                await ReplyAsync("Please write some text to be starred on.");
+                return;
+            }
             await Context.Message.DeleteAsync();
             var sentWithoutAttached = await ReplyAsync($"{MentionUtils.MentionUser(Context.User.Id)} has a star messages:\n{MessagesOrWithAttachment}");
             await sentWithoutAttached.AddReactionAsync(new Discord.Emoji("\u2B50"));
@@ -1127,6 +1139,134 @@ namespace OjamajoBot.Module
 
     }
 
+    [Name("role"), Group("role"), Summary("These contains role commands category.")]
+    public class DoremiRoles : InteractiveBase
+    {
+        [Command("list"), Summary("Show all the available self assignable role list.")]
+        public async Task showRoleList()
+        {
+            var guildId = Context.Guild.Id;
+            var guildJsonFile = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json"));
+
+            PaginatedAppearanceOptions pao = new PaginatedAppearanceOptions();
+            pao.JumpDisplayOptions = JumpDisplayOptions.Never;
+            pao.DisplayInformationIcon = false;
+
+            List<string> pageContent = new List<string>();
+            string title = $"";
+            JArray arrList = (JArray)guildJsonFile["roles_list"];
+
+            string tempVal = title;
+            int currentIndex = 0;
+            for (int i = 0; i < arrList.ToList().Count(); i++)
+            {
+                var roleSearch = Context.Guild.Roles.FirstOrDefault(x => x.Id == Convert.ToUInt64(arrList[i]));
+                if (roleSearch != null)
+                {
+                    tempVal += $"**{roleSearch.Name}**\n";
+                }
+
+                if (currentIndex <= 10) currentIndex++;
+                else
+                {
+                    pageContent.Add(tempVal);
+                    currentIndex = 0;
+                    tempVal = title;
+                }
+
+                if (i == arrList.ToList().Count - 1) pageContent.Add(tempVal);
+            }
+
+            if (arrList.ToList().Count == 0)
+            {
+                tempVal = "There are no self assignable role list yet.";
+                pageContent.Add(tempVal);
+            }
+
+            var pager = new PaginatedMessage
+            {
+                Title = $"**Self Assignable Role List**\n",
+                Pages = pageContent,
+                Color = Config.Doremi.EmbedColor,
+                Options = pao
+            };
+
+            await PagedReplyAsync(pager);
+
+        }
+
+        [Command("set"), Summary("Set your roles with given role parameter. Use `do!role list` to display all self assignable roles list.")]
+        public async Task setRole(string role)
+        {
+            var guildId = Context.Guild.Id;
+            var guildJsonFile = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json"));
+            var embed = new EmbedBuilder().WithColor(Config.Doremi.EmbedColor);
+
+            var roleSearch = Context.Guild.Roles.FirstOrDefault(x => x.Name == role);
+            var userRoles = Context.Guild.GetUser(Context.User.Id).Roles.FirstOrDefault(x => x.Name == role);
+
+            if (roleSearch == null)
+                await ReplyAsync($"Sorry, I can't find that role.");
+            else
+            {
+                JArray item = (JArray)guildJsonFile["roles_list"];
+                if (userRoles != null)
+                {
+                    await ReplyAsync("You already have that roles.");
+                } else
+                {
+                    if (item.ToString().Contains(roleSearch.Id.ToString()))
+                    {
+                        await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(roleSearch);
+                        await ReplyAsync(embed: embed
+                            .WithTitle("Role updated!")
+                            .WithDescription($":white_check_mark: **{Context.User.Username}** have new role: {MentionUtils.MentionRole(roleSearch.Id)}")
+                            .Build());
+                    }
+                    else
+                    {
+                        await ReplyAsync(embed: embed
+                            .WithDescription($"Sorry, you can't assign into that role.")
+                            .Build());
+                    }
+                }   
+            }
+        }
+
+        [Command("remove"), Summary("Remove your roles from given role parameter.")]
+        public async Task removeRole(string role)
+        {
+            var guildId = Context.Guild.Id;
+            var embed = new EmbedBuilder().WithColor(Config.Doremi.EmbedColor);
+
+            var roleSearch = Context.Guild.Roles.FirstOrDefault(x => x.Name == role);
+            var userRoles = Context.Guild.GetUser(Context.User.Id).Roles.FirstOrDefault(x => x.Name == role);
+
+            if (roleSearch == null)
+            {
+                await ReplyAsync(embed: embed
+                        .WithDescription($"Sorry, I can't find that role.")
+                        .Build());
+            }
+            else if (userRoles == null)
+            {
+                await ReplyAsync(embed: embed
+                    .WithDescription($"You already have that roles.")
+                    .Build());
+            }
+            else
+            {   
+                await Context.Guild.GetUser(Context.User.Id).RemoveRoleAsync(roleSearch);
+                await ReplyAsync(embed: embed
+                    .WithTitle("Role removed!")
+                    .WithDescription($":white_check_mark: **{Context.User.Username}** role has been removed from: {MentionUtils.MentionRole(roleSearch.Id)}")
+                    .Build());
+                
+            }
+        }
+
+    }
+
     [Name("mod"), Group("mod"), Summary("Basic moderator commands. Require `manage channels` permission")]
     [RequireUserPermission(GuildPermission.ManageChannels,
         ErrorMessage = "Sorry, you need the `manage channels` permission",
@@ -1134,8 +1274,9 @@ namespace OjamajoBot.Module
     [RequireUserPermission(GuildPermission.ManageRoles,
         ErrorMessage = "Sorry, you need the `manage roles` permission",
         NotAGuildErrorMessage = "Sorry, you need the `manage roles` permission") ]
-    public class DoremiModerator : ModuleBase<SocketCommandContext>
+    public class DoremiModerator : InteractiveBase
     {
+        //leaving_message
         [Command("user leave"), Summary("Set the leaving user notifications with **off** or **on**.")]
         public async Task assignUserLeavingNotification(string settings){
             string replacedsettings = settings.Replace("off", "0").Replace("on", "1");
@@ -1143,12 +1284,143 @@ namespace OjamajoBot.Module
             await ReplyAsync($"**Leaving User Messages** has been turned **{settings}**.");
         }
 
-        //[Command("role"), Summary("Set the role that can be set/assignable to anyone. This require the `manage role` permission.")]
-        //public async Task configureAssignableRole(string role,SocketGuild guild){
-            
-        //}
+        [Name("mod role"), Group("role"), Summary("These commands contains all self assignable role list command. " +
+            "Requires `manage roles permission`.")]
+        public class DoremiModeratorRoles : InteractiveBase
+        {
+            [Command("add"), Summary("Add role to self assignable role list.")]
+            public async Task addSelfAssignableRoles(string roleId)
+            {
+                var embed = new EmbedBuilder().WithColor(Config.Doremi.EmbedColor);
 
-        //leaving_message
+                var roleSearch = Context.Guild.Roles.FirstOrDefault(x => x.Id == Convert.ToUInt64(roleId));
+                if (roleSearch == null)
+                    await ReplyAsync($"Sorry, I can't find that role id. See the role list with " +
+                        $"**{Config.Doremi.PrefixParent[0]}mod role list**");
+                 else
+                {
+                    var guildId = Context.Guild.Id;
+                    var fileDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json";
+                    var guildJsonFile = JObject.Parse(File.ReadAllText(fileDirectory));
+
+                    JArray item = (JArray)guildJsonFile["roles_list"];
+                    if (item.ToString().Contains(roleId))
+                    {
+                        await ReplyAsync(embed: embed
+                         .WithTitle("Error!")
+                         .WithDescription("That roles already existed on self assignable roles list.")
+                         .Build());
+                    } else {
+                        item.Add(roleId);
+                        File.WriteAllText(fileDirectory, guildJsonFile.ToString());
+
+                        await ReplyAsync(embed: embed
+                            .WithTitle("Success adding new roles")
+                            .WithDescription($"{MentionUtils.MentionRole(Convert.ToUInt64(roleId))} has been added into role list.")
+                            .Build());
+                    }
+                    
+                }
+
+                
+            }
+
+            [Command("remove"), Summary("Remove roles from self assignable role list.")]
+            public async Task removeSelfAssignableRoles(string roleId)
+            {
+                var embed = new EmbedBuilder().WithColor(Config.Doremi.EmbedColor);
+
+                var roleSearch = Context.Guild.Roles.FirstOrDefault(x => x.Id == Convert.ToUInt64(roleId));
+                if (roleSearch == null)
+                    await ReplyAsync($"Sorry, I can't find that role id. See the role list with " +
+                        $"**{Config.Doremi.PrefixParent[0]}mod role list**");
+                else
+                {
+                    var guildId = Context.Guild.Id;
+                    var fileDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json";
+                    var guildJsonFile = JObject.Parse(File.ReadAllText(fileDirectory));
+
+                    JArray item = (JArray)guildJsonFile["roles_list"];
+                    if (item.ToString().Contains(roleId))
+                    {
+                        var founded = item.FirstOrDefault(x => roleId != null);
+                        if (founded != null)
+                            item.Remove(founded);
+                        
+                        File.WriteAllText(fileDirectory, guildJsonFile.ToString());
+                        await ReplyAsync(embed: embed
+                            .WithTitle("Role has been removed from the list!")
+                            .WithDescription($"Role has been removed from self assignable roles list.")
+                            .Build());
+                    }
+                    else
+                    {
+                        await ReplyAsync(embed: embed
+                            .WithTitle("Error!")
+                            .WithDescription("Can't remove that role because it's not on the self assignable roles list.")
+                            .Build());
+                    }
+
+                }
+            }
+
+            [Command("list"), Summary("Show all role list along with the assignable status.")]
+            public async Task listSelfAssignableRolesList()
+            {
+                var guildId = Context.Guild.Id;
+                var guildJsonFile = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json"));
+
+                PaginatedAppearanceOptions pao = new PaginatedAppearanceOptions();
+                pao.JumpDisplayOptions = JumpDisplayOptions.Never;
+                pao.DisplayInformationIcon = false;
+
+                List<string> pageContent = new List<string>();
+                string title = $"**Role Name - ID - Self Assignable?**\n";
+                JArray arrList = (JArray)guildJsonFile["roles_list"];
+                var allRoles = Context.Guild.Roles.Where(x => x.Id!= Context.Guild.EveryoneRole.Id); 
+
+                string tempVal = title;
+                int currentIndex = 0;
+                for (int i = 0; i < allRoles.ToList().Count(); i++)
+                {
+                    //aa : 12334 - yes
+                    tempVal += $"**{allRoles.ElementAt(i).Name}** - {allRoles.ElementAt(i).Id} - ";
+                    if (arrList.ToString().Contains(allRoles.ElementAt(i).Id.ToString()))
+                    {
+                        tempVal += "yes";
+                    } else
+                    {
+                        tempVal += "no";
+                    }
+                    //if (arrList.Contains(allRoles.ElementAt(i).Id))
+                    //    tempVal += "yes";
+                    //else
+                    //    tempVal += "no";
+                    tempVal += "\n";
+
+                    if (currentIndex <=10) currentIndex++;
+                    else
+                    {
+                        pageContent.Add(tempVal);
+                        currentIndex = 0;
+                        tempVal = title;
+                    }
+
+                    if (i == allRoles.ToList().Count - 1) pageContent.Add(tempVal);
+                }
+
+                var pager = new PaginatedMessage
+                {
+                    Title = $"**Self Assignable Role List**\n",
+                    Pages = pageContent,
+                    Color = Config.Doremi.EmbedColor,
+                    Options = pao
+                };
+
+                await PagedReplyAsync(pager);
+
+            }
+        }
 
         //set doremi role id
         [Command("doremi role id"), Summary("Set the default doremi role Id for default mentionable command prefix.")]
@@ -3924,11 +4196,10 @@ namespace OjamajoBot.Module
             await Context.Channel.DeleteMessageAsync(Convert.ToUInt64(nowProcessing.Id));
 
             File.Delete(destDir);
-
         }
 
-        [Command("jojo", RunMode = RunMode.Async), Summary("Add Jojo image filter to the image.")]
-        public async Task drawJojoficationToBeContinue(string attachment=""){
+        [Command("to be continue", RunMode = RunMode.Async), Alias("tbc"), Summary("Add to be continue image filter to the image.")]
+        public async Task drawMemesdrawToBeContinue(string attachment=""){
 
             try
             {
@@ -3988,7 +4259,10 @@ namespace OjamajoBot.Module
                 }
 
             }
-            catch(Exception e) { Console.WriteLine(e.ToString()); }
+            catch(Exception e) {
+                await ReplyAsync($"Please give me some image to process on.");
+                //Console.WriteLine(e.ToString());
+            }
             
         }
 

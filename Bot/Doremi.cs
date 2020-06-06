@@ -202,7 +202,7 @@ namespace OjamajoBot.Bot
                 $"You can ask me with `{Config.Doremi.PrefixParent[0]}help` for all commands list.",
             embed: new EmbedBuilder()
             .WithColor(Config.Doremi.EmbedColor)
-            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/c/c3/01.07.JPG")
+            .WithImageUrl("https://i.pinimg.com/474x/e7/1c/ce/e71cce7499e4ea9f9520c6143c9672e7.jpg")
             .Build());
 
             Console.WriteLine($"Doremi Bot joined into: {guild.Name}");
@@ -576,6 +576,7 @@ namespace OjamajoBot.Bot
             
             await commands.AddModuleAsync(typeof(DoremiModule), services);
             await commands.AddModuleAsync(typeof(DorememesModule), services);
+            await commands.AddModuleAsync(typeof(DoremiRoles), services);
             await commands.AddModuleAsync(typeof(DoremiBirthdayModule), services);
             await commands.AddModuleAsync(typeof(DoremiMinigameInteractive), services);
             await commands.AddModuleAsync(typeof(DoremiWiki), services);

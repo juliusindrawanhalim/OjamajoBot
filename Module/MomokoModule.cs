@@ -576,7 +576,7 @@ namespace OjamajoBot.Module
                 await ReplyAsync($"Magical Stage! {query}\n",
                     embed: new EmbedBuilder()
                     .WithColor(Config.Momoko.EmbedColor)
-                    .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/a/ad/Motto1-MagicalStage.png")
+                    .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/5b/MOD-EP1-078.png")
                     .Build());
 
         }

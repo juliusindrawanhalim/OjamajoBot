@@ -144,7 +144,7 @@ namespace OjamajoBot.Bot
                 $"You can ask me with `{Config.Aiko.PrefixParent[0]}help` for all commands list.",
             embed: new EmbedBuilder()
             .WithColor(Config.Aiko.EmbedColor)
-            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/2/28/01.09.JPG")
+            .WithImageUrl("https://i.pinimg.com/originals/5c/b4/8f/5cb48f3c6fb6477d0c1f423895547683.png")
             .Build());
         }
 

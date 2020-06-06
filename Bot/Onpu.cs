@@ -154,7 +154,7 @@ namespace OjamajoBot.Bot
                 $"As an idol, I will make all of you happy. You can ask me with `{Config.Onpu.PrefixParent[0]}help` for all commands list.",
             embed: new EmbedBuilder()
             .WithColor(Config.Onpu.EmbedColor)
-            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/0/01/01.10.JPG")
+            .WithImageUrl("https://i.imgur.com/mgTmDgF.png")
             .Build());
         }
 
