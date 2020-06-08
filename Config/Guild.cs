@@ -113,6 +113,10 @@ namespace Config
                 if (!guildConfig.ContainsKey(TradingCardCore.BadCards.propertyBadCardNumber2))
                     guildConfig.Add(new JProperty(TradingCardCore.BadCards.propertyBadCardNumber2, ""));
 
+                //self assignable roles react
+                if (!guildConfig.ContainsKey("roles_react"))
+                    guildConfig.Add(new JProperty("roles_react", new JObject()));
+
                 //self assignable roles
                 if (!guildConfig.ContainsKey("roles_list"))
                     guildConfig.Add(new JProperty("roles_list", new JArray()));
@@ -141,8 +145,9 @@ namespace Config
                     new JProperty(TradingCardCore.BadCards.propertyBadCardNumber1, ""),
                     new JProperty(TradingCardCore.BadCards.propertyBadCardEquation, ""),
                     new JProperty(TradingCardCore.BadCards.propertyBadCardNumber2, ""),
-                    new JProperty("user_birthday", new JObject(),
-                    new JProperty("roles_list", new JArray())));
+                    new JProperty("user_birthday", new JObject()),
+                    new JProperty("roles_react", new JObject()),
+                    new JProperty("roles_list", new JArray()));
 
                 File.WriteAllText($"{Core.headConfigGuildFolder}{id_guild}/{id_guild}.json", guildConfig.ToString());
             }

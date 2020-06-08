@@ -655,7 +655,6 @@ namespace OjamajoBot.Module
             try
             {
                 var attachments = Context.Message.Attachments;
-
                 WebClient myWebClient = new WebClient();
 
                 string file = attachments.ElementAt(0).Filename;
@@ -1206,7 +1205,7 @@ namespace OjamajoBot.Module
             var userRoles = Context.Guild.GetUser(Context.User.Id).Roles.FirstOrDefault(x => x.Name.ToLower() == role.ToLower());
 
             if (roleSearch == null)
-                await ReplyAsync($"Sorry, I can't find that role.");
+                await ReplyAsync($"Sorry, I can't find that role. See the available roles with **{Config.Doremi.PrefixParent[0]}role list**");
             else
             {
                 JArray item = (JArray)guildJsonFile["roles_list"];
@@ -1225,9 +1224,7 @@ namespace OjamajoBot.Module
                     }
                     else
                     {
-                        await ReplyAsync(embed: embed
-                            .WithDescription($"Sorry, you can't assign into that role.")
-                            .Build());
+                        await ReplyAsync("Sorry, you can't assign into that role.");
                     }
                 }   
             }
@@ -1244,15 +1241,11 @@ namespace OjamajoBot.Module
 
             if (roleSearch == null)
             {
-                await ReplyAsync(embed: embed
-                        .WithDescription($"Sorry, I can't find that role.")
-                        .Build());
+                await ReplyAsync($"Sorry, I can't find that role. See the available roles with **{Config.Doremi.PrefixParent[0]}role list**");
             }
             else if (userRoles == null)
             {
-                await ReplyAsync(embed: embed
-                    .WithDescription($"You already have that roles.")
-                    .Build());
+                await ReplyAsync("You already have that roles.");
             }
             else
             {   
@@ -1284,6 +1277,17 @@ namespace OjamajoBot.Module
             await ReplyAsync($"**Leaving User Messages** has been turned **{settings}**.");
         }
 
+        //[Name("mod role react"), Group("role react"), Summary("These commands contains all self assignable role react list command. " +
+        //    "Requires `manage roles permission`.")]
+        //public class DoremiModeratorRolesReact : InteractiveBase
+        //{
+        //    [Command("add"), Summary("Add role to self assignable role react list.")]
+        //    public async Task addSelfAssignableRoles(string roleId)
+        //    {
+
+        //    }
+        //}
+
         [Name("mod role"), Group("role"), Summary("These commands contains all self assignable role list command. " +
             "Requires `manage roles permission`.")]
         public class DoremiModeratorRoles : InteractiveBase
@@ -1295,8 +1299,7 @@ namespace OjamajoBot.Module
 
                 var roleSearch = Context.Guild.Roles.FirstOrDefault(x => x.Id == Convert.ToUInt64(roleId));
                 if (roleSearch == null)
-                    await ReplyAsync($"Sorry, I can't find that role id. See the role list with " +
-                        $"**{Config.Doremi.PrefixParent[0]}mod role list**");
+                    await ReplyAsync($"Sorry, I can't find that role id. See the role list with **{Config.Doremi.PrefixParent[0]}mod role list**");
                  else
                 {
                     var guildId = Context.Guild.Id;
@@ -1747,13 +1750,6 @@ namespace OjamajoBot.Module
                 await ReplyAsync($"**Random Event Channels** has been assigned into: {MentionUtils.MentionChannel(channel_name.Id)}");
             }
 
-            //[Command("online")]
-            //public async Task assignNotifOnline(IGuildChannel iguild)
-            //{
-            //    Config.Guild.assignId(iguild.GuildId, "id_notif_online", iguild.Id.ToString());
-            //    await ReplyAsync($"**Bot Online Notification Channels** has been assigned into: {MentionUtils.MentionChannel(iguild.Id)}");
-            //}
-
             [Command("remove settings"), Summary("Remove the settings on the assigned channels. " +
                 "Current available settings: `birthday`/`random event`/`trading card spawn`")]
             public async Task removeChannelSettings([Remainder]string settings)
@@ -1930,16 +1926,94 @@ namespace OjamajoBot.Module
                 await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
                 .WithDescription($":white_check_mark: Your trading card data has been successfully registered.")
-                .WithImageUrl(TradingCardCore.Doremi.emojiOk).Build());
+                .WithThumbnailUrl(TradingCardCore.Doremi.emojiOk).Build());
             }
             else
             {
                 await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
                 .WithDescription(":x: Sorry, your trading card data has been registered already.")
-                .WithImageUrl(TradingCardCore.Doremi.emojiError).Build());
+                .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build());
             }
         }
+
+        [Name("card guide"), Group("guide"), Summary("These commands contains FAQ/guide for ojamajo trading card.")]
+        public class DoremiModeratorTradingCardsFAQ : ModuleBase<SocketCommandContext>
+        {
+            [Command("starter", RunMode = RunMode.Async), Summary("Register your configuration for trading card group command.")]
+            public async Task trading_card_faq_gettingStarted()
+            {
+                await ReplyAsync(embed: new EmbedBuilder()
+                    .WithColor(Config.Doremi.EmbedColor)
+                    .WithTitle($"📚 Ojamajo Trading Card - Guide 101")
+                    .WithDescription($"To get started, you need to register yourself with " +
+                    $"**{Config.Doremi.PrefixParent[0]}card register**")
+                    .AddField("How can I capture the card?",
+                    $"You can use **<bot>card capture** to capture the card. <bot> prefix available are: **{Config.Doremi.PrefixParent[0]} / {Config.Hazuki.PrefixParent[0]} / " +
+                    $"{Config.Aiko.PrefixParent[0]} / {Config.Onpu.PrefixParent[0]} / " +
+                    $"{Config.Momoko.PrefixParent[0]}**," +
+                    $"but **BEWARE OF MYSTERY CARD & BAD CARD!** (More explanation of mystery/bad card can be see on each faq)")
+                    .AddField("**How many card pack & type available on the spawn?**",
+                    $"-6 cards pack: Doremi, Hazuki, Aiko, Onpu, Momoko & Other Pack.\n" +
+                    $"-4 cards type: Normal ({TradingCardCore.captureRateNormal*10}%), " +
+                    $"Platinum ({TradingCardCore.captureRatePlatinum * 10}%), " +
+                    $"Metal ({TradingCardCore.captureRateMetal * 10}%) & " +
+                    $"Special({TradingCardCore.captureRateSpecial * 10}%, exclusive for Other card Pack only).\n" +
+                    $"Each card type have different capture rate.")
+                    .AddField("What is Rank on my card status info?",
+                    "Your rank are determined based from your card exp. You will start your rank from 1 and can be raised up to 5 from your card exp. " +
+                    "For each time you're using the card capture command you'll get **1 exp**, for every **100 exp** your rank will be increased by **1**. " +
+                    "Starting from rank 2 and above you will gain free **+10/20/30/40% catching rate benefit** for each rank that you have.")
+                    .AddField("**Getting Started**", 
+                    $"-Gather daily magic seeds everyday (24 hour real time reset) with **{Config.Doremi.PrefixParent[0]}daily**. " +
+                    $"Magic seeds can be used for buying item for card collecting progression.\n" +
+                    $"-Capture the card based from the spawn rules.\n" +
+                    $"-You can visit card shop for card collecting progression with: **{Config.Doremi.PrefixParent[0]}card shop**.\n" +
+                    $"-You can also trade your card with each other with **{Config.Doremi.PrefixParent[0]}card trade**\n" +
+                    $"-To see your card progression, you can use **<bot>card inventory** or **<bot>card status**\n" +
+                    $"For more card command & help you can use **{Config.Doremi.PrefixParent[0]}help card**")
+                    .WithThumbnailUrl("https://cdn.discordapp.com/attachments/706770454697738300/706770837558263928/TW361403.png")
+                    .Build());
+            }
+
+            [Command("mystery card", RunMode = RunMode.Async),Alias("mysterycard"), Summary("Mystery Card FAQ.")]
+            public async Task trading_card_faq_mysteryCard()
+            {
+                await ReplyAsync(embed: new EmbedBuilder()
+                    .WithColor(Config.Doremi.EmbedColor)
+                    .WithTitle($"❓ Ojamajo Trading Card - Mystery Card FAQ")
+                    .WithDescription($"Mystery card are a hidden card that contain more capture rate and a provided clue that you need to guess/answer it " +
+                    $"with the correct ojamajo bot: doremi/hazuki/aiko/onpu/momoko")
+                    .AddField("**How to capture mystery card?**",
+                    "It's same one with normal capture flow, but like previously explained: there will be a provided clue and you need to guess/answer it " +
+                    $"with the correct ojamajo bot: doremi/hazuki/aiko/onpu/momoko. " +
+                    $"You only have a chance to guess the mystery card, if you guess it wrong you have to wait for the next card spawn.")
+                    .WithThumbnailUrl("https://cdn.discordapp.com/attachments/709293222387777626/710869697972797440/mystery.jpg")
+                    .Build());
+            }
+
+            [Command("bad card", RunMode = RunMode.Async), Alias("badcard"), Summary("Bad Card FAQ.")]
+            public async Task trading_card_faq_badCard()
+            {
+                await ReplyAsync(embed: new EmbedBuilder()
+                    .WithColor(Config.Doremi.EmbedColor)
+                    .WithTitle($"💀 Ojamajo Trading Card - Bad Card FAQ")
+                    .WithDescription($"Bad card are attached upon card spawn and extremely **dangerous**. " +
+                    $"It need to be removed first with **{Config.Doremi.PrefixParent[0]}card pureleine** before using card capture commands!")
+                    .AddField("**How many type of bad cards?**", "There are 3 type of bad cards:\n" +
+                    "-**curse**: Steal one of your card after catch attempt. A **normal** bonus card will be rewarded upon removed.\n" +
+                    "-**failure**: Drop your card catch rate into 0%. A **normal** bonus card will be rewarded upon removed.\n" +
+                    "-**seeds**: Steal your magic seeds after catch attempt. Some magic seeds will be rewarded upon removed.")
+                    .AddField("How to remove bad card?", $"You can remove the bad cards with **{Config.Doremi.PrefixParent[0]}card pureleine**. After seeing the question you need to answer with **do!card pureleine <answer>** commands. " +
+                    "When oyajide have clean the bad card, you can safely capture the card again.")
+                    .AddField("How to notice bad card?", " Bad cards are marked on the card spawn where there'll be a bad card image/mark attached upon it.")
+                    .WithThumbnailUrl("https://cdn.discordapp.com/attachments/706770454697738300/715945298370887722/latest.png")
+                    .Build());
+            }
+        }
+
+            
+        
 
         //[Command("debug badcards", RunMode = RunMode.Async), Alias("catch"), Summary("Bad card debug")]
         //public async Task badCardsDebug()
@@ -3429,7 +3503,9 @@ namespace OjamajoBot.Module
             var timeoutDuration = TimeSpan.FromSeconds(60);
             string concatResponseSuccess = "";
 
-            await ReplyAsync(embed: new EmbedBuilder()
+            IUserMessage answerUserTemp = null;
+            IUserMessage messageTemp = null;
+            messageTemp = await ReplyAsync(embed: new EmbedBuilder()
                 .WithAuthor("Doremi Card Shop", Config.Doremi.EmbedAvatarUrl)
                 .WithColor(Config.Doremi.EmbedColor)
                 .WithDescription("Welcome to Doremi Card Shop. Here you can purchase some items to help your card collecting progression.\n" +
@@ -3439,6 +3515,17 @@ namespace OjamajoBot.Module
                 .Build());
 
             var response = await NextMessageAsync(timeout: timeoutDuration);
+
+            try
+            {
+                await Context.Message.DeleteAsync();
+                await Context.Channel.DeleteMessageAsync(messageTemp.Id);
+            }
+            catch (Exception e)
+            {
+
+            }
+
             string replyTimeout = ":stopwatch: I'm sorry, you're not giving valid selection yet. " +
             $"Please use the `{Config.Doremi.PrefixParent[0]}card shop` command to open shop menu again.";
 
@@ -3447,6 +3534,7 @@ namespace OjamajoBot.Module
                 try
                 {
                     var checkNull = response.Content.ToLower().ToString();
+                    answerUserTemp = (IUserMessage)response;
                 }
                 catch
                 {
@@ -3465,14 +3553,24 @@ namespace OjamajoBot.Module
                     isShopping = false;
                     return;
                 }
-
+               
                 if (stepProcess == 1)
                 {
                     var isNumeric = int.TryParse(response.Content.ToString().ToLower(), out int n);
                     if (!isNumeric || Convert.ToInt32(response.Content.ToString()) <= 0 ||
                         Convert.ToInt32(response.Content.ToString()) >= 12)
                     {
-                        await ReplyAsync(embed: new EmbedBuilder()
+                        try
+                        {
+                            await Context.Channel.DeleteMessageAsync(answerUserTemp.Id);
+                            await Context.Channel.DeleteMessageAsync(messageTemp.Id);
+                        }
+                        catch (Exception e)
+                        {
+
+                        }
+
+                        messageTemp = await ReplyAsync(embed: new EmbedBuilder()
                         .WithColor(Config.Doremi.EmbedColor)
                         .WithAuthor("Doremi Card Shop", Config.Doremi.EmbedAvatarUrl)
                         .WithDescription(":x: Please re-select with valid number selection from these list to browse & purchase.\n" +
@@ -3489,10 +3587,20 @@ namespace OjamajoBot.Module
                 }
                 else if (stepProcess == 2)
                 {
+                    try
+                    {
+                        await Context.Channel.DeleteMessageAsync(answerUserTemp.Id);
+                        await Context.Channel.DeleteMessageAsync(messageTemp.Id);
+                    }
+                    catch (Exception e)
+                    {
+
+                    }
+
                     if (selectionItem == 1)
                     {
                         priceConfirmation = 10;
-                        await ReplyAsync("Type **confirm** to proceed with the purchase. Type **back** to go back to previous menu.",
+                        messageTemp = await ReplyAsync("Type **confirm** to proceed with the purchase. Type **back** to go back to previous menu.",
                         embed: new EmbedBuilder()
                         .WithColor(Config.Doremi.EmbedColor)
                         .WithAuthor("Doremi Card Shop", Config.Doremi.EmbedAvatarUrl)
@@ -3506,7 +3614,7 @@ namespace OjamajoBot.Module
                     else if (selectionItem == 2)
                     {
                         priceConfirmation = 3;
-                        await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
+                        messageTemp = await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
                             "Type **confirm** to proceed with the purchase. Type **back** to go back to previous menu.",
                         embed: new EmbedBuilder()
                         .WithColor(Config.Doremi.EmbedColor)
@@ -3522,7 +3630,7 @@ namespace OjamajoBot.Module
                     else if (selectionItem == 3)
                     {
                         priceConfirmation = 3;
-                        await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
+                        messageTemp = await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
                             "Type **confirm** to proceed with the purchase. Type **back** to go back to previous menu.",
                         embed: new EmbedBuilder()
                         .WithColor(Config.Doremi.EmbedColor)
@@ -3538,7 +3646,7 @@ namespace OjamajoBot.Module
                     else if (selectionItem == 4)
                     {
                         priceConfirmation = 3;
-                        await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
+                        messageTemp = await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
                             "Type **confirm** to proceed with the purchase. Type **back** to go back to previous menu.",
                         embed: new EmbedBuilder()
                         .WithColor(Config.Doremi.EmbedColor)
@@ -3554,7 +3662,7 @@ namespace OjamajoBot.Module
                     else if (selectionItem == 5)
                     {
                         priceConfirmation = 10;
-                        await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
+                        messageTemp = await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
                             "Type **confirm** to proceed with the purchase. Type **back** to go back to previous menu.",
                         embed: new EmbedBuilder()
                         .WithColor(Config.Doremi.EmbedColor)
@@ -3576,7 +3684,7 @@ namespace OjamajoBot.Module
                     else if (selectionItem == 6)
                     {
                         priceConfirmation = 15;
-                        await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
+                        messageTemp = await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
                             "Type **confirm** to proceed with the purchase. Type **back** to go back to previous menu.",
                         embed: new EmbedBuilder()
                         .WithColor(Config.Doremi.EmbedColor)
@@ -3597,7 +3705,7 @@ namespace OjamajoBot.Module
                     else if (selectionItem == 7)
                     {
                         priceConfirmation = 25;
-                        await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
+                        messageTemp = await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
                             "Type **confirm** to proceed with the purchase. Type **back** to go back to previous menu.",
                         embed: new EmbedBuilder()
                         .WithColor(Config.Doremi.EmbedColor)
@@ -3619,7 +3727,7 @@ namespace OjamajoBot.Module
                     else if (selectionItem == 8)
                     {
                         priceConfirmation = 30;
-                        await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
+                        messageTemp = await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
                             "Type **confirm** to proceed with the purchase. Type **back** to go back to previous menu.",
                         embed: new EmbedBuilder()
                         .WithColor(Config.Doremi.EmbedColor)
@@ -3640,7 +3748,7 @@ namespace OjamajoBot.Module
                     else if (selectionItem == 9)
                     {
                         priceConfirmation = 30;
-                        await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
+                        messageTemp = await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
                             "Type **confirm** to proceed with the purchase. Type **back** to go back to previous menu.",
                         embed: new EmbedBuilder()
                         .WithColor(Config.Doremi.EmbedColor)
@@ -3661,7 +3769,7 @@ namespace OjamajoBot.Module
                     else if (selectionItem == 10)
                     {
                         priceConfirmation = 35;
-                        await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
+                        messageTemp = await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
                             "Type **confirm** to proceed with the purchase. Type **back** to go back to previous menu.",
                         embed: new EmbedBuilder()
                         .WithColor(Config.Doremi.EmbedColor)
@@ -3682,7 +3790,7 @@ namespace OjamajoBot.Module
                     else if (selectionItem == 11)
                     {
                         priceConfirmation = 45;
-                        await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
+                        messageTemp = await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
                             "Type **confirm** to proceed with the purchase. Type **back** to go back to previous menu.",
                         embed: new EmbedBuilder()
                         .WithColor(Config.Doremi.EmbedColor)
@@ -3704,13 +3812,22 @@ namespace OjamajoBot.Module
 
                     stepProcess = 3;
                     response = await NextMessageAsync(timeout: timeoutDuration);
-
                 }
                 else if (stepProcess == 3)
                 {
                     if (response.Content.ToString().ToLower() != "confirm" &&
                         response.Content.ToString().ToLower() != "back")
                     {
+                        try
+                        {
+                            //await Context.Channel.DeleteMessageAsync(answerUserTemp.Id);
+                            await Context.Channel.DeleteMessageAsync(messageTemp.Id);
+                        }
+                        catch (Exception e)
+                        {
+
+                        }
+
                         await ReplyAsync("Sorry, that is not the valid **confirm/back** choices.");
                         stepProcess = 2;
                     }
@@ -3731,6 +3848,16 @@ namespace OjamajoBot.Module
 
                     if (magicSeeds >= priceConfirmation)
                     {
+                        try
+                        {
+                            await Context.Channel.DeleteMessageAsync(answerUserTemp.Id);
+                            await Context.Channel.DeleteMessageAsync(messageTemp.Id);
+                        }
+                        catch (Exception e)
+                        {
+
+                        }
+
                         if (selectionItem >= 2)//reset all status boost
                         {
                             arrInventory["boost"]["doremi"]["normal"] = 0;
@@ -3981,6 +4108,16 @@ namespace OjamajoBot.Module
                     }
                     else
                     {
+                        try
+                        {
+                            await Context.Channel.DeleteMessageAsync(answerUserTemp.Id);
+                            await Context.Channel.DeleteMessageAsync(messageTemp.Id);
+                        }
+                        catch (Exception e)
+                        {
+
+                        }
+
                         stepProcess = 2;
                         await ReplyAsync(":x: Sorry, you don't have enough magic seeds.");
                     }
@@ -3989,8 +4126,8 @@ namespace OjamajoBot.Module
                 {
                     await ReplyAsync(concatResponseSuccess + "\nThank you for purchasing the items. Please come again next time~");
                     isShopping = false;
+                    return;
                 }
-
 
             }
 

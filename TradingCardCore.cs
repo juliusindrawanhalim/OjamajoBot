@@ -14,7 +14,7 @@ namespace OjamajoBot
 {
     public class TradingCardCore
     {
-        public static string version = "1.12";
+        public static string version = "1.13";
         public static string propertyId = "trading_card_spawn_id";
         public static string propertyCategory = "trading_card_spawn_category";
         public static string propertyToken = "trading_card_spawn_token";
@@ -52,15 +52,21 @@ namespace OjamajoBot
             //    .AddField("How to notice bad cards?", " Bad cards are marked on the bottom part where there'll be a logo marked and id written and followed by the bad card type. An example of bad card marker will be shown below:")
             //    .WithImageUrl("https://cdn.discordapp.com/attachments/706770454697738300/716045344135315566/unknown.png");
 
+            //return new EmbedBuilder()
+            //    .WithColor(Config.Doremi.EmbedColor)
+            //    .WithTitle($"Ojamajo Trading Card - Update {version} - 31.05.20")
+            //    .WithDescription("-Bad card spawn rate has been lowered down\n" +
+            //    "-Entering new month: June [New card spawn will appear]\n" +
+            //    "-Pureleine command update: question difficulty has been increased\n" +
+            //    "-Pureleine command update: seeds reward are now randomized between 1 - 3\n" +
+            //    "-Pureleine command update: answering the wrong question will losing up a capture chance on that spawn turn\n" +
+            //    "-Magic seeds reward image has been resized");
+
             return new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
-                .WithTitle($"Ojamajo Trading Card - Update {version} - 31.05.20")
-                .WithDescription("-Bad card spawn rate has been lowered down\n" +
-                "-Entering new month: June [New card spawn will appear]\n" +
-                "-Pureleine command update: question difficulty has been increased\n" +
-                "-Pureleine command update: seeds reward are now randomized between 1 - 3\n" +
-                "-Pureleine command update: answering the wrong question will losing up a capture chance on that spawn turn\n" +
-                "-Magic seeds reward image has been resized");
+                .WithTitle($"Ojamajo Trading Card - Update {version} - 09.06.20")
+                .WithDescription("-:tools: Card shop interactive is now have auto deletion from previous message to keep the channel clean\n" +
+                "-:new: Added basic guide command for newcomer with: **do!card guide starter**/**do!card guide mystery card**/**do!card guide bad card**");
         }
 
         public static int getPlayerRank(int exp)

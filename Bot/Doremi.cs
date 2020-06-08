@@ -485,6 +485,7 @@ namespace OjamajoBot.Bot
 
             if (message != null && reaction.User.IsSpecified)
             {
+                //star react
                 if (reaction.Emote.Equals(new Emoji("\u2B50")))
                 {
                     if (message.Reactions.TryGetValue(new Emoji("\u2B50"), out var metadata))

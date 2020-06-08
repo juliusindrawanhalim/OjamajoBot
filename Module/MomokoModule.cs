@@ -430,27 +430,6 @@ namespace OjamajoBot.Module
             .Build());
         }
 
-        [Command("shocked"), Alias("omg", "shock"), Summary("Oh my God!")]
-        public async Task shocked()
-        {
-            string[] arrRandom = {
-                "Oh my God!","Ohhh my God!", "*shocked*", "*gasping*", "Oh my Goodness!",
-                "Ohh my Goooneesss!","Oh no!","Oh my GAH!","*le gasp*",":O"
-            };
-
-            string[] arrRandomImg = {
-                "https://vignette.wikia.nocookie.net/ojamajowitchling/images/d/d3/ODN-EP5-068.png",
-                "https://vignette.wikia.nocookie.net/ojamajowitchling/images/1/1a/Motto-02-momo4.png",
-                "https://vignette.wikia.nocookie.net/ojamajowitchling/images/6/69/OjamajoLINE2.26.png"
-            };
-
-            await ReplyAsync(arrRandom[new Random().Next(0, arrRandom.Length)],
-            embed: new EmbedBuilder()
-            .WithColor(Config.Momoko.EmbedColor)
-            .WithImageUrl(arrRandomImg[new Random().Next(0, arrRandomImg.Length)])
-            .Build());
-        }
-
         [Command("thank you"), Alias("thanks", "arigatou"), Summary("Say thank you to Momoko Bot")]
         public async Task thankYou([Remainder] string messages = "")
         {
