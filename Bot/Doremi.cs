@@ -73,6 +73,7 @@ namespace OjamajoBot.Bot
                 .AddSingleton(client)
                 .AddSingleton(commands)
                 .AddSingleton(new InteractiveService(client))
+                .AddSingleton(new ReliabilityService(client))
                 //.AddSingleton(audioservice)
                 //victoria
                 //.AddSingleton<LavaConfig>()
