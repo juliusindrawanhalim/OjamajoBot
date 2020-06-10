@@ -4,6 +4,7 @@ using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
 using Lavalink.NET;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OjamajoBot.Service;
 using Spectacles.NET.Types;
@@ -21,6 +22,7 @@ using System.Net.Sockets;
 using System.Reflection.Metadata;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
@@ -872,8 +874,9 @@ namespace OjamajoBot.Module
                 await ReplyAsync($"{Config.Emoji.birthdayCake} Ok! Your birthday date has been set into: **{DateMonthYear}**. I will remind everyone on your birthday date.",
                         embed: new EmbedBuilder()
                         .WithColor(Config.Doremi.EmbedColor)
-                        .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/0/06/DoremiLineOK.png")
+                        .WithThumbnailUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/0/06/DoremiLineOK.png")
                         .Build());
+
             }
             else
             {
@@ -953,7 +956,7 @@ namespace OjamajoBot.Module
                 await ReplyAsync("Ok, your birthday date settings has been removed.",
                     embed: new EmbedBuilder()
                     .WithColor(Config.Doremi.EmbedColor)
-                    .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/0/06/DoremiLineOK.png")
+                    .WithThumbnailUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/0/06/DoremiLineOK.png")
                     .Build());
             } else {
                 await ReplyAsync("Sorry, it seems you haven't set your birthday date yet.");
@@ -1277,16 +1280,485 @@ namespace OjamajoBot.Module
             await ReplyAsync($"**Leaving User Messages** has been turned **{settings}**.");
         }
 
-        //[Name("mod role react"), Group("role react"), Summary("These commands contains all self assignable role react list command. " +
-        //    "Requires `manage roles permission`.")]
-        //public class DoremiModeratorRolesReact : InteractiveBase
-        //{
-        //    [Command("add"), Summary("Add role to self assignable role react list.")]
-        //    public async Task addSelfAssignableRoles(string roleId)
-        //    {
+        [Name("mod role reaction"), Group("role reaction"), Summary("These commands contains all self assignable role react list command. " +
+            "Requires `manage roles permission`.")]
+        public class DoremiModeratorRolesReact : InteractiveBase
+        {
+            [Command("info", RunMode = RunMode.Async), Summary("See the role react list that have been assigned on the given message link.")]
+            public async Task seeSelfAssignableRoles(string messageLink="")
+            {
+                var guildId = Context.Guild.Id;
+                var clientId = Context.User.Id;
+                IMessage imessage = null; ulong messageId = 0;
+                ulong channelId = 0;
 
-        //    }
-        //}
+                var fileDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json";
+                var guildJsonFile = JObject.Parse(File.ReadAllText(fileDirectory));
+                SocketRole roleSelection = null; GuildEmote emoteSelection = null;
+                Discord.Emoji nonCustomEmoteSelection = null;
+
+                await Context.Message.DeleteAsync();
+
+                if (messageLink == "")
+                {
+                    await ReplyAsync("Please enter the message link that you want to see.");
+                } else
+                {
+                    try
+                    {
+                        var validChannelId = UInt64.TryParse(messageLink.Split('/')[5], out UInt64 _channelId);
+                        var validMessageId = UInt64.TryParse(messageLink.Split('/').Last(), out UInt64 _messageId);
+
+                        channelId = _channelId;
+                        messageId = _messageId;
+                        imessage = await Context.Client
+                        .GetGuild(guildId)
+                        .GetTextChannel(_channelId)
+                        .GetMessageAsync(_messageId);
+                    }
+                    catch (Exception e)
+                    {
+                        //Console.WriteLine(e.ToString());
+                        await ReplyAsync("Sorry, that is not the valid message link.");
+                        return;
+                    }
+
+                    EmbedBuilder embed = new EmbedBuilder()
+                    .WithColor(Config.Doremi.EmbedColor);
+
+                    if (((JObject)(guildJsonFile["roles_react"])).ContainsKey(messageId.ToString()))
+                    {
+                        var jobjrolereact = guildJsonFile["roles_react"][messageId.ToString()]["data"];
+                        for (int i = 0; i < ((JObject)jobjrolereact).Count; i++)
+                        {
+                            var key = ((JObject)jobjrolereact).Properties().ToList();
+                            
+                            try
+                            {
+                                //check emote
+                                string finalEmoteSelection = "**Missing emotes**";
+                                if (GlobalFunctions.checkNonCustomEmojiMatched(key[i].Name))
+                                    finalEmoteSelection = new Discord.Emoji(key[i].Name.ToString()).ToString();
+                                 else
+                                {
+                                    emoteSelection = Context.Guild.Emotes.FirstOrDefault(x => x.ToString() == key[i].Name);
+                                    if (emoteSelection != null)
+                                    {
+                                        finalEmoteSelection = emoteSelection.ToString();
+                                    }
+                                }
+
+                                //check role
+                                string finalRoleSelection = "**Missing roles**";
+                                
+                                roleSelection = Context.Guild.Roles.FirstOrDefault(x => x.Id == Convert.ToUInt64(key[i].Value));
+                                Console.WriteLine(key[i].Value);
+                                if (roleSelection != null)
+                                    finalRoleSelection = roleSelection.Mention;
+                                string convertedMessageLink = $"[message link]({messageLink})";
+                                
+                                await ReplyAsync(embed: new EmbedBuilder()
+                                    .WithColor(Config.Doremi.EmbedColor)
+                                    .AddField("Role:", finalRoleSelection, true)
+                                    .AddField("Reaction:", finalEmoteSelection, true)
+                                    .AddField("Message Link:", convertedMessageLink, true)
+                                    .Build());
+                            } catch(Exception e)
+                            {
+                                Console.WriteLine(e.ToString());
+                            }
+                        }
+                    } else
+                    {
+                        await ReplyAsync("No Role reaction data yet on this message link.");
+                    }
+
+                }
+            }
+
+            [Command("add", RunMode = RunMode.Async), Summary("Add role to self assignable role react list.")]
+            public async Task addSelfAssignableRoles()
+            {
+                var guildId = Context.Guild.Id;
+                var clientId = Context.User.Id;
+                var fileDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json";
+                
+                if (!File.Exists(fileDirectory))
+                {
+                    return;
+                }
+
+                EmbedBuilder embed = new EmbedBuilder()
+                    .WithColor(Config.Doremi.EmbedColor);
+                var guildJsonFile = JObject.Parse(File.ReadAllText(fileDirectory));
+                IMessage imessage = null;
+                IUserMessage answerUserTemp = null;
+                IUserMessage messageTemp = null; string messageLink = ""; string convertedMessageLink = "";
+                ulong messageId = 0;
+                SocketRole roleSelection = null; GuildEmote emoteSelection = null;
+                Discord.Emoji nonCustomEmoteSelection = null;
+                Boolean interactiveRunning = true; int stepProcess = 1;
+
+                var timeoutDuration = TimeSpan.FromSeconds(180);
+
+                messageTemp = await ReplyAsync(embed: embed
+                .WithTitle("Role Reaction Setup - Step 1")
+                .WithDescription("Enter the message link that you want to setup for reaction role.\n " +
+                "You can get the message link by: **Right click > Copy Message Link**\n" +
+                "Type **exit/cancel** anytime to cancel the role react setup.")
+                .Build());
+
+                string replyTimeout = $":stopwatch: Role reaction setup has reach the timeout. Please try again later with `{Config.Doremi.PrefixParent[0]}role react add`";
+                var response = await NextMessageAsync(timeout: timeoutDuration);
+
+                await Context.Message.DeleteAsync();
+                await Context.Channel.DeleteMessageAsync(messageTemp.Id);
+
+                while (interactiveRunning)
+                {
+                    try
+                    {
+                        var checkNull = response.Content.ToLower().ToString();
+                        answerUserTemp = (IUserMessage)response;
+                    }
+                    catch
+                    {
+                        await ReplyAsync(replyTimeout);
+                        interactiveRunning = false;
+                        return;
+                    }
+
+                    if (response.Content.ToString().ToLower() == "cancel" || response.Content.ToString().ToLower() == "exit")
+                    {
+                        await Context.Channel.DeleteMessageAsync(messageTemp.Id);
+                        await ReplyAsync("Reaction role interactive setup has been cancelled.");
+                        interactiveRunning = false;
+                        return;
+                    }
+
+                    if (stepProcess == 1)
+                    {
+                        //enter message link
+                        //guild id/channel name/message id
+                        //link example: https://discordapp.com/channels/646244365928497162/651069058556362753/719763968171966545
+                        messageLink = response.Content.ToString().ToLower();
+                        var validChannelId = UInt64.TryParse(messageLink.Split('/')[5], out UInt64 _channelId);
+                        var validMessageId = UInt64.TryParse(messageLink.Split('/').Last(), out UInt64 _messageId);
+                        
+                        try
+                        {
+                            messageId = _messageId;
+                            imessage = await Context.Client
+                            .GetGuild(guildId)
+                            .GetTextChannel(_channelId)
+                            .GetMessageAsync(messageId);
+                            stepProcess = 2;
+                        }
+                        catch (Exception e)
+                        {
+                            //Console.WriteLine(e.ToString());
+                            messageTemp = await ReplyAsync(embed: embed
+                            .WithTitle("Role Reaction Setup - Step 1")
+                            .WithDescription(":x: Sorry, that is not the valid message link.\n" +
+                            "Please re-enter the correct message link that you want to setup for reaction role.\n" +
+                            "You can get the message link by: **Right click > Copy Message Link**")
+                            .Build());
+                            response = await NextMessageAsync(timeout: timeoutDuration);
+                        }
+
+                    }
+                    else if (stepProcess == 2)
+                    {
+                        //enter the role ID
+                        try
+                        {
+                            await Context.Channel.DeleteMessageAsync(answerUserTemp.Id);
+                            await Context.Channel.DeleteMessageAsync(messageTemp.Id);
+                        }
+                        catch (Exception e)
+                        {
+
+                        }
+                        convertedMessageLink = $"[message link]({messageLink})";
+                        messageTemp = await ReplyAsync(embed: embed
+                            .WithTitle("Role Reaction Setup - Step 2: Role Setup")
+                            .WithDescription($"Type/enter the role ID that you want to add on this {convertedMessageLink}.\n" +
+                            $"You can get the role ID & List with **{Config.Doremi.PrefixParent[0]}mod role list**")
+                            .Build());
+
+                        stepProcess = 3;
+                        response = await NextMessageAsync(timeout: timeoutDuration);
+                    }
+                    else if (stepProcess == 3)
+                    {
+                        try
+                        {
+                            //enter reaction
+
+                            var isNumeric = ulong.TryParse(response.Content.ToString(), out ulong roleId);
+                            try
+                            {
+                                await Context.Channel.DeleteMessageAsync(answerUserTemp.Id);
+                                await Context.Channel.DeleteMessageAsync(messageTemp.Id);
+                            }
+                            catch (Exception e)
+                            {
+
+                            }
+
+                            if (roleSelection!=null)
+                            {
+                                messageTemp = await ReplyAsync(embed: embed
+                                    .WithTitle("Role Reaction Setup - Step 3: Reaction Emote Setup")
+                                    .WithDescription($"Type/enter the emoji that you want to use on this {convertedMessageLink}.\n" +
+                                    $"**NOTE: DO NOT USE THE NITRO EMOJI AS THIS WILL NOT BE WORKING!**")
+                                    .Build());
+                                stepProcess = 4;
+                                response = await NextMessageAsync(timeout: timeoutDuration);
+                            } 
+                            else
+                            {
+                                roleSelection = Context.Guild.Roles.FirstOrDefault(x => x.Id == roleId);
+                                if (roleSelection == null)
+                                {
+                                    stepProcess = 2;
+                                    await ReplyAsync($":x: Sorry, I can't find that role ID.");
+                                }
+                                else
+                                {
+                                    messageTemp = await ReplyAsync(embed: embed
+                                    .WithTitle("Role Reaction Setup - Step 3: Reaction Emote Setup")
+                                    .WithDescription($"Type/enter the emoji that you want to use on this {convertedMessageLink}.\n" +
+                                    $"**NOTE: DO NOT USE THE NITRO EMOJI AS THIS WILL NOT BE WORKING!**")
+                                    .Build());
+
+                                    stepProcess = 4;
+                                    response = await NextMessageAsync(timeout: timeoutDuration);
+                                }
+                            }
+                        } catch(Exception e)
+                        {
+                            Console.WriteLine(e.ToString());
+                        }
+                    }
+                    else if (stepProcess == 4)
+                    {
+                        //review the setup
+                        //emoji example: <:turbo_hana:681440583180615702>
+
+                        string tempRoleResponse = response.Content.ToString();
+                        try
+                        {
+                            await Context.Channel.DeleteMessageAsync(answerUserTemp.Id);
+                            await Context.Channel.DeleteMessageAsync(messageTemp.Id);
+                        }
+                        catch (Exception e) { }
+                        if(emoteSelection == null)
+                            emoteSelection = Context.Guild.Emotes.FirstOrDefault(x => x.ToString() == tempRoleResponse);
+
+                        Boolean isDuplicateEmote = false;
+                        try
+                        {//check if emote already exists/not
+                            
+                            if (!GlobalFunctions.checkNonCustomEmojiMatched(tempRoleResponse))
+                            {
+                                if (imessage.Reactions.TryGetValue(emoteSelection, out var reactionMetadata))
+                                {
+                                    if (reactionMetadata.IsMe)
+                                        isDuplicateEmote = true;
+                                }
+                            }
+                            
+                        } catch(Exception e)
+                        {
+                            //Console.WriteLine(e.ToString());
+                            isDuplicateEmote = false;
+                        }
+
+                        if (emoteSelection == null && !GlobalFunctions.checkNonCustomEmojiMatched(tempRoleResponse))
+                        {//invalid emote
+                            await ReplyAsync($":x: Sorry, that is not the valid emote.");
+                            stepProcess = 3;
+                        }
+                        else if (isDuplicateEmote)
+                        {
+                            await ReplyAsync($":x: Sorry, that reaction already exists on this message link.");
+                            emoteSelection = null; nonCustomEmoteSelection = null;
+                            stepProcess = 3;
+                        }
+                        else
+                        {
+                            if (GlobalFunctions.checkNonCustomEmojiMatched(tempRoleResponse)) {
+                                nonCustomEmoteSelection = new Discord.Emoji(tempRoleResponse);
+                                messageTemp = await ReplyAsync(embed: embed
+                               .WithTitle("Role Reaction Setup - Step 4: Finalization & Review Your Setup")
+                               .WithDescription("Type **confirm** to confirm all your setup.\n" +
+                               "Your role reaction setup setting can be reviewed below:")
+                               .AddField("Role:", MentionUtils.MentionRole(roleSelection.Id), true)
+                               .AddField("Reaction:", nonCustomEmoteSelection, true)
+                               .AddField("Message Link:", convertedMessageLink, true)
+                               .Build());
+                            } else {
+                                messageTemp = await ReplyAsync(embed: embed
+                               .WithTitle("Role Reaction Setup - Step 4: Finalization & Review Your Setup")
+                               .WithDescription("Type **confirm** to confirm all your setup.\n" +
+                               "Your role reaction setup setting can be reviewed below:")
+                               .AddField("Role:", MentionUtils.MentionRole(roleSelection.Id), true)
+                               .AddField("Reaction:", emoteSelection.ToString(), true)
+                               .AddField("Message Link:", convertedMessageLink, true)
+                               .Build());
+                            }
+
+                            //ulong emoteId = emoteSelection.Id;
+                           
+                            stepProcess = 5;
+                            response = await NextMessageAsync(timeout: timeoutDuration);
+                           
+                        }
+
+                    }
+                    else if (stepProcess == 5)
+                    {
+
+                        string tempResponse = response.Content.ToString();
+
+                        try
+                        {
+                            await Context.Channel.DeleteMessageAsync(answerUserTemp.Id);
+                            await Context.Channel.DeleteMessageAsync(messageTemp.Id);
+                        }
+                        catch (Exception e) { }
+
+                        if (tempResponse != "confirm")
+                        {
+                            await ReplyAsync($":x: Sorry, that is not the valid **confirm** respond.");
+                            stepProcess = 4;
+                        }
+                        else
+                        {
+                            try
+                            {
+                                //{
+                                // "roles_react":{
+                                //  "message_id":{
+                                //   "link":"",
+                                //   "data":{
+                                //    "doremi":"role",
+                                //    "reaction2":"role"
+                                //   }
+                                //  }
+                                // }
+                                //}
+                                var jobjrolereact = guildJsonFile;//jobjrolereact["roles_react"]
+
+                                string finalEmoteSelection = "";
+                                if (nonCustomEmoteSelection != null)
+                                {
+                                    finalEmoteSelection = nonCustomEmoteSelection.ToString();
+                                }
+                                else
+                                {
+                                    finalEmoteSelection = emoteSelection.ToString();
+                                }
+
+                                if (!((JObject)(jobjrolereact["roles_react"])).ContainsKey(messageId.ToString()))
+                                {
+                                    //not exists yet
+                                    //jobjrolereact.Add(new JProperty(messageId.ToString(),
+                                    //    new JObject(new JProperty("link", messageLink), new JProperty("data", new JObject(
+                                    //        emoteSelection.ToString(), roleSelection.Id))
+                                    //    )));
+                                    //JObject objMessageId = new JObject();
+                                    //jobjrolereact =  new JObject(
+                                    //    new JProperty(messageId.ToString(),
+                                    //        new JObject(
+                                    //            new JProperty("link", messageLink)
+                                    //    )));
+
+                                    string temp = "{" +
+                                        $"  '{messageId}':{{" +
+                                        $"   'link':'{messageLink}'," +
+                                        "   'data':{" +
+                                        $"    '{finalEmoteSelection}':'{roleSelection.Id}'" +
+                                        "   }" +
+                                        "  }" +
+                                        " }";
+
+                                    JObject o = JObject.Parse(temp);
+
+                                    if (jobjrolereact["roles_react"].ToString() == ""|| 
+                                        jobjrolereact["roles_react"].ToString() == "{}")
+                                    {
+                                        guildJsonFile["roles_react"] = o;
+                                    } else
+                                    {
+                                        string jObj = new JProperty(messageId.ToString(),
+                                            new JObject
+                                            (
+                                                new JProperty("link",messageLink),
+                                                new JProperty("data",new JObject
+                                                (
+                                                    new JProperty(finalEmoteSelection, roleSelection.Id.ToString())
+                                                ))
+                                            )
+                                        ).ToString();
+                                        //JObject otemp = JObject.Parse(guildJsonFile["roles_react"].ToString());
+                                        //Console.WriteLine(otemp.ToString());
+                                        //Console.WriteLine("==================================");
+                                        //Console.WriteLine(jObj.ToString());
+                                        ((JObject)jobjrolereact["roles_react"]).Add(new JProperty(messageId.ToString(),
+                                            new JObject
+                                            (
+                                                new JProperty("link", messageLink),
+                                                new JProperty("data", new JObject
+                                                (
+                                                    new JProperty(finalEmoteSelection, roleSelection.Id.ToString())
+                                                ))
+                                            )
+                                        ));
+                                    }
+                                }
+                                else if (!((JObject)jobjrolereact["roles_react"][messageId.ToString()]["data"]).ContainsKey(finalEmoteSelection))
+                                {//data emote not existed
+                                    ((JObject)jobjrolereact["roles_react"][messageId.ToString()]["data"]).Add(new JProperty(
+                                        finalEmoteSelection, roleSelection.Id.ToString()));
+                                }
+
+                                File.WriteAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json", guildJsonFile.ToString());
+
+                                if (nonCustomEmoteSelection != null)
+                                    await imessage.AddReactionAsync(nonCustomEmoteSelection);
+                                else
+                                    await imessage.AddReactionAsync(emoteSelection);
+                                
+                                await ReplyAsync(embed: embed
+                                    .WithTitle("Role Reaction - Setup Finished!")
+                                    .WithDescription("Your role reaction has been successfully created.")
+                                    //.AddField("Role:", MentionUtils.MentionRole(roleSelection.Id), true)
+                                    //.AddField("Reaction:", emoteSelection.ToString(), true)
+                                    //.AddField("Message Link:", convertedMessageLink, true)
+                                    .Build());
+                                interactiveRunning = false;
+                                return;
+                            }
+                            catch (Exception e)
+                            {
+                                await ReplyAsync(embed: embed
+                                .WithTitle("Role Reaction - Setup Failed...")
+                                .WithDescription($":x: Failed to add the reaction, please try again with **{Config.Doremi.PrefixParent[0]}mod role react add**.")
+                                .AddField("Reason:", e.ToString())
+                                .Build());
+                                interactiveRunning = false;
+                                return;
+                            }
+                            
+                        }
+                    
+                    }
+                }
+            }
+        
+        }
 
         [Name("mod role"), Group("role"), Summary("These commands contains all self assignable role list command. " +
             "Requires `manage roles permission`.")]
@@ -2012,23 +2484,6 @@ namespace OjamajoBot.Module
             }
         }
 
-            
-        
-
-        //[Command("debug badcards", RunMode = RunMode.Async), Alias("catch"), Summary("Bad card debug")]
-        //public async Task badCardsDebug()
-        //{
-        //    var guildId = Context.Guild.Id;
-        //    await TradingCardCore.generateCardSpawn(guildId);
-        //}
-
-        //[Command("debug showspawn", RunMode = RunMode.Async), Alias("catch"), Summary("Bad card debug")]
-        //public async Task showSpawnDebug()
-        //{
-        //    var guildId = Context.Guild.Id;
-        //    await TradingCardCore.printCardSpawned(guildId);
-        //}
-
         [Command("pureleine", RunMode = RunMode.Async), Alias("pureline"), Summary("Detect the bad card with the help from oyajide & pureleine computer. " +
             "Insert the answer as parameter to remove the bad cards if it's existed. Example: do!card pureleine 10")]
         public async Task trading_card_pureleine(string answer = "")
@@ -2046,7 +2501,7 @@ namespace OjamajoBot.Module
             }
             else
             {
-                await ReplyAsync(embed: TradingCardCore.activatePureleine(guildId,clientId.ToString(),answer).Build());
+                await ReplyAsync(embed: TradingCardCore.activatePureleine(guildId,clientId.ToString(),Context.User.Username,answer).Build());
             }
         }
 
@@ -3843,9 +4298,6 @@ namespace OjamajoBot.Module
                 }
                 else if (stepProcess == 4)
                 {
-                    //JArray item = (JArray)arrInventory[parent][spawnedCardCategory];
-                    //item.Add(spawnedCardId);
-
                     if (magicSeeds >= priceConfirmation)
                     {
                         try
@@ -3888,26 +4340,27 @@ namespace OjamajoBot.Module
                             arrInventory["boost"]["other"]["special"] = 0;
                         }
 
+                        concatResponseSuccess = $":sparkles: **{Context.User.Username}** ";
+
                         if (selectionItem == 1)
                         {
                             arrInventory["catch_token"] = "";
-                            File.WriteAllText(playerDataDirectory, arrInventory.ToString());
-                            concatResponseSuccess = ":sparkles: You got 1 more catching attempt!";
+                            concatResponseSuccess += $"got 1 more catching attempt!";
                         } 
                         else if(selectionItem == 2)
                         {
                             arrInventory["boost"]["doremi"]["normal"] = 10;
-                            concatResponseSuccess = ":sparkles: You received **Peperuto Pollon Card** Boost! Activate it on card spawn with **<bot>!card capture boost**";
+                            concatResponseSuccess += $"received **Peperuto Pollon Card** Boost!";
                         } 
                         else if (selectionItem == 3)
                         {
                             arrInventory["boost"]["hazuki"]["normal"] = 10;
-                            concatResponseSuccess = ":sparkles: You received **Puwapuwa Pollon Card** Boost! Activate it on card spawn with **<bot>!card capture boost**";
+                            concatResponseSuccess += $"received **Puwapuwa Pollon Card** Boost!";
                         }
                         else if (selectionItem == 4)
                         {
                             arrInventory["boost"]["aiko"]["normal"] = 10;
-                            concatResponseSuccess = ":sparkles: You received **Poppun Pollon Card** Boost! Activate it on card spawn with **<bot>!card capture boost**";
+                            concatResponseSuccess += $"received **Poppun Pollon Card** Boost!";
                         }
                         else if (selectionItem == 5)
                         {
@@ -3937,7 +4390,7 @@ namespace OjamajoBot.Module
                             arrInventory["boost"]["momoko"]["ojamajos"] = 3;
 
                             arrInventory["boost"]["other"]["special"] = 6;
-                            concatResponseSuccess = ":sparkles: You received **Apprentice Tap Card** Boost! Activate it on card spawn with **<bot>!card capture boost**";
+                            concatResponseSuccess += "received **Apprentice Tap Card** Boost!";
                         }
                         else if (selectionItem == 6)
                         {
@@ -3962,7 +4415,7 @@ namespace OjamajoBot.Module
                             arrInventory["boost"]["onpu"]["ojamajos"] = 4;
 
                             arrInventory["boost"]["other"]["special"] = 7;
-                            concatResponseSuccess = ":sparkles: You received **Rythm Tap Card** Boost! Activate it on card spawn with **<bot>!card capture boost**";
+                            concatResponseSuccess += "received **Rythm Tap Card** Boost!";
                         }
                         else if (selectionItem == 7)
                         {
@@ -3992,7 +4445,7 @@ namespace OjamajoBot.Module
                             arrInventory["boost"]["momoko"]["ojamajos"] = 5;
 
                             arrInventory["boost"]["other"]["special"] = 7;
-                            concatResponseSuccess = ":sparkles: You received **Kururun Pollon Card** Boost! Activate it on card spawn with **<bot>!card capture boost**";
+                            concatResponseSuccess += "received **Kururun Pollon Card** Boost!";
                         }
                         else if (selectionItem == 8)
                         {
@@ -4017,7 +4470,7 @@ namespace OjamajoBot.Module
                             arrInventory["boost"]["onpu"]["ojamajos"] = 6;
 
                             arrInventory["boost"]["other"]["special"] = 7;
-                            concatResponseSuccess = ":sparkles: You received **Picotto Pollon Card** Boost! Activate it on card spawn with **<bot>!card capture boost**";
+                            concatResponseSuccess += "received **Picotto Pollon Card** Boost!";
                         }
                         else if (selectionItem == 9)
                         {
@@ -4042,7 +4495,7 @@ namespace OjamajoBot.Module
                             arrInventory["boost"]["onpu"]["ojamajos"] = 7;
 
                             arrInventory["boost"]["other"]["special"] = 6;
-                            concatResponseSuccess = ":sparkles: You received **Patraine Call Card** Boost! Activate it on card spawn with **<bot>!card capture boost**";
+                            concatResponseSuccess += "received **Patraine Call Card** Boost!";
                         }
                         else if (selectionItem == 10)
                         {
@@ -4067,7 +4520,7 @@ namespace OjamajoBot.Module
                             arrInventory["boost"]["onpu"]["ojamajos"] = 8;
 
                             arrInventory["boost"]["other"]["special"] = 8;
-                            concatResponseSuccess = ":sparkles: You received **Wreath Pollon Card** Boost! Activate it on card spawn with **<bot>!card capture boost**";
+                            concatResponseSuccess += "received **Wreath Pollon Card** Boost!";
                         }
                         else if (selectionItem == 11)
                         {
@@ -4097,9 +4550,13 @@ namespace OjamajoBot.Module
                             arrInventory["boost"]["momoko"]["ojamajos"] = 8;
 
                             arrInventory["boost"]["other"]["special"] = 8;
-                            concatResponseSuccess = ":sparkles: You received **Jewelry Pollon Card** Boost! Activate it on card spawn with **<bot>!card capture boost**";
+                            concatResponseSuccess += "received **Jewelry Pollon Card** Boost!";
                         }
 
+                        if (selectionItem >= 2)
+                        {
+                            concatResponseSuccess += " Activate it on card spawn with **<bot>!card capture boost**";
+                        }
 
                         arrInventory["magic_seeds"] = (magicSeeds - priceConfirmation).ToString();
                         File.WriteAllText(playerDataDirectory, arrInventory.ToString());

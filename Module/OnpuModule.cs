@@ -762,7 +762,7 @@ namespace OjamajoBot.Module
             }
             else
             {
-                await ReplyAsync(embed: TradingCardCore.activatePureleine(guildId, clientId.ToString(), answer).Build());
+                await ReplyAsync(embed: TradingCardCore.activatePureleine(guildId, clientId.ToString(), Context.User.Username, answer).Build());
             }
         }
 

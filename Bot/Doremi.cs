@@ -22,6 +22,7 @@ using System.IO;
 using OjamajoBot.Service;
 using Newtonsoft.Json.Linq;
 using System.Globalization;
+using Spectacles.NET.Types;
 
 namespace OjamajoBot.Bot
 {
@@ -98,7 +99,7 @@ namespace OjamajoBot.Bot
                 if (DateTime.Now.ToString("dd") == Config.Doremi.birthdayDate.ToString("dd") &&
                 DateTime.Now.ToString("MM") == Config.Doremi.birthdayDate.ToString("MM") &&
                 Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour){
-                    await client.SetGameAsync($"with Doremi birthday {Config.Emoji.birthdayCake}", type: ActivityType.Playing); //set activity to current index position
+                    await client.SetGameAsync($"with Doremi birthday {Config.Emoji.birthdayCake}", type: Discord.ActivityType.Playing); //set activity to current index position
                     birthdayExisted = true;
                 }
 
@@ -107,7 +108,7 @@ namespace OjamajoBot.Bot
                 DateTime.Now.ToString("MM") == Config.Hazuki.birthdayDate.ToString("MM") &&
                 Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour)
                 {
-                    await client.SetGameAsync($"with Hazuki birthday {Config.Emoji.birthdayCake}", type: ActivityType.Playing); //set activity to current index position
+                    await client.SetGameAsync($"with Hazuki birthday {Config.Emoji.birthdayCake}", type: Discord.ActivityType.Playing); //set activity to current index position
                     birthdayExisted = true;
                 }
 
@@ -116,7 +117,7 @@ namespace OjamajoBot.Bot
                 DateTime.Now.ToString("MM") == Config.Aiko.birthdayDate.ToString("MM") &&
                 Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour)
                 {
-                    await client.SetGameAsync($"with Aiko birthday {Config.Emoji.birthdayCake}", type: ActivityType.Playing); //set activity to current index position
+                    await client.SetGameAsync($"with Aiko birthday {Config.Emoji.birthdayCake}", type: Discord.ActivityType.Playing); //set activity to current index position
                     birthdayExisted = true;
                 }
 
@@ -124,7 +125,7 @@ namespace OjamajoBot.Bot
                 if (DateTime.Now.ToString("dd") == Config.Onpu.birthdayDate.ToString("dd") &&
                 DateTime.Now.ToString("MM") == Config.Onpu.birthdayDate.ToString("MM") &&
                 Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour){
-                    await client.SetGameAsync($"with Onpu birthday {Config.Emoji.birthdayCake}", type: ActivityType.Playing); //set activity to current index position
+                    await client.SetGameAsync($"with Onpu birthday {Config.Emoji.birthdayCake}", type: Discord.ActivityType.Playing); //set activity to current index position
                     birthdayExisted = true;
                 }
 
@@ -132,7 +133,7 @@ namespace OjamajoBot.Bot
                 if (DateTime.Now.ToString("dd") == Config.Momoko.birthdayDate.ToString("dd") &&
                 DateTime.Now.ToString("MM") == Config.Momoko.birthdayDate.ToString("MM") &&
                 Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour){
-                    await client.SetGameAsync($"with Momoko birthday {Config.Emoji.birthdayCake}", type: ActivityType.Playing); //set activity to current index position
+                    await client.SetGameAsync($"with Momoko birthday {Config.Emoji.birthdayCake}", type: Discord.ActivityType.Playing); //set activity to current index position
                     birthdayExisted = true;
                 }
 
@@ -142,7 +143,7 @@ namespace OjamajoBot.Bot
                                                                                               //if (rndIndex > 0) rndIndex -= 1;
                     string updLog = "Updated Doremi Activity - Playing: " + Config.Doremi.arrRandomActivity[rndIndex, 0];
                     Config.Doremi.indexCurrentActivity = rndIndex;
-                    await client.SetGameAsync(Config.Doremi.arrRandomActivity[rndIndex, 0], type: ActivityType.Playing); //set activity to current index position
+                    await client.SetGameAsync(Config.Doremi.arrRandomActivity[rndIndex, 0], type: Discord.ActivityType.Playing); //set activity to current index position
                     Console.WriteLine(updLog);
                 }
 
@@ -469,7 +470,7 @@ namespace OjamajoBot.Bot
                     embed: new EmbedBuilder()
                             .WithColor(Config.Doremi.EmbedColor)
                             .WithImageUrl(arrRandomPictures[new Random().Next(0, arrRandomPictures.GetLength(0))])
-                            .Build()); //Welcomes the new user
+                            .Build()); //say goodbye to user
             }
         }
 
@@ -479,16 +480,82 @@ namespace OjamajoBot.Bot
         public async Task HandleReactionAddedAsync(Cacheable<IUserMessage, ulong> cachedMessage,
         ISocketMessageChannel originChannel, SocketReaction reaction)
         {
-            //https://discordapp.com/channels/81384788765712384/381889909113225237/643100808916893716
+            //https://discordapp.com/channels/646244365928497162/651069058556362753/719763968171966545
+            
             var message = await cachedMessage.GetOrDownloadAsync();
             //var context = new SocketCommandContext(client, cachedMessage);
-
+            var messageId = message.GetJumpUrl().Split('/').Last();
+            var guildId = message.GetJumpUrl().Split('/')[4];
+            SocketGuildUser guildUser = (SocketGuildUser)reaction.User;
+            var channel = client.GetChannel(originChannel.Id) as SocketTextChannel;
             if (message != null && reaction.User.IsSpecified)
             {
-                //star react
-                if (reaction.Emote.Equals(new Emoji("\u2B50")))
+                JObject guildConfig = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json"));
+                //custom reaction
+                if (!guildUser.IsBot)
                 {
-                    if (message.Reactions.TryGetValue(new Emoji("\u2B50"), out var metadata))
+                    try
+                    {
+                        //non custom role emoticon
+                        var dataReaction = (JObject)guildConfig["roles_react"][messageId]["data"];
+                        if (dataReaction.ContainsKey(reaction.Emote.ToString()))
+                        {
+                            var roleId = guildConfig["roles_react"][messageId]["data"][reaction.Emote.ToString()];
+
+                            var roleMaster = channel.Guild.Roles.FirstOrDefault(x => x.Id == Convert.ToUInt64(roleId));
+                            var roleSearch = guildUser.Roles.FirstOrDefault(x => x.Id == Convert.ToUInt64(roleId));
+                            if (roleSearch == null)
+                            {
+                                IMessage im = await originChannel.SendMessageAsync(embed: new EmbedBuilder()
+                                    .WithColor(Config.Doremi.EmbedColor)
+                                    .WithDescription($":white_check_mark: {MentionUtils.MentionUser(guildUser.Id)} now have new role: " +
+                                    $"{MentionUtils.MentionRole(roleMaster.Id)}")
+                                    .Build());
+                                await guildUser.AddRoleAsync(roleMaster);
+                                await message.RemoveReactionAsync(reaction.Emote, guildUser);
+
+                                new Timer(async _ =>
+                                {
+                                    await im.DeleteAsync();
+                                },
+                                null,
+                                TimeSpan.FromSeconds(30), //time to wait before executing the timer for the first time
+                                TimeSpan.FromSeconds(30) //time to wait before executing the timer again
+                                );
+
+                            }
+                            else
+                            {
+                                IMessage im = await originChannel.SendMessageAsync(embed: new EmbedBuilder()
+                                    .WithColor(Config.Doremi.EmbedColor)
+                                    .WithDescription($":white_check_mark: {MentionUtils.MentionUser(guildUser.Id)} have been removed from the role: " +
+                                    $"{MentionUtils.MentionRole(roleMaster.Id)}")
+                                    .Build());
+                                await guildUser.RemoveRoleAsync(roleMaster);
+                                await message.RemoveReactionAsync(reaction.Emote, guildUser);
+
+                                new Timer(async _ =>
+                                {
+                                    await im.DeleteAsync();
+                                },
+                                null,
+                                TimeSpan.FromSeconds(30), //time to wait before executing the timer for the first time
+                                TimeSpan.FromSeconds(30) //time to wait before executing the timer again
+                                );
+
+                            }
+
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                    }
+                }
+                
+                //star react
+                if (reaction.Emote.Equals(new Discord.Emoji("\u2B50")))
+                {
+                    if (message.Reactions.TryGetValue(new Discord.Emoji("\u2B50"), out var metadata))
                     {
                         if (message.Author.Id == Config.Doremi.Id && metadata.ReactionCount >= 5 && !message.IsPinned)
                         {
@@ -497,12 +564,11 @@ namespace OjamajoBot.Bot
                             var getMentionedUserId = Int64.Parse(splittedMentionedId);
 
                             await client_log(new LogMessage(0, "Reaction pinned:", $"{message.Author}'s : {message.Id} has enough reactions."));
-                            var channel = client.GetChannel(originChannel.Id) as SocketTextChannel;
-                            await originChannel.SendMessageAsync($"{Config.Emoji.clap} Congratulations, I will now pin " +
-                                $"{MentionUtils.MentionUser((ulong)getMentionedUserId)}'s message.",
-                            embed: new EmbedBuilder()
+                            await originChannel.SendMessageAsync(embed: new EmbedBuilder()
                             .WithColor(Config.Doremi.EmbedColor)
-                            .WithImageUrl("https://static.zerochan.net/Harukaze.Doremi.full.2494232.gif")
+                            .WithDescription($"{Config.Emoji.clap} Congratulations, I will now pin " +
+                                $"{MentionUtils.MentionUser((ulong)getMentionedUserId)}'s message.")
+                            .WithThumbnailUrl("https://static.zerochan.net/Harukaze.Doremi.full.2494232.gif")
                             .Build());
                             await message.PinAsync();
                         }

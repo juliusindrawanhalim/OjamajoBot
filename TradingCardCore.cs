@@ -65,7 +65,7 @@ namespace OjamajoBot
             return new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
                 .WithTitle($"Ojamajo Trading Card - Update {version} - 09.06.20")
-                .WithDescription("-:tools: Card shop interactive is now have auto deletion from previous message to keep the channel clean\n" +
+                .WithDescription("-:tools: Card shop interactive now have automated deletion from previous message to keep the channel clean\n" +
                 "-:new: Added basic guide command for newcomer with: **do!card guide starter**/**do!card guide mystery card**/**do!card guide bad card**");
         }
 
@@ -537,7 +537,7 @@ namespace OjamajoBot
             return listAllowed;
         }
 
-        public static EmbedBuilder activatePureleine(ulong guildId, string clientId, string answer)
+        public static EmbedBuilder activatePureleine(ulong guildId, string clientId, string username, string answer)
         {
             string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
 
@@ -570,7 +570,7 @@ namespace OjamajoBot
                     .WithAuthor(TradingCardCore.BadCards.embedPureleineName, TradingCardCore.BadCards.embedPureleineAvatar)
                     .WithColor(TradingCardCore.BadCards.embedPureleineColor)
                     .WithTitle("Wrong answer!")
-                    .WithDescription($":x: That answer is wrong! You also lost a capture chance for this turn...")
+                    .WithDescription($":x: That answer is wrong! **{username}** also lost a chance to capture card for this turn...")
                     .WithThumbnailUrl(TradingCardCore.BadCards.imgAnswerWrong);
                     JObject arrInventory = JObject.Parse(File.ReadAllText(playerDataDirectory));
                     arrInventory["catch_token"] = Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyToken);
@@ -585,6 +585,7 @@ namespace OjamajoBot
                     .WithColor(TradingCardCore.BadCards.embedPureleineColor)
                     .WithTitle("Bad cards effect has been removed!")
                     .WithDescription($":white_check_mark: I've successfully removed the bad cards effect! You may now safely capture the spawned card again.\n")
+                    .WithFooter($"Removed by: {username}")
                     .WithThumbnailUrl(TradingCardCore.BadCards.imgAnswerCorrect);
                     Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCard, "");
                     Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardEquation, "");
@@ -626,11 +627,11 @@ namespace OjamajoBot
                         try
                         {
                             if (arrInventory[parent][chosenCategory].ToString().Contains(chosenId))
-                                embed.Description += $"But I can't give you **{chosenId} - {chosenName}** because you have it already...";
+                                embed.Description += $"Sorry, I can't give **{username}** bonus card: **{chosenId} - {chosenName}** because you have it already...";
                             else
                             {
                                 string chosenUrl = jObjTradingCardList[parent][chosenCategory][chosenId]["url"].ToString();
-                                embed.Description += $"You have been rewarded with a bonus card!";
+                                embed.Description += $"**{username}** have been rewarded with a bonus card!";
                                 embed.AddField($"{chosenCategory} {parent} Bonus Card Reward:", $"**{chosenId} - {chosenName}**");
                                 embed.WithImageUrl(chosenUrl);
 
@@ -645,12 +646,11 @@ namespace OjamajoBot
                         {
                             Console.WriteLine(e.ToString());
                         }
-
                     }
                     else if (badCardType == "seeds")
                     {
                         int randomedMagicSeeds = new Random().Next(1, 4);
-                        embed.Description += "You have been rewarded with some magic seeds!";
+                        embed.Description += $"**{username}** have been rewarded with some magic seeds!";
                         embed.AddField("Rewards:", $"{randomedMagicSeeds} magic seeds.");
                         embed.WithImageUrl(TradingCardCore.imgMagicSeeds);
                         arrInventory["magic_seeds"] = (Convert.ToInt32(arrInventory["magic_seeds"]) + randomedMagicSeeds).ToString();
@@ -886,7 +886,7 @@ namespace OjamajoBot
                                             if (spawnedBadCards == "seeds")
                                             {
                                                 int randomLost = new Random().Next(1, 11);
-                                                replyText = $":skull: Oh no, **{spawnedBadCards}** bad card effect has activated! You lost {randomLost} magic seeds!";
+                                                replyText = $":skull: Oh no, **{spawnedBadCards}** bad card effect has activated! **{username}** just lost {randomLost} magic seeds!";
                                                 int currentMagicSeeds = Convert.ToInt32(arrInventory["magic_seeds"]);
                                                 if (currentMagicSeeds >= 10)
                                                 {
@@ -911,15 +911,15 @@ namespace OjamajoBot
                                                     string stolenName = jObjTradingCardList[parentLost]["normal"][stolenCard]["name"].ToString();
                                                     item.Remove(item[0]);
                                                     File.WriteAllText(playerDataDirectory, arrInventory.ToString());
-                                                    replyText = $":skull: Oh no, **{spawnedBadCards}** bad card effect has activated! You just lost **{parentLost} normal** card: **{stolenCard} - {stolenName}**!";
+                                                    replyText = $":skull: Oh no, **{spawnedBadCards}** bad card effect has activated! **{username}** just lost **{parentLost} normal** card: **{stolenCard} - {stolenName}**!";
                                                 }
                                                 else
                                                 {
-                                                    replyText = $":skull: Oh no, **{spawnedBadCards}** bad card effect has activated! You don't have any card to lose!";
+                                                    replyText = $":skull: Oh no, **{spawnedBadCards}** bad card effect has activated! But **{username}** don't have any card to lose!";
                                                 }
                                             } else if(spawnedBadCards=="failure")
                                             {//failure
-                                                replyText = $":skull: Oh no, **{spawnedBadCards}** bad card effect has activated! You fail and lost a chance to catch a card!";
+                                                replyText = $":skull: Oh no, **{spawnedBadCards}** bad card effect has activated! **{username}** just lost a chance to catch a card on this spawn turn!";
                                                 arrInventory["catch_token"] = Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyToken);
                                                 File.WriteAllText(playerDataDirectory, arrInventory.ToString());
                                             }
