@@ -78,3 +78,12 @@ Doremi Trading Card - Update 1.12 - 30.05.20
 -Pureleine command: question difficulty has been increased
 -Pureleine command: seeds reward are now randomized between 1-3
 -Magic seeds image has been resized
+
+Doremi Trading Card - Update 1.13 - 09.06.20
+=======================================================================
+-Card shop interactive now have automated deletion from previous message to keep the channel clean
+-Added basic guide command for newcomer with: **do!card guide starter**/**do!card guide mystery card**/**do!card guide bad card**
+
+Doremi Trading Card - Update 1.14 - 12.06.20
+=======================================================================
+-Card status & inventory can now display other user with mentioned user parameter

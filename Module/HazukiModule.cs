@@ -3,6 +3,7 @@ using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
 using Newtonsoft.Json.Linq;
+using Spectacles.NET.Types;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -934,23 +935,43 @@ namespace OjamajoBot.Module
             }
         }
 
-        [Command("status", RunMode = RunMode.Async), Summary("Show your Trading Card Status report.")]
-        public async Task trading_card_status()
+        [Command("status", RunMode = RunMode.Async), Summary("Show the Trading Card Status. " +
+            "You can put the mentioned username to see the card status of that user.")]
+        public async Task trading_card_status(SocketGuildUser username = null)
         {
-            var guildId = Context.Guild.Id;
-            var clientId = Context.User.Id;
+            var guildId = Context.Guild.Id; ulong clientId = Context.User.Id;
+            string userUsername = Context.User.Username; string userAvatar = Context.User.GetAvatarUrl();
+            if (username != null)
+            {
+                try
+                {
+                    clientId = username.Id;
+                    userUsername = username.Username;
+                    userAvatar = username.GetAvatarUrl();
+                }
+                catch
+                {
+                    await ReplyAsync(":x: Sorry, that is not the valid username. Please mention the correct username.");
+                    return;
+                }
+            }
+
             await ReplyAsync(embed: TradingCardCore.
-                    printStatusTemplate(Config.Hazuki.EmbedColor, Context.User.Username, guildId.ToString(), clientId.ToString(),
-                    TradingCardCore.Hazuki.emojiError, Context.User.GetAvatarUrl())
+                    printStatusTemplate(Config.Hazuki.EmbedColor, userUsername, guildId.ToString(), clientId.ToString(),
+                    TradingCardCore.Hazuki.emojiError, userAvatar)
                     .Build());
         }
 
+
+
         //list all cards that have been collected
-        [Command("inventory", RunMode = RunMode.Async), Summary("List all **Hazuki** trading cards that you have collected.")]
-        public async Task trading_card_open_inventory(string category = "")
+        [Command("inventory", RunMode = RunMode.Async), Summary("List all **Hazuki** trading cards that you have collected. " +
+            "You can put optional parameter with this format: <bot>!card inventory <category> <username>.")]
+        public async Task trading_card_open_inventory_self(string category = "")
         {
-            var guildId = Context.Guild.Id;
-            var clientId = Context.User.Id;
+            var guildId = Context.Guild.Id; var clientId = Context.User.Id;
+            string userUsername = Context.User.Username; string userAvatar = Context.User.GetAvatarUrl();
+
             string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
             var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
 
@@ -960,7 +981,7 @@ namespace OjamajoBot.Module
             {
                 await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Hazuki.EmbedColor)
-                .WithDescription($"I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
+                .WithDescription($"I'm sorry, {MentionUtils.MentionUser(clientId)} need to register first with **{Config.Doremi.PrefixParent[0]}card register** command.")
                 .WithThumbnailUrl(TradingCardCore.Hazuki.emojiError).Build());
             }
             else
@@ -996,14 +1017,14 @@ namespace OjamajoBot.Module
                         if (arrList.Count >= 1)
                         {
                             await PagedReplyAsync(
-                                TradingCardCore.printInventoryTemplate(Config.Hazuki.EmbedColor, "hazuki", "hazuki", category, jObjTradingCardList, arrList, TradingCardCore.Hazuki.maxNormal, Context.User.Username,
-                                Context.User.GetAvatarUrl())
+                                TradingCardCore.printInventoryTemplate(Config.Hazuki.EmbedColor, "hazuki", "hazuki", category, jObjTradingCardList, arrList, TradingCardCore.Hazuki.maxNormal, userUsername,
+                                userAvatar)
                             );
                         }
                         else
                         {
                             await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                                Config.Hazuki.EmbedColor, "hazuki", category, TradingCardCore.Hazuki.maxNormal, Context.User.Username)
+                                Config.Hazuki.EmbedColor, "hazuki", category, TradingCardCore.Hazuki.maxNormal, userUsername)
                                 .Build());
                         }
                     }
@@ -1016,14 +1037,14 @@ namespace OjamajoBot.Module
                         if (arrList.Count >= 1)
                         {
                             await PagedReplyAsync(
-                                TradingCardCore.printInventoryTemplate(Config.Hazuki.EmbedColor, "hazuki", "hazuki", category, jObjTradingCardList, arrList, TradingCardCore.Hazuki.maxPlatinum, Context.User.Username,
-                                Context.User.GetAvatarUrl())
+                                TradingCardCore.printInventoryTemplate(Config.Hazuki.EmbedColor, "hazuki", "hazuki", category, jObjTradingCardList, arrList, TradingCardCore.Hazuki.maxPlatinum, userUsername,
+                                userAvatar)
                             );
                         }
                         else
                         {
                             await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                                Config.Hazuki.EmbedColor, "hazuki", category, TradingCardCore.Hazuki.maxPlatinum, Context.User.Username)
+                                Config.Hazuki.EmbedColor, "hazuki", category, TradingCardCore.Hazuki.maxPlatinum, userUsername)
                                 .Build());
                         }
                     }
@@ -1036,14 +1057,14 @@ namespace OjamajoBot.Module
                         if (arrList.Count >= 1)
                         {
                             await PagedReplyAsync(
-                                TradingCardCore.printInventoryTemplate(Config.Hazuki.EmbedColor, "hazuki", "hazuki", category, jObjTradingCardList, arrList, TradingCardCore.Hazuki.maxMetal, Context.User.Username,
-                                Context.User.GetAvatarUrl())
+                                TradingCardCore.printInventoryTemplate(Config.Hazuki.EmbedColor, "hazuki", "hazuki", category, jObjTradingCardList, arrList, TradingCardCore.Hazuki.maxMetal, userUsername,
+                                userAvatar)
                             );
                         }
                         else
                         {
                             await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                                Config.Hazuki.EmbedColor, "hazuki", category, TradingCardCore.Hazuki.maxMetal, Context.User.Username)
+                                Config.Hazuki.EmbedColor, "hazuki", category, TradingCardCore.Hazuki.maxMetal, userUsername)
                                 .Build());
                         }
                     }
@@ -1056,14 +1077,14 @@ namespace OjamajoBot.Module
                         if (arrList.Count >= 1)
                         {
                             await PagedReplyAsync(
-                                TradingCardCore.printInventoryTemplate(Config.Hazuki.EmbedColor, "hazuki", "hazuki", category, jObjTradingCardList, arrList, TradingCardCore.Hazuki.maxOjamajos, Context.User.Username,
-                                Context.User.GetAvatarUrl())
+                                TradingCardCore.printInventoryTemplate(Config.Hazuki.EmbedColor, "hazuki", "hazuki", category, jObjTradingCardList, arrList, TradingCardCore.Hazuki.maxOjamajos, userUsername,
+                                userAvatar)
                             );
                         }
                         else
                         {
                             await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                                Config.Hazuki.EmbedColor, "hazuki", category, TradingCardCore.Hazuki.maxOjamajos, Context.User.Username)
+                                Config.Hazuki.EmbedColor, "hazuki", category, TradingCardCore.Hazuki.maxOjamajos, userUsername)
                                 .Build());
                         }
                     }
@@ -1076,14 +1097,14 @@ namespace OjamajoBot.Module
                         if (arrList.Count >= 1)
                         {
                             await PagedReplyAsync(
-                                TradingCardCore.printInventoryTemplate(Config.Hazuki.EmbedColor, "other", "other", category, jObjTradingCardList, arrList, TradingCardCore.maxSpecial, Context.User.Username,
-                                Context.User.GetAvatarUrl())
+                                TradingCardCore.printInventoryTemplate(Config.Hazuki.EmbedColor, "other", "other", category, jObjTradingCardList, arrList, TradingCardCore.maxSpecial, userUsername,
+                                userAvatar)
                             );
                         }
                         else
                         {
                             await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                                Config.Hazuki.EmbedColor, "other", category, TradingCardCore.maxSpecial, Context.User.Username)
+                                Config.Hazuki.EmbedColor, "other", category, TradingCardCore.maxSpecial, userUsername)
                                 .Build());
                         }
                     }
@@ -1095,8 +1116,165 @@ namespace OjamajoBot.Module
 
             }
 
+        }
 
-    }
+        [Command("inventory", RunMode = RunMode.Async), Summary("List all **Hazuki** trading cards that you have collected. " +
+            "You can put optional parameter with this format: <bot>!card inventory <category> <username>.")]
+        public async Task trading_card_open_inventory(SocketGuildUser username = null)
+        {
+            var guildId = Context.Guild.Id; var clientId = Context.User.Id;
+            string userUsername = Context.User.Username; string userAvatar = Context.User.GetAvatarUrl();
+            string category = "";
+
+            if (username != null)
+            {
+                try
+                {
+                    clientId = username.Id;
+                    userUsername = username.Username;
+                    userAvatar = username.GetAvatarUrl();
+                }
+                catch
+                {
+                    await ReplyAsync(embed: new EmbedBuilder()
+                    .WithColor(Config.Hazuki.EmbedColor)
+                    .WithDescription($"Sorry, I can't find that username. Please mention the correct username.")
+                    .WithThumbnailUrl(TradingCardCore.Hazuki.emojiError).Build());
+                    return;
+                }
+            }
+
+            string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+            var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
+
+            string parent = "hazuki";
+
+            if (!File.Exists(playerDataDirectory)) //not registered yet
+            {
+                await ReplyAsync(embed: new EmbedBuilder()
+                .WithColor(Config.Hazuki.EmbedColor)
+                .WithDescription($"I'm sorry, {MentionUtils.MentionUser(clientId)} need to register first with **{Config.Doremi.PrefixParent[0]}card register** command.")
+                .WithThumbnailUrl(TradingCardCore.Hazuki.emojiError).Build());
+            }
+            else
+            {
+                JArray arrList;
+                var playerData = JObject.Parse(File.ReadAllText(playerDataDirectory));
+                EmbedBuilder builder = new EmbedBuilder()
+                .WithColor(Config.Hazuki.EmbedColor);
+
+                Boolean showAllInventory = true;
+
+                try
+                {
+                    //normal category
+                    if (showAllInventory || category.ToLower() == "normal")
+                    {
+                        category = "normal"; arrList = (JArray)playerData[parent][category];
+                        if (arrList.Count >= 1)
+                        {
+                            await PagedReplyAsync(
+                                TradingCardCore.printInventoryTemplate(Config.Hazuki.EmbedColor, "hazuki", "hazuki", category, jObjTradingCardList, arrList, TradingCardCore.Hazuki.maxNormal, userUsername,
+                                userAvatar)
+                            );
+                        }
+                        else
+                        {
+                            await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
+                                Config.Hazuki.EmbedColor, "hazuki", category, TradingCardCore.Hazuki.maxNormal, userUsername)
+                                .Build());
+                        }
+                    }
+
+
+                    //platinum category
+                    if (showAllInventory || category.ToLower() == "platinum")
+                    {
+                        category = "platinum"; arrList = (JArray)playerData[parent][category];
+                        if (arrList.Count >= 1)
+                        {
+                            await PagedReplyAsync(
+                                TradingCardCore.printInventoryTemplate(Config.Hazuki.EmbedColor, "hazuki", "hazuki", category, jObjTradingCardList, arrList, TradingCardCore.Hazuki.maxPlatinum, userUsername,
+                                userAvatar)
+                            );
+                        }
+                        else
+                        {
+                            await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
+                                Config.Hazuki.EmbedColor, "hazuki", category, TradingCardCore.Hazuki.maxPlatinum, userUsername)
+                                .Build());
+                        }
+                    }
+
+
+                    //metal category
+                    if (showAllInventory || category.ToLower() == "metal")
+                    {
+                        category = "metal"; arrList = (JArray)playerData[parent][category];
+                        if (arrList.Count >= 1)
+                        {
+                            await PagedReplyAsync(
+                                TradingCardCore.printInventoryTemplate(Config.Hazuki.EmbedColor, "hazuki", "hazuki", category, jObjTradingCardList, arrList, TradingCardCore.Hazuki.maxMetal, userUsername,
+                                userAvatar)
+                            );
+                        }
+                        else
+                        {
+                            await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
+                                Config.Hazuki.EmbedColor, "hazuki", category, TradingCardCore.Hazuki.maxMetal, userUsername)
+                                .Build());
+                        }
+                    }
+
+
+                    //ojamajos category
+                    if (showAllInventory || category.ToLower() == "ojamajos")
+                    {
+                        category = "ojamajos"; arrList = (JArray)playerData[parent][category];
+                        if (arrList.Count >= 1)
+                        {
+                            await PagedReplyAsync(
+                                TradingCardCore.printInventoryTemplate(Config.Hazuki.EmbedColor, "hazuki", "hazuki", category, jObjTradingCardList, arrList, TradingCardCore.Hazuki.maxOjamajos, userUsername,
+                                userAvatar)
+                            );
+                        }
+                        else
+                        {
+                            await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
+                                Config.Hazuki.EmbedColor, "hazuki", category, TradingCardCore.Hazuki.maxOjamajos, userUsername)
+                                .Build());
+                        }
+                    }
+
+
+                    //special category
+                    if (showAllInventory || category.ToLower() == "special")
+                    {
+                        category = "special"; arrList = (JArray)playerData["other"][category];
+                        if (arrList.Count >= 1)
+                        {
+                            await PagedReplyAsync(
+                                TradingCardCore.printInventoryTemplate(Config.Hazuki.EmbedColor, "other", "other", category, jObjTradingCardList, arrList, TradingCardCore.maxSpecial, userUsername,
+                                userAvatar)
+                            );
+                        }
+                        else
+                        {
+                            await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
+                                Config.Hazuki.EmbedColor, "other", category, TradingCardCore.maxSpecial, userUsername)
+                                .Build());
+                        }
+                    }
+
+
+                }
+                catch (Exception e) { Console.WriteLine(e.ToString()); }
+
+
+            }
+
+
+        }
 
         [Command("detail", RunMode = RunMode.Async), Alias("info","look"), Summary("See the detail of Hazuki card information from the <card_id>.")]
         public async Task trading_card_look(string card_id)

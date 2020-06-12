@@ -872,11 +872,13 @@ namespace OjamajoBot.Module
         }
 
         //list all cards that have been collected
-        [Command("inventory", RunMode = RunMode.Async), Summary("List all **Momoko** trading cards that you have collected.")]
-        public async Task trading_card_open_inventory(string category = "")
+        [Command("inventory", RunMode = RunMode.Async), Summary("List all **Momoko** trading cards that you have collected. " +
+            "You can put optional parameter with this format: <bot>!card inventory <category> <username>.")]
+        public async Task trading_card_open_inventory_self(string category = "")
         {
-            var guildId = Context.Guild.Id;
-            var clientId = Context.User.Id;
+            var guildId = Context.Guild.Id; var clientId = Context.User.Id;
+            string userUsername = Context.User.Username; string userAvatar = Context.User.GetAvatarUrl();
+
             string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
             var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
 
@@ -886,7 +888,7 @@ namespace OjamajoBot.Module
             {
                 await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Momoko.EmbedColor)
-                .WithDescription($":x: I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
+                .WithDescription($":x: I'm sorry, {MentionUtils.MentionUser(clientId)} need to register first with **{Config.Doremi.PrefixParent[0]}card register** command.")
                 .WithThumbnailUrl(TradingCardCore.Momoko.emojiError).Build());
             }
             else
@@ -923,14 +925,14 @@ namespace OjamajoBot.Module
                         if (arrList.Count >= 1)
                         {
                             await PagedReplyAsync(
-                                TradingCardCore.printInventoryTemplate(Config.Momoko.EmbedColor, "momoko", "momoko", category, jObjTradingCardList, arrList, TradingCardCore.Momoko.maxNormal, Context.User.Username,
-                                Context.User.GetAvatarUrl())
+                                TradingCardCore.printInventoryTemplate(Config.Momoko.EmbedColor, "momoko", "momoko", category, jObjTradingCardList, arrList, TradingCardCore.Momoko.maxNormal, userUsername,
+                                userAvatar)
                             );
                         }
                         else
                         {
                             await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                                Config.Momoko.EmbedColor, "momoko", category, TradingCardCore.Momoko.maxNormal, Context.User.Username)
+                                Config.Momoko.EmbedColor, "momoko", category, TradingCardCore.Momoko.maxNormal, userUsername)
                                 .Build());
                         }
                     }
@@ -943,14 +945,14 @@ namespace OjamajoBot.Module
                         if (arrList.Count >= 1)
                         {
                             await PagedReplyAsync(
-                                TradingCardCore.printInventoryTemplate(Config.Momoko.EmbedColor, "momoko", "momoko", category, jObjTradingCardList, arrList, TradingCardCore.Momoko.maxPlatinum, Context.User.Username,
-                                Context.User.GetAvatarUrl())
+                                TradingCardCore.printInventoryTemplate(Config.Momoko.EmbedColor, "momoko", "momoko", category, jObjTradingCardList, arrList, TradingCardCore.Momoko.maxPlatinum, userUsername,
+                                userAvatar)
                             );
                         }
                         else
                         {
                             await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                                Config.Momoko.EmbedColor, "momoko", category, TradingCardCore.Momoko.maxPlatinum, Context.User.Username)
+                                Config.Momoko.EmbedColor, "momoko", category, TradingCardCore.Momoko.maxPlatinum, userUsername)
                                 .Build());
                         }
                     }
@@ -963,14 +965,14 @@ namespace OjamajoBot.Module
                         if (arrList.Count >= 1)
                         {
                             await PagedReplyAsync(
-                                TradingCardCore.printInventoryTemplate(Config.Momoko.EmbedColor, "momoko", "momoko", category, jObjTradingCardList, arrList, TradingCardCore.Momoko.maxMetal, Context.User.Username,
-                                Context.User.GetAvatarUrl())
+                                TradingCardCore.printInventoryTemplate(Config.Momoko.EmbedColor, "momoko", "momoko", category, jObjTradingCardList, arrList, TradingCardCore.Momoko.maxMetal, userUsername,
+                                userAvatar)
                             );
                         }
                         else
                         {
                             await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                                Config.Momoko.EmbedColor, "momoko", category, TradingCardCore.Momoko.maxMetal, Context.User.Username)
+                                Config.Momoko.EmbedColor, "momoko", category, TradingCardCore.Momoko.maxMetal, userUsername)
                                 .Build());
                         }
                     }
@@ -983,14 +985,14 @@ namespace OjamajoBot.Module
                         if (arrList.Count >= 1)
                         {
                             await PagedReplyAsync(
-                                TradingCardCore.printInventoryTemplate(Config.Momoko.EmbedColor, "momoko", "momoko", category, jObjTradingCardList, arrList, TradingCardCore.Momoko.maxOjamajos, Context.User.Username,
-                                Context.User.GetAvatarUrl())
+                                TradingCardCore.printInventoryTemplate(Config.Momoko.EmbedColor, "momoko", "momoko", category, jObjTradingCardList, arrList, TradingCardCore.Momoko.maxOjamajos, userUsername,
+                                userAvatar)
                             );
                         }
                         else
                         {
                             await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                                Config.Momoko.EmbedColor, "momoko", category, TradingCardCore.Momoko.maxOjamajos, Context.User.Username)
+                                Config.Momoko.EmbedColor, "momoko", category, TradingCardCore.Momoko.maxOjamajos, userUsername)
                                 .Build());
                         }
                     }
@@ -1003,14 +1005,14 @@ namespace OjamajoBot.Module
                         if (arrList.Count >= 1)
                         {
                             await PagedReplyAsync(
-                                TradingCardCore.printInventoryTemplate(Config.Momoko.EmbedColor, "other", "other", category, jObjTradingCardList, arrList, TradingCardCore.maxSpecial, Context.User.Username,
-                                Context.User.GetAvatarUrl())
+                                TradingCardCore.printInventoryTemplate(Config.Momoko.EmbedColor, "other", "other", category, jObjTradingCardList, arrList, TradingCardCore.maxSpecial, userUsername,
+                                userAvatar)
                             );
                         }
                         else
                         {
                             await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                                Config.Momoko.EmbedColor, "other", category, TradingCardCore.maxSpecial, Context.User.Username)
+                                Config.Momoko.EmbedColor, "other", category, TradingCardCore.maxSpecial, userUsername)
                                 .Build());
                         }
                     }
@@ -1018,20 +1020,189 @@ namespace OjamajoBot.Module
 
                 }
                 catch (Exception e) { Console.WriteLine(e.ToString()); }
-
-
             }
-
         }
 
-        [Command("status", RunMode = RunMode.Async), Summary("Show your Trading Card Status report.")]
-        public async Task trading_card_status()
+        [Command("inventory", RunMode = RunMode.Async), Summary("List all **Momoko** trading cards that you have collected. " +
+            "You can put optional parameter with this format: <bot>!card inventory <category> <username>.")]
+        public async Task trading_card_open_inventory(SocketGuildUser username = null)
         {
-            var guildId = Context.Guild.Id;
-            var clientId = Context.User.Id;
+            var guildId = Context.Guild.Id; var clientId = Context.User.Id;
+            string userUsername = Context.User.Username; string userAvatar = Context.User.GetAvatarUrl();
+            string category = "";
+
+            if (username != null)
+            {
+                try
+                {
+                    clientId = username.Id;
+                    userUsername = username.Username;
+                    userAvatar = username.GetAvatarUrl();
+                }
+                catch
+                {
+                    await ReplyAsync(embed: new EmbedBuilder()
+                    .WithColor(Config.Momoko.EmbedColor)
+                    .WithDescription($"Sorry, I can't find that username. Please mention the correct username.")
+                    .WithThumbnailUrl(TradingCardCore.Momoko.emojiError).Build());
+                    return;
+                }
+            }
+
+            string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+            var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
+
+            string parent = "momoko";
+
+            if (!File.Exists(playerDataDirectory)) //not registered yet
+            {
+                await ReplyAsync(embed: new EmbedBuilder()
+                .WithColor(Config.Momoko.EmbedColor)
+                .WithDescription($":x: I'm sorry, {MentionUtils.MentionUser(clientId)} need to register first with **{Config.Doremi.PrefixParent[0]}card register** command.")
+                .WithThumbnailUrl(TradingCardCore.Momoko.emojiError).Build());
+            }
+            else
+            {
+                JArray arrList;
+                var playerData = JObject.Parse(File.ReadAllText(playerDataDirectory));
+
+                EmbedBuilder builder = new EmbedBuilder()
+                .WithColor(Config.Momoko.EmbedColor);
+
+                Boolean showAllInventory = true;
+
+                try
+                {
+                    //normal category
+                    if (showAllInventory || category.ToLower() == "normal")
+                    {
+                        category = "normal"; arrList = (JArray)playerData[parent][category];
+                        if (arrList.Count >= 1)
+                        {
+                            await PagedReplyAsync(
+                                TradingCardCore.printInventoryTemplate(Config.Momoko.EmbedColor, "momoko", "momoko", category, jObjTradingCardList, arrList, TradingCardCore.Momoko.maxNormal, userUsername,
+                                userAvatar)
+                            );
+                        }
+                        else
+                        {
+                            await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
+                                Config.Momoko.EmbedColor, "momoko", category, TradingCardCore.Momoko.maxNormal, userUsername)
+                                .Build());
+                        }
+                    }
+
+
+                    //platinum category
+                    if (showAllInventory || category.ToLower() == "platinum")
+                    {
+                        category = "platinum"; arrList = (JArray)playerData[parent][category];
+                        if (arrList.Count >= 1)
+                        {
+                            await PagedReplyAsync(
+                                TradingCardCore.printInventoryTemplate(Config.Momoko.EmbedColor, "momoko", "momoko", category, jObjTradingCardList, arrList, TradingCardCore.Momoko.maxPlatinum, userUsername,
+                                userAvatar)
+                            );
+                        }
+                        else
+                        {
+                            await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
+                                Config.Momoko.EmbedColor, "momoko", category, TradingCardCore.Momoko.maxPlatinum, userUsername)
+                                .Build());
+                        }
+                    }
+
+
+                    //metal category
+                    if (showAllInventory || category.ToLower() == "metal")
+                    {
+                        category = "metal"; arrList = (JArray)playerData[parent][category];
+                        if (arrList.Count >= 1)
+                        {
+                            await PagedReplyAsync(
+                                TradingCardCore.printInventoryTemplate(Config.Momoko.EmbedColor, "momoko", "momoko", category, jObjTradingCardList, arrList, TradingCardCore.Momoko.maxMetal, userUsername,
+                                userAvatar)
+                            );
+                        }
+                        else
+                        {
+                            await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
+                                Config.Momoko.EmbedColor, "momoko", category, TradingCardCore.Momoko.maxMetal, userUsername)
+                                .Build());
+                        }
+                    }
+
+
+                    //ojamajos category
+                    if (showAllInventory || category.ToLower() == "ojamajos")
+                    {
+                        category = "ojamajos"; arrList = (JArray)playerData[parent][category];
+                        if (arrList.Count >= 1)
+                        {
+                            await PagedReplyAsync(
+                                TradingCardCore.printInventoryTemplate(Config.Momoko.EmbedColor, "momoko", "momoko", category, jObjTradingCardList, arrList, TradingCardCore.Momoko.maxOjamajos, userUsername,
+                                userAvatar)
+                            );
+                        }
+                        else
+                        {
+                            await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
+                                Config.Momoko.EmbedColor, "momoko", category, TradingCardCore.Momoko.maxOjamajos, userUsername)
+                                .Build());
+                        }
+                    }
+
+
+                    //special category
+                    if (showAllInventory || category.ToLower() == "special")
+                    {
+                        category = "special"; arrList = (JArray)playerData["other"][category];
+                        if (arrList.Count >= 1)
+                        {
+                            await PagedReplyAsync(
+                                TradingCardCore.printInventoryTemplate(Config.Momoko.EmbedColor, "other", "other", category, jObjTradingCardList, arrList, TradingCardCore.maxSpecial, userUsername,
+                                userAvatar)
+                            );
+                        }
+                        else
+                        {
+                            await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
+                                Config.Momoko.EmbedColor, "other", category, TradingCardCore.maxSpecial, userUsername)
+                                .Build());
+                        }
+                    }
+
+
+                }
+                catch (Exception e) { Console.WriteLine(e.ToString()); }
+            }
+        }
+
+        [Command("status", RunMode = RunMode.Async), Summary("Show the Trading Card Status. " +
+            "You can put the mentioned username to see the card status of that user.")]
+        public async Task trading_card_status(SocketGuildUser username = null)
+        {
+            var guildId = Context.Guild.Id; ulong clientId = Context.User.Id;
+            string userUsername = Context.User.Username; string userAvatar = Context.User.GetAvatarUrl();
+
+            if (username != null)
+            {
+                try
+                {
+                    clientId = username.Id;
+                    userUsername = username.Username;
+                    userAvatar = username.GetAvatarUrl();
+                }
+                catch
+                {
+                    await ReplyAsync(":x: Sorry, that is not the valid username. Please mention the correct username.");
+                    return;
+                }
+            }
+
             await ReplyAsync(embed: TradingCardCore.
-                    printStatusTemplate(Config.Momoko.EmbedColor, Context.User.Username, guildId.ToString(), clientId.ToString(),
-                    TradingCardCore.Momoko.emojiError, Context.User.GetAvatarUrl())
+                    printStatusTemplate(Config.Momoko.EmbedColor, userUsername, guildId.ToString(), clientId.ToString(),
+                    TradingCardCore.Momoko.emojiError, userAvatar)
                     .Build());
         }
 

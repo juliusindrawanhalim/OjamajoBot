@@ -767,11 +767,13 @@ namespace OjamajoBot.Module
         }
 
         //list all cards that have been collected
-        [Command("inventory", RunMode = RunMode.Async), Summary("List all **Onpu** trading cards that you have collected.")]
-        public async Task trading_card_open_inventory(string category = "")
+        [Command("inventory", RunMode = RunMode.Async), Summary("List all **Onpu** trading cards that you have collected. " +
+            "You can put optional parameter with this format: <bot>!card inventory <category> <username>.")]
+        public async Task trading_card_open_inventory_self(string category = "")
         {
-            var guildId = Context.Guild.Id;
-            var clientId = Context.User.Id;
+            var guildId = Context.Guild.Id; var clientId = Context.User.Id;
+            string userUsername = Context.User.Username; string userAvatar = Context.User.GetAvatarUrl();
+
             string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
             var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
 
@@ -781,7 +783,7 @@ namespace OjamajoBot.Module
             {
                 await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Onpu.EmbedColor)
-                .WithDescription($":x: I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
+                .WithDescription($":x: I'm sorry, {MentionUtils.MentionUser(clientId)} need to register first with **{Config.Doremi.PrefixParent[0]}card register** command.")
                 .WithThumbnailUrl(TradingCardCore.Onpu.emojiError).Build());
             }
             else
@@ -795,7 +797,7 @@ namespace OjamajoBot.Module
                 Boolean showAllInventory = true;
                 if (category.ToLower() != "normal" && category.ToLower() != "platinum" && category.ToLower() != "metal" &&
                     category.ToLower() != "ojamajos" && category.ToLower() != "special" && category.ToLower() != "other" &&
-                    category.ToLower() != "")
+                    category!="")
                 {
                     await ReplyAsync($":x: Sorry, that is not the valid pack/category. " +
                     $"Valid category: **normal**/**platinum**/**metal**/**ojamajos**/**special**/**other**");
@@ -818,14 +820,14 @@ namespace OjamajoBot.Module
                         if (arrList.Count >= 1)
                         {
                             await PagedReplyAsync(
-                                TradingCardCore.printInventoryTemplate(Config.Onpu.EmbedColor, "onpu", "onpu", category, jObjTradingCardList, arrList, TradingCardCore.Onpu.maxNormal, Context.User.Username,
-                                Context.User.GetAvatarUrl())
+                                TradingCardCore.printInventoryTemplate(Config.Onpu.EmbedColor, "onpu", "onpu", category, jObjTradingCardList, arrList, TradingCardCore.Onpu.maxNormal, userUsername,
+                                userAvatar)
                             );
                         }
                         else
                         {
                             await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                                Config.Onpu.EmbedColor, "onpu", category, TradingCardCore.Onpu.maxNormal, Context.User.Username)
+                                Config.Onpu.EmbedColor, "onpu", category, TradingCardCore.Onpu.maxNormal, userUsername)
                                 .Build());
                         }
                     }
@@ -838,14 +840,14 @@ namespace OjamajoBot.Module
                         if (arrList.Count >= 1)
                         {
                             await PagedReplyAsync(
-                                TradingCardCore.printInventoryTemplate(Config.Onpu.EmbedColor, "onpu", "onpu", category, jObjTradingCardList, arrList, TradingCardCore.Onpu.maxPlatinum, Context.User.Username,
-                                Context.User.GetAvatarUrl())
+                                TradingCardCore.printInventoryTemplate(Config.Onpu.EmbedColor, "onpu", "onpu", category, jObjTradingCardList, arrList, TradingCardCore.Onpu.maxPlatinum, userUsername,
+                                userAvatar)
                             );
                         }
                         else
                         {
                             await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                                Config.Onpu.EmbedColor, "onpu", category, TradingCardCore.Onpu.maxPlatinum, Context.User.Username)
+                                Config.Onpu.EmbedColor, "onpu", category, TradingCardCore.Onpu.maxPlatinum, userUsername)
                                 .Build());
                         }
                     }
@@ -857,14 +859,14 @@ namespace OjamajoBot.Module
                         if (arrList.Count >= 1)
                         {
                             await PagedReplyAsync(
-                                TradingCardCore.printInventoryTemplate(Config.Onpu.EmbedColor, "onpu", "onpu", category, jObjTradingCardList, arrList, TradingCardCore.Onpu.maxMetal, Context.User.Username,
-                                Context.User.GetAvatarUrl())
+                                TradingCardCore.printInventoryTemplate(Config.Onpu.EmbedColor, "onpu", "onpu", category, jObjTradingCardList, arrList, TradingCardCore.Onpu.maxMetal, userUsername,
+                                userAvatar)
                             );
                         }
                         else
                         {
                             await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                                Config.Onpu.EmbedColor, "onpu", category, TradingCardCore.Onpu.maxMetal, Context.User.Username)
+                                Config.Onpu.EmbedColor, "onpu", category, TradingCardCore.Onpu.maxMetal, userUsername)
                                 .Build());
                         }
                     }
@@ -877,14 +879,14 @@ namespace OjamajoBot.Module
                         if (arrList.Count >= 1)
                         {
                             await PagedReplyAsync(
-                                TradingCardCore.printInventoryTemplate(Config.Onpu.EmbedColor, "onpu", "onpu", category, jObjTradingCardList, arrList, TradingCardCore.Onpu.maxOjamajos, Context.User.Username,
-                                Context.User.GetAvatarUrl())
+                                TradingCardCore.printInventoryTemplate(Config.Onpu.EmbedColor, "onpu", "onpu", category, jObjTradingCardList, arrList, TradingCardCore.Onpu.maxOjamajos, userUsername,
+                                userAvatar)
                             );
                         }
                         else
                         {
                             await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                                Config.Onpu.EmbedColor, "onpu", category, TradingCardCore.Onpu.maxOjamajos, Context.User.Username)
+                                Config.Onpu.EmbedColor, "onpu", category, TradingCardCore.Onpu.maxOjamajos, userUsername)
                                 .Build());
                         }
                     }
@@ -897,14 +899,14 @@ namespace OjamajoBot.Module
                         if (arrList.Count >= 1)
                         {
                             await PagedReplyAsync(
-                                TradingCardCore.printInventoryTemplate(Config.Onpu.EmbedColor, "other", "other", category, jObjTradingCardList, arrList, TradingCardCore.maxSpecial, Context.User.Username,
-                                Context.User.GetAvatarUrl())
+                                TradingCardCore.printInventoryTemplate(Config.Onpu.EmbedColor, "other", "other", category, jObjTradingCardList, arrList, TradingCardCore.maxSpecial, userUsername,
+                                userAvatar)
                             );
                         }
                         else
                         {
                             await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                                Config.Onpu.EmbedColor, "other", category, TradingCardCore.maxSpecial, Context.User.Username)
+                                Config.Onpu.EmbedColor, "other", category, TradingCardCore.maxSpecial, userUsername)
                                 .Build());
                         }
                     }
@@ -918,14 +920,188 @@ namespace OjamajoBot.Module
 
         }
 
-        [Command("status", RunMode = RunMode.Async), Summary("Show your Trading Card Status report.")]
-        public async Task trading_card_status()
+        [Command("inventory", RunMode = RunMode.Async), Summary("List all **Onpu** trading cards that you have collected. " +
+            "You can put optional parameter with this format: <bot>!card inventory <category> <username>.")]
+        public async Task trading_card_open_inventory(SocketGuildUser username = null)
         {
-            var guildId = Context.Guild.Id;
-            var clientId = Context.User.Id;
+            var guildId = Context.Guild.Id; var clientId = Context.User.Id;
+            string userUsername = Context.User.Username; string userAvatar = Context.User.GetAvatarUrl();
+            string category = "";
+
+            if (username != null)
+            {
+                try
+                {
+                    clientId = username.Id;
+                    userUsername = username.Username;
+                    userAvatar = username.GetAvatarUrl();
+                }
+                catch
+                {
+                    await ReplyAsync(embed: new EmbedBuilder()
+                    .WithColor(Config.Onpu.EmbedColor)
+                    .WithDescription($"Sorry, I can't find that username. Please mention the correct username.")
+                    .WithThumbnailUrl(TradingCardCore.Onpu.emojiError).Build());
+                    return;
+                }
+            }
+
+            string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+            var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
+
+            string parent = "onpu";
+
+            if (!File.Exists(playerDataDirectory)) //not registered yet
+            {
+                await ReplyAsync(embed: new EmbedBuilder()
+                .WithColor(Config.Onpu.EmbedColor)
+                .WithDescription($":x: I'm sorry, {MentionUtils.MentionUser(clientId)} need to register first with **{Config.Doremi.PrefixParent[0]}card register** command.")
+                .WithThumbnailUrl(TradingCardCore.Onpu.emojiError).Build());
+            }
+            else
+            {
+                JArray arrList;
+                var playerData = JObject.Parse(File.ReadAllText(playerDataDirectory));
+
+                EmbedBuilder builder = new EmbedBuilder()
+                .WithColor(Config.Onpu.EmbedColor);
+
+                Boolean showAllInventory = true;
+                
+                try
+                {
+                    //normal category
+                    if (showAllInventory || category.ToLower() == "normal")
+                    {
+                        category = "normal"; arrList = (JArray)playerData[parent][category];
+                        if (arrList.Count >= 1)
+                        {
+                            await PagedReplyAsync(
+                                TradingCardCore.printInventoryTemplate(Config.Onpu.EmbedColor, "onpu", "onpu", category, jObjTradingCardList, arrList, TradingCardCore.Onpu.maxNormal, userUsername,
+                                userAvatar)
+                            );
+                        }
+                        else
+                        {
+                            await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
+                                Config.Onpu.EmbedColor, "onpu", category, TradingCardCore.Onpu.maxNormal, userUsername)
+                                .Build());
+                        }
+                    }
+
+
+                    //platinum category
+                    if (showAllInventory || category.ToLower() == "platinum")
+                    {
+                        category = "platinum"; arrList = (JArray)playerData[parent][category];
+                        if (arrList.Count >= 1)
+                        {
+                            await PagedReplyAsync(
+                                TradingCardCore.printInventoryTemplate(Config.Onpu.EmbedColor, "onpu", "onpu", category, jObjTradingCardList, arrList, TradingCardCore.Onpu.maxPlatinum, userUsername,
+                                userAvatar)
+                            );
+                        }
+                        else
+                        {
+                            await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
+                                Config.Onpu.EmbedColor, "onpu", category, TradingCardCore.Onpu.maxPlatinum, userUsername)
+                                .Build());
+                        }
+                    }
+
+                    //metal category
+                    if (showAllInventory || category.ToLower() == "metal")
+                    {
+                        category = "metal"; arrList = (JArray)playerData[parent][category];
+                        if (arrList.Count >= 1)
+                        {
+                            await PagedReplyAsync(
+                                TradingCardCore.printInventoryTemplate(Config.Onpu.EmbedColor, "onpu", "onpu", category, jObjTradingCardList, arrList, TradingCardCore.Onpu.maxMetal, userUsername,
+                                userAvatar)
+                            );
+                        }
+                        else
+                        {
+                            await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
+                                Config.Onpu.EmbedColor, "onpu", category, TradingCardCore.Onpu.maxMetal, userUsername)
+                                .Build());
+                        }
+                    }
+
+
+                    //ojamajos category
+                    if (showAllInventory || category.ToLower() == "ojamajos")
+                    {
+                        category = "ojamajos"; arrList = (JArray)playerData[parent][category];
+                        if (arrList.Count >= 1)
+                        {
+                            await PagedReplyAsync(
+                                TradingCardCore.printInventoryTemplate(Config.Onpu.EmbedColor, "onpu", "onpu", category, jObjTradingCardList, arrList, TradingCardCore.Onpu.maxOjamajos, userUsername,
+                                userAvatar)
+                            );
+                        }
+                        else
+                        {
+                            await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
+                                Config.Onpu.EmbedColor, "onpu", category, TradingCardCore.Onpu.maxOjamajos, userUsername)
+                                .Build());
+                        }
+                    }
+
+
+                    //special category
+                    if (showAllInventory || category.ToLower() == "special")
+                    {
+                        category = "special"; arrList = (JArray)playerData["other"][category];
+                        if (arrList.Count >= 1)
+                        {
+                            await PagedReplyAsync(
+                                TradingCardCore.printInventoryTemplate(Config.Onpu.EmbedColor, "other", "other", category, jObjTradingCardList, arrList, TradingCardCore.maxSpecial, userUsername,
+                                userAvatar)
+                            );
+                        }
+                        else
+                        {
+                            await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
+                                Config.Onpu.EmbedColor, "other", category, TradingCardCore.maxSpecial, userUsername)
+                                .Build());
+                        }
+                    }
+
+
+                }
+                catch (Exception e) { Console.WriteLine(e.ToString()); }
+
+
+            }
+
+        }
+
+        [Command("status", RunMode = RunMode.Async), Summary("Show the Trading Card Status. " +
+            "You can put the mentioned username to see the card status of that user.")]
+        public async Task trading_card_status(SocketGuildUser username = null)
+        {
+            var guildId = Context.Guild.Id; ulong clientId = Context.User.Id;
+            string userUsername = Context.User.Username; string userAvatar = Context.User.GetAvatarUrl();
+
+            if (username != null)
+            {
+                try
+                {
+                    clientId = username.Id;
+                    userUsername = username.Username;
+                    userAvatar = username.GetAvatarUrl();
+                }
+                catch
+                {
+                    await ReplyAsync(":x: Sorry, that is not the valid username. Please mention the correct username.");
+                    return;
+                }
+            }
+
             await ReplyAsync(embed: TradingCardCore.
-                    printStatusTemplate(Config.Onpu.EmbedColor, Context.User.Username, guildId.ToString(), clientId.ToString(),
-                    TradingCardCore.Onpu.emojiError, Context.User.GetAvatarUrl())
+                    printStatusTemplate(Config.Onpu.EmbedColor, userUsername, guildId.ToString(), clientId.ToString(),
+                    TradingCardCore.Onpu.emojiError, userAvatar)
                     .Build());
         }
 

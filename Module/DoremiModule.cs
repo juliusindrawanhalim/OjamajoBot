@@ -2523,7 +2523,7 @@ namespace OjamajoBot.Module
                     embed: cardCaptureReturn.Item2.Build());
 
             //check if player is ranked up
-            if (cardCaptureReturn.Item3!="")
+            if (cardCaptureReturn.Item3 != "")
                 await ReplyAsync(embed: new EmbedBuilder()
                     .WithColor(Config.Doremi.EmbedColor)
                     .WithTitle("Rank Up!")
@@ -2651,15 +2651,16 @@ namespace OjamajoBot.Module
 
                 }
             }
-            
+
         }
 
-        //list all cards that have been collected
-        [Command("inventory", RunMode = RunMode.Async), Summary("List all **Doremi** trading cards that you have collected.")]
-        public async Task trading_card_open_inventory(string category="")
+        [Command("inventory", RunMode = RunMode.Async), Summary("List all **Doremi** trading cards that you have collected. " +
+            "You can put optional parameter with this format: <bot>!card inventory <category> <username>.")]
+        public async Task trading_card_open_inventory_self(string category = "")
         {
-            var guildId = Context.Guild.Id;
-            var clientId = Context.User.Id;
+            var guildId = Context.Guild.Id; var clientId = Context.User.Id;
+            string userUsername = Context.User.Username; string userAvatar = Context.User.GetAvatarUrl();
+
             string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
             var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
 
@@ -2669,7 +2670,7 @@ namespace OjamajoBot.Module
             {
                 await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
-                .WithDescription($":x: I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
+                .WithDescription($":x: I'm sorry, {MentionUtils.MentionUser(clientId)} need to register first with **{Config.Doremi.PrefixParent[0]}card register** command.")
                 .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build());
             }
             else
@@ -2695,7 +2696,162 @@ namespace OjamajoBot.Module
                 }
                 else if (category.ToLower() != "")
                     showAllInventory = false;
-                
+
+                try
+                {
+                    //normal category
+                    if (showAllInventory || category.ToLower() == "normal")
+                    {
+                        category = "normal"; arrList = (JArray)playerData[parent][category];
+                        if (arrList.Count >= 1)
+                        {
+                            PaginatedAppearanceOptions pao = new PaginatedAppearanceOptions();
+                            pao.JumpDisplayOptions = JumpDisplayOptions.Never;
+                            pao.DisplayInformationIcon = false;
+
+                            await PagedReplyAsync(
+                                TradingCardCore.printInventoryTemplate(Config.Doremi.EmbedColor, "doremi", "doremi", category, jObjTradingCardList, arrList, TradingCardCore.Doremi.maxNormal, userUsername,
+                                userAvatar)
+                                );
+
+                        }
+                        else
+                        {
+                            await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
+                                Config.Doremi.EmbedColor, "doremi", category, TradingCardCore.Doremi.maxNormal, userUsername)
+                                .Build());
+                        }
+                    }
+
+                    //platinum category
+                    if (showAllInventory || category.ToLower() == "platinum")
+                    {
+                        category = "platinum"; arrList = (JArray)playerData[parent][category];
+                        if (arrList.Count >= 1)
+                        {
+                            await PagedReplyAsync(
+                                TradingCardCore.printInventoryTemplate(Config.Doremi.EmbedColor, "doremi", "doremi", category, jObjTradingCardList, arrList, TradingCardCore.Doremi.maxPlatinum, userUsername,
+                                userAvatar)
+                            );
+                        }
+                        else
+                        {
+                            await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
+                                Config.Doremi.EmbedColor, "doremi", category, TradingCardCore.Doremi.maxPlatinum, userUsername)
+                                .Build());
+                        }
+                    }
+
+                    //metal category
+                    if (showAllInventory || category.ToLower() == "metal")
+                    {
+                        category = "metal"; arrList = (JArray)playerData[parent][category];
+                        if (arrList.Count >= 1)
+                        {
+                            await PagedReplyAsync(
+                                TradingCardCore.printInventoryTemplate(Config.Doremi.EmbedColor, "doremi", "doremi", category, jObjTradingCardList, arrList, TradingCardCore.Doremi.maxMetal, userUsername,
+                                userAvatar)
+                            );
+                        }
+                        else
+                        {
+                            await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
+                                Config.Doremi.EmbedColor, "doremi", category, TradingCardCore.Doremi.maxMetal, userUsername)
+                                .Build());
+                        }
+                    }
+
+                    //ojamajos category
+                    if (showAllInventory || category.ToLower() == "ojamajos")
+                    {
+                        category = "ojamajos"; arrList = (JArray)playerData[parent][category];
+                        if (arrList.Count >= 1)
+                        {
+                            await PagedReplyAsync(
+                                TradingCardCore.printInventoryTemplate(Config.Doremi.EmbedColor, "doremi", "doremi", category, jObjTradingCardList, arrList, TradingCardCore.Doremi.maxOjamajos, userUsername,
+                                userAvatar)
+                            );
+                        }
+                        else
+                        {
+                            await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
+                                Config.Doremi.EmbedColor, "doremi", category, TradingCardCore.Doremi.maxOjamajos, userUsername)
+                                .Build());
+                        }
+                    }
+
+                    //special category
+                    if (showAllInventory || category.ToLower() == "special")
+                    {
+                        category = "special"; arrList = (JArray)playerData["other"][category];
+                        if (arrList.Count >= 1)
+                        {
+                            await PagedReplyAsync(
+                                TradingCardCore.printInventoryTemplate(Config.Doremi.EmbedColor, "other", "other", category, jObjTradingCardList, arrList, TradingCardCore.maxSpecial, userUsername,
+                                userAvatar)
+                            );
+                        }
+                        else
+                        {
+                            await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
+                                Config.Doremi.EmbedColor, "other", category, TradingCardCore.maxSpecial, userUsername)
+                                .Build());
+                        }
+                    }
+
+                }
+                catch (Exception e) { Console.WriteLine(e.ToString()); }
+
+            }
+
+        }
+
+        //list all cards that have been collected
+        [Command("inventory", RunMode = RunMode.Async), Summary("List all **Doremi** trading cards that you have collected. " +
+            "You can put optional parameter with this format: <bot>!card inventory <category> <username>.")]
+        public async Task trading_card_open_inventory(SocketGuildUser username = null)
+        {
+            var guildId = Context.Guild.Id; var clientId = Context.User.Id;
+            string userUsername = Context.User.Username; string userAvatar = Context.User.GetAvatarUrl();
+            string category = "";
+            
+            if (username != null) {
+                try
+                {
+                    clientId = username.Id;
+                    userUsername = username.Username;
+                    userAvatar = username.GetAvatarUrl();
+                }
+                catch {
+                    await ReplyAsync(embed: new EmbedBuilder()
+                    .WithColor(Config.Doremi.EmbedColor)
+                    .WithDescription($"Sorry, I can't find that username. Please mention the correct username.")
+                    .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build());
+                    return;
+                }
+            }
+
+            string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+            var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
+
+            string parent = "doremi";
+
+            if (!File.Exists(playerDataDirectory)) //not registered yet
+            {
+                await ReplyAsync(embed: new EmbedBuilder()
+                .WithColor(Config.Doremi.EmbedColor)
+                .WithDescription($":x: I'm sorry, {MentionUtils.MentionUser(clientId)} need to register first with **{Config.Doremi.PrefixParent[0]}card register** command.")
+                .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build());
+            }
+            else
+            {
+                JArray arrList;
+                var playerData = JObject.Parse(File.ReadAllText(playerDataDirectory));
+                EmbedBuilder builder = new EmbedBuilder()
+                .WithColor(Config.Doremi.EmbedColor);
+
+                Boolean showAllInventory = true;
+
                 try
                 {
                     //normal category
@@ -2708,15 +2864,15 @@ namespace OjamajoBot.Module
                             pao.DisplayInformationIcon = false;
 
                             await PagedReplyAsync(
-                                TradingCardCore.printInventoryTemplate(Config.Doremi.EmbedColor, "doremi", "doremi", category, jObjTradingCardList, arrList, TradingCardCore.Doremi.maxNormal, Context.User.Username,
-                                Context.User.GetAvatarUrl())
+                                TradingCardCore.printInventoryTemplate(Config.Doremi.EmbedColor, "doremi", "doremi", category, jObjTradingCardList, arrList, TradingCardCore.Doremi.maxNormal, userUsername,
+                                userAvatar)
                                 );
 
                         }
                         else
                         {
                             await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                                Config.Doremi.EmbedColor, "doremi", category, TradingCardCore.Doremi.maxNormal, Context.User.Username)
+                                Config.Doremi.EmbedColor, "doremi", category, TradingCardCore.Doremi.maxNormal, userUsername)
                                 .Build());
                         }
                     }
@@ -2728,14 +2884,14 @@ namespace OjamajoBot.Module
                         if (arrList.Count >= 1)
                         {
                             await PagedReplyAsync(
-                                TradingCardCore.printInventoryTemplate(Config.Doremi.EmbedColor, "doremi", "doremi", category, jObjTradingCardList, arrList, TradingCardCore.Doremi.maxPlatinum, Context.User.Username,
-                                Context.User.GetAvatarUrl())
+                                TradingCardCore.printInventoryTemplate(Config.Doremi.EmbedColor, "doremi", "doremi", category, jObjTradingCardList, arrList, TradingCardCore.Doremi.maxPlatinum, userUsername,
+                                userAvatar)
                             );
                         }
                         else
                         {
                             await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                                Config.Doremi.EmbedColor, "doremi", category, TradingCardCore.Doremi.maxPlatinum, Context.User.Username)
+                                Config.Doremi.EmbedColor, "doremi", category, TradingCardCore.Doremi.maxPlatinum, userUsername)
                                 .Build());
                         }
                     }
@@ -2747,14 +2903,14 @@ namespace OjamajoBot.Module
                         if (arrList.Count >= 1)
                         {
                             await PagedReplyAsync(
-                                TradingCardCore.printInventoryTemplate(Config.Doremi.EmbedColor, "doremi", "doremi", category, jObjTradingCardList, arrList, TradingCardCore.Doremi.maxMetal, Context.User.Username,
-                                Context.User.GetAvatarUrl())
+                                TradingCardCore.printInventoryTemplate(Config.Doremi.EmbedColor, "doremi", "doremi", category, jObjTradingCardList, arrList, TradingCardCore.Doremi.maxMetal, userUsername,
+                                userAvatar)
                             );
                         }
                         else
                         {
                             await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                                Config.Doremi.EmbedColor, "doremi", category, TradingCardCore.Doremi.maxMetal, Context.User.Username)
+                                Config.Doremi.EmbedColor, "doremi", category, TradingCardCore.Doremi.maxMetal, userUsername)
                                 .Build());
                         }
                     }
@@ -2766,14 +2922,14 @@ namespace OjamajoBot.Module
                         if (arrList.Count >= 1)
                         {
                             await PagedReplyAsync(
-                                TradingCardCore.printInventoryTemplate(Config.Doremi.EmbedColor, "doremi", "doremi", category, jObjTradingCardList, arrList, TradingCardCore.Doremi.maxOjamajos, Context.User.Username,
-                                Context.User.GetAvatarUrl())
+                                TradingCardCore.printInventoryTemplate(Config.Doremi.EmbedColor, "doremi", "doremi", category, jObjTradingCardList, arrList, TradingCardCore.Doremi.maxOjamajos, userUsername,
+                                userAvatar)
                             );
                         }
                         else
                         {
                             await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                                Config.Doremi.EmbedColor, "doremi", category, TradingCardCore.Doremi.maxOjamajos, Context.User.Username)
+                                Config.Doremi.EmbedColor, "doremi", category, TradingCardCore.Doremi.maxOjamajos, userUsername)
                                 .Build());
                         }
                     }
@@ -2785,14 +2941,14 @@ namespace OjamajoBot.Module
                         if (arrList.Count >= 1)
                         {
                             await PagedReplyAsync(
-                                TradingCardCore.printInventoryTemplate(Config.Doremi.EmbedColor, "other", "other", category, jObjTradingCardList, arrList, TradingCardCore.maxSpecial, Context.User.Username,
-                                Context.User.GetAvatarUrl())
+                                TradingCardCore.printInventoryTemplate(Config.Doremi.EmbedColor, "other", "other", category, jObjTradingCardList, arrList, TradingCardCore.maxSpecial, userUsername,
+                                userAvatar)
                             );
                         }
                         else
                         {
                             await ReplyAsync(embed: TradingCardCore.printEmptyInventoryTemplate(
-                                Config.Doremi.EmbedColor, "other", category, TradingCardCore.maxSpecial, Context.User.Username)
+                                Config.Doremi.EmbedColor, "other", category, TradingCardCore.maxSpecial, userUsername)
                                 .Build());
                         }
                     }
@@ -2815,15 +2971,31 @@ namespace OjamajoBot.Module
                     .Build());
         }
 
-        [Command("status", RunMode = RunMode.Async), Summary("Show your Trading Card Status report.")]
-        public async Task trading_card_status()
+        [Command("status", RunMode = RunMode.Async), Summary("Show the Trading Card Status. " +
+            "You can put the mentioned username to see the card status of that user.")]
+        public async Task trading_card_status(SocketGuildUser username = null)
         {
-            var guildId = Context.Guild.Id;
-            var clientId = Context.User.Id;
+            var guildId = Context.Guild.Id; ulong clientId = Context.User.Id;
+            string userUsername = Context.User.Username; string userAvatar = Context.User.GetAvatarUrl();
+            if (username != null)
+            {
+                try
+                {
+                    clientId = username.Id;
+                    userUsername = username.Username;
+                    userAvatar = username.GetAvatarUrl();
+                }
+                catch {
+                    await ReplyAsync(":x: Sorry, that is not the valid username. Please mention the correct username.");
+                    return;
+                }
+            }
+
             await ReplyAsync(embed: TradingCardCore.
-                    printStatusTemplate(Config.Doremi.EmbedColor, Context.User.Username, guildId.ToString(), clientId.ToString(),
-                    TradingCardCore.Doremi.emojiError,Context.User.GetAvatarUrl())
-                    .Build());
+                        printStatusTemplate(Config.Doremi.EmbedColor, userUsername, guildId.ToString(), clientId.ToString(),
+                        TradingCardCore.Doremi.emojiError, userAvatar)
+                        .Build());
+
         }
 
         //show top 5 that capture each card pack

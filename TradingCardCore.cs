@@ -3,6 +3,7 @@ using Discord.Addons.Interactive;
 using Discord.WebSocket;
 using Lavalink4NET.Statistics;
 using Newtonsoft.Json.Linq;
+using Spectacles.NET.Types;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,7 +15,7 @@ namespace OjamajoBot
 {
     public class TradingCardCore
     {
-        public static string version = "1.13";
+        public static string version = "1.14";
         public static string propertyId = "trading_card_spawn_id";
         public static string propertyCategory = "trading_card_spawn_category";
         public static string propertyToken = "trading_card_spawn_token";
@@ -63,10 +64,10 @@ namespace OjamajoBot
             //    "-Magic seeds reward image has been resized");
 
             return new EmbedBuilder()
-                .WithColor(Config.Doremi.EmbedColor)
-                .WithTitle($"Ojamajo Trading Card - Update {version} - 09.06.20")
-                .WithDescription("-:tools: Card shop interactive now have automated deletion from previous message to keep the channel clean\n" +
-                "-:new: Added basic guide command for newcomer with: **do!card guide starter**/**do!card guide mystery card**/**do!card guide bad card**");
+            .WithColor(Config.Doremi.EmbedColor)
+            .WithTitle($"Ojamajo Trading Card - Update {version} - 12.06.20")
+            .WithDescription("-:tools: Card status & inventory command can now display their information with given mentioned username parameter.\n" +
+            "Example: **do!card inventory <username>**, **do!card status <username>**");
         }
 
         public static int getPlayerRank(int exp)
@@ -423,17 +424,18 @@ namespace OjamajoBot
             string thumbnailUrl)
         {
             string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
-            var playerData = JObject.Parse(File.ReadAllText(playerDataDirectory));
-
+            
             if (!File.Exists(playerDataDirectory))
             { //not registered yet
                 return new EmbedBuilder()
                 .WithColor(color)
-                .WithDescription($"I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
+                .WithDescription($"I'm sorry, {MentionUtils.MentionUser(Convert.ToUInt64(clientId))} need to " +
+                $"register first with **{Config.Doremi.PrefixParent[0]}card register** command.")
                 .WithThumbnailUrl(emojiError);
             }
             else
             {
+                var playerData = JObject.Parse(File.ReadAllText(playerDataDirectory));
                 var arrListDoremi = playerData["doremi"];
                 var arrListHazuki = playerData["hazuki"];
                 var arrListAiko = playerData["aiko"];
