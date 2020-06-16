@@ -87,3 +87,8 @@ Doremi Trading Card - Update 1.13 - 09.06.20
 Doremi Trading Card - Update 1.14 - 12.06.20
 =======================================================================
 -Card status & inventory can now display other user with mentioned user parameter
+
+Doremi Trading Card - Update 1.15 - 16.06.20
+=======================================================================
+-Card capture command that is fail/error now have auto deletion message between 10 seconds.
+-Card trade now have auto deletion message system to keep the channel clean.

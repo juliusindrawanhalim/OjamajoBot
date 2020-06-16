@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace OjamajoBot.Module
@@ -766,7 +767,7 @@ namespace OjamajoBot.Module
     public class HazukiTradingCardInteractive : InteractiveBase
     {
         [Command("capture", RunMode = RunMode.Async), Alias("catch"), Summary("Capture spawned card with Hazuki.")]
-        public async Task trading_card_hazuki_capture(string boost = "")
+        public async Task<RuntimeResult> trading_card_hazuki_capture(string boost = "")
         {
             //reference: https://www.newtonsoft.com/json/help/html/ModifyJson.htm
             var guildId = Context.Guild.Id;
@@ -777,7 +778,10 @@ namespace OjamajoBot.Module
             TradingCardCore.Hazuki.maxNormal, TradingCardCore.Hazuki.maxPlatinum, TradingCardCore.Hazuki.maxMetal, TradingCardCore.Hazuki.maxOjamajos);
 
             if (cardCaptureReturn.Item1 == "")
-                await ReplyAsync(embed: cardCaptureReturn.Item2.Build());
+            {
+                //await Context.Message.DeleteAsync();
+                await ReplyAndDeleteAsync(null, embed: cardCaptureReturn.Item2.Build(), timeout: TimeSpan.FromSeconds(10));
+            }
             else
                 await ReplyAsync(cardCaptureReturn.Item1,
                     embed: cardCaptureReturn.Item2.Build());
@@ -912,6 +916,7 @@ namespace OjamajoBot.Module
                 }
             }
 
+            return Ok();
         }
 
         [Command("pureleine", RunMode = RunMode.Async), Alias("pureline"), Summary("Detect the bad card with the help from oyajide & pureleine computer. " +

@@ -598,7 +598,7 @@ namespace OjamajoBot.Module
     {
 
         [Command("capture", RunMode = RunMode.Async), Alias("catch"), Summary("Capture spawned card with Onpu.")]
-        public async Task trading_card_onpu_capture(string boost = "")
+        public async Task<RuntimeResult> trading_card_onpu_capture(string boost = "")
         {
             //reference: https://www.newtonsoft.com/json/help/html/ModifyJson.htm
             var guildId = Context.Guild.Id;
@@ -608,7 +608,10 @@ namespace OjamajoBot.Module
             TradingCardCore.Onpu.maxNormal, TradingCardCore.Onpu.maxPlatinum, TradingCardCore.Onpu.maxMetal, TradingCardCore.Onpu.maxOjamajos);
 
             if (cardCaptureReturn.Item1 == "")
-                await ReplyAsync(embed: cardCaptureReturn.Item2.Build());
+            {
+                //await Context.Message.DeleteAsync();
+                await ReplyAndDeleteAsync(null, embed: cardCaptureReturn.Item2.Build(), timeout: TimeSpan.FromSeconds(10));
+            }
             else
                 await ReplyAsync(cardCaptureReturn.Item1,
                     embed: cardCaptureReturn.Item2.Build());
@@ -742,6 +745,8 @@ namespace OjamajoBot.Module
 
                 }
             }
+
+            return Ok();
 
         }
 

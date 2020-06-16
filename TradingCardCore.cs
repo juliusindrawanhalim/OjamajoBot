@@ -15,7 +15,7 @@ namespace OjamajoBot
 {
     public class TradingCardCore
     {
-        public static string version = "1.14";
+        public static string version = "1.15";
         public static string propertyId = "trading_card_spawn_id";
         public static string propertyCategory = "trading_card_spawn_category";
         public static string propertyToken = "trading_card_spawn_token";
@@ -63,11 +63,19 @@ namespace OjamajoBot
             //    "-Pureleine command update: answering the wrong question will losing up a capture chance on that spawn turn\n" +
             //    "-Magic seeds reward image has been resized");
 
+            //return new EmbedBuilder()
+            //.WithColor(Config.Doremi.EmbedColor)
+            //.WithTitle($"Ojamajo Trading Card - Update {version} - 12.06.20")
+            //.WithDescription("-:tools: Card status & inventory command can now display their information with given mentioned username parameter.\n" +
+            //"Example: **do!card inventory <username>**, **do!card status <username>**");
+
             return new EmbedBuilder()
             .WithColor(Config.Doremi.EmbedColor)
-            .WithTitle($"Ojamajo Trading Card - Update {version} - 12.06.20")
-            .WithDescription("-:tools: Card status & inventory command can now display their information with given mentioned username parameter.\n" +
-            "Example: **do!card inventory <username>**, **do!card status <username>**");
+            .WithTitle($"Ojamajo Trading Card - Update {version} - 16.06.20")
+            .WithDescription("-Card capture command that is fail/error now have auto deletion message within 10 seconds after message has been shown.\n" +
+            "-Card status command now have total percentage displayed on each card pack\n" +
+            "-Card save command with **do!card save**: Now you can make your trading card save file that can be used as a backup & continued on with card register command on another server.\n" +
+            "-Card trade command now have auto deletion message system to keep the channel clean.");
         }
 
         public static int getPlayerRank(int exp)
@@ -435,6 +443,7 @@ namespace OjamajoBot
             }
             else
             {
+                DateTime creation = File.GetCreationTime($"{playerDataDirectory}");
                 var playerData = JObject.Parse(File.ReadAllText(playerDataDirectory));
                 var arrListDoremi = playerData["doremi"];
                 var arrListHazuki = playerData["hazuki"];
@@ -455,40 +464,69 @@ namespace OjamajoBot
                     $"**Platinum: {((JArray)arrListDoremi["platinum"]).Count}/{Doremi.maxPlatinum}**\n" +
                     $"**Metal: {((JArray)arrListDoremi["metal"]).Count}/{Doremi.maxMetal}**\n" +
                     $"**Ojamajos: {((JArray)arrListDoremi["ojamajos"]).Count}/{Doremi.maxOjamajos}**";
+                int totalSuccessPack = ((JArray)arrListDoremi["normal"]).Count + ((JArray)arrListDoremi["platinum"]).Count
+                    + ((JArray)arrListDoremi["metal"]).Count + ((JArray)arrListDoremi["ojamajos"]).Count;
+                int totalMax = Doremi.maxNormal+ Doremi.maxPlatinum + Doremi.maxMetal + Doremi.maxOjamajos;
+                double calculated = (double)totalSuccessPack / totalMax * 100;
+                string doremiPercentage = $"({Math.Round(calculated)}%)";
 
                 string hazukiText = $"**Normal: {((JArray)arrListHazuki["normal"]).Count}/{Hazuki.maxNormal}**\n" +
                     $"**Platinum: {((JArray)arrListHazuki["platinum"]).Count}/{Hazuki.maxPlatinum}**\n" +
                     $"**Metal: {((JArray)arrListHazuki["metal"]).Count}/{Hazuki.maxMetal}**\n" +
                     $"**Ojamajos: {((JArray)arrListHazuki["ojamajos"]).Count}/{Hazuki.maxOjamajos}**";
+                totalSuccessPack = ((JArray)arrListHazuki["normal"]).Count + ((JArray)arrListHazuki["platinum"]).Count
+                    + ((JArray)arrListHazuki["metal"]).Count + ((JArray)arrListHazuki["ojamajos"]).Count;
+                totalMax = Hazuki.maxNormal + Hazuki.maxPlatinum + Hazuki.maxMetal + Hazuki.maxOjamajos;
+                calculated = (double)totalSuccessPack / totalMax * 100;
+                string hazukiPercentage = $"({Math.Round(calculated)}%)";
 
                 string aikoText = $"**Normal: {((JArray)arrListAiko["normal"]).Count}/{Aiko.maxNormal}**\n" +
                     $"**Platinum: {((JArray)arrListAiko["platinum"]).Count}/{Aiko.maxPlatinum}**\n" +
                     $"**Metal: {((JArray)arrListAiko["metal"]).Count}/{Aiko.maxMetal}**\n" +
                     $"**Ojamajos: {((JArray)arrListAiko["ojamajos"]).Count}/{Aiko.maxOjamajos}**";
+                totalSuccessPack = ((JArray)arrListAiko["normal"]).Count + ((JArray)arrListAiko["platinum"]).Count
+                    + ((JArray)arrListAiko["metal"]).Count + ((JArray)arrListAiko["ojamajos"]).Count;
+                totalMax = Aiko.maxNormal + Aiko.maxPlatinum + Aiko.maxMetal + Aiko.maxOjamajos;
+                calculated = (double)totalSuccessPack / totalMax * 100;
+                string aikoPercentage = $"({Math.Round(calculated)}%)";
 
                 string onpuText = $"**Normal: {((JArray)arrListOnpu["normal"]).Count}/{Onpu.maxNormal}**\n" +
                     $"**Platinum: {((JArray)arrListOnpu["platinum"]).Count}/{Onpu.maxPlatinum}**\n" +
                     $"**Metal: {((JArray)arrListOnpu["metal"]).Count}/{Onpu.maxMetal}**\n" +
                     $"**Ojamajos: {((JArray)arrListOnpu["ojamajos"]).Count}/{Onpu.maxOjamajos}**";
+                totalSuccessPack = ((JArray)arrListOnpu["normal"]).Count + ((JArray)arrListOnpu["platinum"]).Count
+                    + ((JArray)arrListOnpu["metal"]).Count + ((JArray)arrListOnpu["ojamajos"]).Count;
+                totalMax = Onpu.maxNormal + Onpu.maxPlatinum + Onpu.maxMetal + Onpu.maxOjamajos;
+                calculated = (double)totalSuccessPack / totalMax * 100;
+                string onpuPercentage = $"({Math.Round(calculated)}%)";
 
                 string momokoText = $"**Normal: {((JArray)arrListMomoko["normal"]).Count}/{Momoko.maxNormal}**\n" +
                     $"**Platinum: {((JArray)arrListMomoko["platinum"]).Count}/{Momoko.maxPlatinum}**\n" +
                     $"**Metal: {((JArray)arrListMomoko["metal"]).Count}/{Momoko.maxMetal}**\n" +
                     $"**Ojamajos: {((JArray)arrListMomoko["ojamajos"]).Count}/{Momoko.maxOjamajos}**";
+                totalSuccessPack = ((JArray)arrListMomoko["normal"]).Count + ((JArray)arrListMomoko["platinum"]).Count
+                    + ((JArray)arrListMomoko["metal"]).Count + ((JArray)arrListMomoko["ojamajos"]).Count;
+                totalMax = Momoko.maxNormal + Momoko.maxPlatinum + Momoko.maxMetal + Momoko.maxOjamajos;
+                calculated = (double)totalSuccessPack / totalMax * 100;
+                string momokoPercentage = $"({Math.Round(calculated)}%)";
 
                 string otherText = $"**Special: {((JArray)arrListOther["special"]).Count}/{maxSpecial}**";
+                totalSuccessPack = ((JArray)arrListOther["special"]).Count;
+                totalMax = maxSpecial;
+                calculated = (double)totalSuccessPack / totalMax * 100;
+                string otherPercentage = $"({Math.Round(calculated)}%)";
 
                 return new EmbedBuilder()
                     .WithTitle($"📇 {username} Card Status | Rank: {getPlayerRank(playerExp)}")
                     .WithColor(color)
                     .WithThumbnailUrl(thumbnailUrl)
                     .AddField("Total / EXP", $"**{totalSuccess} / {playerData["catch_attempt"].ToString()}**", false)
-                    .AddField("Doremi Card Pack", doremiText, true)
-                    .AddField("Hazuki Card Pack", hazukiText, true)
-                    .AddField("Aiko Card Pack", aikoText, true)
-                    .AddField("Onpu Card Pack", onpuText, true)
-                    .AddField("Momoko Card Pack", momokoText, true)
-                    .AddField("Other Card Pack", otherText, true);
+                    .AddField($"Doremi Card Pack {doremiPercentage}", doremiText, true)
+                    .AddField($"Hazuki Card Pack {hazukiPercentage}", hazukiText, true)
+                    .AddField($"Aiko Card Pack {aikoPercentage}", aikoText, true)
+                    .AddField($"Onpu Card Pack {onpuPercentage}", onpuText, true)
+                    .AddField($"Momoko Card Pack {momokoPercentage}", momokoText, true)
+                    .AddField($"Other Card Pack {otherPercentage}", otherText, true);
             }
         }
 

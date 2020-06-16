@@ -17,6 +17,7 @@ namespace Config
         public static JObject jobjectconfig; public static JObject jobjectQuiz;
         public static JObject jobjectRandomMoments;
         public static string headTradingCardConfigFolder = "trading_card";
+        public static string headTradingCardSaveConfigFolder = "trading_card_save/";
         public static string attachmentsFolder = "attachments/";
         public static string headConfigFolder = "config/";
         public static string headConfigGuildFolder = $"{headConfigFolder}guild/";
