@@ -92,3 +92,19 @@ Doremi Trading Card - Update 1.15 - 16.06.20
 =======================================================================
 -Card capture command that is fail/error now have auto deletion message between 10 seconds.
 -Card trade now have auto deletion message system to keep the channel clean.
+
+Doremi Trading Card - Update 1.16 - 17.06.20
+=======================================================================
+Updates:
+-card capture anti peeking & auto deletion feature: failed/error executed card capture command from a user will now deleted immediately to keep the channel clean.
+-More cleaner card category command: capture/shop/trade/trade process command: failed/error/timeout message will automatically deleted within 10-15 seconds.
+-card register command that has been loaded now have new rules applied to keep the progress balanced: you can't catch any card on the current card spawn turn.
+-card inventory command will now sort all the card in order
+-Mystery card image has been updated
+
+Bug Fix:
+card trade process command fix: the user list can now be displayed.
+
+New Features:
+-Card data delete command with do!card delete: Want to start over from beginning? Now you can delete your card data progress on current server and start over again. " +
+"Please read some note & rules that applied before executing this command!"

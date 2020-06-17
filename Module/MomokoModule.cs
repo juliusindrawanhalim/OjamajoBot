@@ -708,14 +708,16 @@ namespace OjamajoBot.Module
             //reference: https://www.newtonsoft.com/json/help/html/ModifyJson.htm
             var guildId = Context.Guild.Id;
             var clientId = Context.User.Id;
+
             var cardCaptureReturn = TradingCardCore.cardCapture(Config.Momoko.EmbedColor, Context.Client.CurrentUser.GetAvatarUrl(), guildId, clientId.ToString(), Context.User.Username,
             TradingCardCore.Momoko.emojiError, "momoko", boost, Config.Momoko.PrefixParent[0], "mo",
             TradingCardCore.Momoko.maxNormal, TradingCardCore.Momoko.maxPlatinum, TradingCardCore.Momoko.maxMetal, TradingCardCore.Momoko.maxOjamajos);
 
+            
             if (cardCaptureReturn.Item1 == "")
             {
-                //await Context.Message.DeleteAsync();
-                await ReplyAndDeleteAsync(null, embed: cardCaptureReturn.Item2.Build(), timeout: TimeSpan.FromSeconds(10));
+                await Context.Message.DeleteAsync();
+                await ReplyAndDeleteAsync(null, embed: cardCaptureReturn.Item2.Build(), timeout: TimeSpan.FromSeconds(15));
             }
             else
                 await ReplyAsync(cardCaptureReturn.Item1,

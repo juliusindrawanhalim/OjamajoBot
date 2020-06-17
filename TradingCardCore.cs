@@ -15,7 +15,7 @@ namespace OjamajoBot
 {
     public class TradingCardCore
     {
-        public static string version = "1.15";
+        public static string version = "1.16";
         public static string propertyId = "trading_card_spawn_id";
         public static string propertyCategory = "trading_card_spawn_category";
         public static string propertyToken = "trading_card_spawn_token";
@@ -69,13 +69,28 @@ namespace OjamajoBot
             //.WithDescription("-:tools: Card status & inventory command can now display their information with given mentioned username parameter.\n" +
             //"Example: **do!card inventory <username>**, **do!card status <username>**");
 
+            //return new EmbedBuilder()
+            //.WithColor(Config.Doremi.EmbedColor)
+            //.WithTitle($"Ojamajo Trading Card - Update {version} - 16.06.20")
+            //.WithDescription("-Card capture command that is fail/error now have auto deletion message within 10 seconds after message has been shown.\n" +
+            //"-Card status command now have total percentage displayed on each card pack\n" +
+            //"-Card save command with **do!card save**: Now you can make your trading card save file that can be used as a backup & continued on with card register command on another server.\n" +
+            //"-Card trade command now have auto deletion message system to keep the channel clean.");
+
             return new EmbedBuilder()
             .WithColor(Config.Doremi.EmbedColor)
-            .WithTitle($"Ojamajo Trading Card - Update {version} - 16.06.20")
-            .WithDescription("-Card capture command that is fail/error now have auto deletion message within 10 seconds after message has been shown.\n" +
-            "-Card status command now have total percentage displayed on each card pack\n" +
-            "-Card save command with **do!card save**: Now you can make your trading card save file that can be used as a backup & continued on with card register command on another server.\n" +
-            "-Card trade command now have auto deletion message system to keep the channel clean.");
+            .WithTitle($"Ojamajo Trading Card - Update {version} - 17.06.20")
+            .AddField(":tools: **Updates:**",
+            "-**card capture** anti peeking & auto deletion feature: failed/error executed card capture command from a user will now deleted immediately to keep the channel clean.\n" +
+            "-More cleaner card category command: **capture**/**shop**/**trade**/**trade process** command: failed/error/timeout message will automatically deleted within 10-15 seconds.\n" +
+            "-**card register** command that has been loaded now have new rules applied to keep the progress balanced: you can't catch any card on the current card spawn turn.\n" +
+            "-**card inventory** command will now sort all the card in order\n" +
+            "-Mystery card image has been updated")
+            .AddField(":beetle: **Bug Fix:**",
+            "-**card trade process** command fix: the user list can now be displayed.")
+            .AddField(":new: **New Features**:",
+            "-Card data delete command with **do!card delete**: Want to start over from beginning? Now you can delete your card data progress on current server and start over again. " +
+            "Please read some note & rules that applied before executing this command!");
         }
 
         public static int getPlayerRank(int exp)
@@ -112,15 +127,24 @@ namespace OjamajoBot
                 string url = jObjTradingCardList[parent][category][cardId]["url"].ToString();
                 tempVal += $"[{arrList[i]} - {name}]({url})\n";
 
-                if (currentIndex < 14) currentIndex++;
-                else
-                {
-                    pageContent.Add(tempVal);
-                    currentIndex = 0;
-                    tempVal = title;
-                }
+                if (i == arrList.Count - 1) {
+                    String output = string.Join("\n", tempVal.Split("\n").OrderBy(s => s));
 
-                if (i == arrList.Count - 1) pageContent.Add(tempVal);
+                    //pageContent.Add(tempVal); //original
+                    pageContent.Add(output);
+                } else
+                {
+                    if (currentIndex < 14) currentIndex++;
+                    else
+                    {
+                        String output = string.Join("\n", tempVal.Split("\n").OrderBy(s => s));
+
+                        //pageContent.Add(tempVal); //original
+                        pageContent.Add(output);
+                        currentIndex = 0;
+                        tempVal = title;
+                    }
+                }
             }
 
             var pager = new PaginatedMessage
@@ -624,7 +648,7 @@ namespace OjamajoBot
                     .WithAuthor(TradingCardCore.BadCards.embedPureleineName, TradingCardCore.BadCards.embedPureleineAvatar)
                     .WithColor(TradingCardCore.BadCards.embedPureleineColor)
                     .WithTitle("Bad cards effect has been removed!")
-                    .WithDescription($":white_check_mark: I've successfully removed the bad cards effect! You may now safely capture the spawned card again.\n")
+                    .WithDescription($":white_check_mark: You may now safely capture the spawned card again.\n")
                     .WithFooter($"Removed by: {username}")
                     .WithThumbnailUrl(TradingCardCore.BadCards.imgAnswerCorrect);
                     Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCard, "");
@@ -1501,7 +1525,8 @@ namespace OjamajoBot
                 .WithColor(Discord.Color.DarkerGrey)
                 .WithTitle($"🔍 Revealed Hint:")
                 .WithDescription(descriptionMystery)
-                .WithImageUrl("https://cdn.discordapp.com/attachments/709293222387777626/710869697972797440/mystery.jpg")
+                //.WithImageUrl("https://cdn.discordapp.com/attachments/709293222387777626/710869697972797440/mystery.jpg")
+                .WithImageUrl("https://cdn.discordapp.com/attachments/709293222387777626/722780058904821760/mystery.gif")
                 .WithThumbnailUrl(badCardIcon)
                 .WithFooter($"ID: ???{footerBadCard} | Catch Rate: {catchRate}");
 

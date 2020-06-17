@@ -706,7 +706,7 @@ namespace OjamajoBot.Bot
                     case CommandError.Exception:
                         // This is what happens instead of the catch block.
                         //await message.Channel.SendMessageAsync($"Sorry, I can't seem to understand your commands. See ``doremi help`` for more info.");
-                        Console.WriteLine(result.ErrorReason);
+                        //Console.WriteLine(result.ErrorReason);
                         break;
                 }
                 

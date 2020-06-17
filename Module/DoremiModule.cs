@@ -2382,29 +2382,6 @@ namespace OjamajoBot.Module
     [Name("Card"), Group("card"), Summary("This category contains all Doremi Trading card command.")]
     public class DoremiTradingCardInteractive : InteractiveBase
     {
-        [Command("save", RunMode = RunMode.Async), Summary("Make a save file backup from this server that you can continue to another server.")]
-        public async Task trading_card_save_file()
-        {
-            string sourceFileName = $"{Config.Core.headConfigGuildFolder}{Context.Guild.Id}/{Config.Core.headTradingCardConfigFolder}/{Context.User.Id}.json";
-            string destFileName = $"config/{Core.headTradingCardSaveConfigFolder}/{Context.User.Id}.json";
-
-            if (File.Exists(sourceFileName))
-            {
-                File.Copy(sourceFileName, destFileName,true);
-                await ReplyAsync(embed: new EmbedBuilder()
-                .WithColor(Config.Doremi.EmbedColor)
-                .WithDescription($":white_check_mark: Your trading card data has been successfully saved! " +
-                $"On the next time you're using the register command, your card data will be continued with the latest save data.")
-                .WithThumbnailUrl(TradingCardCore.Doremi.emojiOk).Build());
-            } else
-            {
-                await ReplyAsync(embed: new EmbedBuilder()
-                .WithColor(Config.Doremi.EmbedColor)
-                .WithDescription(":x: Sorry, you don't have trading card data on this server yet.")
-                .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build());
-            }
-        }
-        
         [Command("register", RunMode = RunMode.Async), Summary("Register your configuration for trading cards group command.")]
         public async Task trading_card_register()
         {
@@ -2418,16 +2395,35 @@ namespace OjamajoBot.Module
                 if (File.Exists(playerSaveDataDirectory))
                 {
                     File.Copy(playerSaveDataDirectory, $@"{playerDataDirectory}");
-                    await ReplyAsync(embed: new EmbedBuilder()
-                    .WithColor(Config.Doremi.EmbedColor)
-                    .WithDescription($":white_check_mark: Your trading card data has been successfully loaded!")
-                    .WithThumbnailUrl(TradingCardCore.Doremi.emojiOk).Build());
+                    //modify the catch token
+                    try
+                    {
+                        JObject arrInventory = JObject.Parse(File.ReadAllText(playerDataDirectory));
+                        arrInventory["catch_token"] = Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyToken);
+                        File.WriteAllText(playerDataDirectory, arrInventory.ToString());
+
+                        await ReplyAsync(embed: new EmbedBuilder()
+                        .WithColor(Config.Doremi.EmbedColor)
+                        .WithDescription($":white_check_mark: Your trading card data has been successfully loaded! " +
+                        $"To keep the progress balanced, you can't catch any card on this spawn turn.")
+                        .WithThumbnailUrl(TradingCardCore.Doremi.emojiOk).Build());
+
+                    }
+                    catch {
+                        await ReplyAsync(embed: new EmbedBuilder()
+                        .WithColor(Config.Doremi.EmbedColor)
+                        .WithDescription($":x: Sorry, something went wrong. Please try the command again or seek help assistance from bot support team.")
+                        .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build());
+                    }
                 } else
                 {
                     File.Copy($@"{Config.Core.headConfigFolder}trading_card_template_data.json", $@"{playerDataDirectory}");
                     await ReplyAsync(embed: new EmbedBuilder()
                     .WithColor(Config.Doremi.EmbedColor)
-                    .WithDescription($":white_check_mark: Your trading card data has been successfully registered.")
+                    .WithDescription($":white_check_mark: Your trading card data has been successfully registered. " +
+                    $"You can see the tutorial/guide with: **{Config.Doremi.PrefixParent[0]}card guide starter**/" +
+                    $"**{Config.Doremi.PrefixParent[0]}card guide mystery guide**/" +
+                    $"**{Config.Doremi.PrefixParent[0]}card guide bad card**")
                     .WithThumbnailUrl(TradingCardCore.Doremi.emojiOk).Build());
                 }
                 
@@ -2436,15 +2432,112 @@ namespace OjamajoBot.Module
             {
                 await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
-                .WithDescription(":x: Sorry, your trading card data has been registered already.")
+                .WithDescription($":x: Sorry, your trading card data has been registered already. " +
+                $"Please delete with **{Config.Doremi.PrefixParent[0]}card delete** if you want to starting over from beginning.")
                 .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build());
+            }
+        }
+
+        [Command("save", RunMode = RunMode.Async), Summary("Make a save file backup from this server that you can continue on another server.")]
+        public async Task trading_card_save_file()
+        {
+            string sourceFileName = $"{Config.Core.headConfigGuildFolder}{Context.Guild.Id}/{Config.Core.headTradingCardConfigFolder}/{Context.User.Id}.json";
+            string destFileName = $"config/{Core.headTradingCardSaveConfigFolder}/{Context.User.Id}.json";
+
+            if (File.Exists(sourceFileName))
+            {
+                File.Copy(sourceFileName, destFileName, true);
+                await ReplyAsync(embed: new EmbedBuilder()
+                .WithColor(Config.Doremi.EmbedColor)
+                .WithDescription($":white_check_mark: Your trading card data on this server: **{Context.Guild.Name}** has been successfully saved! " +
+                $"On the next time you're using the register command, your card data will be continued with the latest save data.")
+                .WithThumbnailUrl(TradingCardCore.Doremi.emojiOk).Build());
+            }
+            else
+            {
+                await ReplyAsync(embed: new EmbedBuilder()
+                .WithColor(Config.Doremi.EmbedColor)
+                .WithDescription(":x: Sorry, you don't have trading card data on this server yet.")
+                .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build());
+            }
+        }
+
+        [Command("delete", RunMode = RunMode.Async), Summary("Delete all of your trading card data on this server.")]
+        public async Task trading_card_new_file()
+        {
+            var guildId = Context.Guild.Id;
+            var clientId = Context.User.Id;
+
+            string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId.ToString()}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+            string sourceFileName = $"config/{Core.headTradingCardSaveConfigFolder}/{Context.User.Id}.json";
+
+
+            if (!File.Exists(playerDataDirectory))
+            {
+                await ReplyAsync(embed: new EmbedBuilder()
+                .WithColor(Config.Doremi.EmbedColor)
+                .WithDescription($"I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
+                .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build());
+            }
+            else
+            {
+                var timeoutDuration = TimeSpan.FromSeconds(60);
+                
+                //select user
+                string captcha = GlobalFunctions.RandomString(5);
+
+                IUserMessage msg = await ReplyAsync(embed: new EmbedBuilder()
+                    .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+                    .WithTitle("Are you sure you want to delete your card data on this server?")
+                    .WithDescription($"Please read these rules & notes that applied bellow:\n" +
+                    $"-**THIS ACTIONS ARE NOT REVERSIBLE, " +
+                    $"MAKE SURE YOU HAVE CREATE YOUR SAVE FILE IF YOU WANT TO LOAD YOUR SAVE DATA AGAIN!**\n" +
+                    $"-All of your card data on this server will be deleted!\n" +
+                    $"If you really want to delete the save data on this server please enter this confirmation code: **{captcha}**")
+                    .WithColor(Config.Doremi.EmbedColor)
+                    .Build());
+                var response = await NextMessageAsync(timeout: timeoutDuration);
+
+                try
+                {
+                    var checkNull = response.Content.ToLower().ToString();
+                }
+                catch
+                {
+                    await Context.Channel.DeleteMessageAsync(response.Id);
+                    await Context.Channel.DeleteMessageAsync(msg);
+                    await ReplyAsync(":stopwatch: I'm sorry, you have reach your timeout. " +
+                    $"Please use the `{Config.Doremi.PrefixParent[0]}card delete` command again to retry the delete process.");
+                    return;
+                }
+
+                await Context.Channel.DeleteMessageAsync(response.Id);
+                await Context.Channel.DeleteMessageAsync(msg);
+
+                if (response.Content.ToString() == captcha)
+                {
+                    File.Delete(playerDataDirectory);
+                    await ReplyAsync(embed: new EmbedBuilder()
+                    .WithTitle("Your card data has been deleted!")
+                    .WithColor(Config.Doremi.EmbedColor)
+                    .Build());
+                } else
+                {
+                    await ReplyAsync(embed: new EmbedBuilder()
+                    .WithTitle(":x: That is not the correct confirmation code. Card data deletion process has been cancelled.")
+                    .WithColor(Config.Doremi.EmbedColor)
+                    .Build());
+                }
+
+                return;
+                    
             }
         }
 
         [Name("card guide"), Group("guide"), Summary("These commands contains FAQ/guide for ojamajo trading card.")]
         public class DoremiModeratorTradingCardsFAQ : ModuleBase<SocketCommandContext>
         {
-            [Command("starter", RunMode = RunMode.Async), Summary("Register your configuration for trading card group command.")]
+            [Command("starter", RunMode = RunMode.Async), Summary("Shows the basic guide for ojamajo trading card.")]
             public async Task trading_card_faq_gettingStarted()
             {
                 await ReplyAsync(embed: new EmbedBuilder()
@@ -2480,7 +2573,7 @@ namespace OjamajoBot.Module
                     .Build());
             }
 
-            [Command("mystery card", RunMode = RunMode.Async),Alias("mysterycard"), Summary("Mystery Card FAQ.")]
+            [Command("mystery card", RunMode = RunMode.Async),Alias("mysterycard"), Summary("Shows all information regarding the mystery card.")]
             public async Task trading_card_faq_mysteryCard()
             {
                 await ReplyAsync(embed: new EmbedBuilder()
@@ -2496,7 +2589,7 @@ namespace OjamajoBot.Module
                     .Build());
             }
 
-            [Command("bad card", RunMode = RunMode.Async), Alias("badcard"), Summary("Bad Card FAQ.")]
+            [Command("bad card", RunMode = RunMode.Async), Alias("badcard"), Summary("Shows all information regarding the bad card.")]
             public async Task trading_card_faq_badCard()
             {
                 await ReplyAsync(embed: new EmbedBuilder()
@@ -2550,8 +2643,8 @@ namespace OjamajoBot.Module
 
             if (cardCaptureReturn.Item1 == "")
             {
-                //await Context.Message.DeleteAsync();
-                await ReplyAndDeleteAsync(null,embed: cardCaptureReturn.Item2.Build(), timeout: TimeSpan.FromSeconds(10));
+                await Context.Message.DeleteAsync();
+                await ReplyAndDeleteAsync(null,embed: cardCaptureReturn.Item2.Build(), timeout: TimeSpan.FromSeconds(15));
             }
             else
                 await ReplyAsync(cardCaptureReturn.Item1,
@@ -3070,18 +3163,15 @@ namespace OjamajoBot.Module
             if (!File.Exists(playerDataDirectory)) //not registered yet
             {
                 await Context.Message.DeleteAsync();
-                new Timer(async _ =>
-                {
-                    var msg = await ReplyAsync(embed: new EmbedBuilder()
-                    .WithColor(Config.Doremi.EmbedColor)
-                    .WithDescription($":x: I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
-                    .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build());
-                    await Context.Channel.DeleteMessageAsync(msg.Id);
-                },
-                null,
-                TimeSpan.FromSeconds(10),
-                TimeSpan.FromMilliseconds(-1));
+                await ReplyAndDeleteAsync(null,embed: new EmbedBuilder()
+                .WithColor(Config.Doremi.EmbedColor)
+                .WithDescription($":x: I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
+                .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build(),timeout:TimeSpan.FromSeconds(10));
+                
                 return Ok();
+            } else
+            {
+
             }
 
             var playerData = JObject.Parse(File.ReadAllText(playerDataDirectory));
@@ -3089,7 +3179,7 @@ namespace OjamajoBot.Module
 
             if (fileCount <= 1)
             {
-                await ReplyAsync("Sorry, server need to have more than 1 user that register the trading card data.");
+                await ReplyAndDeleteAsync("Sorry, server need to have more than 1 user that register the trading card data.",timeout:TimeSpan.FromSeconds(10));
                 return Ok();
             }
             else
@@ -3186,7 +3276,10 @@ namespace OjamajoBot.Module
                         }
                         catch
                         {
-                            await ReplyAsync(replyTimeout);
+                            await Context.Channel.DeleteMessageAsync(response.Id);
+                            await Context.Channel.DeleteMessageAsync(msg.Id);
+                            await Context.Channel.DeleteMessageAsync(msg2.Id);
+                            await ReplyAndDeleteAsync(replyTimeout, timeout: TimeSpan.FromSeconds(15));
                             isTrading = false;
                             return Ok();
                         }
@@ -3891,12 +3984,12 @@ namespace OjamajoBot.Module
                                 else
                                 {
                                     await ReplyAsync(embed: new EmbedBuilder()
-                                        .WithTitle("✅ Trade Completed")
+                                        .WithTitle("✅ Trade Offer has been sent succesfully!")
                                         .WithColor(Config.Doremi.EmbedColor)
                                         .WithDescription($"Your trade offer has been sent to " +
                                         $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}!\nThank you for using {TradingCardCore.Doremi.embedName}.")
                                         .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
-                                        .WithImageUrl(TradingCardCore.Doremi.emojiOk)
+                                        .WithThumbnailUrl(TradingCardCore.Doremi.emojiOk)
                                         .Build());
 
                                     await ReplyAsync($"You have a new card trade offer, {MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}.\n" +
@@ -3950,7 +4043,7 @@ namespace OjamajoBot.Module
         }
 
         [Command("trade process", RunMode = RunMode.Async), Summary("Trade one of your doremi trading card with other user.")]
-        public async Task trading_card_queue_process()
+        public async Task<RuntimeResult> trading_card_queue_process()
         {
             var guildId = Context.Guild.Id;
             var clientId = Context.User.Id;
@@ -3959,11 +4052,11 @@ namespace OjamajoBot.Module
 
             if (!File.Exists(playerDataDirectory)) //not registered yet
             {
-                await ReplyAsync(embed: new EmbedBuilder()
+                await ReplyAndDeleteAsync(null,embed: new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
                 .WithDescription($"I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
-                .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build());
-                return;
+                .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build(),timeout:TimeSpan.FromSeconds(10));
+                return Ok();
             }
 
             var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
@@ -3974,8 +4067,9 @@ namespace OjamajoBot.Module
 
             if (fileCount <= 1)
             {
-                await ReplyAsync("Sorry, server need to have more than 1 user that register the trading card data.");
-                return;
+                await ReplyAndDeleteAsync(":x: Sorry, server need to have more than 1 user that register the trading card data.",
+                    timeout:TimeSpan.FromSeconds(10));
+                return Ok();
             }
             else
             {
@@ -3994,10 +4088,9 @@ namespace OjamajoBot.Module
 
                     if (userList.Count <= 0)
                     {
-                        await ReplyAsync(":x: There are no trade that you can process.");
-                        return;
+                        await ReplyAsync(":x: There are no card trade that you can process.");
+                        return Ok();
                     }
-
                     IList<JToken> objUserList = userList;
                     int currentIndex = 0;
                     for (int i = 0; i < userList.Count; i++)
@@ -4025,9 +4118,10 @@ namespace OjamajoBot.Module
                     string selectionOtherUserCardPack = ""; string selectionOtherUserCardCategory = "";
                     string selectionYourCardPack = ""; string selectionYourCardCategory = "";
 
-                    DirectoryInfo d = new DirectoryInfo(userFolderDirectory);//Assuming Test is your Folder
-                    FileInfo[] Files = d.GetFiles("*.json"); //Getting Text files
+                    //DirectoryInfo d = new DirectoryInfo(userFolderDirectory);//Assuming Test is your Folder
+                    //FileInfo[] Files = d.GetFiles("*.json"); //Getting Text files
 
+                    IUserMessage msg; IUserMessage msg2;
                     //user selection
                     string titleUserSelection = $"**Step 1 - Select the user trade process with numbers**\n";
                     string tempVal = titleUserSelection;
@@ -4040,7 +4134,7 @@ namespace OjamajoBot.Module
                                         //2:review process
                     Boolean newStep = true;
                     //select user
-                    await ReplyAsync(embed: new EmbedBuilder()
+                    msg = await ReplyAsync(embed: new EmbedBuilder()
                         .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
                         .WithDescription($"Welcome to {TradingCardCore.Doremi.embedName}. " +
                         $"Here you can process your trade offer that sent by someone. " +
@@ -4048,7 +4142,18 @@ namespace OjamajoBot.Module
                         .WithColor(Config.Doremi.EmbedColor)
                         .Build());
 
-                    //await PagedReplyAsync(pageContentUserList);
+                    PaginatedAppearanceOptions pao = new PaginatedAppearanceOptions();
+                    pao.JumpDisplayOptions = JumpDisplayOptions.Never;
+                    pao.DisplayInformationIcon = false;
+
+                    var pager = new PaginatedMessage
+                    {
+                        Pages = pageContentUserList,
+                        Color = Config.Doremi.EmbedColor,
+                        Options = pao
+                    };
+
+                    msg2 = await PagedReplyAsync(pageContentUserList);
                     var response = await NextMessageAsync(timeout: timeoutDuration);
                     newStep = false;
 
@@ -4060,30 +4165,54 @@ namespace OjamajoBot.Module
                         }
                         catch
                         {
-                            await ReplyAsync(replyTimeout);
+                            await ReplyAndDeleteAsync(replyTimeout,timeout:TimeSpan.FromSeconds(10));
                             isTrading = false;
-                            return;
+                            return Ok();
                         }
 
                         if (response.Content.ToString().ToLower() == "cancel" ||
                             response.Content.ToString().ToLower() == "exit")
                         {
+                            try
+                            {
+                                await Context.Channel.DeleteMessageAsync(response.Id);
+                                await Context.Channel.DeleteMessageAsync(msg);
+                            }
+                            catch { }
+                            try
+                            {
+                                await Context.Channel.DeleteMessageAsync(msg2);
+                            }
+                            catch { }
+
                             await ReplyAsync(embed: new EmbedBuilder()
                                 .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
                                 .WithDescription($"You have cancel your trade process. Thank you for using the {TradingCardCore.Doremi.embedName}")
                                 .WithColor(Config.Doremi.EmbedColor)
                                 .Build());
                             isTrading = false;
-                            return;
+                            return Ok();
                         }
                         else if (stepProcess == 1)
                         {
+                            try
+                            {
+                                await Context.Channel.DeleteMessageAsync(response.Id);
+                                await Context.Channel.DeleteMessageAsync(msg);
+                            }
+                            catch { }
+                            try
+                            {
+                                await Context.Channel.DeleteMessageAsync(msg2);
+                            }
+                            catch { }
+
                             //select user
                             var isNumeric = int.TryParse(response.Content.ToString().ToLower(), out int n);
                             if (newStep)
                             {
                                 newStep = false;
-                                //await PagedReplyAsync(pageContentUserList);
+                                msg2 = await PagedReplyAsync(pageContentUserList);
                                 response = await NextMessageAsync(timeout: timeoutDuration);
                             }
                             else
@@ -4092,7 +4221,8 @@ namespace OjamajoBot.Module
                                 {
                                     stepProcess = 1;
                                     selectionUserId = "";
-                                    await ReplyAsync(":x: Please re-type the proper number selection.");
+                                    await ReplyAndDeleteAsync(":x: Please re-type the proper number selection.",
+                                        timeout:TimeSpan.FromSeconds(10));
                                     //await PagedReplyAsync(pageContentUserList);
                                     response = await NextMessageAsync(timeout: timeoutDuration);
                                 }
@@ -4102,8 +4232,9 @@ namespace OjamajoBot.Module
                                 {
                                     stepProcess = 1;
                                     selectionUserId = "";
-                                    await ReplyAsync(":x: That number choice is not on the list. Please re-type the proper number selection.");
-                                    //await PagedReplyAsync(pageContentUserList);
+                                    await ReplyAndDeleteAsync(":x: That number choice is not on the list. Please re-type the proper number selection.",
+                                        timeout:TimeSpan.FromSeconds(10));
+                                    msg2 = await PagedReplyAsync(pageContentUserList);
                                     response = await NextMessageAsync(timeout: timeoutDuration);
                                 }
                                 else
@@ -4124,6 +4255,18 @@ namespace OjamajoBot.Module
                         }
                         else if (stepProcess == 2)
                         {
+                            try
+                            {
+                                await Context.Channel.DeleteMessageAsync(response.Id);
+                                await Context.Channel.DeleteMessageAsync(msg);
+                            }
+                            catch { }
+                            try
+                            {
+                                await Context.Channel.DeleteMessageAsync(msg2);
+                            }
+                            catch { }
+
                             //check if your card/other user card still exists on the inventory or not
                             var JCheckUserData = JObject.Parse(File.ReadAllText(playerDataDirectory));
                             string otherUserDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/" +
@@ -4157,7 +4300,7 @@ namespace OjamajoBot.Module
                                 ((JObject)JUserData["trading_queue"]).Remove(selectionUserId);
                                 File.WriteAllText(yourUserDataDirectory, JUserData.ToString());
                                 isTrading = false;
-                                return;
+                                return Ok();
                             }
                             else if (existsYours || existsOthers)
                             {//check for duplicates
@@ -4165,7 +4308,7 @@ namespace OjamajoBot.Module
                                 .WithTitle("🗑️ Trade Process Cancelled")
                                 .WithColor(Config.Doremi.EmbedColor)
                                 .WithDescription($"Your trade with " +
-                                $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))} has been cancelled because one of you have the same card offer that being sent.\n" +
+                                $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))} has been cancelled because one of you already have the same card offer that being sent.\n" +
                                 $"Please use the **{Config.Doremi.PrefixParent[0]}card trade process** again to process other card offer.")
                                 .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
                                 .Build());
@@ -4176,7 +4319,7 @@ namespace OjamajoBot.Module
                                 ((JObject)JUserData["trading_queue"]).Remove(selectionUserId);
                                 File.WriteAllText(yourUserDataDirectory, JUserData.ToString());
                                 isTrading = false;
-                                return;
+                                return Ok();
                             }
 
                             EmbedBuilder eb = new EmbedBuilder()
@@ -4185,7 +4328,7 @@ namespace OjamajoBot.Module
                             $"Type **confirm** or **accept** to confirm the trade.\n" +
                             $"Type **reject** to reject the trade.\n" +
                             $"Type **back** to select other card pack.\n" +
-                            $"Type **cancel** to cancel your trading process.")
+                            $"Type **exit** or **cancel** to exit the card trade process.")
                             .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
                             //other user:
                             .AddField($"You will receive:",
@@ -4209,7 +4352,7 @@ namespace OjamajoBot.Module
                             if (newStep)
                             {
                                 newStep = false;
-                                await ReplyAsync(embed: eb.Build());
+                                msg = await ReplyAsync(embed: eb.Build());
                                 response = await NextMessageAsync(timeout: timeoutDuration);
                             }
                             else
@@ -4223,14 +4366,14 @@ namespace OjamajoBot.Module
                                   response.Content.ToString().ToLower() != "confirm" &&
                                   response.Content.ToString().ToLower() != "reject")
                                 {
-                                    await ReplyAsync(":x: Please type with the valid choice: **accept/confirm/reject**.",
+                                    msg = await ReplyAsync(":x: Please type with the valid choice: **accept/confirm/reject**.",
                                         embed: eb.Build());
                                     response = await NextMessageAsync(timeout: timeoutDuration);
                                 }
                                 else if (response.Content.ToString().ToLower() == "reject")
                                 {
                                     await ReplyAsync(embed: new EmbedBuilder()
-                                        .WithTitle("🗑️ Trade Process Rejected")
+                                        .WithTitle(":no_entry_sign: Trade Process Rejected")
                                         .WithColor(Config.Doremi.EmbedColor)
                                         .WithDescription($"You have reject the trade offer from " +
                                         $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}.\nThank you for using {TradingCardCore.Doremi.embedName}.")
@@ -4238,14 +4381,12 @@ namespace OjamajoBot.Module
                                         .Build());
 
                                     //save the file
-
-
                                     string yourUserDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
                                     var JUserData = JObject.Parse(File.ReadAllText(yourUserDataDirectory));
                                     ((JObject)JUserData["trading_queue"]).Remove(selectionUserId);
                                     File.WriteAllText(yourUserDataDirectory, JUserData.ToString());
                                     isTrading = false;
-                                    return;
+                                    return Ok();
                                 }
                                 else
                                 {
@@ -4253,9 +4394,10 @@ namespace OjamajoBot.Module
                                         .WithTitle("✅ Trade Process Completed")
                                         .WithColor(Config.Doremi.EmbedColor)
                                         .WithDescription($"You have successfully accepted the trade offer from " +
-                                        $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}.\nThank you for using {TradingCardCore.Doremi.embedName}.")
+                                        $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}.\n" +
+                                        $"Thank you for using {TradingCardCore.Doremi.embedName}.")
                                         .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
-                                        .WithImageUrl(TradingCardCore.Doremi.emojiOk)
+                                        .WithThumbnailUrl(TradingCardCore.Doremi.emojiOk)
                                         .Build());
 
                                     //save to yours
@@ -4297,26 +4439,23 @@ namespace OjamajoBot.Module
                                     File.WriteAllText(otherUserDataDirectory, JOtherUserData.ToString());
 
                                     isTrading = false;
-                                    return;
+                                    return Ok();
 
                                 }
                             }
-
                         }
-
                     }
-
-
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e.ToString());
+                    //Console.WriteLine(e.ToString());
                 }
             }
+            return Ok();
         }
 
         [Command("shop", RunMode = RunMode.Async), Summary("Open Doremi Card Shop Menu.")]
-        public async Task openShop()
+        public async Task<RuntimeResult> openShop()
         {
             var guildId = Context.Guild.Id;
             var clientId = Context.User.Id;
@@ -4329,7 +4468,7 @@ namespace OjamajoBot.Module
                 .WithColor(Config.Doremi.EmbedColor)
                 .WithDescription($":x: I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
                 .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build());
-                return;
+                return Ok();
             }
 
             JObject arrInventory = JObject.Parse(File.ReadAllText(playerDataDirectory));
@@ -4370,7 +4509,7 @@ namespace OjamajoBot.Module
                 await Context.Message.DeleteAsync();
                 await Context.Channel.DeleteMessageAsync(messageTemp.Id);
             }
-            catch (Exception e)
+            catch
             {
 
             }
@@ -4387,20 +4526,33 @@ namespace OjamajoBot.Module
                 }
                 catch
                 {
-                    await ReplyAsync(replyTimeout);
-                    isShopping = false;
-                    return;
+                    await Context.Channel.DeleteMessageAsync(answerUserTemp.Id);
+                    await Context.Channel.DeleteMessageAsync(messageTemp.Id);
+
+                    await ReplyAndDeleteAsync(replyTimeout,timeout:TimeSpan.FromSeconds(15));
+                    //isShopping = false;
+                    return Ok();
                 }
 
                 if (response.Content.ToString().ToLower() == "cancel" || response.Content.ToString().ToLower() == "exit")
                 {
+                    try
+                    {
+                        await Context.Channel.DeleteMessageAsync(answerUserTemp.Id);
+                        await Context.Channel.DeleteMessageAsync(messageTemp.Id);
+                    }
+                    catch
+                    {
+
+                    }
+
                     await ReplyAsync(embed: new EmbedBuilder()
                         .WithAuthor("Doremi Card Shop", Config.Doremi.EmbedAvatarUrl)
                         .WithDescription($"Thank you for visiting the Doremi Card Shop.")
                         .WithColor(Config.Doremi.EmbedColor)
                         .Build());
-                    isShopping = false;
-                    return;
+                    //isShopping = false;
+                    return Ok();
                 }
                
                 if (stepProcess == 1)
@@ -4414,7 +4566,7 @@ namespace OjamajoBot.Module
                             await Context.Channel.DeleteMessageAsync(answerUserTemp.Id);
                             await Context.Channel.DeleteMessageAsync(messageTemp.Id);
                         }
-                        catch (Exception e)
+                        catch
                         {
 
                         }
@@ -4441,7 +4593,7 @@ namespace OjamajoBot.Module
                         await Context.Channel.DeleteMessageAsync(answerUserTemp.Id);
                         await Context.Channel.DeleteMessageAsync(messageTemp.Id);
                     }
-                    catch (Exception e)
+                    catch
                     {
 
                     }
@@ -4672,12 +4824,12 @@ namespace OjamajoBot.Module
                             //await Context.Channel.DeleteMessageAsync(answerUserTemp.Id);
                             await Context.Channel.DeleteMessageAsync(messageTemp.Id);
                         }
-                        catch (Exception e)
+                        catch
                         {
 
                         }
 
-                        await ReplyAsync("Sorry, that is not the valid **confirm/back** choices.");
+                        await ReplyAndDeleteAsync(":x: Sorry, that is not the valid **confirm/back** choices.",timeout:TimeSpan.FromSeconds(10));
                         stepProcess = 2;
                     }
                     else if (response.Content.ToString().ToLower() == "back")
@@ -4699,7 +4851,7 @@ namespace OjamajoBot.Module
                             await Context.Channel.DeleteMessageAsync(answerUserTemp.Id);
                             await Context.Channel.DeleteMessageAsync(messageTemp.Id);
                         }
-                        catch (Exception e)
+                        catch
                         {
 
                         }
@@ -4949,7 +5101,7 @@ namespace OjamajoBot.Module
 
                         if (selectionItem >= 2)
                         {
-                            concatResponseSuccess += " Activate it on card spawn with **<bot>!card capture boost**";
+                            concatResponseSuccess += " Activate it on the card spawn with **<bot>!card capture boost**";
                         }
 
                         arrInventory["magic_seeds"] = (magicSeeds - priceConfirmation).ToString();
@@ -4964,25 +5116,25 @@ namespace OjamajoBot.Module
                             await Context.Channel.DeleteMessageAsync(answerUserTemp.Id);
                             await Context.Channel.DeleteMessageAsync(messageTemp.Id);
                         }
-                        catch (Exception e)
+                        catch
                         {
 
                         }
 
                         stepProcess = 2;
-                        await ReplyAsync(":x: Sorry, you don't have enough magic seeds.");
+                        await ReplyAndDeleteAsync(":x: Sorry, you don't have enough magic seeds.",timeout:TimeSpan.FromSeconds(10));
                     }
                 }
                 else if (stepProcess == 5)
                 {
                     await ReplyAsync(concatResponseSuccess + "\nThank you for purchasing the items. Please come again next time~");
-                    isShopping = false;
-                    return;
+                    //isShopping = false;
+                    return Ok();
                 }
 
             }
 
-            return;
+            return Ok();
         }
 
         [Command("boost", RunMode = RunMode.Async), Summary("Show card boost status.")]

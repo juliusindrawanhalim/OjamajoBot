@@ -603,14 +603,15 @@ namespace OjamajoBot.Module
             //reference: https://www.newtonsoft.com/json/help/html/ModifyJson.htm
             var guildId = Context.Guild.Id;
             var clientId = Context.User.Id;
+
             var cardCaptureReturn = TradingCardCore.cardCapture(Config.Onpu.EmbedColor, Context.Client.CurrentUser.GetAvatarUrl(), guildId, clientId.ToString(), Context.User.Username,
             TradingCardCore.Onpu.emojiError, "onpu", boost, Config.Onpu.PrefixParent[0], "on",
             TradingCardCore.Onpu.maxNormal, TradingCardCore.Onpu.maxPlatinum, TradingCardCore.Onpu.maxMetal, TradingCardCore.Onpu.maxOjamajos);
-
+            
             if (cardCaptureReturn.Item1 == "")
             {
-                //await Context.Message.DeleteAsync();
-                await ReplyAndDeleteAsync(null, embed: cardCaptureReturn.Item2.Build(), timeout: TimeSpan.FromSeconds(10));
+                await Context.Message.DeleteAsync();
+                await ReplyAndDeleteAsync(null, embed: cardCaptureReturn.Item2.Build(), timeout: TimeSpan.FromSeconds(15));
             }
             else
                 await ReplyAsync(cardCaptureReturn.Item1,

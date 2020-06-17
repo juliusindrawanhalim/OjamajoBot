@@ -779,8 +779,8 @@ namespace OjamajoBot.Module
 
             if (cardCaptureReturn.Item1 == "")
             {
-                //await Context.Message.DeleteAsync();
-                await ReplyAndDeleteAsync(null, embed: cardCaptureReturn.Item2.Build(), timeout: TimeSpan.FromSeconds(10));
+                await Context.Message.DeleteAsync();
+                await ReplyAndDeleteAsync(null, embed: cardCaptureReturn.Item2.Build(), timeout: TimeSpan.FromSeconds(15));
             }
             else
                 await ReplyAsync(cardCaptureReturn.Item1,
