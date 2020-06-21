@@ -3092,7 +3092,7 @@ namespace OjamajoBot.Module
             var guildId = Context.Guild.Id;
             var clientId = Context.User.Id;
 
-            await ReplyAsync(embed: TradingCardCore.printCardDetailTemplate(Config.Doremi.EmbedColor, guildId.ToString(),
+            await ReplyAsync(null,embed: TradingCardCore.printCardDetailTemplate(Config.Doremi.EmbedColor, guildId.ToString(),
                 clientId.ToString(), card_id, "doremi", TradingCardCore.Doremi.emojiError, ":x: Sorry, I can't find that card ID.")
                     .Build());
         }
@@ -4890,7 +4890,7 @@ namespace OjamajoBot.Module
                         if (selectionItem == 1)
                         {
                             arrInventory["catch_token"] = "";
-                            concatResponseSuccess += $"got 1 more catching attempt!";
+                            concatResponseSuccess += $"got 1 more card capture attempt!";
                         } 
                         else if(selectionItem == 2)
                         {
@@ -5100,7 +5100,7 @@ namespace OjamajoBot.Module
 
                         if (selectionItem >= 2)
                         {
-                            concatResponseSuccess += " Activate it on the card spawn with **<bot>!card capture boost**";
+                            concatResponseSuccess += " You can activate it on the card that has spawned with **<bot>!card capture boost**";
                         }
 
                         arrInventory["magic_seeds"] = (magicSeeds - priceConfirmation).ToString();
@@ -5500,18 +5500,22 @@ namespace OjamajoBot.Module
             "**Available difficulty:**\n" +
             "**easy:** 30 seconds, 10 lives, score+50\n" +
             "**medium:** 20 seconds, 7 lives, score+100\n" +
-            "**hard:** 15 seconds, 5 lives, score+200\n")]
-        public async Task Interact_Quiz_Hangman(string category="random", string difficulty = "easy")
+            "**hard:** 15 seconds, 5 lives, score+200")]
+        public async Task<RuntimeResult> Interact_Quiz_Hangman(string category="random", string difficulty = "easy")
         {
+            TimeSpan autoDeleteTimespan = TimeSpan.FromSeconds(15);
+            IMessage respondBot;
             //check first if category available on quiz.json/not
             if (category.ToLower()!="random" && !Config.Core.jobjectQuiz.ContainsKey(category.ToLower())){
-                await ReplyAsync($"Sorry, I can't find that category. Available category options: **random**/**characters**/**color**/**fruit**/**animal**");
-                return;
+                await ReplyAndDeleteAsync($"Sorry, I can't find that category. Available category options: **random**/**characters**/**color**/**fruit**/**animal**",
+                    timeout: autoDeleteTimespan);
+                return Ok();
             }
             
             if(difficulty.ToLower()!="easy"&&difficulty.ToLower() != "medium" && difficulty.ToLower() != "hard"){
-                await ReplyAsync($"Sorry, I can't find that difficulty. Available difficulty options: **easy**/**medium**/**hard**");
-                return;
+                await ReplyAndDeleteAsync($"Sorry, I can't find that difficulty. Available difficulty options: **easy**/**medium**/**hard**",
+                    timeout: autoDeleteTimespan);
+                return Ok();
             }
 
             if (!Config.Doremi.isRunningMinigame.ContainsKey(Context.User.Id.ToString()))
@@ -5560,7 +5564,7 @@ namespace OjamajoBot.Module
                     questionsFormat = $"Guess one of the ojamajo doremi characters name:```{replacedAnswer}```";
                 }
 
-                await ReplyAsync($"{Context.User.Username}, \u23F1 You have **{timeoutDuration}** seconds each turn, with **{lives}** \u2764. " +
+                respondBot = await ReplyAsync($"{Context.User.Username}, \u23F1 You have **{timeoutDuration}** seconds each turn, with **{lives}** \u2764. " +
                     $"Type **exit** to exit from the games.\n" +
                     questionsFormat);
 
@@ -5570,10 +5574,17 @@ namespace OjamajoBot.Module
                     Boolean isGuessed = false;
                     string loweredResponse = response.Content.ToLower();
 
+                    try
+                    {
+                        await Context.Channel.DeleteMessageAsync(respondBot.Id);
+                        await Context.Channel.DeleteMessageAsync(response.Id);
+                    }
+                    catch { }
+
                     if (loweredResponse == "exit"){
                         Config.Doremi.isRunningMinigame.Remove(Context.User.Id.ToString());
-                        await ReplyAsync($"**{Context.User.Username}** has left the hangman minigame.");
-                        return;
+                        await ReplyAndDeleteAsync($"**{Context.User.Username}** has left the hangman minigame.", timeout: autoDeleteTimespan);
+                        return Ok();
                     }
                     else if (loweredResponse == randomedAnswer)
                     {
@@ -5586,16 +5597,19 @@ namespace OjamajoBot.Module
 
                         //save the data
                         MinigameCore.updateScore(guildId.ToString(), userId.ToString(), scoreValue);
-                        return;
+                        return Ok();
                     }
                     else if (loweredResponse.Length > 1)
-                        await ReplyAsync($"Sorry **{Context.User.Username}**, but you can only guess a word each turn.");
+                        await ReplyAndDeleteAsync($":x: Sorry **{Context.User.Username}**, you can only guess a word each turn.",
+                            timeout:autoDeleteTimespan);
                     else if (loweredResponse == " ")
-                        await ReplyAsync($"Sorry **{Context.User.Username}**, but you can't enter a whitespace character.");
+                        await ReplyAndDeleteAsync($":x: Sorry **{Context.User.Username}**, you can't enter a whitespace character.",
+                            timeout: autoDeleteTimespan);
                     else if (loweredResponse.Length <= 1){
                         foreach (string x in guessedWord){
                             if (loweredResponse.Contains(x)){
-                                await ReplyAsync($"**{Context.User.Username}**, you already guessed **{x}**");
+                                await ReplyAndDeleteAsync($":x: Sorry **{Context.User.Username}**, you already guessed **{x}**",
+                                    timeout:autoDeleteTimespan);
                                 isGuessed = true;
                                 break;
                             }
@@ -5608,12 +5622,12 @@ namespace OjamajoBot.Module
                             lives -= 1;
                             if (lives > 0){
                                 Config.Doremi.isRunningMinigame.Remove(Context.User.Id.ToString());
-                                await ReplyAsync($"\u274C Sorry **{Context.User.Username}**, you guess it wrong. \u2764: **{lives}** . Category:**{key}**```{replacedAnswer}```");
+                                respondBot = await ReplyAsync($"\u274C Sorry **{Context.User.Username}**, you guess it wrong. \u2764: **{lives}** . Category:**{key}**```{replacedAnswer}```");
                             } else {
                                 lives = 0;
                                 Config.Doremi.isRunningMinigame.Remove(Context.User.Id.ToString());
                                 await ReplyAsync($"\u274C Sorry **{Context.User.Username}**, you're running out of guessing attempt. The correct answer is : **{randomedAnswer}**");
-                                return;
+                                return Ok();
                             }
                                 
                         } else if (!isGuessed) {
@@ -5630,8 +5644,10 @@ namespace OjamajoBot.Module
                                 replacedAnswer = sb.ToString();
                             }
                             catch (Exception e) { Console.WriteLine(e.ToString()); }
-                            if(replacedAnswer.Contains("_"))
-                                await ReplyAsync($":white_check_mark: **{Context.User.Username}**. Category:**{key}**\n```{replacedAnswer}```");
+                            if (replacedAnswer.Contains("_"))
+                            {
+                                respondBot = await ReplyAsync($":white_check_mark: **{Context.User.Username}**. Category:**{key}**\n```{replacedAnswer}```");
+                            }
                             else {
                                 Config.Doremi.isRunningMinigame.Remove(Context.User.Id.ToString());
 
@@ -5642,7 +5658,7 @@ namespace OjamajoBot.Module
 
                                 //save the data
                                 MinigameCore.updateScore(guildId.ToString(), userId.ToString(), scoreValue);
-                                return;
+                                return Ok();
                             }
                         }
 
@@ -5655,100 +5671,104 @@ namespace OjamajoBot.Module
                 lives = 0;
                 Config.Doremi.isRunningMinigame.Remove(Context.User.Id.ToString());
                 await ReplyAsync($"\u23F1 Time's up **{Context.User.Username}**. The correct answer is : **{randomedAnswer}**.");
-                return;
+                return Ok();
 
             }
             else
+            {
                 await ReplyAsync($"Sorry **{Context.User.Username}**, you're still running the **minigame** interactive commands, please finish it first.");
-
+                return Ok();
+            }
+                
+            
         }
 
-        [Command("dorequiz", RunMode = RunMode.Async), Summary("I will give you some quiz about Doremi.")]
-        public async Task Interact_Quiz()
-        {
-            Random rnd = new Random();
-            int rndQuiz = rnd.Next(0, 4);
+        //[Command("dorequiz", RunMode = RunMode.Async), Summary("I will give you some quiz about Doremi.")]
+        //public async Task Interact_Quiz()
+        //{
+        //    Random rnd = new Random();
+        //    int rndQuiz = rnd.Next(0, 4);
 
-            string question, replyCorrect, replyWrong, replyEmbed;
-            List<string> answer = new List<string>();
-            string replyTimeout = "Time's up. Sorry but it seems you haven't answered yet.";
+        //    string question, replyCorrect, replyWrong, replyEmbed;
+        //    List<string> answer = new List<string>();
+        //    string replyTimeout = "Time's up. Sorry but it seems you haven't answered yet.";
 
-            if (rndQuiz == 1)
-            {
-                question = "What is my favorite food?";
-                answer.Add("steak");
-                replyCorrect = "Ding Dong, correct! I love steak very much";
-                replyWrong = "Sorry but that's wrong. Please retype the correct answer.";
-                replyTimeout = "Time's up. My favorite food is steak.";
-                replyEmbed = "https://66.media.tumblr.com/337aaf42d3fb0992c74f7f9e2a0bf4f6/tumblr_olqtewoJDS1r809wso1_500.png";
-            }
-            else if (rndQuiz == 2)
-            {
-                question = "Where do I attend my school?";
-                answer.Add("misora elementary school"); answer.Add("misora elementary"); answer.Add("misora school");
-                replyCorrect = "Ding Dong, correct!";
-                replyWrong = "Sorry but that's wrong. Please retype the correct answer.";
-                replyTimeout = "Time's up. I went to Misora Elementary School.";
-                replyEmbed = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/d/df/E.JPG";
-            }
-            else if (rndQuiz == 3)
-            {
-                question = "What is my full name?";
-                answer.Add("doremi harukaze"); answer.Add("harukaze doremi");
-                replyCorrect = "Ding Dong, correct! Doremi Harukaze is my full name.";
-                replyWrong = "Sorry but that's wrong. Please retype the correct answer.";
-                replyTimeout = "Time's up. Doremi Harukaze is my full name.";
-                replyEmbed = "https://i.pinimg.com/originals/e7/1c/ce/e71cce7499e4ea9f9520c6143c9672e7.jpg";
-            }
-            else
-            {
-                question = "What is my sister name?";
-                answer.Add("pop"); answer.Add("harukaze pop"); answer.Add("pop harukaze");
-                replyCorrect = "Ding Dong, that's correct. Pop Harukaze is my sister name.";
-                replyWrong = "Sorry, wrong answer. Please retype the correct answer.";
-                replyTimeout = "Time's up. My sister name is Pop Harukaze.";
-                replyEmbed = "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/6e3bcaa4-2e3a-4390-a51a-652dff45c0b6/d6r5yu6-bffc8dba-af11-4af3-856c-d8ce82efaba3.png/v1/fill/w_333,h_250,q_70,strp/pop_harukaze_by_xdnobody_d6r5yu6-250t.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9MzAwIiwicGF0aCI6IlwvZlwvNmUzYmNhYTQtMmUzYS00MzkwLWE1MWEtNjUyZGZmNDVjMGI2XC9kNnI1eXU2LWJmZmM4ZGJhLWFmMTEtNGFmMy04NTZjLWQ4Y2U4MmVmYWJhMy5wbmciLCJ3aWR0aCI6Ijw9NDAwIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmltYWdlLm9wZXJhdGlvbnMiXX0.ZOzOlhlXguuSwk-EKwPjNIWywfRYeWRWKLOBQK4i5HY";
-            }
+        //    if (rndQuiz == 1)
+        //    {
+        //        question = "What is my favorite food?";
+        //        answer.Add("steak");
+        //        replyCorrect = "Ding Dong, correct! I love steak very much";
+        //        replyWrong = "Sorry but that's wrong. Please retype the correct answer.";
+        //        replyTimeout = "Time's up. My favorite food is steak.";
+        //        replyEmbed = "https://66.media.tumblr.com/337aaf42d3fb0992c74f7f9e2a0bf4f6/tumblr_olqtewoJDS1r809wso1_500.png";
+        //    }
+        //    else if (rndQuiz == 2)
+        //    {
+        //        question = "Where do I attend my school?";
+        //        answer.Add("misora elementary school"); answer.Add("misora elementary"); answer.Add("misora school");
+        //        replyCorrect = "Ding Dong, correct!";
+        //        replyWrong = "Sorry but that's wrong. Please retype the correct answer.";
+        //        replyTimeout = "Time's up. I went to Misora Elementary School.";
+        //        replyEmbed = "https://vignette.wikia.nocookie.net/ojamajowitchling/images/d/df/E.JPG";
+        //    }
+        //    else if (rndQuiz == 3)
+        //    {
+        //        question = "What is my full name?";
+        //        answer.Add("doremi harukaze"); answer.Add("harukaze doremi");
+        //        replyCorrect = "Ding Dong, correct! Doremi Harukaze is my full name.";
+        //        replyWrong = "Sorry but that's wrong. Please retype the correct answer.";
+        //        replyTimeout = "Time's up. Doremi Harukaze is my full name.";
+        //        replyEmbed = "https://i.pinimg.com/originals/e7/1c/ce/e71cce7499e4ea9f9520c6143c9672e7.jpg";
+        //    }
+        //    else
+        //    {
+        //        question = "What is my sister name?";
+        //        answer.Add("pop"); answer.Add("harukaze pop"); answer.Add("pop harukaze");
+        //        replyCorrect = "Ding Dong, that's correct. Pop Harukaze is my sister name.";
+        //        replyWrong = "Sorry, wrong answer. Please retype the correct answer.";
+        //        replyTimeout = "Time's up. My sister name is Pop Harukaze.";
+        //        replyEmbed = "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/6e3bcaa4-2e3a-4390-a51a-652dff45c0b6/d6r5yu6-bffc8dba-af11-4af3-856c-d8ce82efaba3.png/v1/fill/w_333,h_250,q_70,strp/pop_harukaze_by_xdnobody_d6r5yu6-250t.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9MzAwIiwicGF0aCI6IlwvZlwvNmUzYmNhYTQtMmUzYS00MzkwLWE1MWEtNjUyZGZmNDVjMGI2XC9kNnI1eXU2LWJmZmM4ZGJhLWFmMTEtNGFmMy04NTZjLWQ4Y2U4MmVmYWJhMy5wbmciLCJ3aWR0aCI6Ijw9NDAwIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmltYWdlLm9wZXJhdGlvbnMiXX0.ZOzOlhlXguuSwk-EKwPjNIWywfRYeWRWKLOBQK4i5HY";
+        //    }
 
-            //response.Content.ToLower() to get the answer
+        //    //response.Content.ToLower() to get the answer
 
-            await ReplyAsync(question);
-            //var response = await NextMessageAsync();
-            //Boolean wrongLoop = false;
-            Boolean correctAnswer = false;
+        //    await ReplyAsync(question);
+        //    //var response = await NextMessageAsync();
+        //    //Boolean wrongLoop = false;
+        //    Boolean correctAnswer = false;
 
-            while (!correctAnswer)
-            {
-                var response = await NextMessageAsync();
+        //    while (!correctAnswer)
+        //    {
+        //        var response = await NextMessageAsync();
 
-                if (response == null)
-                {
-                    await ReplyAsync(replyTimeout);
-                    return;
-                }
-                else if (answer.Contains(response.Content.ToLower()))
-                {
-                    int scoreValue = 20;
-                    var guildId = Context.Guild.Id;
-                    var userId = Context.User.Id;
+        //        if (response == null)
+        //        {
+        //            await ReplyAsync(replyTimeout);
+        //            return;
+        //        }
+        //        else if (answer.Contains(response.Content.ToLower()))
+        //        {
+        //            int scoreValue = 20;
+        //            var guildId = Context.Guild.Id;
+        //            var userId = Context.User.Id;
 
-                    //save the data
-                    MinigameCore.updateScore(guildId.ToString(), userId.ToString(), scoreValue);
+        //            //save the data
+        //            MinigameCore.updateScore(guildId.ToString(), userId.ToString(), scoreValue);
 
-                    replyCorrect += $". Your **score+{scoreValue}**";
-                    await ReplyAsync(replyCorrect, embed: new EmbedBuilder()
-                    .WithColor(Config.Doremi.EmbedColor)
-                    .WithImageUrl(replyEmbed)
-                    .Build());
+        //            replyCorrect += $". Your **score+{scoreValue}**";
+        //            await ReplyAsync(replyCorrect, embed: new EmbedBuilder()
+        //            .WithColor(Config.Doremi.EmbedColor)
+        //            .WithImageUrl(replyEmbed)
+        //            .Build());
 
-                    correctAnswer = true;
-                }
-                else
-                {
-                    await ReplyAsync(replyWrong);
-                }
-            }
-        }
+        //            correctAnswer = true;
+        //        }
+        //        else
+        //        {
+        //            await ReplyAsync(replyWrong);
+        //        }
+        //    }
+        //}
 
         [Command("numbers", RunMode = RunMode.Async), Alias("number","dice"), Summary("Guess if the number is lower/higher than the one I give.")]
         public async Task Interact_Minigame_Guess_Numbers()

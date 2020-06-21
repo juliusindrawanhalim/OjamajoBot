@@ -501,28 +501,87 @@ namespace OjamajoBot.Bot
                         var dataReaction = (JObject)guildConfig["roles_react"][messageId]["data"];
                         if (dataReaction.ContainsKey(reaction.Emote.ToString()))
                         {
+                            if (!Config.Doremi._imReactionRole.ContainsKey(guildId))
+                                Config.Doremi._imReactionRole.Add(guildId, new List<IMessage>());
+
                             var roleId = guildConfig["roles_react"][messageId]["data"][reaction.Emote.ToString()];
 
                             var roleMaster = channel.Guild.Roles.FirstOrDefault(x => x.Id == Convert.ToUInt64(roleId));
                             var roleSearch = guildUser.Roles.FirstOrDefault(x => x.Id == Convert.ToUInt64(roleId));
                             if (roleSearch == null)
                             {
+                                await guildUser.AddRoleAsync(roleMaster);
+
                                 IMessage im = await originChannel.SendMessageAsync(embed: new EmbedBuilder()
                                     .WithColor(Config.Doremi.EmbedColor)
                                     .WithDescription($":white_check_mark: {MentionUtils.MentionUser(guildUser.Id)} now have new role: " +
                                     $"{MentionUtils.MentionRole(roleMaster.Id)}")
                                     .Build());
-                                await guildUser.AddRoleAsync(roleMaster);
+                                Config.Doremi._imReactionRole[guildId].Add(im);
+
+                                //add a
+                                //add b
+                                //add c
+                                //remove c
+                                //add d
+
+                                try
+                                {
+                                    new Timer(async _ =>
+                                    {
+                                        for (int i = 0; i < Config.Doremi._imReactionRole[guildId].Count(); i++)
+                                        {
+                                            await Config.Doremi._imReactionRole[guildId][i].DeleteAsync();
+                                        }
+                                        Config.Doremi._imReactionRole[guildId].Clear();
+                                    },
+                                    null,
+                                    20000,
+                                    Timeout.Infinite //time to wait before executing the timer again
+                                    );
+                                }
+                                catch { }
+
                                 await message.RemoveReactionAsync(reaction.Emote, guildUser);
+
                             }
                             else
                             {
+                                await guildUser.RemoveRoleAsync(roleMaster);
+
                                 IMessage im = await originChannel.SendMessageAsync(embed: new EmbedBuilder()
                                     .WithColor(Config.Doremi.EmbedColor)
                                     .WithDescription($":white_check_mark: {MentionUtils.MentionUser(guildUser.Id)} have been removed from the role: " +
                                     $"{MentionUtils.MentionRole(roleMaster.Id)}")
                                     .Build());
-                                await guildUser.RemoveRoleAsync(roleMaster);
+                                Config.Doremi._imReactionRole[guildId].Add(im);
+
+                                try
+                                {
+                                    if (Config.Doremi._imReactionRole[guildId].Count() >= 1)
+                                    {
+                                        new Timer(async _ =>
+                                        {
+                                            for (int i = 0; i < Config.Doremi._imReactionRole[guildId].Count(); i++)
+                                            {
+                                                await Config.Doremi._imReactionRole[guildId][i].DeleteAsync();
+                                            }
+
+                                            Config.Doremi._imReactionRole[guildId].Clear();
+
+                                            //await im.DeleteAsync();
+                                            //await originChannel.DeleteMessageAsync(im.Id);
+                                            //await im.DeleteAsync();
+                                        },
+                                        null,
+                                        20000,
+                                        Timeout.Infinite //time to wait before executing the timer again
+                                        );
+                                    }
+                                        
+                                }
+                                catch {}
+                                
                                 await message.RemoveReactionAsync(reaction.Emote, guildUser);
 
                             }
@@ -532,11 +591,9 @@ namespace OjamajoBot.Bot
                     catch (Exception e)
                     {
                     }
-                }
-                
-                //star react
-                if (reaction.Emote.Equals(new Discord.Emoji("\u2B50")))
+                } else if (reaction.Emote.Equals(new Discord.Emoji("\u2B50")))
                 {
+                    //star react
                     if (message.Reactions.TryGetValue(new Discord.Emoji("\u2B50"), out var metadata))
                     {
                         if (message.Author.Id == Config.Doremi.Id && metadata.ReactionCount >= 5 && !message.IsPinned)
@@ -560,7 +617,6 @@ namespace OjamajoBot.Bot
 
                     //Console.WriteLine($"{reaction.User.Value} just added a reaction '{reaction.Emote}' " +
                     //$"to {message.Author}'s message ({message.Id}).");
-
                 }
             }
         }

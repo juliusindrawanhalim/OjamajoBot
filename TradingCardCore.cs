@@ -95,7 +95,7 @@ namespace OjamajoBot
             .WithColor(Config.Doremi.EmbedColor)
             .WithTitle($"Ojamajo Trading Card - Update {version} - 21.06.20")
             .AddField(":tools: **Updates:**",
-            "-**Card Inventory** is now displaying the percentage progression status and fixed the unsorted order on each page.");
+            "-**card inventory** is now displaying the percentage progression status and fixed the unsorted order on each page.");
         }
 
         public static int getPlayerRank(int exp)
@@ -449,7 +449,7 @@ namespace OjamajoBot
                     .AddField("ID", card_id, true)
                     .AddField("Category", category, true)
                     .AddField("Rank", rank, true)
-                    .AddField("⭐", star, true)
+                    .AddField("Star", star, true)
                     .AddField("Point", point, true)
                     .WithImageUrl(imgUrl)
                     .WithFooter($"Captured by: {username} ({totalCaptured}/{max})",botIconUrl);
