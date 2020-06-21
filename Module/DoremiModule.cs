@@ -1362,7 +1362,7 @@ namespace OjamajoBot.Module
                                     .Build());
                             } catch(Exception e)
                             {
-                                Console.WriteLine(e.ToString());
+                                //Console.WriteLine(e.ToString());
                             }
                         }
                     } else
@@ -2643,7 +2643,6 @@ namespace OjamajoBot.Module
 
             if (cardCaptureReturn.Item1 == "")
             {
-                await Context.Message.DeleteAsync();
                 await ReplyAndDeleteAsync(null,embed: cardCaptureReturn.Item2.Build(), timeout: TimeSpan.FromSeconds(15));
             }
             else

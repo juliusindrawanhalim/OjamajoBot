@@ -15,7 +15,7 @@ namespace OjamajoBot
 {
     public class TradingCardCore
     {
-        public static string version = "1.16";
+        public static string version = "1.16a";
         public static string propertyId = "trading_card_spawn_id";
         public static string propertyCategory = "trading_card_spawn_category";
         public static string propertyToken = "trading_card_spawn_token";
@@ -77,20 +77,25 @@ namespace OjamajoBot
             //"-Card save command with **do!card save**: Now you can make your trading card save file that can be used as a backup & continued on with card register command on another server.\n" +
             //"-Card trade command now have auto deletion message system to keep the channel clean.");
 
+            //return new EmbedBuilder()
+            //.WithColor(Config.Doremi.EmbedColor)
+            //.WithTitle($"Ojamajo Trading Card - Update {version} - 17.06.20")
+            //.AddField(":tools: **Updates:**",
+            //"-More cleaner card category command: **capture**/**shop**/**trade**/**trade process** command: failed/error/timeout message will automatically deleted within 10-15 seconds.\n" +
+            //"-**card register** command that has been loaded now have new rules applied to keep the progress balanced: you can't catch any card on the current card spawn turn.\n" +
+            //"-**card inventory** command will now sort all the card in order\n" +
+            //"-Mystery card image has been updated")
+            //.AddField(":beetle: **Bug Fix:**",
+            //"-**card trade process** command fix: the user list can now be displayed.")
+            //.AddField(":new: **New Features**:",
+            //"-Card data delete command with **do!card delete**: Want to start over from beginning? Now you can delete your card data progress on current server and start over again. " +
+            //"Please read some note & rules that applied before executing this command!");
+
             return new EmbedBuilder()
             .WithColor(Config.Doremi.EmbedColor)
-            .WithTitle($"Ojamajo Trading Card - Update {version} - 17.06.20")
+            .WithTitle($"Ojamajo Trading Card - Update {version} - 21.06.20")
             .AddField(":tools: **Updates:**",
-            "-**card capture** anti peeking & auto deletion feature: failed/error executed card capture command from a user will now deleted immediately to keep the channel clean.\n" +
-            "-More cleaner card category command: **capture**/**shop**/**trade**/**trade process** command: failed/error/timeout message will automatically deleted within 10-15 seconds.\n" +
-            "-**card register** command that has been loaded now have new rules applied to keep the progress balanced: you can't catch any card on the current card spawn turn.\n" +
-            "-**card inventory** command will now sort all the card in order\n" +
-            "-Mystery card image has been updated")
-            .AddField(":beetle: **Bug Fix:**",
-            "-**card trade process** command fix: the user list can now be displayed.")
-            .AddField(":new: **New Features**:",
-            "-Card data delete command with **do!card delete**: Want to start over from beginning? Now you can delete your card data progress on current server and start over again. " +
-            "Please read some note & rules that applied before executing this command!");
+            "-**Card Inventory** is now displaying the percentage progression status and fixed the unsorted order on each page.");
         }
 
         public static int getPlayerRank(int exp)
@@ -116,7 +121,13 @@ namespace OjamajoBot
 
             List<string> pageContent = new List<string>();
             var arrList = (JArray)arrData;
-            string title = $"**Total: {arrList.Count}/{maxAmount}**\n";
+            JArray sorted = new JArray(arrList.OrderBy(e=>e));
+            arrList = sorted;
+
+            double calculated = (double)arrList.Count / maxAmount * 100;
+            string percentageCompleted = $"({Math.Round(calculated)}%)";
+
+            string title = $"**Total: {arrList.Count}/{maxAmount} {percentageCompleted}**\n";
 
             string tempVal = title;
             int currentIndex = 0;
@@ -545,12 +556,12 @@ namespace OjamajoBot
                     .WithColor(color)
                     .WithThumbnailUrl(thumbnailUrl)
                     .AddField("Total / EXP", $"**{totalSuccess} / {playerData["catch_attempt"].ToString()}**", false)
-                    .AddField($"Doremi Card Pack {doremiPercentage}", doremiText, true)
-                    .AddField($"Hazuki Card Pack {hazukiPercentage}", hazukiText, true)
-                    .AddField($"Aiko Card Pack {aikoPercentage}", aikoText, true)
-                    .AddField($"Onpu Card Pack {onpuPercentage}", onpuText, true)
-                    .AddField($"Momoko Card Pack {momokoPercentage}", momokoText, true)
-                    .AddField($"Other Card Pack {otherPercentage}", otherText, true);
+                    .AddField($"Doremi Pack {doremiPercentage}", doremiText, true)
+                    .AddField($"Hazuki Pack {hazukiPercentage}", hazukiText, true)
+                    .AddField($"Aiko Pack {aikoPercentage}", aikoText, true)
+                    .AddField($"Onpu Pack {onpuPercentage}", onpuText, true)
+                    .AddField($"Momoko Pack {momokoPercentage}", momokoText, true)
+                    .AddField($"Other Pack {otherPercentage}", otherText, true);
             }
         }
 

@@ -514,16 +514,6 @@ namespace OjamajoBot.Bot
                                     .Build());
                                 await guildUser.AddRoleAsync(roleMaster);
                                 await message.RemoveReactionAsync(reaction.Emote, guildUser);
-
-                                new Timer(async _ =>
-                                {
-                                    await im.DeleteAsync();
-                                },
-                                null,
-                                TimeSpan.FromSeconds(30), //time to wait before executing the timer for the first time
-                                TimeSpan.FromSeconds(30) //time to wait before executing the timer again
-                                );
-
                             }
                             else
                             {
@@ -534,15 +524,6 @@ namespace OjamajoBot.Bot
                                     .Build());
                                 await guildUser.RemoveRoleAsync(roleMaster);
                                 await message.RemoveReactionAsync(reaction.Emote, guildUser);
-
-                                new Timer(async _ =>
-                                {
-                                    await im.DeleteAsync();
-                                },
-                                null,
-                                TimeSpan.FromSeconds(30), //time to wait before executing the timer for the first time
-                                TimeSpan.FromSeconds(30) //time to wait before executing the timer again
-                                );
 
                             }
 
