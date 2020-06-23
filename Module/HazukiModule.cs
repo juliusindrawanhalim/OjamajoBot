@@ -939,7 +939,7 @@ namespace OjamajoBot.Module
             }
         }
 
-        [Command("status", RunMode = RunMode.Async), Summary("Show the Trading Card Status. " +
+        [Command("status", RunMode = RunMode.Async), Summary("Show your Trading Card Progression/Status. " +
             "You can put the mentioned username to see the card status of that user.")]
         public async Task trading_card_status(SocketGuildUser username = null)
         {
@@ -1287,7 +1287,7 @@ namespace OjamajoBot.Module
             var clientId = Context.User.Id;
 
             await ReplyAsync(embed: TradingCardCore.printCardDetailTemplate(Config.Hazuki.EmbedColor, guildId.ToString(),
-                clientId.ToString(), card_id, "hazuki", TradingCardCore.Hazuki.emojiError, ":x: Sorry, I can't find that card ID.")
+                clientId.ToString(), Context.User.Username , card_id, "hazuki", TradingCardCore.Hazuki.emojiError, ":x: Sorry, I can't find that card ID.")
                     .Build());
         }
 

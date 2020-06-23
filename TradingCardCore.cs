@@ -93,9 +93,14 @@ namespace OjamajoBot
 
             return new EmbedBuilder()
             .WithColor(Config.Doremi.EmbedColor)
-            .WithTitle($"Ojamajo Trading Card - Update {version} - 21.06.20")
+            .WithTitle($"Ojamajo Trading Card - Update {version} - 22.06.20")
             .AddField(":tools: **Updates:**",
-            "-**card inventory** is now displaying the percentage progression status and fixed the unsorted order on each page.");
+            "-**card inventory** is now displaying the percentage progression status and fixed the unsorted order on each page.\n" +
+            "-**card trade** now only displaying the available user on the server.")
+            .AddField(":beetle: Bug fix",
+            "-**card trade** and **card trade process** : can only be executed one time per instance at trade interactive.")
+            .AddField("New Features",
+            "-**card timer**: now you can check the approximate of next card spawn timer.");
         }
 
         public static int getPlayerRank(int exp)
@@ -246,8 +251,9 @@ namespace OjamajoBot
 
             return new EmbedBuilder()
                 .WithColor(color)
-                .WithTitle($"**{username} Card Status Boost**\n")
-                .WithDescription("Note: Using a boost for any category on a card pack will remove all that boost status.")
+                .WithTitle($":arrow_double_up: **{username} Card Status Boost**")
+                .WithDescription("Using a boost for **any category** on a card pack will remove all that boost status. " +
+                "You can use the capture boost with **<bot prefix>!card capture boost**")
                 .AddField("Doremi Boost", doremiBoost, true)
                 .AddField("Hazuki Boost", hazukiBoost, true)
                 .AddField("Aiko Boost", aikoBoost, true)
@@ -266,7 +272,7 @@ namespace OjamajoBot
         }
 
         public static EmbedBuilder printCardDetailTemplate(Color color, string guildId, string clientId, 
-            string card_id, string parent, string emojiError, string errorDescription)
+            string username, string card_id, string parent, string emojiError, string errorDescription)
         {
             string category = getCardCategory(card_id);
 
@@ -289,7 +295,7 @@ namespace OjamajoBot
                     {
                         name = jObjTradingCardList[parent][category][card_id]["name"].ToString();
                     }
-                    catch (Exception e) { }
+                    catch { }
                 }
                 else if (category == "special")
                 {
@@ -298,7 +304,7 @@ namespace OjamajoBot
                         name = jObjTradingCardList["other"][category][card_id]["name"].ToString();
                         parent = "other";
                     }
-                    catch (Exception e) { }
+                    catch { }
                 }
 
                 if (name == "")
@@ -321,7 +327,7 @@ namespace OjamajoBot
                     .AddField("ID", card_id, true)
                     .AddField("Category", category, true)
                     .AddField("Rank", rank, true)
-                    .AddField("⭐", star, true)
+                    .AddField("Star", star, true)
                     .AddField("Point", point, true)
                     .WithImageUrl(imgUrl);
                 }
@@ -329,7 +335,7 @@ namespace OjamajoBot
                 {
                     return new EmbedBuilder()
                     .WithColor(color)
-                    .WithDescription($":x: Sorry, you don't have: **{card_id} - {name}** card yet. Try to capture it to look at this card.")
+                    .WithDescription($":x: Sorry **{username}**, you don't have: **{card_id} - {name}** card yet. Try to capture it to look at this card.")
                     .WithThumbnailUrl(emojiError);
                 }
             }
@@ -1454,7 +1460,14 @@ namespace OjamajoBot
 
             string footerBadCard = "";
             //start read json
-            var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
+            JObject jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
+            
+            //using (var stream = File.Open($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json", FileMode.Open, FileAccess.Write, FileShare.ReadWrite))
+            //{
+            //    using var sr = new StreamReader(stream);
+            //    jObjTradingCardList = JObject.Parse(sr.ReadToEnd());
+            //}
+
             var key = JObject.Parse(jObjTradingCardList[parent][chosenCategory].ToString()).Properties().ToList();
             int randIndex = new Random().Next(0, key.Count);
 

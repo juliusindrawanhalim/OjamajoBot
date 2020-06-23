@@ -610,7 +610,7 @@ namespace OjamajoBot.Module
                     "Please order something up from the menu listed below:")
                     .AddField("Menu list", concatMenu)
                     .WithColor(Config.Momoko.EmbedColor)
-                    .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/c/cc/ODN-EP11-027.png")
+                    .WithThumbnailUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/c/cc/ODN-EP11-027.png")
                     .Build());
 
                 Boolean procedureFinish = false;
@@ -1184,7 +1184,7 @@ namespace OjamajoBot.Module
             }
         }
 
-        [Command("status", RunMode = RunMode.Async), Summary("Show the Trading Card Status. " +
+        [Command("status", RunMode = RunMode.Async), Summary("Show your Trading Card Progression/Status. " +
             "You can put the mentioned username to see the card status of that user.")]
         public async Task trading_card_status(SocketGuildUser username = null)
         {
@@ -1219,7 +1219,7 @@ namespace OjamajoBot.Module
             var clientId = Context.User.Id;
 
             await ReplyAsync(embed: TradingCardCore.printCardDetailTemplate(Config.Momoko.EmbedColor, guildId.ToString(),
-                clientId.ToString(), card_id, "momoko", TradingCardCore.Momoko.emojiError, ":x: Sorry, I can't find that card ID.")
+                clientId.ToString(), Context.User.Username , card_id, "momoko", TradingCardCore.Momoko.emojiError, ":x: Sorry, I can't find that card ID.")
                     .Build());
 
         }

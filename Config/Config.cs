@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using System.Linq;
 using System.Threading;
 using System.Globalization;
+using System.Diagnostics;
 
 namespace Config
 {
@@ -151,6 +152,9 @@ namespace Config
         public static JObject jObjRandomMoments;
         public static JObject jobjectdorememes;
 
+        public static IDictionary<string, Boolean> isRunningTradeCard = new Dictionary<string, Boolean>();
+        public static IDictionary<string, Boolean> isRunningTradeCardProcess = new Dictionary<string, Boolean>();
+
         public static List<string> listRandomEvent = new List<string>{
             $"{MentionUtils.MentionUser(Hazuki.Id)} let's go to maho dou",
             $"{MentionUtils.MentionUser(Aiko.Id)} let's go to maho dou",
@@ -166,7 +170,9 @@ namespace Config
         public static IDictionary<string, Timer> _timerBirthdayAnnouncement = new Dictionary<string, Timer>();//birthday reminder timer
         //trading card
         public static IDictionary<string, Timer> _timerTradingCardSpawn = new Dictionary<string, Timer>();//trading card spawn timer
+        public static IDictionary<string, Stopwatch> _stopwatchCardSpawn = new Dictionary<string, Stopwatch>();//trading card stopwatch spawn timer
         public static IDictionary<string, List<IMessage>> _imReactionRole = new Dictionary<string, List<IMessage>>();
+        
         //public static IDictionary<string, string> _tradingCardSpawnedId = new Dictionary<string, string>();//the spawned trading card id
         //public static IDictionary<string, string> _tradingCardSpawnedCategory = new Dictionary<string, string>();//category
         //public static IDictionary<string, string> _tradingCardCatchToken = new Dictionary<string, string>();//catch token
