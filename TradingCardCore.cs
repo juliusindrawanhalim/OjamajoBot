@@ -15,7 +15,7 @@ namespace OjamajoBot
 {
     public class TradingCardCore
     {
-        public static string version = "1.16a";
+        public static string version = "1.17";
         public static string propertyId = "trading_card_spawn_id";
         public static string propertyCategory = "trading_card_spawn_category";
         public static string propertyToken = "trading_card_spawn_token";
@@ -91,16 +91,24 @@ namespace OjamajoBot
             //"-Card data delete command with **do!card delete**: Want to start over from beginning? Now you can delete your card data progress on current server and start over again. " +
             //"Please read some note & rules that applied before executing this command!");
 
+            //return new EmbedBuilder()
+            //.WithColor(Config.Doremi.EmbedColor)
+            //.WithTitle($"Ojamajo Trading Card - Update {version} - 22.06.20")
+            //.AddField(":tools: **Updates:**",
+            //"-**card inventory** is now displaying the percentage progression status and fixed the unsorted order on each page.\n" +
+            //"-**card trade** now only displaying the available user on the server.")
+            //.AddField(":beetle: Bug fix",
+            //"-**card trade** and **card trade process** : can only be executed one time per instance at trade interactive.")
+            //.AddField("New Features",
+            //"-**card timer**: now you can check the approximate of next card spawn timer.");
+
             return new EmbedBuilder()
             .WithColor(Config.Doremi.EmbedColor)
-            .WithTitle($"Ojamajo Trading Card - Update {version} - 22.06.20")
+            .WithTitle($"Ojamajo Trading Card - Update {version} - 25.06.20")
             .AddField(":tools: **Updates:**",
-            "-**card inventory** is now displaying the percentage progression status and fixed the unsorted order on each page.\n" +
-            "-**card trade** now only displaying the available user on the server.")
+            "**card trade** and **card trade process** : you can now trade **ojamajos** category card.")
             .AddField(":beetle: Bug fix",
-            "-**card trade** and **card trade process** : can only be executed one time per instance at trade interactive.")
-            .AddField("New Features",
-            "-**card timer**: now you can check the approximate of next card spawn timer.");
+            "-**card trade** : issues resolved where you can't choose the user/exit.");
         }
 
         public static int getPlayerRank(int exp)
@@ -586,6 +594,8 @@ namespace OjamajoBot
                 listAllowed.Add("doremi platinum");
             if (((JArray)(arrListDoremi["metal"])).Count >= 1)
                 listAllowed.Add("doremi metal");
+            if (((JArray)(arrListDoremi["ojamajos"])).Count >= 1)
+                listAllowed.Add("doremi ojamajos");
             //hazuki
             if (((JArray)(arrListHazuki["normal"])).Count >= 1)
                 listAllowed.Add("hazuki normal");
@@ -593,6 +603,8 @@ namespace OjamajoBot
                 listAllowed.Add("hazuki platinum");
             if (((JArray)(arrListHazuki["metal"])).Count >= 1)
                 listAllowed.Add("hazuki metal");
+            if (((JArray)(arrListHazuki["ojamajos"])).Count >= 1)
+                listAllowed.Add("hazuki ojamajos");
             //aiko
             if (((JArray)(arrListAiko["normal"])).Count >= 1)
                 listAllowed.Add("aiko normal");
@@ -600,6 +612,8 @@ namespace OjamajoBot
                 listAllowed.Add("aiko platinum");
             if (((JArray)(arrListAiko["metal"])).Count >= 1)
                 listAllowed.Add("aiko metal");
+            if (((JArray)(arrListHazuki["ojamajos"])).Count >= 1)
+                listAllowed.Add("aiko ojamajos");
             //onpu
             if (((JArray)(arrListOnpu["normal"])).Count >= 1)
                 listAllowed.Add("onpu normal");
@@ -607,6 +621,8 @@ namespace OjamajoBot
                 listAllowed.Add("onpu platinum");
             if (((JArray)(arrListOnpu["metal"])).Count >= 1)
                 listAllowed.Add("onpu metal");
+            if (((JArray)(arrListHazuki["ojamajos"])).Count >= 1)
+                listAllowed.Add("onpu ojamajos");
             //momoko
             if (((JArray)(arrListMomoko["normal"])).Count >= 1)
                 listAllowed.Add("momoko normal");
@@ -614,6 +630,8 @@ namespace OjamajoBot
                 listAllowed.Add("momoko platinum");
             if (((JArray)(arrListMomoko["metal"])).Count >= 1)
                 listAllowed.Add("momoko metal");
+            if (((JArray)(arrListHazuki["ojamajos"])).Count >= 1)
+                listAllowed.Add("momoko ojamajos");
 
             return listAllowed;
         }
@@ -1305,6 +1323,57 @@ namespace OjamajoBot
 
         }
 
+        //public static Tuple<string,string> getCardParentOjamajos(string cardId)
+        //{
+        //    //return: original parent, related
+        //    //Console.WriteLine(parent + " " +category + " "+ cardId + " " + property);
+        //    var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
+        //    string parent = "doremi"; string related = "";
+        //    try
+        //    {
+        //        JToken arrListRelated = jObjTradingCardList["doremi"]["ojamajos"][cardId]["related"][0];
+        //        parent = "doremi";
+        //        related = arrListRelated.ToString();
+        //    }
+        //    catch { }
+
+        //    try
+        //    {
+        //        JToken arrListRelated = jObjTradingCardList["hazuki"]["ojamajos"][cardId]["related"][0];
+        //        parent = "hazuki";
+        //        related = arrListRelated.ToString();
+        //    }
+        //    catch { }
+
+        //    try
+        //    {
+        //        JToken arrListRelated = jObjTradingCardList["aiko"]["ojamajos"][cardId]["related"][0];
+        //        parent = "aiko";
+        //        related = arrListRelated.ToString();
+        //    }
+        //    catch { }
+
+        //    try
+        //    {
+        //        JToken arrListRelated = jObjTradingCardList["onpu"]["ojamajos"][cardId]["related"][0];
+        //        parent = "onpu";
+        //        related = arrListRelated.ToString();
+        //    }
+        //    catch { }
+
+        //    try
+        //    {
+        //        JToken arrListRelated = jObjTradingCardList["momoko"]["ojamajos"][cardId]["related"][0];
+        //        parent = "momoko";
+        //        related = arrListRelated.ToString();
+        //    }
+        //    catch { }
+
+        //    return Tuple.Create(parent,related);
+
+
+        //}
+
         public static string getCardProperty(string parent, string category,string cardId,string property){
             //Console.WriteLine(parent + " " +category + " "+ cardId + " " + property);
             var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
@@ -1369,7 +1438,7 @@ namespace OjamajoBot
             int randomParent = new Random().Next(0, 6);
             int randomCategory = new Random().Next(11);
             int randomMystery = new Random().Next(0, 2);
-            int randomBadCard = new Random().Next(0, 21);
+            int randomBadCard = new Random().Next(0, 12);
 
             string chosenCategory = ""; string catchRate = ""; string badCardIcon = null;
             Boolean isMystery = false; if (randomMystery <= 0) isMystery = true;
@@ -1487,7 +1556,7 @@ namespace OjamajoBot
             Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardNumber2, "");
 
             //bad card trigger
-            if (randomBadCard <= 0)
+            if (randomBadCard <= 1)
             {
                 int randomBadCardType = new Random().Next(0, 3);
                 badCardIcon = TradingCardCore.BadCards.embedFooterUrl;
@@ -1753,11 +1822,11 @@ namespace OjamajoBot
                 ":sparkles: **Pirilala** is one of my chanting spell",
                 ":sparkles: **Poporina** is one of my chanting spell",
                 ":sparkles: **Peperuto** is one of my chanting spell",
-                ":sparkles: **Paipai Raruku Famifami Pon!** are not my spell",
-                ":sparkles: **Puwapuwa Petton Pururun Rarirori!** are not my spell",
+                ":sparkles: **Paipai Poppun Famifami Pon!** are not my spell",
+                ":sparkles: **Faa Puwapuwa Pon Rarirori!** are not my spell",
                 ":sparkles: **Puu Raruku Purun Perutan!** are not my spell",
                 ":sparkles: **Puu Poppun Faa Pon!** are not my spell",
-                ":sparkles: **Ponpoi Pameruku Pururun Petton!** are not my spell",
+                ":sparkles: **Petton Puu Pameruku Faa!** are not my spell",
                 ":sparkles: **Famifami Rarirori Paipai Petton!** are not my spell"
             };
 
@@ -1797,10 +1866,10 @@ namespace OjamajoBot
                 ":sparkles: **Ponpoi** is one of my chanting spell",
                 ":sparkles: **Puwapuwa** is one of my chanting spell",
                 ":sparkles: **Puu** is one of my chanting spell",
-                ":sparkles: **Pirika Raruku Famifami Pon!** are not my spell",
-                ":sparkles: **Purun Pirilala Pararira Rarirori!** are not my spell",
-                ":sparkles: **Peperuto Poppun Faa Pon!** are not my spell",
-                ":sparkles: **Peperuto Purun Rarirori Perutan!** are not my spell"
+                ":sparkles: **Raruku Famifami Pirika Pon!** are not my spell",
+                ":sparkles: **Pararira Faa Rarirori Poporina!** are not my spell",
+                ":sparkles: **Poppun Pirika Faa Perutan!** are not my spell",
+                ":sparkles: **Rarirori Peperuto Perutan Purun!** are not my spell"
             };
 
         }
@@ -1839,12 +1908,12 @@ namespace OjamajoBot
                 ":sparkles: **Raruku** is one of my chanting spell",
                 ":sparkles: **Rarirori** is one of my chanting spell",
                 ":sparkles: **Poppun** is one of my chanting spell",
-                ":sparkles: **Pirika Ponpoi Famifami Pon!** are not my spell",
+                ":sparkles: **Famifami Pon Ponpoi Pirika!** are not my spell",
                 ":sparkles: **Peperuto Puwapuwa Purun Perutan!** are not my spell",
                 ":sparkles: **Ponpoi Purun Pirilala Petton!** are not my spell",
-                ":sparkles: **Poporina Puwapuwa Famifami Pararira!** are not my spell",
-                ":sparkles: **Paipai Pururun Pirika Perutan!** are not my spell",
-                ":sparkles: **Puu Faa Peperuto Pon!** are not my spell"
+                ":sparkles: **Famifami Pararira Puwapuwa Poporina!** are not my spell",
+                ":sparkles: **Pururun Paipai Perutan Pirika!** are not my spell",
+                ":sparkles: **Puu Pon Faa Peperuto!** are not my spell"
             };
 
         }
@@ -1883,11 +1952,11 @@ namespace OjamajoBot
                 ":sparkles: **Purun** is one of my chanting spell",
                 ":sparkles: **Famifami** is one of my chanting spell",
                 ":sparkles: **Faa** is one of my chanting spell",
-                ":sparkles: **Rarirori Ponpoi Pon Pirika!** are not my spell",
-                ":sparkles: **Peperuto Puwapuwa Raruku Perutan!** are not my spell",
-                ":sparkles: **Pirilala Ponpoi Raruku Petton!** are not my spell",
+                ":sparkles: **Rarirori Pirika Ponpoi Pon!** are not my spell",
+                ":sparkles: **Puwapuwa Peperuto Raruku Perutan!** are not my spell",
+                ":sparkles: **Ponpoi Raruku Petton Pirilala!** are not my spell",
                 ":sparkles: **Poporina Puwapuwa Rarirori Pararira!** are not my spell",
-                ":sparkles: **Peperuto Puu Poppun Pon!** are not my spell",
+                ":sparkles: **Peperuto Pon Poppun Puu!** are not my spell",
                 ":sparkles: **Paipai Pirika Pameruku Perutan!** are not my spell"
             };
 
@@ -1928,12 +1997,12 @@ namespace OjamajoBot
                 ":sparkles: **Petton** is one of my chanting spell",
                 ":sparkles: **Pararira** is one of my chanting spell",
                 ":sparkles: **Pon** is one of my chanting spell",
-                ":sparkles: **Ponpoi Rarirori Pirika Faa!** are not my spell",
+                ":sparkles: **Ponpoi Pirika Faa Rarirori!** are not my spell",
                 ":sparkles: **Raruku Puwapuwa Peperuto Pururun!** are not my spell",
-                ":sparkles: **Purun Ponpoi Raruku  Pirilala!** are not my spell",
+                ":sparkles: **Purun Ponpoi Pirilala Raruku!** are not my spell",
                 ":sparkles: **Rarirori Poporina Famifami Puwapuwa!** are not my spell",
-                ":sparkles: **Faa Puu Poppun Peperuto!** are not my spell",
-                ":sparkles: **Pururun Pirika Pameruku Paipai!** are not my spell"
+                ":sparkles: **Faa Poppun Puu Peperuto!** are not my spell",
+                ":sparkles: **Pururun Pameruku Pirika Paipai!** are not my spell"
             };
 
         }

@@ -3323,16 +3323,23 @@ namespace OjamajoBot.Module
                             foreach (FileInfo file in Files)
                             {
                                 ulong otherUserId = Convert.ToUInt64(Path.GetFileNameWithoutExtension(file.Name));
-
                                 var iguilduser = Context.Guild.Users.FirstOrDefault(x=>x.Id==otherUserId);
                                 
                                 //var available = iguilduser.Guild.GetUserAsync(otherUserId);
-
                                 if (otherUserId != clientId && iguilduser!=null)
                                 {
                                     arrUserId.Add(otherUserId.ToString());
-                                    tempVal += $"**{ctr + 1}. {MentionUtils.MentionUser(otherUserId)}**\n";
+                                }
+                            }
 
+                            for (int i =0;i<arrUserId.Count;i++)
+                            {
+                                var iguilduser = Context.Guild.Users.FirstOrDefault(x => x.Id == Convert.ToUInt64(arrUserId[i]));
+                                tempVal += $"**{i + 1}. {MentionUtils.MentionUser(iguilduser.Id)}**\n";
+
+                                if (i == arrUserId.Count-2) pageContentUserList.Add(tempVal);
+                                else
+                                {
                                     if (currentIndex < 14) currentIndex++;
                                     else
                                     {
@@ -3340,9 +3347,6 @@ namespace OjamajoBot.Module
                                         currentIndex = 0;
                                         tempVal = titleUserSelection;
                                     }
-
-                                    if (ctr == fileCount - 2) pageContentUserList.Add(tempVal);
-                                    ctr++;
                                 }
                             }
 
@@ -3391,9 +3395,13 @@ namespace OjamajoBot.Module
                                 }
                                 catch
                                 {
-                                    await Context.Channel.DeleteMessageAsync(response.Id);
-                                    await Context.Channel.DeleteMessageAsync(msg.Id);
-                                    await Context.Channel.DeleteMessageAsync(msg2.Id);
+                                    try
+                                    {
+                                        await Context.Channel.DeleteMessageAsync(msg.Id);
+                                        await Context.Channel.DeleteMessageAsync(msg2.Id);
+                                    }
+                                    catch { }
+                                    
                                     await ReplyAndDeleteAsync(replyTimeout, timeout: TimeSpan.FromSeconds(15));
                                     isTrading = false;
                                     Config.Doremi.isRunningTradeCard[Context.User.Id.ToString()] = false;
@@ -3543,6 +3551,7 @@ namespace OjamajoBot.Module
                                                     .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
                                                     .WithDescription($":x: Sorry, you cannot trade more than once with " +
                                                     $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}.")
+                                                    .WithThumbnailUrl(TradingCardCore.Doremi.emojiError)
                                                     .Build());
                                                 msg2 = await PagedReplyAsync(pagerUserList);
                                                 response = await NextMessageAsync(timeout: timeoutDuration);
@@ -4095,7 +4104,7 @@ namespace OjamajoBot.Module
                                         else if (response.Content.ToString().ToLower() != "accept" &&
                                           response.Content.ToString().ToLower() != "confirm")
                                         {
-                                            msg = await ReplyAsync(":x: Please type with the valid choice: **accept/confirm**",
+                                            msg = await ReplyAsync(":x: Please type with the valid choice: **accept/confirm/back/exit**",
                                                 embed: eb.Build());
                                             response = await NextMessageAsync(timeout: timeoutDuration);
                                         }
@@ -4114,6 +4123,11 @@ namespace OjamajoBot.Module
                                                 $"Please use **{Config.Doremi.PrefixParent[0]}card trade process** to process your trade offer.");
 
                                             //save to user
+                                            if (selectionOtherUserCardCategory.Contains("ojamajos"))
+                                                selectionOtherUserCardChoiceId = $"{selectionOtherUserCardPack} {selectionOtherUserCardChoiceId}";
+                                            if (selectionYourCardCategory.Contains("ojamajos"))
+                                                selectionYourCardChoiceId = $"{selectionYourCardPack} {selectionYourCardChoiceId}";
+
                                             string[] parameterNames = new string[] { selectionOtherUserCardChoiceId, selectionYourCardChoiceId };
                                             JArray jarrayObj = new JArray();
                                             foreach (string parameterName in parameterNames)
@@ -4259,7 +4273,7 @@ namespace OjamajoBot.Module
 
                         IUserMessage msg; IUserMessage msg2;
                         //user selection
-                        string titleUserSelection = $"**Step 1 - Select the user trade process with numbers**\n";
+                        string titleUserSelection = $"**Step 1 - Select the trade process from a user with numbers**\n";
                         string tempVal = titleUserSelection;
 
                         Boolean isTrading = true;
@@ -4381,14 +4395,34 @@ namespace OjamajoBot.Module
                                         stepProcess = 2; newStep = true;
                                         selectionUserId = arrUserId[Convert.ToInt32(response.Content.ToString()) - 1];
                                         var selectedUserData = (JArray)userList[selectionUserId];
-                                        //will be send
+                                        //will be send--
                                         selectionYourCardChoiceId = selectedUserData[0].ToString();
-                                        selectionYourCardPack = TradingCardCore.getCardParent(selectionYourCardChoiceId);
+
+                                        if(selectionYourCardChoiceId.Contains(" "))
+                                        {//ojamajos category
+                                            //example: hazuki ojt...
+                                            string[] splittedYourChoice = selectionYourCardChoiceId.Split(" ");
+                                            selectionYourCardPack = splittedYourChoice[0];
+                                            selectionYourCardChoiceId = splittedYourChoice[1];
+                                        } else
+                                            selectionYourCardPack = TradingCardCore.getCardParent(selectionYourCardChoiceId);
+
                                         selectionYourCardCategory = TradingCardCore.getCardCategory(selectionYourCardChoiceId);
+                                        
                                         //will be received
                                         selectionOtherUserCardChoiceId = selectedUserData[1].ToString();
-                                        selectionOtherUserCardPack = TradingCardCore.getCardParent(selectionOtherUserCardChoiceId);
+
+                                        if (selectionOtherUserCardChoiceId.Contains(" "))
+                                        {//ojamajos category
+                                            //example: hazuki ojt...
+                                            string[] splittedOtherChoice = selectionOtherUserCardChoiceId.Split(" ");
+                                            selectionOtherUserCardPack = splittedOtherChoice[0];
+                                            selectionOtherUserCardChoiceId = splittedOtherChoice[1];
+                                        } else
+                                            selectionOtherUserCardPack = TradingCardCore.getCardParent(selectionOtherUserCardChoiceId);
+                                        
                                         selectionOtherUserCardCategory = TradingCardCore.getCardCategory(selectionOtherUserCardChoiceId);
+                                        
                                     }
                                 }
                             }
@@ -4428,7 +4462,7 @@ namespace OjamajoBot.Module
                                     .WithTitle("🗑️ Trade Process Cancelled")
                                     .WithColor(Config.Doremi.EmbedColor)
                                     .WithDescription($"Your trade with " +
-                                    $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))} has been cancelled because one of you don't have the offered card anymore\n" +
+                                    $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))} has been cancelled because one of you don't have the offered card anymore.\n" +
                                     $"Please use the **{Config.Doremi.PrefixParent[0]}card trade process** again to process other card offer.")
                                     .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
                                     .Build());
@@ -4449,10 +4483,9 @@ namespace OjamajoBot.Module
                                     .WithColor(Config.Doremi.EmbedColor)
                                     .WithDescription($"Your trade with " +
                                     $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))} has been cancelled because one of you already have the same card offer that being sent.\n" +
-                                    $"Please use the **{Config.Doremi.PrefixParent[0]}card trade process** again to process other card offer.")
+                                    $"Please use the **{Config.Doremi.PrefixParent[0]}card trade process** again to process another card offer.")
                                     .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
                                     .Build());
-                                    isTrading = false;
                                     //save the file
                                     string yourUserDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
                                     var JUserData = JObject.Parse(File.ReadAllText(yourUserDataDirectory));
