@@ -423,10 +423,10 @@ namespace OjamajoBot.Bot
                 user.Id != Config.Onpu.Id && user.Id != Config.Momoko.Id)
             {
                 string[] arrRandomWelcomeMessage = {
-                    $"We hope you enjoy and happy with all of us.",
-                    $"We're really happy that you join our group.",
-                    $"We're expecting you to come and hopefully you're enjoying your stay on the group.",
-                    $"Hope you enjoy your stay."
+                    $"We hope you enjoy and happy with all of us, {MentionUtils.MentionUser(user.Id)}.",
+                    $"We're really happy that you join our group, {MentionUtils.MentionUser(user.Id)}.",
+                    $"We're expecting you to come and hopefully you're enjoying your stay on the group, {MentionUtils.MentionUser(user.Id)}.",
+                    $"Hope you enjoy your stay, {MentionUtils.MentionUser(user.Id)}."
                 };
 
                 string[] arrRandomPictures =
@@ -441,7 +441,7 @@ namespace OjamajoBot.Bot
                 int rndIndexRandomPictures = new Random().Next(0, arrRandomPictures.GetLength(0));
 
                 await channel.SendMessageAsync(embed: new EmbedBuilder()
-                    .WithTitle($"Welcome to {channel.Guild.Name}, {user.Nickname}")
+                    .WithTitle($"Welcome to {channel.Guild.Name}, {user.Username}")
                     .WithDescription($"{arrRandomWelcomeMessage[rndIndexWelcomeMessage]} " +
                     $"Please introduce yourself and don't forget to always follow & read the rule guidelines.")
                     .WithColor(Config.Doremi.EmbedColor)
