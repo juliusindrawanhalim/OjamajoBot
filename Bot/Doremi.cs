@@ -91,8 +91,38 @@ namespace OjamajoBot.Bot
             await client.LoginAsync(TokenType.Bot, Config.Doremi.Token);
             await client.StartAsync();
 
+            //start rotates weather
+            Timer _rotatesWeather = new Timer(async _ =>
+                {
+                    int randomWeather = new Random().Next(0, 40);
+                    int selectedWeatherIndex = 0;
+                    if (randomWeather <= 20)
+                    {
+                        selectedWeatherIndex = 0;
+                        GardenCore.weather = new string[]{ $"☀️", "sunny","A perfect time to water the plant~","5"};
+                    } else if (randomWeather <= 30)
+                    {
+                        selectedWeatherIndex = 1;
+                        GardenCore.weather = new string[] { $"☁️", "cloudy","There might be a chance to rain soon...","4"};
+                    }
+                    else if (randomWeather <= 34)
+                    {
+                        selectedWeatherIndex = 2;
+                        GardenCore.weather = new string[] { $"🌧️", "raining","Not sure if it's a good time to water the plant.","3"};
+                    }
+                    else if (randomWeather <= 38)
+                    {
+                        selectedWeatherIndex = 3;
+                        GardenCore.weather = new string[] { $"⛈️", "thunder storm","I don't think it's the best time to water the plant now...","2"};
+                    }
+                },
+                null,
+                TimeSpan.FromSeconds(1),
+                TimeSpan.FromHours(2)
+            );
+
             //start rotates activity
-            _timerStatus = new Timer(async _ =>
+                _timerStatus = new Timer(async _ =>
             {
                 Boolean birthdayExisted = false;
 
@@ -746,6 +776,7 @@ namespace OjamajoBot.Bot
             await commands.AddModuleAsync(typeof(DoremiModerator), services);
             //await commands.AddModuleAsync(typeof(DoremiModeratorChannels), services);
             await commands.AddModuleAsync(typeof(DoremiMagicalStageModule), services);
+            await commands.AddModuleAsync(typeof(DoremiGardenInteractive), services);
             await commands.AddModuleAsync(typeof(DoremiTradingCardInteractive), services);
         }
 

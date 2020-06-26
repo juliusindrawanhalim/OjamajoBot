@@ -15,7 +15,7 @@ namespace OjamajoBot
 {
     public class TradingCardCore
     {
-        public static string version = "1.17";
+        public static string version = "1.18";
         public static string propertyId = "trading_card_spawn_id";
         public static string propertyCategory = "trading_card_spawn_category";
         public static string propertyToken = "trading_card_spawn_token";
@@ -34,7 +34,6 @@ namespace OjamajoBot
 
         public static int maxSpecial = 37;
 
-        public static string imgMagicSeeds = "https://cdn.discordapp.com/attachments/706770454697738300/716673416479899729/magic_seeds.jpg";
         public static string roleCompletionistSpecial = "Ojamajo Card Special Badge";
         public static Color roleCompletionistColor = new Discord.Color(4, 173, 18);
         public static string imgCompleteAllCardSpecial = $"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/badge/badge_special.png";
@@ -102,13 +101,30 @@ namespace OjamajoBot
             //.AddField("New Features",
             //"-**card timer**: now you can check the approximate of next card spawn timer.");
 
+            //return new EmbedBuilder()
+            //.WithColor(Config.Doremi.EmbedColor)
+            //.WithTitle($"Ojamajo Trading Card - Update {version} - 25.06.20")
+            //.AddField(":tools: **Updates:**",
+            //"**card trade** and **card trade process** : you can now trade **ojamajos** category card.")
+            //.AddField(":beetle: Bug fix",
+            //"-**card trade** : issues resolved where you can't choose the user/exit.");
+
             return new EmbedBuilder()
             .WithColor(Config.Doremi.EmbedColor)
-            .WithTitle($"Ojamajo Trading Card - Update {version} - 25.06.20")
-            .AddField(":tools: **Updates:**",
-            "**card trade** and **card trade process** : you can now trade **ojamajos** category card.")
-            .AddField(":beetle: Bug fix",
-            "-**card trade** : issues resolved where you can't choose the user/exit.");
+            .WithTitle($"Ojamajo Trading Card - Update {version} - 27.06.20")
+            .AddField(":tools: **Command updates:**",
+            "**card inventory**: can now be called with category command upon with other username. " +
+            "Example: **do!card inventory normal @someone**")
+            .AddField(":new: New Command",
+            "-**card checklist** or **card list**: now you can check the card checklist.")
+            .AddField(":new: Garden maho-dou",
+            "-**do!daily** command now track your plant growth progression.\n" +
+            "A 100% growing plant progression will reward you 1 royal seeds and reset its progress into 0%.\n" +
+            $"-new command: **do!garden progress** to check your plant growth progress.\n"+
+            "-new command: **do!garden weather** to check the current weather.\n" +
+            "-4 weather available: **sunny**/**cloudy**/**rainy**/**thunder storm**. " +
+            "Each weather will affect your plant growing progression. The weather will change for every 2 hours.\n" +
+            "*More usage & information about royal seeds will be added on upcoming updates soon.");
         }
 
         public static int getPlayerRank(int exp)
@@ -140,7 +156,7 @@ namespace OjamajoBot
             double calculated = (double)arrList.Count / maxAmount * 100;
             string percentageCompleted = $"({Math.Round(calculated)}%)";
 
-            string title = $"**Total: {arrList.Count}/{maxAmount} {percentageCompleted}**\n";
+            string title = $"**Progress: {arrList.Count}/{maxAmount} {percentageCompleted}**\n";
 
             string tempVal = title;
             int currentIndex = 0;
@@ -174,6 +190,82 @@ namespace OjamajoBot
             var pager = new PaginatedMessage
             {
                 Title = $"**{GlobalFunctions.UppercaseFirst(parent)} {GlobalFunctions.UppercaseFirst(category)} Card Inventory**\n",
+                Pages = pageContent,
+                Color = color,
+                Author = new EmbedAuthorBuilder()
+                {
+                    Name = GlobalFunctions.UppercaseFirst(username),
+                    IconUrl = thumbnailUrl
+                },
+                Options = pao
+            };
+
+            return pager;
+
+        }
+
+        public static PaginatedMessage printChecklistTemplate(Color color, string pack, string parent, string category,
+            JObject jObjTradingCardList, JArray arrData, int maxAmount, string username, string thumbnailUrl)
+        {
+            PaginatedAppearanceOptions pao = new PaginatedAppearanceOptions();
+            pao.JumpDisplayOptions = JumpDisplayOptions.Never;
+            pao.DisplayInformationIcon = false;
+
+            List<string> pageContent = new List<string>();
+            var arrList = (JArray)arrData;
+
+            try
+            {
+                var arrListMaster = ((JObject)jObjTradingCardList[parent][category]).Properties().ToList();
+                JObject sorted = new JObject(arrListMaster.OrderBy(e => e.Name));
+                var arrListMasterSorted = sorted.Properties().ToList();
+
+                double calculated = (double)arrList.Count / maxAmount * 100;
+                string percentageCompleted = $"({Math.Round(calculated)}%)";
+
+                string title = $"**Progress: {arrList.Count}/{maxAmount} {percentageCompleted}**\n";
+
+                string tempVal = title;
+                int currentIndex = 0;
+                for (int i = 0; i < arrListMasterSorted.Count; i++)
+                {
+                    string cardId = arrListMasterSorted[i].Name;
+                    string name = arrListMasterSorted[i].Value["name"].ToString();
+                    string url = arrListMasterSorted[i].Value["url"].ToString();
+
+                    var owned = arrList.ToString().Contains(cardId);
+                    if (owned)
+                        tempVal += ":white_check_mark: ";
+                     else
+                        tempVal += ":x: ";
+                    
+                    tempVal+= $"[{cardId} - {name}]({url})\n";
+
+                    if (i == arrListMasterSorted.Count - 1)
+                    {
+                        pageContent.Add(tempVal);
+                    }
+                    else
+                    {
+                        if (currentIndex < 9) currentIndex++;
+                        else
+                        {
+                            pageContent.Add(tempVal);
+                            currentIndex = 0;
+                            tempVal = title;
+                        }
+                    }
+
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
+
+            var pager = new PaginatedMessage
+            {
+                Title = $"**{GlobalFunctions.UppercaseFirst(parent)} {GlobalFunctions.UppercaseFirst(category)} Card Checklist**\n",
                 Pages = pageContent,
                 Color = color,
                 Author = new EmbedAuthorBuilder()
@@ -569,13 +661,14 @@ namespace OjamajoBot
                     .WithTitle($"📇 {username} Card Status | Rank: {getPlayerRank(playerExp)}")
                     .WithColor(color)
                     .WithThumbnailUrl(thumbnailUrl)
-                    .AddField("Total / EXP", $"**{totalSuccess} / {playerData["catch_attempt"].ToString()}**", false)
+                    .AddField("Collected / EXP", $"**{totalSuccess} / {playerData["catch_attempt"].ToString()}**", false)
                     .AddField($"Doremi Pack {doremiPercentage}", doremiText, true)
                     .AddField($"Hazuki Pack {hazukiPercentage}", hazukiText, true)
                     .AddField($"Aiko Pack {aikoPercentage}", aikoText, true)
                     .AddField($"Onpu Pack {onpuPercentage}", onpuText, true)
                     .AddField($"Momoko Pack {momokoPercentage}", momokoText, true)
-                    .AddField($"Other Pack {otherPercentage}", otherText, true);
+                    .AddField($"Other Pack {otherPercentage}", otherText, true)
+                    .WithFooter($"Magic seeds: {playerData["magic_seeds"]}");
             }
         }
 
@@ -751,7 +844,7 @@ namespace OjamajoBot
                         int randomedMagicSeeds = new Random().Next(1, 4);
                         embed.Description += $"**{username}** have been rewarded with some magic seeds!";
                         embed.AddField("Rewards:", $"{randomedMagicSeeds} magic seeds.");
-                        embed.WithImageUrl(TradingCardCore.imgMagicSeeds);
+                        embed.WithImageUrl(GardenCore.imgMagicSeeds);
                         arrInventory["magic_seeds"] = (Convert.ToInt32(arrInventory["magic_seeds"]) + randomedMagicSeeds).ToString();
                         File.WriteAllText(playerDataDirectory, arrInventory.ToString());
                     }
