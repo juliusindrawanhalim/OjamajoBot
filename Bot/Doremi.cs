@@ -46,7 +46,7 @@ namespace OjamajoBot.Bot
         //private LavaNode _lavaNode;
 
         //timer to rotates activity
-        private Timer _timerStatus;
+        private Timer _timerStatus, _rotatesWeather;
 
         //private readonly List<string> listRandomListening = new List<string>() {
         //    "Otome wa Kyuu ni Tomarenai", "Kitto Chanto Onnanoko", "Ice Cream Child", "'Su' no Tsuku Koibito", "Merry-Go-Round"
@@ -92,29 +92,37 @@ namespace OjamajoBot.Bot
             await client.StartAsync();
 
             //start rotates weather
-            Timer _rotatesWeather = new Timer(async _ =>
+            _rotatesWeather = new Timer(async _ =>
                 {
-                    int randomWeather = new Random().Next(0, 40);
+                    int randomWeather = new Random().Next(0, 51);
                     int selectedWeatherIndex = 0;
-                    if (randomWeather <= 20)
+                    //Console.WriteLine(randomWeather);
+                    if (randomWeather <= 30)
                     {
                         selectedWeatherIndex = 0;
-                        GardenCore.weather = new string[]{ $"☀️", "sunny","A perfect time to water the plant~","5"};
-                    } else if (randomWeather <= 30)
+                        //GardenCore.weather = new string[]{ $"☀️", "sunny","A perfect time to water the plant~","5"};
+                        
+                    } else if (randomWeather <= 40)
                     {
                         selectedWeatherIndex = 1;
-                        GardenCore.weather = new string[] { $"☁️", "cloudy","There might be a chance to rain soon...","4"};
+                        //GardenCore.weather = new string[] { $"☁️", "cloudy","There might be a chance to rain soon...","4"};
                     }
-                    else if (randomWeather <= 34)
+                    else if (randomWeather <= 45)
                     {
                         selectedWeatherIndex = 2;
-                        GardenCore.weather = new string[] { $"🌧️", "raining","Not sure if it's a good time to water the plant.","3"};
+                        //GardenCore.weather = new string[] { $"🌧️", "raining","Not sure if it's a good time to water the plant.","3"};
                     }
-                    else if (randomWeather <= 38)
+                    else if (randomWeather <= 50)
                     {
                         selectedWeatherIndex = 3;
-                        GardenCore.weather = new string[] { $"⛈️", "thunder storm","I don't think it's the best time to water the plant now...","2"};
+                        //GardenCore.weather = new string[] { $"⛈️", "thunder storm","I don't think it's the best time to water the plant now...","2"};
                     }
+                    GardenCore.weather[0] = GardenCore.arrRandomWeather[selectedWeatherIndex,0];
+                    GardenCore.weather[1] = GardenCore.arrRandomWeather[selectedWeatherIndex,1];
+                    GardenCore.weather[2] = GardenCore.arrRandomWeather[selectedWeatherIndex,2];
+                    GardenCore.weather[3] = GardenCore.arrRandomWeather[selectedWeatherIndex,3];
+
+                    //GardenCore.weather = new string[] { GardenCore.arrRandomWeather[selectedWeatherIndex, 0] };
                 },
                 null,
                 TimeSpan.FromSeconds(1),
@@ -571,7 +579,7 @@ namespace OjamajoBot.Bot
                                 var dmchannel = await guildUser.GetOrCreateDMChannelAsync();
                                 await dmchannel.SendMessageAsync(embed: new EmbedBuilder()
                                             .WithColor(Config.Doremi.EmbedColor)
-                                            .WithTitle("Your role has bet set!")
+                                            .WithTitle("Your role has been set!")
                                             .WithDescription($":white_check_mark: You have been assigned with the new role: **{roleMaster.Name}**")
                                             .WithThumbnailUrl(TradingCardCore.Doremi.emojiOk)
                                             .WithFooter($"From: {channel.Guild.Name}")
@@ -674,8 +682,7 @@ namespace OjamajoBot.Bot
                     catch (Exception e)
                     {
                     }
-                }
-                else if (reaction.Emote.Equals(new Discord.Emoji("\u2B50")))
+                } else if (reaction.Emote.Equals(new Discord.Emoji("\u2B50")))
                 {
                     //star react
                     if (message.Reactions.TryGetValue(new Discord.Emoji("\u2B50"), out var metadata))
@@ -708,7 +715,7 @@ namespace OjamajoBot.Bot
         public async Task HandleReactionRemovedAsync(Cacheable<IUserMessage, ulong> cachedMessage,
         ISocketMessageChannel originChannel, SocketReaction reaction)
         {
-            var message = await cachedMessage.GetOrDownloadAsync();
+            //var message = await cachedMessage.GetOrDownloadAsync();
             //if (message != null && reaction.User.IsSpecified)
             //    Console.WriteLine($"{reaction.User.Value} just remove a reaction '{reaction.Emote}' " +
             //                        $"to {message.Author}'s message ({message.Id}).");

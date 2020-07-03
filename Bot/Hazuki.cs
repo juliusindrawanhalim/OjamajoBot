@@ -14,6 +14,9 @@ using OjamajoBot.Module;
 using OjamajoBot.Service;
 using System.Threading;
 using Discord.Addons.Interactive;
+using Newtonsoft.Json.Linq;
+using System.IO;
+using System.Drawing;
 
 namespace OjamajoBot.Bot
 {
@@ -50,6 +53,7 @@ namespace OjamajoBot.Bot
             await client.LoginAsync(TokenType.Bot, Config.Hazuki.Token);
             await client.StartAsync();
 
+            client.ReactionAdded += HandleReactionAddedAsync;
             client.JoinedGuild += JoinedGuild;
             client.GuildAvailable += GuildAvailable;
 
@@ -136,6 +140,152 @@ namespace OjamajoBot.Bot
 
         }
 
+        public void HookReactionAdded(BaseSocketClient client) => client.ReactionAdded += HandleReactionAddedAsync;
+
+        public async Task HandleReactionAddedAsync(Cacheable<IUserMessage, ulong> cachedMessage,
+        ISocketMessageChannel originChannel, SocketReaction reaction)
+        {
+            var message = await cachedMessage.GetOrDownloadAsync();
+            //var context = new SocketCommandContext(client, cachedMessage);
+            var messageId = message.GetJumpUrl().Split('/').Last();
+            var guildId = message.GetJumpUrl().Split('/')[4];
+            SocketGuildUser guildUser = (SocketGuildUser)reaction.User;
+            var channel = client.GetChannel(originChannel.Id) as SocketTextChannel;
+
+            if (message != null && reaction.User.IsSpecified)
+            {
+                if (!guildUser.IsBot)
+                {
+                    if (reaction.Emote.Equals(new Discord.Emoji("\uD83C\uDF81")))
+                    {
+                        try
+                        {
+                            //config/
+                            var fileDirectory = $"{Config.Core.headConfigFolder}giveaway/giveaway.json";
+                            var fileDirectoryData = $"{Config.Core.headConfigFolder}giveaway/userdata.json";
+                            var val = JObject.Parse(File.ReadAllText(fileDirectory));
+                            var valUserData = JObject.Parse(File.ReadAllText(fileDirectoryData));
+                            JArray itemCode = (JArray)val["discord"];
+
+                            var dmchannel = await guildUser.GetOrCreateDMChannelAsync();
+
+                            var userId = guildUser.Id;
+                            var randomWin = new Random().Next(0, 21);
+                            var eb = new EmbedBuilder()
+                            .WithColor(Config.Hazuki.EmbedColor);
+
+
+                            var dataClaimed = (JObject)valUserData["claimed"];
+                            var dataParticipant = (JObject)valUserData["participant"];
+
+                            if (dataClaimed.ContainsKey(guildUser.Id.ToString()))
+                            {
+                                eb.WithDescription("Sorry, " +
+                                    "you're not allowed to participate anymore because you have win the giveaway already.")
+                                .WithThumbnailUrl("https://cdn.discordapp.com/attachments/706770454697738300/728651519750176788/lose3.jpg");
+                                await dmchannel.SendMessageAsync(embed: eb.Build());
+                            } else if (dataParticipant.ContainsKey(guildUser.Id.ToString())&&
+                                dataParticipant[guildUser.Id.ToString()].ToString() == DateTime.Now.ToString("dd"))
+                            {
+                                var now = DateTime.Now;
+                                var tomorrow = now.AddDays(1).Date;
+                                double totalHours = (tomorrow - now).TotalHours;
+
+                                eb.WithDescription("Sorry, you have participate the giveaway event today. " +
+                                    $"Please wait again until next day at **{Math.Floor(totalHours)}** hour(s) " +
+                                    $"**{Math.Ceiling(60 * (totalHours - Math.Floor(totalHours)))}** more minute(s).")
+                                .WithThumbnailUrl("https://cdn.discordapp.com/attachments/706770454697738300/728651519750176788/lose3.jpg");
+                                await dmchannel.SendMessageAsync(embed: eb.Build());
+                            }
+                            else if (Convert.ToInt32(DateTime.Now.ToString("dd")) >= 25)
+                            {
+                                eb.WithDescription("I'm sorry to tell that the giveaway event has ended.")
+                                    .WithThumbnailUrl("https://cdn.discordapp.com/attachments/706770454697738300/728651519750176788/lose3.jpg");
+                                await dmchannel.SendMessageAsync(embed: eb.Build());
+                            } else if (val.Count <= 0)
+                            {
+                                eb.WithDescription("I'm sorry to tell that I'm running out of the giveaway codes now... " +
+                                "I hope you can win next time~")
+                                .WithThumbnailUrl("https://cdn.discordapp.com/attachments/706770454697738300/728651519750176788/lose3.jpg");
+                                await dmchannel.SendMessageAsync(embed: eb.Build());
+                            } else if (randomWin != 3)
+                            {//not win
+                                eb.WithTitle("You are participating the giveaway event and the result comes out:")
+                                .WithDescription(":x:  I'm sorry to tell that you're not lucky enough this time... " +
+                                "But don't worry, you can try again next day or until the giveaway event has ended.")
+                                .WithThumbnailUrl("https://cdn.discordapp.com/attachments/706770454697738300/728655230719361177/draw0.jpg");
+                                await dmchannel.SendMessageAsync(embed: eb.Build());
+
+                                //add to data
+                                if (!dataParticipant.ContainsKey(guildUser.Id.ToString()))
+                                {
+                                    dataParticipant.Add(new JProperty(guildUser.Id.ToString(), DateTime.Now.ToString("dd")));
+                                } else
+                                {
+                                    dataParticipant[guildUser.Id.ToString()] = DateTime.Now.ToString("dd");
+                                }
+                                
+                                File.WriteAllText(fileDirectoryData, valUserData.ToString());
+                            }
+                            else if (randomWin == 3)
+                            {//win
+                                string code = itemCode[0].ToString();
+
+                                eb.WithTitle("You are participating the giveaway event and the result comes out:")
+                                .WithDescription($":tada: " +
+                                $"Oh, looks like you have win the giveaway event. Big congratulations to you!\n" +
+                                "Thank you for participating this event and I hope you enjoy this gift~")
+                                .AddField("1 Month Discord Nitro Code:", $"||{code}||")
+                                .WithFooter("Sincerely, Hazuki & Digi~")
+                                .WithThumbnailUrl("https://cdn.discordapp.com/attachments/706770454697738300/728655569799610438/hazuki_happy21.jpg");
+                                await dmchannel.SendMessageAsync(embed: eb.Build());
+
+                                //start remove
+                                itemCode[0].Remove();
+                                File.WriteAllText(fileDirectory, val.ToString());
+                                //end remove
+
+                                //add to data
+                                dataClaimed.Add(new JProperty(guildUser.Id.ToString(), code));
+                                File.WriteAllText(fileDirectoryData, valUserData.ToString());
+
+                                await originChannel.SendMessageAsync($"Congratulations to our friend: {MentionUtils.MentionUser(guildUser.Id)} that has win the giveaway event!");
+                                
+                                if (itemCode.Count <= 0)
+                                {
+                                    var ebEventFinish = new EmbedBuilder()
+                                        .WithColor(Config.Hazuki.EmbedColor)
+                                        .WithThumbnailUrl("https://cdn.discordapp.com/attachments/706770454697738300/728655569799610438/hazuki_happy21.jpg")
+                                        .WithDescription($"The giveaway event has come to an end! " +
+                                        $"Thank you everyone for participating. " +
+                                        $"For those who haven't got the chance to win I hope you can win on next time~. " +
+                                        $"Until we meet again next time~");
+                                    await originChannel.SendMessageAsync(embed:ebEventFinish.Build());
+                                }
+                            }
+
+                            await message.RemoveReactionAsync(reaction.Emote, guildUser);
+
+                            //if (message.Author.Id == Config.Doremi.Id)
+                            //{
+                            //    //user id: 145584315839938561
+                            //    
+                            //    await dmchannel.SendMessageAsync(embed: new EmbedBuilder()
+                            //    .WithColor(Config.Doremi.EmbedColor)
+                            //    .WithTitle("You have choose the Discord Nitro Giveaway!")
+                            //    .WithDescription($":x: You have been removed from the role: **{roleMaster.Name}**")
+                            //    .WithThumbnailUrl(TradingCardCore.Doremi.emojiOk)
+                            //    .Build());
+                            //}
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e.ToString());
+                        }
+                    }
+                }
+            }
+        }
         public async Task GuildAvailable(SocketGuild guild)
         {
             //set hazuki birthday announcement timer

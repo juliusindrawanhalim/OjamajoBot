@@ -840,8 +840,8 @@ namespace OjamajoBot.Module
                     await ReplyAsync(embed: new EmbedBuilder()
                     .WithColor(Config.Doremi.EmbedColor)
                     .WithDescription($":seedling: {MentionUtils.MentionUser(clientId)} " +
-                    $"have watered the plant and received **{randomedReceive}** magic seed(s), **{plant_growth}%** " +
-                    $"plant growth progress from **{GardenCore.weather[1]}** weather effect. " +
+                    $"have watered the plant and received **{randomedReceive}** magic seed(s), **{randomedGrowth}%** " +
+                    $"plant growth progress from {GardenCore.weather[0]}**{GardenCore.weather[1]}** weather effect. " +
                     $"Thank you for watering it~")
                     .AddField("Current plant growth progress:",$"{plant_growth}%")
                     .WithThumbnailUrl(GardenCore.imgMagicSeeds)
@@ -944,7 +944,7 @@ namespace OjamajoBot.Module
             .WithTitle($"{GardenCore.weather[0]} It's {GardenCore.weather[1]} now.")
             .WithDescription(GardenCore.weather[2])
             .AddField("Plant growth rate:",$"1-{GardenCore.weather[3]}%")
-            .WithFooter("Weather will be change every 2 hours.")
+            .WithFooter("Weather will change every 2 hours.")
             .Build());
         }
 
@@ -1961,6 +1961,7 @@ namespace OjamajoBot.Module
             }
         
         }
+
 
         [Name("mod role"), Group("role"), Summary("These commands contains all self assignable role list command. " +
             "Requires `manage roles permission`.")]

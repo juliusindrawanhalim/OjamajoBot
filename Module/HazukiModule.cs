@@ -579,62 +579,102 @@ namespace OjamajoBot.Module
             .Build());
         }
 
+
+        [Command("giveaway"), Summary("Host a giveaway. Can only be executed by the bot owner.")]
+        public async Task giveawayAssignment()
+        {
+            if (Context.User.Id != 145584315839938561)
+            {
+                await ReplyAsync($"Sorry, this command can only executed by someone who create me.");
+                return;
+            }
+            else
+            {
+                var everyoneRole = Context.Guild.EveryoneRole.Mention;
+                await Context.Message.DeleteAsync();
+                var eb = new EmbedBuilder()
+                    .WithColor(Config.Hazuki.EmbedColor)
+                    .WithThumbnailUrl("https://cdn.discordapp.com/attachments/706770454697738300/728659482913144872/hazuki_happy5.jpg")
+                    .WithTitle($"🎁 {Context.User.Username} has start a giveway event!")
+                    .WithDescription("Pretty witchy Hazuki is here~\n" +
+                    "Allow me to make a brief announcement that our friends: " +
+                    $"{MentionUtils.MentionUser(Context.User.Id)} are hosting " +
+                    $"**1 month discord classic** giveaway events for **5 lucky people**, starting from July 19'th until July 24'th (server time)!\n" +
+                    $"You can see the terms and condition written below if you wish to participate the giveaway.")
+                    .AddField("Terms and condition:",
+                    "-You can participate the event by simply click the 🎁 reaction that has been provided by me.\n" +
+                    "-You cannot participate the giveaway anymore if: " +
+                    "**you already win the giveaway**, **the giveaway codes are running out**, **the giveaway has come to an end**.\n" +
+                    "-Winner giveaway results will be announced on the group. " +
+                    "Should you **win** the giveaway event, you'll be given the nitro code and " +
+                    "you're not allowed to participate the giveaway anymore.\n" +
+                    "-Didn't win the giveaway yet? " +
+                    "Don't worry, you can still participate again on the next day as long the giveaway codes are still available and the event are still running.\n" +
+                    $"-If the codes are not working, you can try to ask {MentionUtils.MentionUser(Context.User.Id)}.\n" +
+                    $"-If there's still some code available and the giveaway has ended, " +
+                    $"{MentionUtils.MentionUser(Context.User.Id)} will host and announce a last run giveaway on the group.");
+                var sentMessage = await ReplyAsync(embed:eb.Build());
+                await sentMessage.AddReactionAsync(new Discord.Emoji("\uD83C\uDF81")); //💎 discord nitro classic 1 month
+            }
+        }
+
     }
 
-    //RANDOM OLD JOKES:
-    /*string[] arrRandom =
-                {
-                    "Q. Why was King Arthur’s army too tired to fight?\nA. It had too many sleepless knights.",
-                    "Q. Which country’s capital has the fastest-growing population?\nA. Ireland. Every day it’s Dublin.",
-                    "I asked my French friend if she likes to play video games. She said, 'Wii.'",
-                    "Yesterday, a clown held the door open for me. It was such a nice jester!",
-                    "The machine at the coin factory just suddenly stopped working, with no explanation. It doesn’t make any cents!",
-                    "I was going to make myself a belt made out of watches, but then I realized it would be a waist of time.",
-                    "Did you hear about the auto body shop that just opened? It comes highly wreck-a-mended.",
-                    "Q. What’s the difference between a hippo and a Zippo?\nA. A hippo is really heavy, and a Zippo is a little lighter.",
-                    "All these sea monster jokes are just Kraken me up.",
-                    "Q. Why can’t you run through a campground?\nA. You can only ran, because it’s past tents.",
-                    "Shout out to the people who ask what the opposite of “in” is.",
-                    "I’m only friends with 25 letters of the alphabet. I don’t know Y.",
-                    "Q. What sound does a sleeping T-Rex make?\nA. A dino-snore.",
-                    "Q. Why can’t Harry Potter tell the difference between the pot he uses to make potions and his best friend?\n" +
-                    "A. They’re both cauld ron.",
-                    "Two windmills are standing in a wind farm. One asks, “What’s your favorite kind of music?” The other says, “I’m a big metal fan.”",
-                    "Want to hear something terrible? Paper.",
-                    "Last night, I dreamed I was swimming in an ocean of orange soda. But it was just a Fanta sea.",
-                    "My boss yelled at me the other day, “You’ve got to be the worst train driver in history. How many trains did you derail last year?” I said, “Can’t say…",
-                    "A man sued an airline company after it lost his luggage. Sadly, he lost his case.",
-                    "Atoms are untrustworthy little critters. They make up everything!",
-                    "The past, the present, and the future walk into a bar…\nIt was tense.",
-                    "An atom loses an electron… it says, “Man, I really gotta keep an ion them.”",
-                    "Did you hear about the man who was accidentally buried alive?  It was a grave mistake.",
-                    "I had to clean out my spice rack and found everything was too old and had to be thrown out.  What a waste of thyme.",
-                    "6:30 is the best time on a clock… hands down.",
-                    "I hate how funerals are always at 9 a.m.  I’m not really a mourning person.",
-                    "I lost my job at the bank on my very first day.  A woman asked me to check her balance, so I pushed her over.",
-                    "Ray’s friends claim he’s a baseball nut. He says they’re way off base.",
-                    "The public safety officer came up to a large mob of people outside a department store and asked, “What’s happening?” A mall officer replied, “These people are waiting to get…",
-                    "Why not go out on a limb? Isn’t that where all the fruit is?",
-                    "My ex used to hit me with stringed instruments. If only I had known about her history of violins.",
-                    "Did you hear about the 2 silk worms in a race? It ended in a tie!",
-                    "Someone stole my toilet and the police have nothing to go on.",
-                    "Last time I got caught stealing a calendar I got 12 months.",
-                    "What do you call a laughing motorcycle? A Yamahahaha.",
-                    "A friend of mine tried to annoy me with bird puns, but I soon realized that toucan play at that game.",
-                    "Did you hear about the guy who got hit in the head with a can of soda? He was lucky it was a soft drink.",
-                    "I wasn’t originally going to get a brain transplant, but then I changed my mind.",
-                    "I can’t believe I got fired from the calendar factory. All I did was take a day off.",
-                    "A termite walks into a bar and says, “Where is the bar tender?”",
-                    "I saw an ad for burial plots, and thought to myself this is the last thing I need.",
-                    "What’s the difference between a poorly dressed man on a bicycle and a nicely dressed man on a tricycle? A tire.",
-                    "What do you call a fish with no eyes? A fsh.",
-                    "What do you call a can opener that doesn’t work? A can’t opener!",
-                    "What do you get when you combine a rhetorical question and a joke?\n…\nGet it? Bad jokes don’t even need a punch line to be funny!",
-                    "Did you hear about the Italian chef who died? He pasta-way.",
-                    "Two muffins were sitting in an oven. One turned to the other and said, “Wow, it’s pretty hot in here.” The other one shouted, “Wow, a talking muffin!”",
-                    "I sold my vacuum the other day. All it was doing was collecting dust."
-                };
-                */
+
+        //RANDOM OLD JOKES:
+        /*string[] arrRandom =
+                    {
+                        "Q. Why was King Arthur’s army too tired to fight?\nA. It had too many sleepless knights.",
+                        "Q. Which country’s capital has the fastest-growing population?\nA. Ireland. Every day it’s Dublin.",
+                        "I asked my French friend if she likes to play video games. She said, 'Wii.'",
+                        "Yesterday, a clown held the door open for me. It was such a nice jester!",
+                        "The machine at the coin factory just suddenly stopped working, with no explanation. It doesn’t make any cents!",
+                        "I was going to make myself a belt made out of watches, but then I realized it would be a waist of time.",
+                        "Did you hear about the auto body shop that just opened? It comes highly wreck-a-mended.",
+                        "Q. What’s the difference between a hippo and a Zippo?\nA. A hippo is really heavy, and a Zippo is a little lighter.",
+                        "All these sea monster jokes are just Kraken me up.",
+                        "Q. Why can’t you run through a campground?\nA. You can only ran, because it’s past tents.",
+                        "Shout out to the people who ask what the opposite of “in” is.",
+                        "I’m only friends with 25 letters of the alphabet. I don’t know Y.",
+                        "Q. What sound does a sleeping T-Rex make?\nA. A dino-snore.",
+                        "Q. Why can’t Harry Potter tell the difference between the pot he uses to make potions and his best friend?\n" +
+                        "A. They’re both cauld ron.",
+                        "Two windmills are standing in a wind farm. One asks, “What’s your favorite kind of music?” The other says, “I’m a big metal fan.”",
+                        "Want to hear something terrible? Paper.",
+                        "Last night, I dreamed I was swimming in an ocean of orange soda. But it was just a Fanta sea.",
+                        "My boss yelled at me the other day, “You’ve got to be the worst train driver in history. How many trains did you derail last year?” I said, “Can’t say…",
+                        "A man sued an airline company after it lost his luggage. Sadly, he lost his case.",
+                        "Atoms are untrustworthy little critters. They make up everything!",
+                        "The past, the present, and the future walk into a bar…\nIt was tense.",
+                        "An atom loses an electron… it says, “Man, I really gotta keep an ion them.”",
+                        "Did you hear about the man who was accidentally buried alive?  It was a grave mistake.",
+                        "I had to clean out my spice rack and found everything was too old and had to be thrown out.  What a waste of thyme.",
+                        "6:30 is the best time on a clock… hands down.",
+                        "I hate how funerals are always at 9 a.m.  I’m not really a mourning person.",
+                        "I lost my job at the bank on my very first day.  A woman asked me to check her balance, so I pushed her over.",
+                        "Ray’s friends claim he’s a baseball nut. He says they’re way off base.",
+                        "The public safety officer came up to a large mob of people outside a department store and asked, “What’s happening?” A mall officer replied, “These people are waiting to get…",
+                        "Why not go out on a limb? Isn’t that where all the fruit is?",
+                        "My ex used to hit me with stringed instruments. If only I had known about her history of violins.",
+                        "Did you hear about the 2 silk worms in a race? It ended in a tie!",
+                        "Someone stole my toilet and the police have nothing to go on.",
+                        "Last time I got caught stealing a calendar I got 12 months.",
+                        "What do you call a laughing motorcycle? A Yamahahaha.",
+                        "A friend of mine tried to annoy me with bird puns, but I soon realized that toucan play at that game.",
+                        "Did you hear about the guy who got hit in the head with a can of soda? He was lucky it was a soft drink.",
+                        "I wasn’t originally going to get a brain transplant, but then I changed my mind.",
+                        "I can’t believe I got fired from the calendar factory. All I did was take a day off.",
+                        "A termite walks into a bar and says, “Where is the bar tender?”",
+                        "I saw an ad for burial plots, and thought to myself this is the last thing I need.",
+                        "What’s the difference between a poorly dressed man on a bicycle and a nicely dressed man on a tricycle? A tire.",
+                        "What do you call a fish with no eyes? A fsh.",
+                        "What do you call a can opener that doesn’t work? A can’t opener!",
+                        "What do you get when you combine a rhetorical question and a joke?\n…\nGet it? Bad jokes don’t even need a punch line to be funny!",
+                        "Did you hear about the Italian chef who died? He pasta-way.",
+                        "Two muffins were sitting in an oven. One turned to the other and said, “Wow, it’s pretty hot in here.” The other one shouted, “Wow, a talking muffin!”",
+                        "I sold my vacuum the other day. All it was doing was collecting dust."
+                    };
+                    */
 
     [Summary("hidden")]
     public class HazukiMagicalStageModule : ModuleBase
