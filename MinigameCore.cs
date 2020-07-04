@@ -14,7 +14,7 @@ namespace OjamajoBot
     {
         public class rockPaperScissor{
 
-            public static Tuple<string,EmbedBuilder> rpsResults(Color color, string embedIcon, int randomGuess, string guess, string parent, string username,
+            public static Tuple<string,EmbedBuilder,Boolean> rpsResults(Color color, string embedIcon, int randomGuess, string guess, string parent, string username,
                 string[] arrWinReaction, string[] arrLoseReaction, string[] arrDrawReaction, 
                 ulong guildId, ulong userId)
             {
@@ -22,6 +22,7 @@ namespace OjamajoBot
                 string randomResult; string gameState;
                 string picReactionFolderDir = $"config/rps_reaction/{parent}/";
                 string embedTitle; string textTemplate = "";
+                Boolean isWin = false;
 
                 guess = guess.ToLower();
 
@@ -69,6 +70,7 @@ namespace OjamajoBot
 
                     //save the data
                     MinigameCore.updateScore(guildId.ToString(), userId.ToString(), 10);
+                    isWin = true;
 
                 }
                 else if (gameState == "draw")
@@ -109,7 +111,7 @@ namespace OjamajoBot
                 eb.AddField(GlobalFunctions.UppercaseFirst(username) + " used:", guess, true);
                 eb.AddField(GlobalFunctions.UppercaseFirst(parent) + " used:", randomResult, true);
 
-                return Tuple.Create($"{randomPathFile}", eb);
+                return Tuple.Create($"{randomPathFile}", eb, isWin);
 
                 //return arrResult;
             }

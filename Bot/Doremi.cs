@@ -121,6 +121,7 @@ namespace OjamajoBot.Bot
                     GardenCore.weather[1] = GardenCore.arrRandomWeather[selectedWeatherIndex,1];
                     GardenCore.weather[2] = GardenCore.arrRandomWeather[selectedWeatherIndex,2];
                     GardenCore.weather[3] = GardenCore.arrRandomWeather[selectedWeatherIndex,3];
+                    GardenCore.weather[4] = GardenCore.arrRandomWeather[selectedWeatherIndex,4];
 
                     //GardenCore.weather = new string[] { GardenCore.arrRandomWeather[selectedWeatherIndex, 0] };
                 },

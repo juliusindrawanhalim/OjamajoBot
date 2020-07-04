@@ -15,7 +15,7 @@ namespace OjamajoBot
 {
     public class TradingCardCore
     {
-        public static string version = "1.18";
+        public static string version = "1.19";
         public static string propertyId = "trading_card_spawn_id";
         public static string propertyCategory = "trading_card_spawn_category";
         public static string propertyToken = "trading_card_spawn_token";
@@ -40,6 +40,7 @@ namespace OjamajoBot
 
         public static EmbedBuilder printUpdatesNote()
         {
+
             //return new EmbedBuilder()
             //    .WithColor(Config.Doremi.EmbedColor)
             //    .WithTitle($"Ojamajo Trading Card - Update {version} - 30.05.20")
@@ -109,22 +110,28 @@ namespace OjamajoBot
             //.AddField(":beetle: Bug fix",
             //"-**card trade** : issues resolved where you can't choose the user/exit.");
 
+            //return new EmbedBuilder()
+            //.WithColor(Config.Doremi.EmbedColor)
+            //.WithTitle($"Ojamajo Trading Card - Update {version} - 27.06.20")
+            //.AddField(":tools: **Command updates:**",
+            //"**card inventory**: can now be called with category command upon with other username. " +
+            //"Example: **do!card inventory normal @someone**")
+            //.AddField(":new: New Command",
+            //"-**card checklist** or **card list**: now you can check the card checklist.")
+            //.AddField(":new: Garden maho-dou",
+            //"-**do!daily** command now track your plant growth progression.\n" +
+            //"A 100% growing plant progression will reward you 1 royal seeds and reset its progress into 0%.\n" +
+            //$"-new command: **do!garden progress** to check your plant growth progress.\n"+
+            //"-new command: **do!garden weather** to check the current weather.\n" +
+            //"-4 weather available: **sunny**/**cloudy**/**rainy**/**thunder storm**. " +
+            //"Each weather will affect your plant growing progression. The weather will change for every 2 hours.\n" +
+            //"*More usage & information about royal seeds will be added on upcoming updates soon.");
+
             return new EmbedBuilder()
             .WithColor(Config.Doremi.EmbedColor)
-            .WithTitle($"Ojamajo Trading Card - Update {version} - 27.06.20")
-            .AddField(":tools: **Command updates:**",
-            "**card inventory**: can now be called with category command upon with other username. " +
-            "Example: **do!card inventory normal @someone**")
-            .AddField(":new: New Command",
-            "-**card checklist** or **card list**: now you can check the card checklist.")
-            .AddField(":new: Garden maho-dou",
-            "-**do!daily** command now track your plant growth progression.\n" +
-            "A 100% growing plant progression will reward you 1 royal seeds and reset its progress into 0%.\n" +
-            $"-new command: **do!garden progress** to check your plant growth progress.\n"+
-            "-new command: **do!garden weather** to check the current weather.\n" +
-            "-4 weather available: **sunny**/**cloudy**/**rainy**/**thunder storm**. " +
-            "Each weather will affect your plant growing progression. The weather will change for every 2 hours.\n" +
-            "*More usage & information about royal seeds will be added on upcoming updates soon.");
+            .WithTitle($"Ojamajo Trading Card - Update {version} - 05.07.20")
+            .AddField(":tools: **Updates:**",
+            "**daily commands**: Fixed the growth rate progress for each weather.");
         }
 
         public static int getPlayerRank(int exp)
@@ -1631,7 +1638,12 @@ namespace OjamajoBot
             //}
 
             var key = JObject.Parse(jObjTradingCardList[parent][chosenCategory].ToString()).Properties().ToList();
-            int randIndex = new Random().Next(0, key.Count);
+            int randIndex = 0;
+            int timedLoop = Convert.ToInt32(DateTime.Now.ToString("dd"));
+            for(int i = 0; i <= timedLoop; i++)
+            {
+                randIndex = new Random().Next(0, key.Count);
+            }
 
             //chosen data:
             string chosenId = key[randIndex].Name;

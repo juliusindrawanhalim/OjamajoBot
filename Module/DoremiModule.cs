@@ -36,7 +36,7 @@ using Victoria.Enums;
 namespace OjamajoBot.Module
 {
     [Name("General")]
-    class DoremiModule : ModuleBase<SocketCommandContext>
+    class DoremiModule : InteractiveBase
     {
         //start
         private readonly CommandService _commands;
@@ -825,12 +825,12 @@ namespace OjamajoBot.Module
 
                 //plant_growth
                 //royal_seeds
-
                 if ((string)arrInventory["magic_seeds_last_claim"] == "" ||
                     (string)arrInventory["magic_seeds_last_claim"] != DateTime.Now.ToString("dd"))
                 {
                     //plant_growth
-                    int randomedGrowth = new Random().Next(1,Convert.ToInt32(GardenCore.weather[3])+1);
+                    int randomedGrowth = new Random().Next(Convert.ToInt32(GardenCore.weather[3]), 
+                        Convert.ToInt32(GardenCore.weather[4])+1);
                     int plant_growth = Convert.ToInt32(arrInventory["plant_growth"])+randomedGrowth;
                     if (plant_growth >= 100) plant_growth = 100;
 
@@ -915,12 +915,22 @@ namespace OjamajoBot.Module
                 JObject arrInventory = JObject.Parse(File.ReadAllText(playerDataDirectory));
                 await ReplyAsync(embed: new EmbedBuilder()
                     .WithColor(Config.Doremi.EmbedColor)
-                    .WithDescription($":seedling: {MentionUtils.MentionUser(clientId)} have **{arrInventory[keySelection]}** magic seeds.")
+                    .WithDescription($":seedling: {MentionUtils.MentionUser(clientId)} have: " +
+                    $"**{arrInventory[keySelection]}** {selection} seeds.")
                     .Build());
             }
         }
 
-        
+        //[Command("achievement"), Alias("achievement"), Summary("See your achievements")]
+        //public async Task showAchievements()
+        //{
+        //    ulong guildId = Context.Guild.Id;
+        //    ulong clientId = Context.User.Id;
+
+        //    await PagedReplyAsync(AchievementsCore.printAchievementsStatus(
+        //        Config.Doremi.EmbedColor,guildId,clientId,Context.User.Username,Context.User.GetAvatarUrl()
+        //    ));
+        //}
 
         //event schedule/reminder
         //vote for best characters
@@ -943,7 +953,7 @@ namespace OjamajoBot.Module
             .WithColor(Config.Doremi.EmbedColor)
             .WithTitle($"{GardenCore.weather[0]} It's {GardenCore.weather[1]} now.")
             .WithDescription(GardenCore.weather[2])
-            .AddField("Plant growth rate:",$"1-{GardenCore.weather[3]}%")
+            .AddField("Plant growth rate:",$"{GardenCore.weather[3]}-{GardenCore.weather[4]}%")
             .WithFooter("Weather will change every 2 hours.")
             .Build());
         }
@@ -6353,9 +6363,15 @@ namespace OjamajoBot.Module
                 "Oh no, looks like I lose the game."};//bot lose
             string[] arrDrawReaction = { "Ehh, it's a draw!","We got a draw this time." };//bot draw
 
-            Tuple<string, EmbedBuilder> result = MinigameCore.rockPaperScissor.rpsResults(Config.Doremi.EmbedColor, Config.Doremi.EmbedAvatarUrl, randomGuess, guess, "doremi", Context.User.Username,
+            Tuple<string, EmbedBuilder,Boolean> result = MinigameCore.rockPaperScissor.rpsResults(Config.Doremi.EmbedColor, Config.Doremi.EmbedAvatarUrl, randomGuess, guess, "doremi", Context.User.Username,
                 arrWinReaction, arrLoseReaction, arrDrawReaction,
                 Context.Guild.Id, Context.User.Id);
+
+            //isWin?
+            if (result.Item3)
+            {
+
+            }
 
             await Context.Channel.SendFileAsync(result.Item1, embed: result.Item2.Build());
         }

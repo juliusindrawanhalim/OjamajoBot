@@ -767,7 +767,7 @@ namespace OjamajoBot.Module
             string[] arrLoseReaction = { "I'm losing the game." };//bot lose
             string[] arrDrawReaction = { "Well, it's a draw." };//bot draw
 
-            Tuple<string, EmbedBuilder> result = MinigameCore.rockPaperScissor.rpsResults(Config.Aiko.EmbedColor, Config.Aiko.EmbedAvatarUrl, randomGuess, guess, "aiko", Context.User.Username,
+            Tuple<string, EmbedBuilder, Boolean> result = MinigameCore.rockPaperScissor.rpsResults(Config.Aiko.EmbedColor, Config.Aiko.EmbedAvatarUrl, randomGuess, guess, "aiko", Context.User.Username,
                 arrWinReaction, arrLoseReaction, arrDrawReaction,
                 Context.Guild.Id, Context.User.Id);
 
