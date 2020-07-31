@@ -40,11 +40,14 @@ namespace OjamajoBot.Bot
                 .AddSingleton(client)
                 .AddSingleton(commands)
                 .AddSingleton(new InteractiveService(client))
-                .AddSingleton(new ReliabilityService(client))
-                .AddSingleton(audioservice)
+                //.AddSingleton(new ReliabilityService(client))
+                //.AddSingleton(audioservice)
                 .BuildServiceProvider();
 
             client.Log += client_log;
+
+            // do something .. don't forget disposing serviceProvider!
+            Dispose();
 
             await RegisterCommandsAsync();
             await client.LoginAsync(TokenType.Bot, Config.Aiko.Token);
@@ -56,64 +59,14 @@ namespace OjamajoBot.Bot
             //start rotates random activity
             _timerStatus = new Timer(async _ =>
             {
-                Boolean birthdayExisted = false;
+                var returnStatusActivity = Config.Core.BotStatus.checkStatusActivity(Config.Core.BotClass.Aiko,
+                    Config.Aiko.Status.arrRandomActivity);
 
-                //override if there's bot birthday
-                if (DateTime.Now.ToString("dd") == Config.Doremi.birthdayDate.ToString("dd") &&
-                DateTime.Now.ToString("MM") == Config.Doremi.birthdayDate.ToString("MM") &&
-                Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour)
-                {
-                    await client.SetGameAsync($"with Doremi birthday {Config.Emoji.birthdayCake}", type: ActivityType.Playing); //set activity to current index position
-                    birthdayExisted = true;
-                }
-
-                //announce hazuki birthday
-                if (DateTime.Now.ToString("dd") == Config.Hazuki.birthdayDate.ToString("dd") &&
-                DateTime.Now.ToString("MM") == Config.Hazuki.birthdayDate.ToString("MM") &&
-                Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour)
-                {
-                    await client.SetGameAsync($"with Hazuki birthday {Config.Emoji.birthdayCake}", type: ActivityType.Playing); //set activity to current index position
-                    birthdayExisted = true;
-                }
-
-                //announce aiko birthday
-                if (DateTime.Now.ToString("dd") == Config.Aiko.birthdayDate.ToString("dd") &&
-                DateTime.Now.ToString("MM") == Config.Aiko.birthdayDate.ToString("MM") &&
-                Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour)
-                {
-                    await client.SetGameAsync($"with Aiko birthday {Config.Emoji.birthdayCake}", type: ActivityType.Playing); //set activity to current index position
-                    birthdayExisted = true;
-                }
-
-                //announce onpu birthday
-                if (DateTime.Now.ToString("dd") == Config.Onpu.birthdayDate.ToString("dd") &&
-                DateTime.Now.ToString("MM") == Config.Onpu.birthdayDate.ToString("MM") &&
-                Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour)
-                {
-                    await client.SetGameAsync($"with Onpu birthday {Config.Emoji.birthdayCake}", type: ActivityType.Playing); //set activity to current index position
-                    birthdayExisted = true;
-                }
-
-                //announce momoko birthday
-                if (DateTime.Now.ToString("dd") == Config.Momoko.birthdayDate.ToString("dd") &&
-                DateTime.Now.ToString("MM") == Config.Momoko.birthdayDate.ToString("MM") &&
-                Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour)
-                {
-                    await client.SetGameAsync($"with Momoko birthday {Config.Emoji.birthdayCake}", type: ActivityType.Playing); //set activity to current index position
-                    birthdayExisted = true;
-                }
-
-                if (!birthdayExisted)
-                {
-                    Random rnd = new Random();
-                    int rndIndex = rnd.Next(0, Config.Aiko.arrRandomActivity.GetLength(0)); //random the list value
-                                                                                            //if (rndIndex > 0) rndIndex -= 1;
-                    string updLog = "Updated Aiko Activity - Playing: " + Config.Aiko.arrRandomActivity[rndIndex, 0];
-                    Config.Aiko.indexCurrentActivity = rndIndex;
-                    await client.SetGameAsync(Config.Aiko.arrRandomActivity[rndIndex, 0], type: ActivityType.Playing); //set activity to current index position
-
-                    Console.WriteLine(updLog);
-                }
+                var returnObjectActivity = returnStatusActivity.Item1;
+                Config.Aiko.Status.currentActivity = returnObjectActivity[0].ToString();
+                Config.Aiko.Status.currentActivityReply = returnObjectActivity[1].ToString();
+                await client.SetGameAsync(Config.Aiko.Status.currentActivity);
+                await client.SetStatusAsync((UserStatus)returnObjectActivity[2]);
 
             },
             null,
@@ -137,6 +90,8 @@ namespace OjamajoBot.Bot
             await Task.Delay(3000);
         }
 
+        public void Dispose() => client.MessageReceived -= HandleCommandAsync;
+
         public async Task JoinedGuild(SocketGuild guild)
         {
             var systemChannel = client.GetChannel(guild.SystemChannel.Id) as SocketTextChannel; // Gets the channel to send the message in
@@ -157,10 +112,7 @@ namespace OjamajoBot.Bot
                 Config.Aiko._timerBirthdayAnnouncement[guild.Id.ToString()] = new Timer(async _ =>
                 {
                     //announce doremi birthday
-                    if (DateTime.Now.ToString("dd") == Config.Doremi.birthdayDate.ToString("dd") &&
-                    DateTime.Now.ToString("MM") == Config.Doremi.birthdayDate.ToString("MM") &&
-                    (Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour &&
-                    Int32.Parse(DateTime.Now.ToString("HH")) <= Config.Core.maxGlobalTimeHour))
+                    if (Config.Doremi.Status.isBirthday())
                     {
                         await client
                         .GetGuild(guild.Id)

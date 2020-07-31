@@ -331,14 +331,14 @@ namespace OjamajoBot.Module
         [Command("hello"), Summary("Hello, I will greet you up")]
         public async Task momokoHello()
         {
-            string tempReply = "";
             List<string> listRandomRespond = new List<string>() {
                 $"Hello there, {MentionUtils.MentionUser(Context.User.Id)}. ",
                 $"Hey, {MentionUtils.MentionUser(Context.User.Id)}. ",
+                $"Hi, {MentionUtils.MentionUser(Context.User.Id)}. ",
             };
 
             int rndIndex = new Random().Next(0, listRandomRespond.Count);
-            tempReply = listRandomRespond[rndIndex] + Config.Momoko.arrRandomActivity[Config.Momoko.indexCurrentActivity, 1];
+            string tempReply = listRandomRespond[rndIndex] + Config.Momoko.Status.currentActivityReply;
 
             await ReplyAsync(tempReply);
         }

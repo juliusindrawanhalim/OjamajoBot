@@ -10,9 +10,16 @@ using System.Linq;
 using System.Threading;
 using System.Globalization;
 using System.Diagnostics;
+using System.Collections;
+using Discord.WebSocket;
+using System.Threading.Tasks;
+using Spectacles.NET.Types;
+using System.Security.Cryptography.X509Certificates;
+using OjamajoBot.Bot;
 
 namespace Config
 {
+
     public class Core
     {
         public static JObject jobjectconfig; public static JObject jobjectQuiz;
@@ -131,6 +138,212 @@ namespace Config
                 return false;
             }
         }
+        
+        public enum BotClass {
+            Doremi,
+            Hazuki,
+            Aiko,
+            Onpu,
+            Momoko
+        }
+
+        public class BotStatus
+        {
+            public static object[] statusSleeping = { "sleeping time", $"*snores* ZZZzzzz...", UserStatus.DoNotDisturb };
+            public static object[] statusSchool = { $"at misora elementary school {Emoji.school}", "I'm still at the school right now.", UserStatus.DoNotDisturb };
+            public static object[] statusGlobalMahoDou = {"at maho dou","I'm working on maho-dou right now. Please come and visit the shop any time~", UserStatus.Idle};
+            public static List<List<object>> arrPlayingWith = new List<List<object>>();
+
+            public BotStatus()
+            {
+                arrPlayingWith.Add(new List<object>{ "with Doremi", $"I'm playing with {MentionUtils.MentionUser(Doremi.Id)} right now.", UserStatus.Online});
+                arrPlayingWith.Add(new List<object>{ "with Hazuki", $"I'm playing with {MentionUtils.MentionUser(Hazuki.Id)} right now.", UserStatus.Online });
+                arrPlayingWith.Add(new List<object> {"with Aiko",$"I'm playing with {MentionUtils.MentionUser(Aiko.Id)} right now. " +
+                "Please come and join us to make takoyaki together, will you?", UserStatus.Online});
+                arrPlayingWith.Add(new List<object> { "with Onpu", $"I'm playing with {MentionUtils.MentionUser(Onpu.Id)} right now.", UserStatus.Online });arrPlayingWith.Add(new List<object> { "with Onpu", $"I'm playing with {MentionUtils.MentionUser(Onpu.Id)} right now.", UserStatus.Online });
+                arrPlayingWith.Add(new List<object> { "with Momoko", $"I'm playing with {MentionUtils.MentionUser(Momoko.Id)} right now.", UserStatus.Online });
+
+            }
+
+            //public static List<object>[,] arrPlayingWith = 
+            //{
+            //    { "with Doremi", $"I'm playing with {MentionUtils.MentionUser(Doremi.Id)} right now.", UserStatus.Online},
+            //    { "with Hazuki", $"I'm playing with {MentionUtils.MentionUser(Hazuki.Id)} right now." , UserStatus.Online},
+            //    {"with Aiko",$"I'm playing with {MentionUtils.MentionUser(Aiko.Id)} right now. " +
+            //    "Please come and join us to make takoyaki together, will you?", UserStatus.Online},
+            //    { "with Onpu", $"I'm playing with {MentionUtils.MentionUser(Onpu.Id)} right now.", UserStatus.Online },
+            //    { "with Momoko", $"I'm playing with {MentionUtils.MentionUser(Momoko.Id)} right now.", UserStatus.Online }
+            //};
+            public static string myBirthdayActivity = $"my birthday party {Config.Emoji.birthdayCake}";
+            public static string myBirthdayActivityReply = "we're celebrating my birthday party now.";
+            public static UserStatus myBirthdayActivityUserStatus = UserStatus.Online;
+
+            public static Tuple<object[]> checkStatusActivity(BotClass caller, object[,] arrRandomActivity)
+            {
+                //return parameter: force status change,the status array
+                Boolean isWeekday = false;
+                if (DateTime.Now.ToString("dddd").ToLower() == "monday" || DateTime.Now.ToString("dddd").ToLower() == "tuesday" ||
+                DateTime.Now.ToString("dddd").ToLower() == "wednesday" || DateTime.Now.ToString("dddd").ToLower() == "thursday" ||
+                DateTime.Now.ToString("dddd").ToLower() == "friday"){
+                    isWeekday = true;
+                }
+
+                //start
+                //if (randomizePlayingWith)
+                //{
+                //    //doremi->hazuki,hazuki->doremi
+
+                //    //random doremi:
+                //    int randomPlayingWithDoremi = new Random().Next(0, 5);
+                //    if(!Config.Doremi.Status.isPlayingWith && 
+                //        randomPlayingWithDoremi == 0)
+                //    {
+                //        arrPlayingWith.RemoveAt(0);
+                //        Config.Doremi.Status.currentActivity = arrPlayingWith[0][0];
+                //        Config.Doremi.Status.userStatus = (UserStatus)arrPlayingWith[0, 1];
+
+                //    } else
+                //    {
+
+                //    }
+
+                //    //random hazuki:
+
+
+                //    //random aiko:
+
+
+                //    //random onpu:
+
+
+                //    //random momoko:
+
+                //}
+                //end
+
+                object[] returnStatus = { "init","init","init" };
+
+                Boolean forceChange = false;
+                
+                if (Config.Doremi.Status.isBirthday())
+                {
+                    if(caller == BotClass.Doremi)
+                    {
+                        returnStatus[0] = myBirthdayActivity;
+                        returnStatus[1] = myBirthdayActivityReply;
+                        returnStatus[2] = myBirthdayActivityUserStatus;
+                    } else
+                    {
+                        returnStatus[0] = Config.Doremi.Status.birthdayActivity;
+                        returnStatus[1] = "We're celebrating Doremi birthday today.";
+                        returnStatus[2] = myBirthdayActivityUserStatus;
+                    }
+                    forceChange = true;
+                }
+
+                if (Config.Hazuki.Status.isBirthday())
+                {
+                    if (caller == BotClass.Hazuki)
+                    {
+                        returnStatus[0] = myBirthdayActivity;
+                        returnStatus[1] = myBirthdayActivityReply;
+                        returnStatus[2] = myBirthdayActivityUserStatus;
+                    }
+                    else
+                    {
+                        returnStatus[0] = Config.Hazuki.Status.birthdayActivity;
+                        returnStatus[1] = "We're celebrating Hazuki birthday today.";
+                        returnStatus[2] = myBirthdayActivityUserStatus;
+                    }
+                    forceChange = true;
+                }
+
+                if (Config.Aiko.Status.isBirthday())
+                {
+                    if (caller == BotClass.Aiko)
+                    {
+                        returnStatus[0] = myBirthdayActivity;
+                        returnStatus[1] = myBirthdayActivityReply;
+                        returnStatus[2] = myBirthdayActivityUserStatus;
+                    }
+                    else
+                    {
+                        returnStatus[0] = Config.Aiko.Status.birthdayActivity;
+                        returnStatus[1] = "We're celebrating Aiko birthday today.";
+                        returnStatus[2] = myBirthdayActivityUserStatus;
+                    }
+                    forceChange = true;
+                }
+
+                if (Config.Onpu.Status.isBirthday())
+                {
+                    if (caller == BotClass.Onpu)
+                    {
+                        returnStatus[0] = myBirthdayActivity;
+                        returnStatus[1] = myBirthdayActivityReply;
+                        returnStatus[2] = myBirthdayActivityUserStatus;
+                    }
+                    else
+                    {
+                        returnStatus[0] = Config.Onpu.Status.birthdayActivity;
+                        returnStatus[1] = "We're celebrating Onpu birthday today.";
+                        returnStatus[2] = myBirthdayActivityUserStatus;
+                    }
+                    forceChange = true;
+                }
+
+                if (Config.Momoko.Status.isBirthday())
+                {
+                    if (caller == BotClass.Momoko)
+                    {
+                        returnStatus[0] = myBirthdayActivity;
+                        returnStatus[1] = myBirthdayActivityReply;
+                        returnStatus[2] = myBirthdayActivityUserStatus;
+                    }
+                    else
+                    {
+                        returnStatus[0] = Config.Momoko.Status.birthdayActivity;
+                        returnStatus[1] = "We're celebrating Momoko birthday today.";
+                        returnStatus[2] = myBirthdayActivityUserStatus;
+                    }
+                    forceChange = true;
+                }
+
+
+                if (!forceChange)
+                {
+                    int hourNow = Convert.ToInt32(DateTime.Now.ToString("%H"));
+                    if ( hourNow >= 0 && hourNow < 6)
+                    {
+                        returnStatus = statusSleeping;
+                    }
+                    else if (isWeekday && hourNow >= 6 && hourNow <= 12)
+                    {
+                        returnStatus = statusSchool;
+                    }
+                    else if (isWeekday && hourNow >= 13 && hourNow <= 14)
+                    {
+                        returnStatus = statusGlobalMahoDou;
+                    }
+                    else
+                    {
+                        //random activity:
+                        //,reply,user status
+
+                        Random rnd = new Random();
+                        int rndIndex = rnd.Next(0, arrRandomActivity.GetLength(0));
+
+                        returnStatus = new object[]{ arrRandomActivity[rndIndex, 0],
+                            arrRandomActivity[rndIndex, 1],
+                            arrRandomActivity[rndIndex, 2] };
+                    }
+                }
+                
+                 return Tuple.Create(returnStatus);
+            }
+
+
+        }
 
     }
 
@@ -153,8 +366,9 @@ namespace Config
         public static JObject jObjRandomMoments;
         public static JObject jobjectdorememes;
 
-        public static IDictionary<string, Boolean> isRunningTradeCard = new Dictionary<string, Boolean>();
-        public static IDictionary<string, Boolean> isRunningTradeCardProcess = new Dictionary<string, Boolean>();
+        //public static IDictionary<string, Boolean> isRunningTradeCard = new Dictionary<string, Boolean>();
+        //public static IDictionary<string, Boolean> isRunningTradeCardProcess = new Dictionary<string, Boolean>();
+        public static IDictionary<string,Boolean> isRunningInteractive = new Dictionary<string, Boolean>();
 
         public static List<string> listRandomEvent = new List<string>{
             $"{MentionUtils.MentionUser(Hazuki.Id)} let's go to maho dou",
@@ -178,29 +392,49 @@ namespace Config
         //public static IDictionary<string, string> _tradingCardSpawnedCategory = new Dictionary<string, string>();//category
         //public static IDictionary<string, string> _tradingCardCatchToken = new Dictionary<string, string>();//catch token
 
-        public static string[,] arrRandomActivity = {
-            {$"at misora elementary school {Emoji.school}" , "I'm still at school right now."},
-            {$"piano {Emoji.piano}","I'm playing piano right now. Do you want to hear me playing the piano?"},
-            {"at maho dou","I'm working on maho-dou right now. Please visit the shop any time"},
-            {$"with big steak {Emoji.steak}",$"I'm eating my favorite food right now, the big steak {Emoji.drool}"},
-            {"with friends","I'm playing with my classmates. I love everyone on the class."},
-            {"with Hazuki",$"I'm playing with {MentionUtils.MentionUser(Hazuki.Id)} right now. She's one of my best friend."},
-            {"with Aiko",$"I'm playing with {MentionUtils.MentionUser(Aiko.Id)} right now. " +
-                $"We're going to make Takoyaki together with {MentionUtils.MentionUser(Hazuki.Id)}, {MentionUtils.MentionUser(Onpu.Id)} and {MentionUtils.MentionUser(Momoko.Id)}. " +
-                $"Please come and join us to make takoyaki, will you?"},
-            {"with Kotake","Psst, I'm trying to disturb kotake right now :smirk:"},
-            {"with Pop","I'm playing with Pop now. She needs my help with some piano lesson."},
-            {"with Hana","I'm playing with Hana now."},
-            {"at Home",$"I'm at my home right now. I hope my mom will make a steak for dinner {Emoji.steak}"},
-            {$"at witch's world {Emoji.broom}","I'm at the witch's world right now."},
-            {"with homework \uD83D\uDCDA","I'm doing my homework right now"},
-            {"with Momoko",$"I'm playing with {MentionUtils.MentionUser(Momoko.Id)} right now."},
-            {"with Onpu",$"I'm playing with {MentionUtils.MentionUser(Onpu.Id)} right now."},
-            {"with Dodo the fairy",$"I'm playing with fairy: Dodo right now."},
-            {"with Tamaki",$"I'm playing with Tamaki right now."},
-            {"with Ojamajo Trading Card",$"I'm playing Ojamajo Trading Card right now."}
-        };
-        public static int indexCurrentActivity { get; set; }
+        public class Status
+        {
+            public static object[,] arrRandomActivity = {
+                {$"piano {Emoji.piano}","I'm playing piano right now. Do you want to hear me playing the piano?", UserStatus.Online},
+                {$"with big steak {Emoji.steak}",$"I'm eating my favorite food right now, the big steak {Emoji.drool}", UserStatus.Online},
+                {"with Kotake","Psst, I'm trying to disturb kotake right now :smirk:", UserStatus.Online},
+                {"with Pop","I'm playing with Pop now. She needs my help with some piano lesson.", UserStatus.Online},
+                {"with Hana","I'm playing with Hana now.", UserStatus.Online},
+                {"at Home",$"I'm at my home right now. I hope my mom will make a steak for dinner {Emoji.steak}", UserStatus.Online},
+                {$"at witch's world {Emoji.broom}","I'm at the witch's world right now.", UserStatus.Online},
+                {"with homework \uD83D\uDCDA","I'm doing my homework right now", UserStatus.DoNotDisturb},
+                {"with Dodo the fairy",$"I'm playing with fairy: Dodo right now.", UserStatus.Online},
+                {"with Tamaki",$"I'm playing with Tamaki right now.", UserStatus.Online},
+                {"with Ojamajo Trading Card",$"I'm playing Ojamajo Trading Card right now.", UserStatus.Online}
+            };
+
+            public static object[,] arrPlayingWith = {
+                { "with Hazuki", $"I'm playing with {MentionUtils.MentionUser(Hazuki.Id)} right now." , UserStatus.Online},
+                {"with Aiko",$"I'm playing with {MentionUtils.MentionUser(Aiko.Id)} right now. " +
+                "Please come and join us to make takoyaki together, will you?", UserStatus.Online},
+                { "with Onpu", $"I'm playing with {MentionUtils.MentionUser(Onpu.Id)} right now.", UserStatus.Online },
+                { "with Momoko", $"I'm playing with {MentionUtils.MentionUser(Momoko.Id)} right now.", UserStatus.Online }
+            };
+
+            public static string birthdayActivity = $"Doremi birthday {Config.Emoji.birthdayCake}";
+
+            public static string currentActivity = "";
+            public static string currentActivityReply = "";
+            public static UserStatus userStatus = UserStatus.Online;
+            public static Boolean isPlayingWith = false;
+
+            public static Boolean isBirthday()
+            {
+                Boolean isBirthday = false;
+                if(DateTime.Now.ToString("dd") == Config.Doremi.birthdayDate.ToString("dd") &&
+                DateTime.Now.ToString("MM") == Config.Doremi.birthdayDate.ToString("MM") &&
+                Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour)
+                {
+                    isBirthday = true;
+                }
+                return isBirthday;
+            }
+        }
 
         public static string EmbedName = "Doremi Bot";
         public static string EmbedNameError = "Doremi 404";
@@ -222,27 +456,47 @@ namespace Config
         public static IDictionary<string, Timer> _timerRandomEvent = new Dictionary<string, Timer>();
         public static IDictionary<string, Timer> _timerBirthdayAnnouncement = new Dictionary<string, Timer>();//birthday reminder timer
 
-        //backup
-        public static string[,] arrRandomActivity = {
-            {$"at misora elementary school {Emoji.school}" , "I'm still at school right now."},
-            {"at maho dou","I'm working on maho-dou right now. Please come visit the shop any time."},
-            {"with Doremi",$"I'm playing with {MentionUtils.MentionUser(Doremi.Id)} right now. She's one of my best friend."},
-            {"with Aiko",$"I'm playing with {MentionUtils.MentionUser(Aiko.Id)} right now. " +
-                    $"We're going to make some Takoyaki with {MentionUtils.MentionUser(Doremi.Id)}, {MentionUtils.MentionUser(Onpu.Id)} and {MentionUtils.MentionUser(Momoko.Id)}."},
-            {$"violin {Emoji.violin}","I'm playing with my violin instrument now. Wanna hear me to play some music?"},
-            {"with Masaru","I'm playing with my Masaru right now. We're usually playing music together on the afternoon \uD83D\uDE0A"},
-            {"at Home",$"I'm at my home right now. I have violin lesson to attend after this."},
-            {$"at witch's world {Emoji.broom}","I'm at the witch's world right now."},
-            {"with homework \uD83D\uDCDA","I'm doing my homework right now."},
-            {"with Momoko",$"I'm playing with {MentionUtils.MentionUser(Momoko.Id)} right now."},
-            {"with Onpu-",$"I'm playing with {MentionUtils.MentionUser(Onpu.Id)} right now."},
-            {"with Rere the fairy",$"I'm playing with my fairy: Rere right now."},
-            {"with Hana","I'm playing with Hana now."},
-            {"with Marina","I'm playing with Marina now. We're planning to plant some flower together."},
-            {"with Ojamajo Trading Card",$"I'm playing Ojamajo Trading Card right now."}
-        };
+        public class Status{
+            public static object[,] arrRandomActivity = {
+                {$"violin {Emoji.violin}","I'm playing with my violin instrument now. Wanna hear me to play some music?", UserStatus.Online},
+                {"with Masaru","I'm playing with my Masaru right now. We're usually playing music together on the afternoon \uD83D\uDE0A", UserStatus.Online},
+                {"at Home",$"I'm at my home right now. I have violin lesson to attend after this.", UserStatus.Online},
+                {$"at witch's world {Emoji.broom}","I'm at the witch's world right now.", UserStatus.Online},
+                {"with homework \uD83D\uDCDA","I'm doing my homework right now.", UserStatus.DoNotDisturb},
+                {"with Rere the fairy",$"I'm playing with my fairy: Rere right now.", UserStatus.Online},
+                {"with Hana","I'm playing with Hana now.", UserStatus.Online},
+                {"with Marina","I'm playing with Marina now. We're planning to plant some flower together.", UserStatus.Online},
+                {"with Ojamajo Trading Card",$"I'm playing Ojamajo Trading Card right now.", UserStatus.Online}
+            };
 
-        public static int indexCurrentActivity { get; set; }
+            public static object[,] arrPlayingWith = {
+                { "with Doremi", $"I'm playing with {MentionUtils.MentionUser(Doremi.Id)} right now.", UserStatus.Online},
+                {"with Aiko",$"I'm playing with {MentionUtils.MentionUser(Aiko.Id)} right now. " +
+                "Please come and join us to make takoyaki together, will you?", UserStatus.Online},
+                { "with Onpu", $"I'm playing with {MentionUtils.MentionUser(Onpu.Id)} right now.", UserStatus.Online },
+                { "with Momoko", $"I'm playing with {MentionUtils.MentionUser(Momoko.Id)} right now.", UserStatus.Online }
+            };
+
+            public static string birthdayActivity = $"Hazuki birthday {Config.Emoji.birthdayCake}";
+
+            public static string currentActivity = "";
+            public static string currentActivityReply = "";
+            public static UserStatus userStatus = UserStatus.Online;
+            public static Boolean isPlayingWith = false;
+
+            public static Boolean isBirthday()
+            {
+                Boolean isBirthday = false;
+                if (DateTime.Now.ToString("dd") == Config.Hazuki.birthdayDate.ToString("dd") &&
+                DateTime.Now.ToString("MM") == Config.Hazuki.birthdayDate.ToString("MM") &&
+                Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour)
+                {
+                    isBirthday = true;
+                }
+                return isBirthday;
+            }
+
+        }
 
         public static string EmbedName = "Hazuki Bot";
         public static string EmbedNameError = "Hazuki 404";
@@ -267,26 +521,48 @@ namespace Config
         public static IDictionary<string, Boolean> hasSpookyAikoInvader = new Dictionary<string, Boolean>();
         public static IDictionary<string, Timer> _timerSpookyInvader = new Dictionary<string, Timer>();//spooky aiko self executing timer
 
-        public static string[,] arrRandomActivity = {
-            {$"at misora elementary school {Emoji.school}","I'm still at school right now."},
-            {"at maho dou","I'm working on maho-dou right now. Please come to the shop any time"},
-            {"with takoyaki",$"I'm making some delicious takoyaki right now with {MentionUtils.MentionUser(Doremi.Id)}, {MentionUtils.MentionUser(Hazuki.Id)}, {MentionUtils.MentionUser(Onpu.Id)} and {MentionUtils.MentionUser(Momoko.Id)}. " +
-                    $"I will give you some when it's ready."},
-            {"with friends","I'm playing with my classmates. We're gonna play some tennis table."},
-            {"with Hazuki",$"I'm playing with {MentionUtils.MentionUser(Hazuki.Id)} right now. She's a really nice and kind friend for you to meet."},
-            {"with Doremi",$"I'm playing with {MentionUtils.MentionUser(Doremi.Id)} right now. We're probably gonna make steak for her."},
-            {"with Nobuko","I'm playing with Nobuko right now. Currently the latest Detective Boy Tatekawa series was pretty cool."},
-            {"harmonica","I'm playing with my harmonica instrument now. Wanna hear me to play some music?"},
-            {$"at witch's world {Emoji.broom}","I'm at the witch's world right now."},
-            {"with sweet potatoes","Sweet potatoes is one of my favorite foods, I just love to eat it so much."},
-            {"with homework \uD83D\uDCDA","I'm doing my homework right now."},
-            {"with Momoko",$"I'm playing with {MentionUtils.MentionUser(Momoko.Id)} right now."},
-            {"with Onpu",$"I'm playing with {MentionUtils.MentionUser(Onpu.Id)} right now."},
-            {"with Mimi the fairy",$"I'm playing with my fairy: Mimi right now."},
-            {"with Hana","I'm playing with Hana now."},
-            {"with Ojamajo Trading Card",$"I'm playing Ojamajo Trading Card right now."}
-        };
-        public static int indexCurrentActivity { get; set; }
+        public class Status
+        {
+            public static object[,] arrRandomActivity = {
+                {"with takoyaki",$"I'm making some delicious takoyaki right now with {MentionUtils.MentionUser(Doremi.Id)}, {MentionUtils.MentionUser(Hazuki.Id)}, {MentionUtils.MentionUser(Onpu.Id)} and {MentionUtils.MentionUser(Momoko.Id)}. " +
+                        $"I will give you some when it's ready.", UserStatus.Online},
+                {"with friends","I'm playing with my classmates. We're gonna play some tennis table.", UserStatus.Online},
+                {"with Nobuko","I'm playing with Nobuko right now. Currently the latest Detective Boy Tatekawa series was pretty cool.", UserStatus.Online},
+                {"harmonica","I'm playing with my harmonica instrument now. Wanna hear me to play some music?", UserStatus.Online},
+                {$"at witch's world {Emoji.broom}","I'm at the witch's world right now.", UserStatus.Online},
+                {"with sweet potatoes","Sweet potatoes is one of my favorite foods, I just love to eat it so much.", UserStatus.Online},
+                {"with homework \uD83D\uDCDA","I'm doing my homework right now.", UserStatus.DoNotDisturb},
+                {"with Mimi the fairy",$"I'm playing with my fairy: Mimi right now.", UserStatus.Online},
+                {"with Hana","I'm playing with Hana now.", UserStatus.Online},
+                {"with Ojamajo Trading Card",$"I'm playing Ojamajo Trading Card right now.", UserStatus.Online}
+            };
+
+            public static object[,] arrPlayingWith = {
+                { "with Doremi", $"I'm playing with {MentionUtils.MentionUser(Doremi.Id)} right now.", UserStatus.Online},
+                { "with Hazuki", $"I'm playing with {MentionUtils.MentionUser(Hazuki.Id)} right now." , UserStatus.Online},
+                { "with Onpu", $"I'm playing with {MentionUtils.MentionUser(Onpu.Id)} right now.", UserStatus.Online },
+                { "with Momoko", $"I'm playing with {MentionUtils.MentionUser(Momoko.Id)} right now.", UserStatus.Online }
+            };
+
+            public static string birthdayActivity = $"Aiko birthday {Config.Emoji.birthdayCake}";
+
+            public static string currentActivity = "";
+            public static string currentActivityReply = "";
+            public static UserStatus userStatus = UserStatus.Online;
+            public static Boolean isPlayingWith = false;
+
+            public static Boolean isBirthday()
+            {
+                Boolean isBirthday = false;
+                if (DateTime.Now.ToString("dd") == Config.Aiko.birthdayDate.ToString("dd") &&
+                DateTime.Now.ToString("MM") == Config.Aiko.birthdayDate.ToString("MM") &&
+                Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour)
+                {
+                    isBirthday = true;
+                }
+                return isBirthday;
+            }
+        }
 
         public static string EmbedName = "Aiko Bot";
         public static string EmbedNameError = "Aiko 404";
@@ -308,24 +584,46 @@ namespace Config
         public static IDictionary<string, Timer> _timerRandomEvent = new Dictionary<string, Timer>();
         public static IDictionary<string, Timer> _timerBirthdayAnnouncement = new Dictionary<string, Timer>();//birthday reminder timer
 
-        //backup 
-        public static string[,] arrRandomActivity = {
-            {$"at misora elementary school {Emoji.school}" , "I'm still at school right now."},
-            {"at maho dou","I'm working on maho-dou right now. Please come to the shop any time"},
-            {"with Hazuki",$"I'm playing with {MentionUtils.MentionUser(Hazuki.Id)} right now. She's a really nice and kind friend for you to meet."},
-            {"with Doremi",$"I'm playing with {MentionUtils.MentionUser(Doremi.Id)} right now. We're probably gonna make steak for her."},
-            {"with Aiko",$"I'm playing with {MentionUtils.MentionUser(Aiko.Id)} right now. We're probably gonna make steak for her."},
-            {"with Momoko",$"I'm playing with {MentionUtils.MentionUser(Momoko.Id)} right now."},
-            {"at misora tv studio","I'm working on the studio right now. Feel free to come and watch me on some drama performances."},
-            {"at misora radio station","I'm currently broadcasting at radio station right now. Stay tune for more daily info."},
-            {$"at witch's world {Emoji.broom}","I'm at the witch's world right now."},
-            {"flute","I'm playing with my flute instrument now. Wanna hear me to play some music?"},
-            {"with homework \uD83D\uDCDA","I'm doing my homework right now."},
-            {"with Roro the fairy",$"I'm playing with my fairy: Roro right now."},
-            {"with Hana","I'm playing with Hana now."},
-            {"with Ojamajo Trading Card",$"I'm playing Ojamajo Trading Card right now."}
-        };
-        public static int indexCurrentActivity { get; set; }
+        public class Status
+        {
+            public static object[,] arrRandomActivity = {
+                {"at misora tv studio","I'm working on the studio right now. Feel free to come and watch me on some drama performances.", UserStatus.DoNotDisturb},
+                {"at misora radio station","I'm currently broadcasting at radio station right now. Stay tune for more daily info.", UserStatus.DoNotDisturb},
+                {$"at witch's world {Emoji.broom}","I'm at the witch's world right now.", UserStatus.Online},
+                {"flute","I'm playing with my flute instrument now. Wanna hear me to play some music?", UserStatus.Online},
+                {"with homework \uD83D\uDCDA","I'm doing my homework right now.", UserStatus.DoNotDisturb},
+                {"with Roro the fairy",$"I'm playing with my fairy: Roro right now.", UserStatus.Online},
+                {"with Hana","I'm playing with Hana now.", UserStatus.Online},
+                {"with Ojamajo Trading Card",$"I'm playing Ojamajo Trading Card right now.", UserStatus.Online}
+            };
+
+            public static object[,] arrPlayingWith = {
+                { "with Doremi", $"I'm playing with {MentionUtils.MentionUser(Doremi.Id)} right now.", UserStatus.Online},
+                { "with Hazuki", $"I'm playing with {MentionUtils.MentionUser(Hazuki.Id)} right now." , UserStatus.Online},
+                {"with Aiko",$"I'm playing with {MentionUtils.MentionUser(Aiko.Id)} right now. " +
+                "Please come and join us to make takoyaki together, will you?", UserStatus.Online},
+                { "with Momoko", $"I'm playing with {MentionUtils.MentionUser(Momoko.Id)} right now.", UserStatus.Online }
+            };
+
+            public static string birthdayActivity = $"Onpu birthday {Config.Emoji.birthdayCake}";
+
+            public static string currentActivity = "";
+            public static string currentActivityReply = "";
+            public static UserStatus userStatus = UserStatus.Online;
+            public static Boolean isPlayingWith = false;
+
+            public static Boolean isBirthday()
+            {
+                Boolean isBirthday = false;
+                if (DateTime.Now.ToString("dd") == Config.Onpu.birthdayDate.ToString("dd") &&
+                DateTime.Now.ToString("MM") == Config.Onpu.birthdayDate.ToString("MM") &&
+                Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour)
+                {
+                    isBirthday = true;
+                }
+                return isBirthday;
+            }
+        }
 
         public static string EmbedName = "Onpu Bot";
         public static string EmbedNameError = "Onpu 404";
@@ -348,23 +646,48 @@ namespace Config
         public static IDictionary<string, Timer> _timerRandomEvent = new Dictionary<string, Timer>();
         public static IDictionary<string, Timer> _timerBirthdayAnnouncement = new Dictionary<string, Timer>();//birthday reminder timer
 
-        public static string[,] arrRandomActivity = {
-            {$"at misora elementary school {Emoji.school}" , "I'm still at school right now."},
-            {"at maho dou","I'm working on maho-dou right now. Please come to the shop any time"},
-            {"with Hazuki",$"I'm playing with {MentionUtils.MentionUser(Hazuki.Id)} right now. She's a really nice and kind friend for you to meet."},
-            {"with Doremi",$"I'm playing with {MentionUtils.MentionUser(Doremi.Id)} right now. We're probably gonna make steak for her."},
-            {"with Aiko",$"I'm playing with {MentionUtils.MentionUser(Aiko.Id)} right now. She's a nice girl that loves to eat takoyaki very much."},
-            {"with Onpu",$"I'm playing with {MentionUtils.MentionUser(Onpu.Id)} right now."},
-            {$"at witch's world {Emoji.broom}","I'm at the witch's world right now."},
-            {$"guitar {Emoji.guitar}","I'm playing with my guitar instrument now. Wanna hear me to play some music?"},
-            {"with homework \uD83D\uDCDA","I'm doing my homework right now."},
-            {"with Nini",$"I'm playing with my fairy: Nini right now."},
-            {"baseball \u26BE",$"I'm playing baseball right now."},
-            {"with Hana","I'm playing with Hana now."},
-            {"with Tamaki",$"I'm playing with Tamaki right now."},
-            {"with Ojamajo Trading Card",$"I'm playing Ojamajo Trading Card right now."}
-        };
-        public static int indexCurrentActivity { get; set; }
+        public class Status
+        {
+            public static object[,] arrRandomActivity = {
+                {$"at witch's world {Emoji.broom}","I'm at the witch's world right now.",UserStatus.Online},
+                {$"guitar {Emoji.guitar}","I'm playing with my guitar instrument now. Wanna hear me to play some music?",UserStatus.Online},
+                {"with homework \uD83D\uDCDA","I'm doing my homework right now.",UserStatus.DoNotDisturb},
+                {"with Nini",$"I'm playing with my fairy: Nini right now.",UserStatus.Idle},
+                {"with Hana","I'm playing with Hana now.", UserStatus.Online},
+                {"baseball \u26BE",$"I'm playing baseball right now.",UserStatus.Idle},
+                {"with Hana","I'm playing with Hana now.",UserStatus.Idle},
+                {"with Tamaki",$"I'm playing with Tamaki right now.",UserStatus.Idle},
+                {"with Ojamajo Trading Card",$"I'm playing Ojamajo Trading Card right now.",UserStatus.Idle}
+            };
+
+            public static object[,] arrPlayingWith = {
+                { "with Doremi", $"I'm playing with {MentionUtils.MentionUser(Doremi.Id)} right now.", UserStatus.Online},
+                { "with Hazuki", $"I'm playing with {MentionUtils.MentionUser(Hazuki.Id)} right now." , UserStatus.Online},
+                {"with Aiko",$"I'm playing with {MentionUtils.MentionUser(Aiko.Id)} right now. " +
+                "Please come and join us to make takoyaki together, will you?", UserStatus.Online},
+                { "with Onpu", $"I'm playing with {MentionUtils.MentionUser(Onpu.Id)} right now.", UserStatus.Online }
+            };
+
+            public static string birthdayActivity = $"Momoko birthday {Config.Emoji.birthdayCake}";
+
+
+            public static string currentActivity = "";
+            public static string currentActivityReply = "";
+            public static UserStatus userStatus = UserStatus.Online;
+            public static Boolean isPlayingWith = false;
+
+            public static Boolean isBirthday()
+            {
+                Boolean isBirthday = false;
+                if (DateTime.Now.ToString("dd") == Config.Momoko.birthdayDate.ToString("dd") &&
+                DateTime.Now.ToString("MM") == Config.Momoko.birthdayDate.ToString("MM") &&
+                Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour)
+                {
+                    isBirthday = true;
+                }
+                return isBirthday;
+            }
+        }
 
         public static string EmbedName = "Momoko Bot";
         public static string EmbedNameError = "Momoko 404";

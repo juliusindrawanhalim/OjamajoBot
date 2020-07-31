@@ -443,14 +443,13 @@ namespace OjamajoBot.Module
         [Command("hello"), Summary("Hello, I will greet you up")]
         public async Task doremiHello()
         {
-            string tempReply = "";
             List<string> listRandomRespond = new List<string>() {
                     $"Hii hii {MentionUtils.MentionUser(Context.User.Id)}! ",
                     $"Hello {MentionUtils.MentionUser(Context.User.Id)}! ",
             };
 
             int rndIndex = new Random().Next(0, listRandomRespond.Count);
-            tempReply = listRandomRespond[rndIndex] + Config.Doremi.arrRandomActivity[Config.Doremi.indexCurrentActivity, 1];
+            string tempReply = listRandomRespond[rndIndex] + Config.Doremi.Status.currentActivityReply;
 
             await ReplyAsync(tempReply);
         }
@@ -886,9 +885,8 @@ namespace OjamajoBot.Module
             }
         }
 
-        [Command("seeds"), Alias("magicseeds"), Summary("See the current seeds that you have. " +
-            "Parameter can be filled with **magic** or **royal**")]
-        public async Task showTotalSeeds(string selection="magic")
+        [Command("seeds"), Summary("See the total amount of seeds that you have.")]
+        public async Task showTotalSeeds()
         {
             var guildId = Context.Guild.Id;
             var clientId = Context.User.Id;
@@ -903,20 +901,12 @@ namespace OjamajoBot.Module
             }
             else
             {
-                string keySelection = "magic_seeds";
-                if (selection.ToLower() != "magic" && selection.ToLower() != "royal")
-                {
-                    await ReplyAsync("Sorry, please enter **magic** or **royal** as the parameter.");
-                    return;
-                } else if (selection.ToLower()=="royal")
-                    keySelection = "royal";
-                
-
                 JObject arrInventory = JObject.Parse(File.ReadAllText(playerDataDirectory));
                 await ReplyAsync(embed: new EmbedBuilder()
                     .WithColor(Config.Doremi.EmbedColor)
-                    .WithDescription($":seedling: {MentionUtils.MentionUser(clientId)} have: " +
-                    $"**{arrInventory[keySelection]}** {selection} seeds.")
+                    .WithDescription($":seedling: {MentionUtils.MentionUser(clientId)} have:\n" +
+                    $"-**{arrInventory["magic_seeds"]}** magic seeds.\n" +
+                    $"-**{arrInventory["royal_seeds"]}** royal seeds.")
                     .Build());
             }
         }
@@ -1339,6 +1329,7 @@ namespace OjamajoBot.Module
                 Options = pao
             };
 
+            await Context.Message.DeleteAsync();
             await PagedReplyAsync(pager);
 
         }
@@ -3890,9 +3881,10 @@ namespace OjamajoBot.Module
                     .Build());
         }
 
-        [Command("updates"), Alias("update"), Summary("Show Trading Card Updates")]
+        [Command("updates"), Alias("update"), Summary("Show the Ojamajo Doremi Trading Card Updates.")]
         public async Task showCardUpdates()
         {
+            await Context.Message.DeleteAsync();
             await ReplyAsync(embed: TradingCardCore.
                     printUpdatesNote()
                     .Build());
@@ -3905,10 +3897,10 @@ namespace OjamajoBot.Module
             var guildId = Context.Guild.Id;
             var clientId = Context.User.Id;
 
-            if (!Config.Doremi.isRunningTradeCard.ContainsKey(Context.User.Id.ToString()))
-                Config.Doremi.isRunningTradeCard.Add(Context.User.Id.ToString(), false);
+            if (!Config.Doremi.isRunningInteractive.ContainsKey(Context.User.Id.ToString()))
+                Config.Doremi.isRunningInteractive.Add(Context.User.Id.ToString(), false);
 
-            if (!Config.Doremi.isRunningTradeCard[Context.User.Id.ToString()])
+            if (!Config.Doremi.isRunningInteractive[Context.User.Id.ToString()])
             {
                 string userFolderDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}";
 
@@ -4027,7 +4019,7 @@ namespace OjamajoBot.Module
                                 $"-You **cannot** trade card that you or that user already had.")
                                 .WithColor(Config.Doremi.EmbedColor)
                                 .Build());
-                            Config.Doremi.isRunningTradeCard[Context.User.Id.ToString()] = true;
+                            Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = true;
                             msg2 = await PagedReplyAsync(pagerUserList);
                             var response = await NextMessageAsync(timeout: timeoutDuration);
                             newStep = false;
@@ -4052,7 +4044,7 @@ namespace OjamajoBot.Module
                                     
                                     await ReplyAndDeleteAsync(replyTimeout, timeout: TimeSpan.FromSeconds(15));
                                     isTrading = false;
-                                    Config.Doremi.isRunningTradeCard[Context.User.Id.ToString()] = false;
+                                    Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = false;
                                     return Ok();
                                 }
 
@@ -4085,7 +4077,7 @@ namespace OjamajoBot.Module
                                         .WithColor(Config.Doremi.EmbedColor)
                                         .Build());
                                     isTrading = false;
-                                    Config.Doremi.isRunningTradeCard[Context.User.Id.ToString()] = false;
+                                    Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = false;
                                     return Ok();
                                 }
                                 else if (stepProcess == 1)
@@ -4490,7 +4482,7 @@ namespace OjamajoBot.Module
                                             $"Your card trading process has been canceled.")
                                             .Build());
                                         isTrading = false;
-                                        Config.Doremi.isRunningTradeCard[Context.User.Id.ToString()] = false;
+                                        Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = false;
                                         return Ok();
                                     }
                                     else
@@ -4792,7 +4784,7 @@ namespace OjamajoBot.Module
                                             //item.Add(spawnedCardId);
                                             File.WriteAllText(otherUserDataDirectory, JUserData.ToString());
                                             isTrading = false;
-                                            Config.Doremi.isRunningTradeCard[Context.User.Id.ToString()] = false;
+                                            Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = false;
                                             return Ok();
                                         }
                                     }
@@ -4825,8 +4817,6 @@ namespace OjamajoBot.Module
 
             return Ok();
 
-
-
             /*json format:
              * "trading_queue": {
                 "01929183481": ["do","on"]
@@ -4842,10 +4832,10 @@ namespace OjamajoBot.Module
             string userFolderDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}";
             string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
 
-            if (!Config.Doremi.isRunningTradeCardProcess.ContainsKey(Context.User.Id.ToString()))
-                Config.Doremi.isRunningTradeCardProcess.Add(Context.User.Id.ToString(), false);
+            if (!Config.Doremi.isRunningInteractive.ContainsKey(Context.User.Id.ToString()))
+                Config.Doremi.isRunningInteractive.Add(Context.User.Id.ToString(), false);
 
-            if (!Config.Doremi.isRunningTradeCardProcess[Context.User.Id.ToString()])
+            if (!Config.Doremi.isRunningInteractive[Context.User.Id.ToString()])
             {
                 if (!File.Exists(playerDataDirectory)) //not registered yet
                 {
@@ -4857,7 +4847,6 @@ namespace OjamajoBot.Module
                 }
 
                 var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
-
 
                 var playerData = JObject.Parse(File.ReadAllText(playerDataDirectory));
                 int fileCount = Directory.GetFiles(userFolderDirectory).Length;
@@ -4952,7 +4941,7 @@ namespace OjamajoBot.Module
                         };
 
                         msg2 = await PagedReplyAsync(pageContentUserList);
-                        Config.Doremi.isRunningTradeCardProcess[Context.User.Id.ToString()] = true;
+                        Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = true;
                         var response = await NextMessageAsync(timeout: timeoutDuration);
                         newStep = false;
 
@@ -4966,7 +4955,7 @@ namespace OjamajoBot.Module
                             {
                                 await ReplyAndDeleteAsync(replyTimeout, timeout: TimeSpan.FromSeconds(10));
                                 isTrading = false;
-                                Config.Doremi.isRunningTradeCardProcess[Context.User.Id.ToString()] = false;
+                                Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = false;
                                 return Ok();
                             }
 
@@ -4991,7 +4980,7 @@ namespace OjamajoBot.Module
                                     .WithColor(Config.Doremi.EmbedColor)
                                     .Build());
                                 isTrading = false;
-                                Config.Doremi.isRunningTradeCardProcess[Context.User.Id.ToString()] = false;
+                                Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = false;
                                 return Ok();
                             }
                             else if (stepProcess == 1)
@@ -5121,7 +5110,7 @@ namespace OjamajoBot.Module
                                     ((JObject)JUserData["trading_queue"]).Remove(selectionUserId);
                                     File.WriteAllText(yourUserDataDirectory, JUserData.ToString());
                                     isTrading = false;
-                                    Config.Doremi.isRunningTradeCardProcess[Context.User.Id.ToString()] = false;
+                                    Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = false;
                                     return Ok();
                                 }
                                 else if (existsYours || existsOthers)
@@ -5140,7 +5129,7 @@ namespace OjamajoBot.Module
                                     ((JObject)JUserData["trading_queue"]).Remove(selectionUserId);
                                     File.WriteAllText(yourUserDataDirectory, JUserData.ToString());
                                     isTrading = false;
-                                    Config.Doremi.isRunningTradeCardProcess[Context.User.Id.ToString()] = false;
+                                    Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = false;
                                     return Ok();
                                 }
 
@@ -5208,7 +5197,7 @@ namespace OjamajoBot.Module
                                         ((JObject)JUserData["trading_queue"]).Remove(selectionUserId);
                                         File.WriteAllText(yourUserDataDirectory, JUserData.ToString());
                                         isTrading = false;
-                                        Config.Doremi.isRunningTradeCardProcess[Context.User.Id.ToString()] = false;
+                                        Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = false;
                                         return Ok();
                                     }
                                     else
@@ -5262,7 +5251,7 @@ namespace OjamajoBot.Module
                                         File.WriteAllText(otherUserDataDirectory, JOtherUserData.ToString());
 
                                         isTrading = false;
-                                        Config.Doremi.isRunningTradeCardProcess[Context.User.Id.ToString()] = false;
+                                        Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = false;
                                         return Ok();
 
                                     }
@@ -5281,6 +5270,318 @@ namespace OjamajoBot.Module
                 await ReplyAndDeleteAsync(null, embed: new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
                 .WithDescription($"I'm sorry, you're still running the card trade process. Please finish it first.")
+                .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build(), timeout: TimeSpan.FromSeconds(10));
+            }
+
+            return Ok();
+        }
+
+        [Command("shop exclusive", RunMode = RunMode.Async), Summary("Open Card Shop Exclusive Menu.")]
+        public async Task<RuntimeResult> openRoyalShopMenu()
+        {
+            var guildId = Context.Guild.Id;
+            var clientId = Context.User.Id;
+
+            if (!Config.Doremi.isRunningInteractive.ContainsKey(Context.User.Id.ToString()))
+                Config.Doremi.isRunningInteractive.Add(Context.User.Id.ToString(), false);
+
+            if (!Config.Doremi.isRunningInteractive[Context.User.Id.ToString()])
+            {
+                string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+                var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
+
+                if (!File.Exists(playerDataDirectory)) //not registered yet
+                {
+                    await Context.Message.DeleteAsync();
+                    await ReplyAndDeleteAsync(null, embed: new EmbedBuilder()
+                    .WithColor(Config.Doremi.EmbedColor)
+                    .WithDescription($":x: I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
+                    .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build(), timeout: TimeSpan.FromSeconds(10));
+
+                    return Ok();
+                }
+                else
+                {
+                    string embedName = "Exclusive Card Shop";
+                    Boolean isRunning = true;
+                    var timeoutDuration = TimeSpan.FromSeconds(300);
+                    string replyTimeout = ":stopwatch: I'm sorry, but you have reach your timeout. " +
+                        $"Please use the `{Config.Doremi.PrefixParent[0]}card shop exclusive` command to come back again.";
+                    int stepProcess = 1;//1: select the card pack that you want, 2: select the card category, 3:review process
+
+                    Boolean newStep = true; 
+                    string selectedBox = ""; string selectedParent = ""; string selectedColor = ""; string selectedCardId = "";
+                    int selectedPriceMagicSeeds = -1; int selectedPriceRoyalSeeds = -1;
+                    int userMagicSeeds = 0; int userRoyalSeeds = 0;
+                    string concatCardListDisplay = "";
+
+                    var playerData = JObject.Parse(File.ReadAllText(playerDataDirectory));
+                    userMagicSeeds = Convert.ToInt32(playerData["magic_seeds"].ToString());
+                    userRoyalSeeds = Convert.ToInt32(playerData["royal_seeds"].ToString());
+
+
+                    IDictionary<string, string> parentColor = new Dictionary<string, string>();
+                    parentColor["pink"] = "doremi"; parentColor["orange"] = "hazuki"; parentColor["blue"] = "aiko";
+                    parentColor["purple"] = "onpu"; parentColor["yellow"] = "momoko";
+
+                    string[] availableItemNormalSelection = { "pink","orange","blue","purple","yellow" };
+
+                    EmbedBuilder ebTop = new EmbedBuilder()
+                    .WithAuthor(embedName, Config.Doremi.EmbedAvatarUrl)
+                    .WithDescription($"Welcome to Exclusive Card Shop, here you can exchange your royal seeds with the royal box." +
+                    $"**Please enter the card pack that you want to browse.**\n" +
+                    $"Type **cancel**/**exit** anytime to exit.\n")
+                    .AddField($"Your available seeds:",
+                    $"{userRoyalSeeds} royal seeds")
+                    .AddField("Select the royal box that you want to open:",
+                    "**pink**: 1 royal seeds (doremi)\n" +
+                    "**orange**: 1 royal seeds (hazuki)\n" +
+                    "**blue**: 1 royal seeds (aiko)\n" +
+                    "**purple**: 1 royal seeds (onpu)\n" +
+                    "**yellow**: 1 royal seeds (momoko)")
+                    .WithFooter("*Experimental version, please report it soon if you notice any bugs.")
+                    .WithColor(Config.Doremi.EmbedColor);
+
+                    IUserMessage msg;
+                    msg = await ReplyAsync(embed: ebTop.Build());
+                    Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = true;
+                    var response = await NextMessageAsync(timeout: timeoutDuration);
+                    newStep = false;
+
+                    Dictionary<string, string> arrAvailableSelected = new Dictionary<string, string>();
+
+                    while (isRunning)
+                    {
+                        EmbedBuilder ebTemplate = new EmbedBuilder()
+                        .WithColor(Config.Doremi.EmbedColor);
+
+                        try
+                        {
+                            var checkNull = response.Content.ToLower().ToString();
+                        }
+                        catch
+                        {
+                            try
+                            {
+                                await Context.Channel.DeleteMessageAsync(msg.Id);
+                            }
+                            catch { }
+
+                            await ReplyAndDeleteAsync(replyTimeout, timeout: TimeSpan.FromSeconds(15));
+                            isRunning = false;
+                            Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = false;
+                            return Ok();
+                        }
+
+                        //response = await NextMessageAsync(timeout: timeoutDuration);
+                        //string responseText = response.Content.ToLower().ToString();
+
+                        if (response.Content.ToString().ToLower() == "cancel" ||
+                            response.Content.ToString().ToLower() == "exit")
+                        {
+                            try
+                            {
+                                await Context.Channel.DeleteMessageAsync(response.Id);
+                                await Context.Channel.DeleteMessageAsync(msg.Id);
+                            }
+                            catch
+                            {
+
+                            }
+                            //try
+                            //{
+                            //    await Context.Channel.DeleteMessageAsync(msg2.Id);
+                            //}
+                            //catch
+                            //{
+
+                            //}
+                            await ReplyAsync(embed: new EmbedBuilder()
+                                .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+                                .WithDescription($"Thank you for visiting the exclusive card shop. Please come back again next time.")
+                                .WithColor(Config.Doremi.EmbedColor)
+                                .Build());
+                            isRunning = false;
+                            Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = false;
+                            return Ok();
+                        }
+                        else if (stepProcess == 1)
+                        { 
+                            if (newStep)
+                            {
+                                newStep = false;
+                                try
+                                {
+                                    await Context.Channel.DeleteMessageAsync(response.Id);
+                                    await Context.Channel.DeleteMessageAsync(msg.Id);
+                                }
+                                catch
+                                {
+
+                                }
+                                
+                                msg = await ReplyAsync(embed: ebTop.Build());
+                                response = await NextMessageAsync(timeout: timeoutDuration);
+                            }
+                            else
+                            {
+                                selectedColor = response.Content.ToString().ToLower();
+                                if (!availableItemNormalSelection.Contains(selectedColor))
+                                {
+                                    await ReplyAndDeleteAsync($":x: Sorry, that is not the valid box selection. " +
+                                        $"Please re-enter the valid box selection.", timeout: TimeSpan.FromSeconds(10));
+                                    msg = await ReplyAsync(embed: ebTop.Build());
+                                    response = await NextMessageAsync(timeout: timeoutDuration);
+                                }
+                                else
+                                {
+                                    Boolean enoughSeed = false;
+                                    
+                                    selectedParent = parentColor[selectedColor];
+
+                                    if (selectedParent == "doremi"|| selectedParent == "hazuki"|| selectedParent == "aiko"||
+                                        selectedParent == "onpu"|| selectedParent == "momoko")
+                                    {
+                                        if (userRoyalSeeds >= 1)
+                                        {
+                                            enoughSeed = true;
+                                            userRoyalSeeds -= 1;
+                                        }
+                                    }
+
+                                    if (enoughSeed)
+                                    {
+                                        concatCardListDisplay = "";
+
+                                        //random 5 cards
+                                        for (int i = 0; i <= 4; i++)
+                                        {
+                                            string chosenCategory = "";
+                                            int randomCategory = new Random().Next(11);
+                                            if (randomCategory <= 2)//0-1
+                                                chosenCategory = "ojamajos";
+                                            else if (randomCategory <= 5)//0-2
+                                                chosenCategory = "metal";
+                                            else if (randomCategory <= 8)//0-5
+                                                chosenCategory = "platinum";
+                                            else if (randomCategory <= 10)//0-10
+                                                chosenCategory = "normal";
+
+                                            var key = JObject.Parse(jObjTradingCardList[selectedParent][chosenCategory].ToString()).Properties().ToList();
+                                            int randIndex = new Random().Next(0, key.Count);
+
+                                            string chosenId = key[randIndex].Name;
+                                            string chosenName = jObjTradingCardList[selectedParent][chosenCategory][key[randIndex].Name]["name"].ToString();
+                                            string chosenUrl = jObjTradingCardList[selectedParent][chosenCategory][key[randIndex].Name]["url"].ToString();
+
+                                            JArray arrList = (JArray)playerData[selectedParent][chosenCategory];
+                                            var owned = arrList.ToString().Contains(chosenId);
+                                            if (owned)
+                                                concatCardListDisplay += ":white_check_mark: ";
+                                            else
+                                            {
+                                                concatCardListDisplay += ":x: ";
+                                                arrAvailableSelected[chosenId] = $"[{chosenId} - {chosenName}]({chosenUrl})";
+                                            }
+
+                                            concatCardListDisplay += $"[{chosenId} - {chosenName}]({chosenUrl})\n";
+
+                                        }
+
+                                        await ReplyAndDeleteAsync(null,embed: new EmbedBuilder()
+                                        .WithDescription($"Magical Stage! Give {MentionUtils.MentionUser(clientId)} " +
+                                        $"the **{selectedColor} Box**!")
+                                        .WithColor(Config.Doremi.EmbedColor)
+                                        .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/5b/MOD-EP1-078.png")
+                                        .Build(),timeout: TimeSpan.FromSeconds(15));
+                                        stepProcess = 2;
+                                        newStep = true;
+
+                                        playerData["royal_seeds"] = userRoyalSeeds;
+                                        File.WriteAllText(playerDataDirectory, playerData.ToString());
+
+                                    } else
+                                    {
+                                        await ReplyAndDeleteAsync($":x: Sorry, you don't have enough seeds to exchange that box.",
+                                            timeout: TimeSpan.FromSeconds(10));
+                                        msg = await ReplyAsync(embed: ebTop.Build());
+                                        response = await NextMessageAsync(timeout: timeoutDuration);
+
+                                        stepProcess = 1;
+                                        newStep = true;
+                                    }
+                                }
+                            }
+                        }
+                         else if(stepProcess == 2)
+                        {
+                            if (newStep)
+                            {
+                                newStep = false;
+                                msg = await ReplyAsync(embed: ebTemplate
+                                .WithDescription("Type **exit/cancel** to exit the card selection.")
+                                .AddField("Select 1 Card Id that you want to take:",
+                                concatCardListDisplay)
+                                .Build());
+                                response = await NextMessageAsync(timeout: timeoutDuration);
+
+                                try
+                                {
+                                    await Context.Channel.DeleteMessageAsync(response.Id);
+                                    await Context.Channel.DeleteMessageAsync(msg.Id);
+                                }
+                                catch
+                                {
+
+                                }
+
+                            } else
+                            {
+                                selectedCardId = response.Content.ToString();
+                                if (arrAvailableSelected.ContainsKey(selectedCardId))
+                                {
+                                    string[] splittedImgUrl = arrAvailableSelected[selectedCardId].Split("](");
+                                    string imgUrl = splittedImgUrl[1].Remove(splittedImgUrl[1].Length - 1);
+
+                                    await ReplyAsync(embed: new EmbedBuilder()
+                                        .WithDescription($"You have received the: **{arrAvailableSelected[selectedCardId]}**.\n" +
+                                        $"Thank you for visiting the **exclusive card shop**.")
+                                        .WithImageUrl(imgUrl)
+                                        .WithColor(Config.Doremi.EmbedColor)
+                                        .Build());
+
+
+                                    //playerData["magic_seeds"] = userRoyalSeeds;
+                                    JArray item = (JArray)playerData[selectedParent][TradingCardCore.getCardCategory(selectedCardId)];
+                                    item.Add(selectedCardId);
+                                    File.WriteAllText(playerDataDirectory, playerData.ToString());
+
+                                    //terminate the interactive
+                                    Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = false;
+                                    isRunning = false;
+                                }
+                                else
+                                {
+                                    await ReplyAndDeleteAsync($":x: Sorry, that is not the valid card id selection. " +
+                                            $"Please re-enter the valid card id.", timeout: TimeSpan.FromSeconds(10));
+                                    msg = await ReplyAsync(embed: ebTemplate
+                                    .WithDescription("Type **exit/cancel** to exit the card selection.")
+                                    .AddField("Select 1 Card Id that you want to take:",
+                                    concatCardListDisplay)
+                                    .Build());
+
+                                    response = await NextMessageAsync(timeout: timeoutDuration);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                await ReplyAndDeleteAsync(null, embed: new EmbedBuilder()
+                .WithColor(Config.Doremi.EmbedColor)
+                .WithDescription($":x: I'm sorry, you are still running the interactive command. Please finish it first.")
                 .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build(), timeout: TimeSpan.FromSeconds(10));
             }
 
@@ -6229,7 +6530,7 @@ namespace OjamajoBot.Module
 
                 if (extension == ".jpg" || extension == ".jpeg" || extension == ".png" || extension == ".gif")
                 {
-                    IMessage nowProcessing = await ReplyAsync($"\u23F3 Processing the dorememes jojofication, please wait for a moment...");
+                    IMessage nowProcessing = await ReplyAsync($"\u23F3 Processing the image, please wait for a moment...");
 
                     //Download the resource and load the bytes into a buffer.
                     byte[] buffer = myWebClient.DownloadData(url);

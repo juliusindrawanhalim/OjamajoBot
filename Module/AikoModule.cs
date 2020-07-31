@@ -381,7 +381,7 @@ namespace OjamajoBot.Module
             };
 
             int rndIndex = new Random().Next(0, listRandomRespond.Count);
-            string tempReply = listRandomRespond[rndIndex] + Config.Aiko.arrRandomActivity[Config.Aiko.indexCurrentActivity, 1];
+            string tempReply = listRandomRespond[rndIndex] + Config.Aiko.Status.currentActivityReply;
 
             await ReplyAsync(tempReply);
         }

@@ -15,7 +15,7 @@ namespace OjamajoBot
 {
     public class TradingCardCore
     {
-        public static string version = "1.19";
+        public static string version = "1.2";
         public static string propertyId = "trading_card_spawn_id";
         public static string propertyCategory = "trading_card_spawn_category";
         public static string propertyToken = "trading_card_spawn_token";
@@ -127,11 +127,27 @@ namespace OjamajoBot
             //"Each weather will affect your plant growing progression. The weather will change for every 2 hours.\n" +
             //"*More usage & information about royal seeds will be added on upcoming updates soon.");
 
+            //return new EmbedBuilder()
+            //.WithColor(Config.Doremi.EmbedColor)
+            //.WithTitle($"Ojamajo Trading Card - Update {version} - 05.07.20")
+            //.AddField(":tools: **Updates:**",
+            //"**daily commands**: Fixed the growth rate progress for each weather.");
+
             return new EmbedBuilder()
             .WithColor(Config.Doremi.EmbedColor)
-            .WithTitle($"Ojamajo Trading Card - Update {version} - 05.07.20")
-            .AddField(":tools: **Updates:**",
-            "**daily commands**: Fixed the growth rate progress for each weather.");
+            .WithTitle($"Ojamajo Trading Card - Update {version} - 31.07.20")
+            .AddField(":new: **Command Updates:**",
+            "-**card shop exclusive**: Now you can exchange your royal seeds on this shop menu.\n" +
+            "-**seeds**: added the royal seeds amount display.\n")
+            .AddField(":new: Garden maho-dou",
+            "-**do!daily** image has been updated.")
+            .AddField(":tools: **Card Spawn Updates**:",
+            "-**mystery card hint**: added & removed some of the mystery card hint.\n" +
+            "-**new mystery card hint [translate the numbers into words or rearrange it after]**: " +
+            "You can translate it with the alphabetical orders(1:A, 2:B, etc...).\n" +
+            "Example: **9-13-4-15-18-5** will be translated into **i-m-d-o-r-e** " +
+            "and when it's rearranged, the result will be: **doremi**");
+            //"Decipher these number into words and rearrange the result: ",//doremi
         }
 
         public static int getPlayerRank(int exp)
@@ -284,6 +300,79 @@ namespace OjamajoBot
             };
 
             return pager;
+
+        }
+
+        public static Tuple<List<string>, PaginatedMessage> printListAllCardTemplate(Color color, string parent, string category,
+             JObject jObjTradingCardList, JArray arrData)
+        {
+            PaginatedAppearanceOptions pao = new PaginatedAppearanceOptions();
+            pao.JumpDisplayOptions = JumpDisplayOptions.Never;
+            pao.DisplayInformationIcon = false;
+
+            List<string> arrAllowed = new List<string>();
+            List<string> pageContent = new List<string>();
+            var arrList = (JArray)arrData;
+
+            try
+            {
+                var arrListMaster = ((JObject)jObjTradingCardList[parent][category]).Properties().ToList();
+                JObject sorted = new JObject(arrListMaster.OrderBy(e => e.Name));
+                var arrListMasterSorted = sorted.Properties().ToList();
+                
+
+                string title = "";
+
+                string tempVal = title;
+                int currentIndex = 0;
+                for (int i = 0; i < arrListMasterSorted.Count; i++)
+                {
+                    string cardId = arrListMasterSorted[i].Name;
+                    string name = arrListMasterSorted[i].Value["name"].ToString();
+                    string url = arrListMasterSorted[i].Value["url"].ToString();
+
+                    var owned = arrList.ToString().Contains(cardId);
+                    if (owned)
+                        tempVal += ":white_check_mark: ";
+                    else
+                    {
+                        tempVal += ":x: ";
+                        arrAllowed.Add(cardId);
+                    }
+                    
+                    tempVal += $"[{cardId} - {name}]({url})\n";
+
+                    if (i == arrListMasterSorted.Count - 1)
+                    {
+                        pageContent.Add(tempVal);
+                    }
+                    else
+                    {
+                        if (currentIndex < 9) currentIndex++;
+                        else
+                        {
+                            pageContent.Add(tempVal);
+                            currentIndex = 0;
+                            tempVal = title;
+                        }
+                    }
+
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
+
+            var pager = new PaginatedMessage
+            {
+                Title = $"**{GlobalFunctions.UppercaseFirst(parent)} {GlobalFunctions.UppercaseFirst(category)} Card List**\n",
+                Pages = pageContent,
+                Color = color,
+                Options = pao
+            };
+
+            return Tuple.Create(arrAllowed, pager);
 
         }
 
@@ -1918,23 +2007,51 @@ namespace OjamajoBot
                 return category;
             }
 
+            public static string[] cardCategoryList = { 
+                "doremi normal",
+                "doremi platinum",
+                "doremi metal",
+                "doremi ojamajos"
+            };
+
             public static string[] arrMysteryDescription = {
-                ":birthday: July is my birthday",
-                "Dodo is my fairy",
+                //19,20,5,1,11
+                //a=1, b=4, c=7
+                //d/h/a/o/m
+                //doremi/hazuki/aiko/onpu/momoko
+                //":sparkles: **Pirika** is one of my chanting spell",
+                //":sparkles: **Pirilala** is one of my chanting spell",
+                //":sparkles: **Poporina** is one of my chanting spell",
+                //":sparkles: **Peperuto** is one of my chanting spell",
+
+                ":birthday: My birthday was on July",
+                ":woman_fairy: Translate these numbers into words: 4-15-4-15",//dodo
+                ":woman_fairy: Translate these numbers into words and rearrange the result: 15-4-15-4",
                 ":birthday: February, May, March and November are not my birthday",
-                ":birthday: My birthday was at 30th",
-                ":sparkles: **Pirika** is one of my chanting spell",
-                ":sparkles: **Pirilala** is one of my chanting spell",
-                ":sparkles: **Poporina** is one of my chanting spell",
-                ":sparkles: **Peperuto** is one of my chanting spell",
+                ":birthday: My birthday date was on 30",
+                
                 ":sparkles: **Paipai Poppun Famifami Pon!** are not my spell",
                 ":sparkles: **Faa Puwapuwa Pon Rarirori!** are not my spell",
                 ":sparkles: **Puu Raruku Purun Perutan!** are not my spell",
                 ":sparkles: **Puu Poppun Faa Pon!** are not my spell",
                 ":sparkles: **Petton Puu Pameruku Faa!** are not my spell",
-                ":sparkles: **Famifami Rarirori Paipai Petton!** are not my spell"
-            };
+                ":sparkles: **Famifami Rarirori Paipai Petton!** are not my spell",
+                //new:
+                ":girl: Translate these numbers into words: 4-15-18-5-13-9",//doremi
+                ":girl: Translate these numbers into words and rearrange the result: 5-18-15-4-9-13",//doremi
+                ":girl: Translate these numbers into words and rearrange the result: 18-5-9-13-15-4",//doremi
+                ":girl: Translate these numbers into words and rearrange the result: 15-4-13-9-18-5",//doremi
+                ":girl: Translate these numbers into words and rearrange the result: 9-13-4-15-18-5",//doremi
+                ":girl: Translate these numbers into words and rearrange the result: 9-18-5-15-13-4",//doremi
 
+                ":girl: Translate these numbers into words: 8-1-18-21-11-1-26-5",//harukaze
+                ":girl: Translate these numbers into words and rearrange the result: 1-1-26-5-11-8-18-21",//harukaze
+                ":girl: Translate these numbers into words and rearrange the result: 5-1-21-1-8-11-18-26",//harukaze
+
+                ":fork_and_knife: Translate these numbers into words: 19-20-5-1-11",//steak
+                ":fork_and_knife: Translate these numbers into words and rearrange the result: 20-19-11-5-1",//steak
+                ":fork_and_knife: Translate these numbers into words and rearrange the result: 1-11-19-5-20"//steak
+            };
         }
 
         public class Hazuki {
@@ -1959,22 +2076,43 @@ namespace OjamajoBot
                 return category;
             }
 
+            public static string[] cardCategoryList = {
+                "hazuki normal",
+                "hazuki platinum",
+                "hazuki metal",
+                "hazuki ojamajos"
+            };
+
             public static string[] arrMysteryDescription = {
-                ":birthday: February is my birthday",
-                "Rere is my fairy",
+                //
+                //":fork_and_knife: One of my favorite food ends with **e**",
+                //":fork_and_knife: One of my favorite food start with **ch**",
+                //":sparkles: **Paipai** is one of my chanting spell",
+                //":sparkles: **Ponpoi** is one of my chanting spell",
+                //":sparkles: **Puwapuwa** is one of my chanting spell",
+                //":sparkles: **Puu** is one of my chanting spell",
+
+                ":drop_of_blood: My blood type is A",
+                ":birthday: My birthday was on February",
+                ":woman_fairy: Translate these numbers into words: 18-5-18-5",//rere
+                ":woman_fairy: Translate these numbers into words and rearrange the result: 5-18-18-5",//rere
+                ":woman_fairy: Translate these numbers into words and rearrange the result: 5-5-18-18",//rere
                 ":birthday: May, July, March and November are not my birthday month",
                 ":birthday: My birthday is the same day of the month as Aiko but I was born a few months earlier",
-                ":drop_of_blood: My blood type was A",
-                ":fork_and_knife: One of my favorite food ends with **e**",
-                ":fork_and_knife: One of my favorite food start with **ch**",
-                ":sparkles: **Paipai** is one of my chanting spell",
-                ":sparkles: **Ponpoi** is one of my chanting spell",
-                ":sparkles: **Puwapuwa** is one of my chanting spell",
-                ":sparkles: **Puu** is one of my chanting spell",
                 ":sparkles: **Raruku Famifami Pirika Pon!** are not my spell",
                 ":sparkles: **Pararira Faa Rarirori Poporina!** are not my spell",
                 ":sparkles: **Poppun Pirika Faa Perutan!** are not my spell",
-                ":sparkles: **Rarirori Peperuto Perutan Purun!** are not my spell"
+                ":sparkles: **Rarirori Peperuto Perutan Purun!** are not my spell",
+                ":girl: Translate these numbers into words: 8-1-26-21-11-9",//hazuki
+                ":girl: Translate these numbers into words and rearrange the result: 26-9-8-21-1-11",//hazuki
+                ":girl: Translate these numbers into words and rearrange the result: 11-21-8-1-26-9",//hazuki
+                ":girl: Translate these numbers into words and rearrange the result: 9-21-8-1-26-11",//hazuki
+                
+                ":girl: Translate these numbers into words: 6-21-10-9-23-1-18-1", //fujiwara
+                ":girl: Translate these numbers into words and rearrange the result: 1-23-6-18-21-1-9-10", //fujiwara
+                ":girl: Translate these numbers into words and rearrange the result: 1-10-9-21-19-1-6-23", //fujiwara
+                ":girl: Translate these numbers into words and rearrange the result: 10-9-21-1-6-18-23-1", //fujiwara
+                ":girl: Translate these numbers into words and rearrange the result: 23-1-18-1-10-21-6-9", //fujiwara
             };
 
         }
@@ -2001,24 +2139,40 @@ namespace OjamajoBot
                 return category;
             }
 
+            public static string[] cardCategoryList = {
+                "aiko normal",
+                "aiko platinum",
+                "aiko metal",
+                "aiko ojamajos"
+            };
+
             public static string[] arrMysteryDescription = {
-                ":birthday: November is my birthday",
-                "Mimi is my fairy",
+                //":sparkles: **Pameruku** is one of my chanting spell",
+                //":sparkles: **Raruku** is one of my chanting spell",
+                //":sparkles: **Rarirori** is one of my chanting spell",
+                //":sparkles: **Poppun** is one of my chanting spell",
+
+                ":birthday: My birthday was on November",
+                ":woman_fairy: Translate these numbers into words: 13-9-13-9",//mimi
+                ":woman_fairy: Translate these numbers into words: 13-13-9-9",//mimi
+                ":fork_and_knife: Translate these numbers into words: 20-1-11-15-25-1-11-9",//takoyaki
+                ":fork_and_knife: Translate these numbers into words and rearrange the result: 1-11-11-9-20-1-25-15",//takoyaki
+                ":fork_and_knife: Translate these numbers into words and rearrange the result: 15-11-9-20-11-1-25-1",//takoyaki
+                ":fork_and_knife: Translate these numbers into words and rearrange the result: 9-1-15-25-11-1-20-11",//takoyaki
                 ":birthday: July, February, March and May are not my birthday",
                 ":birthday: My birthday is the same day of the month as Hazuki but I was born a few months older",
-                ":drop_of_blood: My blood type was O",
+                ":drop_of_blood: My blood type is O",
                 ":fork_and_knife: One of my favorite food ends with **i**",
                 ":fork_and_knife: One of my favorite food start with **t**",
-                ":sparkles: **Pameruku** is one of my chanting spell",
-                ":sparkles: **Raruku** is one of my chanting spell",
-                ":sparkles: **Rarirori** is one of my chanting spell",
-                ":sparkles: **Poppun** is one of my chanting spell",
                 ":sparkles: **Famifami Pon Ponpoi Pirika!** are not my spell",
                 ":sparkles: **Peperuto Puwapuwa Purun Perutan!** are not my spell",
                 ":sparkles: **Ponpoi Purun Pirilala Petton!** are not my spell",
                 ":sparkles: **Famifami Pararira Puwapuwa Poporina!** are not my spell",
                 ":sparkles: **Pururun Paipai Perutan Pirika!** are not my spell",
-                ":sparkles: **Puu Pon Faa Peperuto!** are not my spell"
+                ":sparkles: **Puu Pon Faa Peperuto!** are not my spell",
+                ":girl: Translate these numbers into words: 1-9-11-15",//aiko
+                ":girl: Translate these numbers into words and rearrange the result: 15-11-9-1",//aiko
+                ":girl: Translate these numbers into words and rearrange the result: 11-15-1-9",//aiko
             };
 
         }
@@ -2046,23 +2200,40 @@ namespace OjamajoBot
                 return category;
             }
 
+            public static string[] cardCategoryList = {
+                "onpu normal",
+                "onpu platinum",
+                "onpu metal",
+                "onpu ojamajos"
+            };
+
             public static string[] arrMysteryDescription = {
-                ":birthday: March is my birthday",
-                "Roro is my fairy",
+                //":sparkles: **Pururun** is one of my chanting spell",
+                //":sparkles: **Purun** is one of my chanting spell",
+                //":sparkles: **Famifami** is one of my chanting spell",
+                //":sparkles: **Faa** is one of my chanting spell",
+                //":fork_and_knife: One of my favorite food ends with **s**",
+                //":fork_and_knife: One of my favorite food start with **cr**",
+
+                ":birthday: My birthday was on March",
+                ":woman_fairy: Translate these numbers into words: 18-15-18-15",//roro
+                ":woman_fairy: Translate these numbers into words: 18-18-15-15",//roro
                 ":birthday: July, February, November and May are not my birthday",
-                ":birthday: My birthday was at 3rd",
-                ":fork_and_knife: One of my favorite food ends with **s**",
-                ":fork_and_knife: One of my favorite food start with **cr**",
-                ":sparkles: **Pururun** is one of my chanting spell",
-                ":sparkles: **Purun** is one of my chanting spell",
-                ":sparkles: **Famifami** is one of my chanting spell",
-                ":sparkles: **Faa** is one of my chanting spell",
+                ":birthday: My birthday date was on 3",
                 ":sparkles: **Rarirori Pirika Ponpoi Pon!** are not my spell",
                 ":sparkles: **Puwapuwa Peperuto Raruku Perutan!** are not my spell",
                 ":sparkles: **Ponpoi Raruku Petton Pirilala!** are not my spell",
                 ":sparkles: **Poporina Puwapuwa Rarirori Pararira!** are not my spell",
                 ":sparkles: **Peperuto Pon Poppun Puu!** are not my spell",
-                ":sparkles: **Paipai Pirika Pameruku Perutan!** are not my spell"
+                ":sparkles: **Paipai Pirika Pameruku Perutan!** are not my spell",
+                ":girl: Translate these numbers into words: 15-14-16-21", //onpu
+                ":girl: Translate these numbers into words and rearrange the result: 16-21-15-14", //onpu
+                ":girl: Translate these numbers into words and rearrange the result: 21-15-14-16", //onpu
+                
+                ":girl: Translate these numbers into words: 19-5-7-1-23-1", //segawa
+                ":girl: Translate these numbers into words and rearrange the result: 1-7-23-5-1-19", //segawa
+                ":girl: Translate these numbers into words and rearrange the result: 1-1-5-23-19-7", //segawa
+                ":girl: Translate these numbers into words and rearrange the result: 5-1-1-23-19-7", //segawa
             };
 
         }
@@ -2090,24 +2261,37 @@ namespace OjamajoBot
                 return category;
             }
 
+            public static string[] cardCategoryList = {
+                "momoko normal",
+                "momoko platinum",
+                "momoko metal",
+                "momoko ojamajos"
+            };
+
             public static string[] arrMysteryDescription = {
-                ":birthday: May is my birthday",
-                "Nini is my fairy",
-                ":drop_of_blood: My blood type was AB",
+                //":fork_and_knife: One of my favorite food ends with **t**",
+                //":sparkles: **Perutan** is one of my chanting spell",
+                //":sparkles: **Petton** is one of my chanting spell",
+                //":sparkles: **Pararira** is one of my chanting spell",
+                //":sparkles: **Pon** is one of my chanting spell",
+
+                ":birthday: My birthday was on May",
+                ":woman_fairy: Translate these numbers into words: 14-9-14-9",//nini
+                ":drop_of_blood: My blood type is AB",
                 ":birthday: July, February, November and March are not my birthday",
-                ":birthday: My birthday was at 6th",
-                ":fork_and_knife: One of my favorite food ends with **t**",
+                ":birthday: My birthday date was on 6",
                 ":fork_and_knife: One of my favorite food start with **s**",
-                ":sparkles: **Perutan** is one of my chanting spell",
-                ":sparkles: **Petton** is one of my chanting spell",
-                ":sparkles: **Pararira** is one of my chanting spell",
-                ":sparkles: **Pon** is one of my chanting spell",
                 ":sparkles: **Ponpoi Pirika Faa Rarirori!** are not my spell",
                 ":sparkles: **Raruku Puwapuwa Peperuto Pururun!** are not my spell",
                 ":sparkles: **Purun Ponpoi Pirilala Raruku!** are not my spell",
                 ":sparkles: **Rarirori Poporina Famifami Puwapuwa!** are not my spell",
                 ":sparkles: **Faa Poppun Puu Peperuto!** are not my spell",
-                ":sparkles: **Pururun Pameruku Pirika Paipai!** are not my spell"
+                ":sparkles: **Pururun Pameruku Pirika Paipai!** are not my spell",
+
+                ":girl: Translate these numbers into words: 13-15-13-15-11-15",//momoko
+
+                ":girl: Translate these numbers into words and rearrange the result: 15-15-13-13-11-15",//momoko
+                ":girl: Translate these numbers into words and rearrange the result: 11-13-15-13-15-15"//momoko
             };
 
         }

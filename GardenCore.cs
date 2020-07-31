@@ -6,7 +6,7 @@ namespace OjamajoBot
 {
     public static class GardenCore
     {
-        public static string imgMagicSeeds = "https://cdn.discordapp.com/attachments/706770454697738300/716673416479899729/magic_seeds.jpg";
+        public static string imgMagicSeeds = "https://cdn.discordapp.com/attachments/706770454697738300/738695405558038578/magic_seeds.jpg";
         public static string imgRoyalSeeds = "https://cdn.discordapp.com/attachments/706770454697738300/726137300052082728/royal_seeds.gif";
         public static string[] weather = { $"☀️", "sunny", "It's a sunny day!","4","5" };//current weather/initialize it
         public static string[,] arrRandomWeather = {

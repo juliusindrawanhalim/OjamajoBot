@@ -69,18 +69,18 @@ namespace OjamajoBot.Bot
             /// </summary>
             /// <returns>the service provider</returns>
             services = new ServiceCollection()
-                // Discord
-                .AddSingleton(client)
-                .AddSingleton(commands)
-                .AddSingleton(new InteractiveService(client))
-                .AddSingleton(new ReliabilityService(client))
-                //.AddSingleton(audioservice)
-                //victoria
-                //.AddSingleton<LavaConfig>()
-                //.AddSingleton<LavaNode>()
-                // Request Caching for Lavalink
-                //.AddSingleton<ILavalinkCache, LavalinkCache>()
-                .BuildServiceProvider();
+            // Discord
+            .AddSingleton(client)
+            .AddSingleton(commands)
+            .AddSingleton(new InteractiveService(client))
+            //.AddSingleton(new ReliabilityService(client))
+            //.AddSingleton(audioservice)
+            //victoria
+            //.AddSingleton<LavaConfig>()
+            //.AddSingleton<LavaNode>()
+            // Request Caching for Lavalink
+            //.AddSingleton<ILavalinkCache, LavalinkCache>()
+            .BuildServiceProvider();
 
             client.Log += client_log;
 
@@ -117,11 +117,16 @@ namespace OjamajoBot.Bot
                         selectedWeatherIndex = 3;
                         //GardenCore.weather = new string[] { $"⛈️", "thunder storm","I don't think it's the best time to water the plant now...","2"};
                     }
-                    GardenCore.weather[0] = GardenCore.arrRandomWeather[selectedWeatherIndex,0];
-                    GardenCore.weather[1] = GardenCore.arrRandomWeather[selectedWeatherIndex,1];
-                    GardenCore.weather[2] = GardenCore.arrRandomWeather[selectedWeatherIndex,2];
-                    GardenCore.weather[3] = GardenCore.arrRandomWeather[selectedWeatherIndex,3];
-                    GardenCore.weather[4] = GardenCore.arrRandomWeather[selectedWeatherIndex,4];
+
+                    for(int i = 0; i<=4; i++)
+                    {
+                        GardenCore.weather[i] = GardenCore.arrRandomWeather[selectedWeatherIndex, i];
+                    }
+                    
+                    //GardenCore.weather[1] = GardenCore.arrRandomWeather[selectedWeatherIndex,1];
+                    //GardenCore.weather[2] = GardenCore.arrRandomWeather[selectedWeatherIndex,2];
+                    //GardenCore.weather[3] = GardenCore.arrRandomWeather[selectedWeatherIndex,3];
+                    //GardenCore.weather[4] = GardenCore.arrRandomWeather[selectedWeatherIndex,4];
 
                     //GardenCore.weather = new string[] { GardenCore.arrRandomWeather[selectedWeatherIndex, 0] };
                 },
@@ -131,65 +136,32 @@ namespace OjamajoBot.Bot
             );
 
             //start rotates activity
-                _timerStatus = new Timer(async _ =>
+            _timerStatus = new Timer(async _ =>
             {
-                Boolean birthdayExisted = false;
 
-                //override if there's bot birthday
-                if (DateTime.Now.ToString("dd") == Config.Doremi.birthdayDate.ToString("dd") &&
-                DateTime.Now.ToString("MM") == Config.Doremi.birthdayDate.ToString("MM") &&
-                Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour)
-                {
-                    await client.SetGameAsync($"with Doremi birthday {Config.Emoji.birthdayCake}", type: Discord.ActivityType.Playing); //set activity to current index position
-                    birthdayExisted = true;
-                }
+                var returnStatusActivity = Config.Core.BotStatus.checkStatusActivity(Config.Core.BotClass.Doremi,
+                    Config.Doremi.Status.arrRandomActivity);
 
-                //announce hazuki birthday
-                if (DateTime.Now.ToString("dd") == Config.Hazuki.birthdayDate.ToString("dd") &&
-                DateTime.Now.ToString("MM") == Config.Hazuki.birthdayDate.ToString("MM") &&
-                Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour)
-                {
-                    await client.SetGameAsync($"with Hazuki birthday {Config.Emoji.birthdayCake}", type: Discord.ActivityType.Playing); //set activity to current index position
-                    birthdayExisted = true;
-                }
-
-                //announce aiko birthday
-                if (DateTime.Now.ToString("dd") == Config.Aiko.birthdayDate.ToString("dd") &&
-                DateTime.Now.ToString("MM") == Config.Aiko.birthdayDate.ToString("MM") &&
-                Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour)
-                {
-                    await client.SetGameAsync($"with Aiko birthday {Config.Emoji.birthdayCake}", type: Discord.ActivityType.Playing); //set activity to current index position
-                    birthdayExisted = true;
-                }
-
-                //announce onpu birthday
-                if (DateTime.Now.ToString("dd") == Config.Onpu.birthdayDate.ToString("dd") &&
-                DateTime.Now.ToString("MM") == Config.Onpu.birthdayDate.ToString("MM") &&
-                Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour)
-                {
-                    await client.SetGameAsync($"with Onpu birthday {Config.Emoji.birthdayCake}", type: Discord.ActivityType.Playing); //set activity to current index position
-                    birthdayExisted = true;
-                }
-
-                //announce momoko birthday
-                if (DateTime.Now.ToString("dd") == Config.Momoko.birthdayDate.ToString("dd") &&
-                DateTime.Now.ToString("MM") == Config.Momoko.birthdayDate.ToString("MM") &&
-                Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour)
-                {
-                    await client.SetGameAsync($"with Momoko birthday {Config.Emoji.birthdayCake}", type: Discord.ActivityType.Playing); //set activity to current index position
-                    birthdayExisted = true;
-                }
-
-                if (!birthdayExisted)
-                {
-                    Random rnd = new Random();
-                    int rndIndex = rnd.Next(0, Config.Doremi.arrRandomActivity.GetLength(0)); //random the list value
-                                                                                              //if (rndIndex > 0) rndIndex -= 1;
-                    string updLog = "Updated Doremi Activity - Playing: " + Config.Doremi.arrRandomActivity[rndIndex, 0];
-                    Config.Doremi.indexCurrentActivity = rndIndex;
-                    await client.SetGameAsync(Config.Doremi.arrRandomActivity[rndIndex, 0], type: Discord.ActivityType.Playing); //set activity to current index position
-                    Console.WriteLine(updLog);
-                }
+                var returnObjectActivity = returnStatusActivity.Item1;
+                Config.Doremi.Status.currentActivity = returnObjectActivity[0].ToString();
+                Config.Doremi.Status.currentActivityReply = returnObjectActivity[1].ToString();
+                await client.SetGameAsync(Config.Doremi.Status.currentActivity);
+                await client.SetStatusAsync((UserStatus)returnObjectActivity[2]);
+                
+                //if (!forceStatusChange && returnDailyRoutine.Item1)
+                //{
+                //    //Config.Doremi.Status.userStatus = returnDailyRoutine.Item2[
+                //    await client.SetStatusAsync(Config.Doremi.Status.userStatus);
+                //} else
+                //{
+                //    Random rnd = new Random();
+                //    int rndIndex = rnd.Next(0, Config.Doremi.Status.arrRandomActivity.GetLength(0)); //random the list value
+                //    await client.SetGameAsync(Config.Doremi.Status.arrRandomActivity[rndIndex, 0].ToString(), type: Discord.ActivityType.Playing); //set activity to current index position
+                //    Config.Doremi.Status.currentActivityReply = Config.Doremi.Status.arrRandomActivity[rndIndex, 1].ToString();
+                    
+                //    string updLog = $"Updated Doremi Activity - Playing: {Config.Doremi.Status.currentActivity}";
+                //    Console.WriteLine(updLog);
+                //}
 
             },
             null,
@@ -215,13 +187,14 @@ namespace OjamajoBot.Bot
             client.Ready += () => {
 
                 Console.WriteLine("Doremi Connected!");
-                //new Hazuki().RunBotAsync().GetAwaiter().GetResult();
-                //_lavaNode.ConnectAsync();
 
+                //_lavaNode.ConnectAsync();
+                //new Hazuki().RunBotAsync().GetAwaiter().GetResult();
                 return Task.CompletedTask;
             };
 
             //// Block this task until the program is closed.
+
             await Task.Delay(1000);
         }
 
@@ -265,10 +238,7 @@ namespace OjamajoBot.Bot
                     var guildId = guild.Id; DateTime date; Boolean birthdayExisted = false;
 
                     //announce hazuki birthday
-                    if (DateTime.Now.ToString("dd") == Config.Hazuki.birthdayDate.ToString("dd") &&
-                    DateTime.Now.ToString("MM") == Config.Hazuki.birthdayDate.ToString("MM") &&
-                    (Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour &&
-                    Int32.Parse(DateTime.Now.ToString("HH")) <= Config.Core.maxGlobalTimeHour))
+                    if (Config.Hazuki.Status.isBirthday())
                     {
                         await client
                         .GetGuild(guild.Id)
@@ -279,24 +249,18 @@ namespace OjamajoBot.Bot
                     }
 
                     //announce aiko birthday
-                    if (DateTime.Now.ToString("dd") == Config.Aiko.birthdayDate.ToString("dd") &&
-                    DateTime.Now.ToString("MM") == Config.Aiko.birthdayDate.ToString("MM") &&
-                    (Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour &&
-                    Int32.Parse(DateTime.Now.ToString("HH")) <= Config.Core.maxGlobalTimeHour))
+                    if (Config.Aiko.Status.isBirthday())
                     {
                         await client
                         .GetGuild(guild.Id)
                         .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "id_birthday_announcement")))
-                        .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday to our osakan friend: {MentionUtils.MentionUser(Config.Aiko.Id)} chan. " +
+                        .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday to our dear osakan friend: {MentionUtils.MentionUser(Config.Aiko.Id)} chan. " +
                         $"She has turned into {Config.Aiko.birthdayCalculatedYear} on this year. Let's give some takoyaki and wonderful birthday wishes for her.");
                         birthdayExisted = true;
                     }
 
                     //announce onpu birthday
-                    if (DateTime.Now.ToString("dd") == Config.Onpu.birthdayDate.ToString("dd") &&
-                    DateTime.Now.ToString("MM") == Config.Onpu.birthdayDate.ToString("MM") &&
-                    (Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour &&
-                    Int32.Parse(DateTime.Now.ToString("HH")) <= Config.Core.maxGlobalTimeHour))
+                    if (Config.Onpu.Status.isBirthday())
                     {
                         await client
                         .GetGuild(guild.Id)
@@ -307,10 +271,7 @@ namespace OjamajoBot.Bot
                     }
 
                     //announce momoko birthday
-                    if (DateTime.Now.ToString("dd") == Config.Momoko.birthdayDate.ToString("dd") &&
-                    DateTime.Now.ToString("MM") == Config.Momoko.birthdayDate.ToString("MM") &&
-                    (Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour &&
-                    Int32.Parse(DateTime.Now.ToString("HH")) <= Config.Core.maxGlobalTimeHour))
+                    if (Config.Momoko.Status.isBirthday())
                     {
                         await client
                         .GetGuild(guild.Id)

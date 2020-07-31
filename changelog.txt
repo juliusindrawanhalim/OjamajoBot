@@ -108,3 +108,14 @@ card trade process command fix: the user list can now be displayed.
 New Features:
 -Card data delete command with do!card delete: Want to start over from beginning? Now you can delete your card data progress on current server and start over again. " +
 "Please read some note & rules that applied before executing this command!"
+
+Doremi Trading Card - Update 1.20 - 31.07.20
+=======================================================================
+Updates:
+-card shop exclusive: Now you can exchange your royal seeds on this shop menu.
+-seeds: added the royal seeds amount display.
+-do!daily image update.
+-mystery card hint: added & removed some of the mystery card hint.
+-new mystery card hint [translate the numbers into words or rearrange it after]: 
+You can translate it with the alphabetical orders(1:A, 2:B, etc...)
+Example: **9-13-4-15-18-5** will be translated into **i-m-d-o-r-e**  and when it's rearranged, the result will be: **doremi**");
