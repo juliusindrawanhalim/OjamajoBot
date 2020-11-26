@@ -1,0 +1,173 @@
+Doremi Trading Card - Update 1.01 - 06.05.20
+=======================================================================
+-New optional capture command:`card info/card look`
+-New optional capture command: `card catch`\n" +
+-New command: `card status` [let you see all the cards & total that you own for all card pack]
+-`card status` command allow you to track down your catching attempt\n" +
+-New command: `card leaderboard` [let you see top 5 user that capture all the card for each pack]
+-Updates on card spawn display
+-Updates on spawn rate & catch rate
+-Dialogue updates on card capture
+-Additional randomized timer for spawn interval between 5-10 minutes
+
+Doremi Trading Card - Update 1.02 - 08.05.20
+=======================================================================
+-New trading command with: **do!card trade**
+-You can process your trade with: **do!card trade process**
+
+Doremi Trading Card - Update 1.03 - 12.05.20
+=======================================================================
+-New Trading Card Category & Pack: Ojamajos Category & Other Pack: Special Category. These 2 cards can't be traded.
+-Ojamajos card can be captured with any related bots. Example: Doremi & Hazuki can be captured with doremi/hazuki bots. Related card will be automatically placed into the valid card pack inventory.
+-Other Special card can be captured with any bots and shared their same inventory.
+-Ojamajos category card capture rate: 20%
+-Other-Special category card capture rate: 40%
+-Card Shop Feature: with do!card shop command.
+You can purchase items with the collected magic seeds daily.
+-Card Capture Boost Feature with <bot>!card capture boost
+-Card Boost Status with <bot>!card boost
+-You will now receive daily random amount of magic seeds between 1-5
+
+Doremi Trading Card - Update 1.04 - 12.05.20
+=======================================================================
+-You can now select inventory category for each bot with additional inventory parameter. Example: do!card inventory platinum.
+-Updated card display layout
+-Card catch & spawn rate can be displayed with do!card rate
+
+Doremi Trading Card - Update 1.05 - 12.05.20
+=======================================================================
+-Bug fix on card catch color
+-Bug fix on catch rate
+-Updates on card spawn embed layout
+
+Doremi Trading Card - Update 1.06 - 16.05.20
+=======================================================================
+-New Card Type: Mystery Card
+
+Doremi Trading Card - Update 1.07 - 19.05.20
+=======================================================================
+-Bug fix on card detail command
+-Code & performance optimization for card capture & card detail commands
+
+Doremi Trading Card - Update 1.08 - 21.05.20
+=======================================================================
+-Bug fix & updates on card inventory where paging cannot be used
+-Updates on card status report
+-Paging updates on card trade command
+-Added rank system which affect the catch rate
+-Card spawn appearance updates
+
+Doremi Trading Card - Update 1.09 - 27.05.20
+=======================================================================
+-Added Role & Badge Updates for user that have completed all the card
+
+Doremi Trading Card - Update 1.1 - 30.05.20
+=======================================================================
+-Added bad cards & pureleine command
+
+Doremi Trading Card - Update 1.11 - 30.05.20
+=======================================================================
+-Bad cards curse effect is now only steal "normal" card category
+-Bad cards reward is now only rewarded with "normal" card category
+-Bad cards seed reward is now rewarded with 1-5 magic seeds
+-Added bad cards & pureleine command
+
+Doremi Trading Card - Update 1.12 - 30.05.20
+=======================================================================
+-Bad card spawn rate has been lowered down
+-Pureleine command: question difficulty has been increased
+-Pureleine command: seeds reward are now randomized between 1-3
+-Magic seeds image has been resized
+
+Doremi Trading Card - Update 1.13 - 09.06.20
+=======================================================================
+-Card shop interactive now have automated deletion from previous message to keep the channel clean
+-Added basic guide command for newcomer with: **do!card guide starter**/**do!card guide mystery card**/**do!card guide bad card**
+
+Doremi Trading Card - Update 1.14 - 12.06.20
+=======================================================================
+-Card status & inventory can now display other user with mentioned user parameter
+
+Doremi Trading Card - Update 1.15 - 16.06.20
+=======================================================================
+-Card capture command that is fail/error now have auto deletion message between 10 seconds.
+-Card trade now have auto deletion message system to keep the channel clean.
+
+Doremi Trading Card - Update 1.16 - 17.06.20
+=======================================================================
+Updates:
+-card capture anti peeking & auto deletion feature: failed/error executed card capture command from a user will now deleted immediately to keep the channel clean.
+-More cleaner card category command: capture/shop/trade/trade process command: failed/error/timeout message will automatically deleted within 10-15 seconds.
+-card register command that has been loaded now have new rules applied to keep the progress balanced: you can't catch any card on the current card spawn turn.
+-card inventory command will now sort all the card in order
+-Mystery card image has been updated
+
+Bug Fix:
+card trade process command fix: the user list can now be displayed.
+
+New Features:
+-Card data delete command with do!card delete: Want to start over from beginning? Now you can delete your card data progress on current server and start over again. " +
+"Please read some note & rules that applied before executing this command!"
+
+Doremi Trading Card - Update 1.20 - 31.07.20
+=======================================================================
+Updates:
+-card shop exclusive: Now you can exchange your royal seeds on this shop menu.
+-seeds: added the royal seeds amount display.
+-do!daily image update.
+-mystery card hint: added & removed some of the mystery card hint.
+-new mystery card hint [translate the numbers into words or rearrange it after]: 
+You can translate it with the alphabetical orders(1:A, 2:B, etc...)
+Example: **9-13-4-15-18-5** will be translated into **i-m-d-o-r-e**  and when it's rearranged, the result will be: **doremi**");
+
+Doremi Trading Card - Update 1.28 - 31.07.20
+=======================================================================
+//return new EmbedBuilder()
+//.WithColor(Config.Doremi.EmbedColor)
+//.WithTitle($"Ojamajo Trading Card - Update {version} - 14.09.20")
+//.AddField("**Updates**:",
+//"-Card spawn is now role mentionable.\n" +
+//"-Card capture with **boost** command now only use the boost category from the card that is spawned.\n" +
+//"-**daily** commmand seeds reward has been increased into 20-30 magic seeds.\n" +
+//"-New card spawn type: **zone** has been added as new spawn system. " +
+//"Unlike normal card spawn, this card are locked/instanced individually for each users based on the zone that are assigned. " +
+//"To capture this card type you need to use the specific ojamajo bots that you already assigned on. " +
+//"By default everyone will be assigned at **doremi normal** zone. " +
+//"No changes are made for the capture rate. " +
+//"You can set your zone with **do!card zone <card pack>** or **do!card region <card pack>**. " +
+//"Additionally there will be no bad card marks for this card.\n" +
+//"-Updated the **spawn** command which can no longer be executed if the card is spawned automatically by the bots.")
+//.AddField(":new: **New commands**:",
+//"-**<bot>!card zone set <category>** or **<bot>!card region set <category>** : " +
+//"Set your card spawn zone from the bot prefix. Available category: **normal**/**platinum**/**metal**/**ojamajos**. " +
+//"Additionally you need to use magic seeds for everytime you want to change your card zone. " +
+//"The amount of magic seeds that are required for each category will be:\n" +
+//"**normal**: 5 magic seeds.\n" +
+//"**platinum**: 10 magic seeds.\n" +
+//"**metal**: 12 magic seeds.\n" +
+//"**ojamajos**: 15 magic seeds.\n\n" +
+//"-**<bot>!card zone where** or **<bot>!card region where**: Look at your assigned card zone.\n" +
+//"-**<bot>!card zone price** or **<bot>!card region price**: See the required magic seeds for **card zone set** command.");
+
+Doremi Trading Card - Update 1.29 - 11.11.20
+=======================================================================
+-Made some slight change migration from json to mysql
+-playing minigame now allows you to get some magic seeds
+
+Doremi Trading Card - Update 1.30 - 22.11.20
+===============================================================
+-migration progress from json to mysql
+-major data migration & changes for all trading card & garden related command. Please report if you notice any command that is not working properly.
+-card & data between server now has been migrated & merged
+-register command has been removed, user can immediately capture card
+-save & delete command has been removed
+-trade command are removed temporarily
+-leaderboard command has been updated and can be called with each ojamajo bot for each pack
+-card guide has been updated
+-using the card boost now doesn't reset all card boost for that pack
+-buying card boost now doesn't reset the boost that you have from the listed boost effect
+-Seeds now have cap limitation. magic seeds are capped up to 3000 and royal seeds are capped up to 10.
+-added new command: card verify to let know if user has complete their card pack or not
+-spawn command has been removed
+-new command: verify. This will let you get verified to get the card badge
+-new command: status complete. This will let you see your/other ojamajo trading card completion date

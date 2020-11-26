@@ -17,6 +17,7 @@ using Discord.Addons.Interactive;
 using Newtonsoft.Json.Linq;
 using System.IO;
 using System.Drawing;
+using OjamajoBot.Database.Model;
 
 namespace OjamajoBot.Bot
 {
@@ -245,37 +246,38 @@ namespace OjamajoBot.Bot
         }
         public async Task GuildAvailable(SocketGuild guild)
         {
-            //set hazuki birthday announcement timer
-            if (Config.Guild.hasPropertyValues(guild.Id.ToString(), "id_birthday_announcement"))
-            {
-                Config.Hazuki._timerBirthdayAnnouncement[guild.Id.ToString()] = new Timer(async _ =>
-                {
-                    //announce doremi birthday
-                    if (Config.Doremi.Status.isBirthday())
-                    {
-                        await client
-                        .GetGuild(guild.Id)
-                        .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "id_birthday_announcement")))
-                        .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday, {MentionUtils.MentionUser(Config.Doremi.Id)} chan. " +
-                        $"She has turned into {Config.Doremi.birthdayCalculatedYear} on this year. Let's give some big steak and wonderful birthday wishes for her.");
-                    }
+            ulong guildId = guild.Id;
+            Config.Guild.init(guild.Id);
+            var guildData = Config.Guild.getGuildData(guildId);
 
-                },
-                null,
-                TimeSpan.FromSeconds(10), //time to wait before executing the timer for the first time
-                TimeSpan.FromHours(24) //time to wait before executing the timer again
-                );
-            }
+            //Config.Hazuki._timerBirthdayAnnouncement[guild.Id.ToString()] = new Timer(async _ =>
+            //    {
+            //        //set birthday announcement timer
+            //        if (guildData[DBM_Guild.Columns.birthday_announcement_date_last].ToString() !=
+            //            DateTime.Now.ToString("dd"))
+            //        {
+            //            await client
+            //            .GetGuild(guild.Id)
+            //            .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "id_birthday_announcement")))
+            //            .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday, {MentionUtils.MentionUser(Config.Doremi.Id)} chan. " +
+            //            $"She has turned into {Config.Doremi.birthdayCalculatedYear} on this year. Let's give some big steak and wonderful birthday wishes for her.");
+            //        }
+            //    },
+            //    null,
+            //    TimeSpan.FromSeconds(10), //time to wait before executing the timer for the first time
+            //    TimeSpan.FromHours(24) //time to wait before executing the timer again
+            //);
         }
 
         public async Task JoinedGuild(SocketGuild guild)
         {
             var systemChannel = client.GetChannel(guild.SystemChannel.Id) as SocketTextChannel; // Gets the channel to send the message in
-            await systemChannel.SendMessageAsync($"Pretty witchy {MentionUtils.MentionUser(Config.Hazuki.Id)} chi~ has arrived to the {guild.Name}. " +
-                $"Thank you for very much inviting me, I'm very happy to meet you all. " +
-                $"You can ask me with `{Config.Hazuki.PrefixParent[0]}help` for all commands list.",
+            await systemChannel.SendMessageAsync(
             embed: new EmbedBuilder()
             .WithColor(Config.Hazuki.EmbedColor)
+            .WithDescription("Pretty witchy {MentionUtils.MentionUser(Config.Hazuki.Id)} chi~ has arrived to the {guild.Name}. " +
+                $"Thank you for very much inviting me, I'm very happy to meet you all. " +
+                $"You can ask me with `{Config.Hazuki.PrefixParent[0]}help` for all commands list.")
             .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/f/fc/04.01.08.JPG")
             .Build());
         }

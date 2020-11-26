@@ -15,8 +15,8 @@ namespace OjamajoBot
         public static IDictionary<string, string[]> achievementList = new Dictionary<string, string[]>();
         public static IDictionary<string, string[]> achievementListHidden = new Dictionary<string, string[]>();
 
-        public static string TYPE_NORMAL = "normal";
-        public static string TYPE_HIDDEN = "hidden";
+        public const string TYPE_NORMAL = "normal";
+        public const string TYPE_HIDDEN = "hidden";
 
         /*
          * key types that will display: 
@@ -188,9 +188,9 @@ namespace OjamajoBot
                 achievementList["status1_min"] = new string[] { "Rookie", "Reach level 2."};
                 achievementList["status2_min"] = new string[] { "Veteran", "Reach level 5."};
 
-                achievementListHidden["statush1_min"] = new string[] { "EXPerience is the best teacher", "Get 500 EXP."};
-                achievementListHidden["statush2_min"] = new string[] { "Status Peeker", "Use the card status command 50 times."};
-                achievementListHidden["statush3_min"] = new string[] { "The inventorist", "Use the card inventory command 50 times."};
+                achievementListHidden["status_hidden1_min"] = new string[] { "EXPerience is the best teacher", "Get 500 EXP."};
+                achievementListHidden["status_hidden2_min"] = new string[] { "Status Peeker", "Use the card status command 50 times."};
+                achievementListHidden["status_hidden3_min"] = new string[] { "The inventorist", "Use the card inventory command 50 times."};
             }
 
             public class Check
@@ -218,7 +218,7 @@ namespace OjamajoBot
                     }
                     else
                     {
-                        return Tuple.Create("", "", "");
+                        return null;
                     }
                 }
 
@@ -241,7 +241,7 @@ namespace OjamajoBot
                     }
                     else
                     {
-                        return Tuple.Create("", "", "");
+                        return null;
                     }
                 }
 
@@ -264,7 +264,7 @@ namespace OjamajoBot
                     }
                     else
                     {
-                        return Tuple.Create("", "", "");
+                        return null;
                     }
                 }
 
@@ -274,7 +274,7 @@ namespace OjamajoBot
                     //scoring group
                     if (val >= 50)
                     {
-                        key = "statush3_min";
+                        key = "status_hidden3_min";
                     }
                     else
                     {
@@ -287,7 +287,7 @@ namespace OjamajoBot
                     }
                     else
                     {
-                        return Tuple.Create("", "", "");
+                        return null;
                     }
                 }
             }
@@ -300,17 +300,17 @@ namespace OjamajoBot
             static Card()
             {
                 //init achievement list
-                achievementList["card1_bool"] = new string[] { "First Card", "Capture your first card." };
+                achievementList["card1_bool"] = new string[] { "The First Card", "Capture your first card." };
                 achievementList["card2_min"] = new string[] { "Cardtastic", "Collect 300 cards." };
                 achievementList["card3_bool"] = new string[] { "Steak for you", "Complete all Doremi Card Pack." };
-                achievementList["card4_bool"] = new string[] { "The violist", "Complete all Hazuki Card Pack." };
+                achievementList["card4_bool"] = new string[] { "The violinist", "Complete all Hazuki Card Pack." };
                 achievementList["card5_bool"] = new string[] { "The Bravest Pack", "Complete all Aiko Card Pack." };
                 achievementList["card6_bool"] = new string[] { "Onpu Biggest Fan", "Complete all Onpu Card Pack." };
-                achievementList["card7_bool"] = new string[] { "Dokkiri DOUGHNUT", "Complete all Momoko Card Pack." };
-                achievementList["card8_bool"] = new string[] { "Especially For You", "Complete all Other/Special Card Pack." };
+                achievementList["card7_bool"] = new string[] { "It's American Traditional!", "Complete all Momoko Card Pack." };
+                achievementList["card8_bool"] = new string[] { "Spectialist", "Complete all Other/Special Card Pack." };
 
-                achievementListHidden["cardh1_bool"] = new string[] { "We are the pureleine", "Remove bad card for first time." };
-                achievementListHidden["cardh2_bool"] = new string[] { "Seedtastic", "Remove bad card and get your first magic seeds rewards." };
+                achievementListHidden["card_hidden1_bool"] = new string[] { "We are the pureleine", "Remove bad card for first time." };
+                achievementListHidden["card_hidden2_bool"] = new string[] { "Seedtastic", "Remove bad card and get your first magic seed reward." };
             }
         }
 
@@ -324,7 +324,7 @@ namespace OjamajoBot
                 achievementList["shop1_bool"] = new string[]{"Shopper","Buy item from the shop for first time."};
                 achievementList["shop2_min"] = new string[]{"Shoptastic", "Buy item from the shop 10 times." };
 
-                achievementListHidden["shoph1_min"] = new string[] { "Window Shopping", "Visit the Doremi Trading Card Shop 50 times." };
+                achievementListHidden["shop_hidden1_min"] = new string[] { "Window Shopping", "Visit the Doremi Trading Card Shop 50 times." };
             }
 
         }

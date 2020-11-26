@@ -23,6 +23,11 @@ using OjamajoBot.Service;
 using Newtonsoft.Json.Linq;
 using System.Globalization;
 using Spectacles.NET.Types;
+using OjamajoBot.Database;
+using OjamajoBot.Database.Model;
+using System.Data;
+using OjamajoBot.Core;
+using System.Text.RegularExpressions;
 
 namespace OjamajoBot.Bot
 {
@@ -198,7 +203,6 @@ namespace OjamajoBot.Bot
             await Task.Delay(1000);
         }
 
-
         /// <summary>
         ///     Stops the bot asynchronously.
         /// </summary>
@@ -207,42 +211,48 @@ namespace OjamajoBot.Bot
 
         public async Task LeftGuild(SocketGuild guild)
         {
-            Console.WriteLine($"Bot lefted from: {guild.Name}");
-            Config.Guild.removeGuildConfigFile(guild.Id.ToString());
+            Console.WriteLine($"Doremi bot leaving from: {guild.Name}");
+            //Config.Guild.removeGuildConfigFile(guild.Id.ToString());
         }
 
         public async Task JoinedGuild(SocketGuild guild)
         {
-            //Config.Music.storedLavaTrack[guild.Id.ToString()] = new List<LavaTrack>();
             var systemChannel = client.GetChannel(guild.SystemChannel.Id) as SocketTextChannel; // Gets the channel to send the message in
-            await systemChannel.SendMessageAsync($"Pretty witchy {MentionUtils.MentionUser(Config.Doremi.Id)} chi~ has arrived to the {guild.Name}. " +
-                $"Thank you everyone for inviting me up, I'm very happy to meet you all. " +
-                $"You can ask me with `{Config.Doremi.PrefixParent[0]}help` for all commands list.",
+            await systemChannel.SendMessageAsync(
             embed: new EmbedBuilder()
             .WithColor(Config.Doremi.EmbedColor)
+            .WithTitle($"Pretty witchy {MentionUtils.MentionUser(client.CurrentUser.Id)} chi!")
+            .WithDescription($"Thank you everyone for inviting me to the {guild.Name}, I'm very happy to meet you all. " +
+                $"You can call me with `{Config.Doremi.PrefixParent[0]}` as my default prefix or " +
+                $"ask me with `{Config.Doremi.PrefixParent[0]}help` for all commands list that I have.")
             .WithImageUrl("https://i.pinimg.com/474x/e7/1c/ce/e71cce7499e4ea9f9520c6143c9672e7.jpg")
             .Build());
 
-            Console.WriteLine($"Doremi Bot joined into: {guild.Name}");
+            Console.WriteLine($"Doremi bot joined into: {guild.Name}");
             Config.Guild.init(guild.Id);
         }
 
         public async Task GuildAvailable(SocketGuild guild)
         {
             Config.Guild.init(guild.Id);
-            //set birthday announcement timer
-            if (Config.Guild.hasPropertyValues(guild.Id.ToString(), "id_birthday_announcement"))
+
+            ulong guildId = guild.Id;
+            var guildData = Config.Guild.getGuildData(guildId);
+
+            Config.Doremi._timerBirthdayAnnouncement[guild.Id.ToString()] = new Timer(async _ =>
             {
-                Config.Doremi._timerBirthdayAnnouncement[guild.Id.ToString()] = new Timer(async _ =>
+                //set birthday announcement timer
+                if (guildData[DBM_Guild.Columns.birthday_announcement_date_last].ToString() !=
+                    DateTime.Now.ToString("dd"))
                 {
-                    var guildId = guild.Id; DateTime date; Boolean birthdayExisted = false;
+                    var guildId = guild.Id; Boolean birthdayExisted = false;
 
                     //announce hazuki birthday
                     if (Config.Hazuki.Status.isBirthday())
                     {
                         await client
-                        .GetGuild(guild.Id)
-                        .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "id_birthday_announcement")))
+                        .GetGuild(guildId)
+                        .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guildId, "id_birthday_announcement")))
                         .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday to you, {MentionUtils.MentionUser(Config.Hazuki.Id)} chan. " +
                         $"She has turned into {Config.Hazuki.birthdayCalculatedYear} on this year. Let's give wonderful birthday wishes for her.");
                         birthdayExisted = true;
@@ -252,8 +262,8 @@ namespace OjamajoBot.Bot
                     if (Config.Aiko.Status.isBirthday())
                     {
                         await client
-                        .GetGuild(guild.Id)
-                        .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "id_birthday_announcement")))
+                        .GetGuild(guildId)
+                        .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guildId, "id_birthday_announcement")))
                         .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday to our dear osakan friend: {MentionUtils.MentionUser(Config.Aiko.Id)} chan. " +
                         $"She has turned into {Config.Aiko.birthdayCalculatedYear} on this year. Let's give some takoyaki and wonderful birthday wishes for her.");
                         birthdayExisted = true;
@@ -263,8 +273,8 @@ namespace OjamajoBot.Bot
                     if (Config.Onpu.Status.isBirthday())
                     {
                         await client
-                        .GetGuild(guild.Id)
-                        .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "id_birthday_announcement")))
+                        .GetGuild(guildId)
+                        .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guildId, "id_birthday_announcement")))
                         .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday to our wonderful idol friend: {MentionUtils.MentionUser(Config.Onpu.Id)} chan. " +
                         $"She has turned into {Config.Onpu.birthdayCalculatedYear} on this year. Let's give some wonderful birthday wishes for her.");
                         birthdayExisted = true;
@@ -274,115 +284,108 @@ namespace OjamajoBot.Bot
                     if (Config.Momoko.Status.isBirthday())
                     {
                         await client
-                        .GetGuild(guild.Id)
-                        .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "id_birthday_announcement")))
+                        .GetGuild(guildId)
+                        .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guildId, "id_birthday_announcement")))
                         .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday to our wonderful friend: {MentionUtils.MentionUser(Config.Momoko.Id)} chan. " +
                         $"She has turned into {Config.Momoko.birthdayCalculatedYear} on this year. Let's give some wonderful birthday wishes for her.");
                         birthdayExisted = true;
                     }
 
-                    var guildJsonFile = (JObject)JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json")).GetValue("user_birthday");
-                    var jobjbirthday = guildJsonFile.Properties().ToList();
+                    //announce member birthday
+                    DBC db = new DBC();
+                    string query = @$"select * 
+                    from {DBM_Guild_User_Birthday.tableName} 
+                    where {DBM_Guild_User_Birthday.Columns.id_guild}=@{DBM_Guild_User_Birthday.Columns.id_guild} and 
+                    month({DBM_Guild_User_Birthday.Columns.birthday_date}) = month(curdate()) and 
+                    day({DBM_Guild_User_Birthday.Columns.birthday_date}) = day(curdate())";
 
-                    for (int i = 0; i < jobjbirthday.Count; i++)
+                    Dictionary<string, object> colSelect = new Dictionary<string, object>();
+                    colSelect[DBM_Guild_User_Birthday.Columns.id_guild] = guildId.ToString();
+
+                    var result = db.selectAll(query, colSelect);
+
+                    foreach (DataRow row in result.Rows)
                     {
-                        var key = jobjbirthday[i].Name; var val = jobjbirthday[i].Value.ToString();
+                        ulong userId = Convert.ToUInt64(row[DBM_Guild_User_Birthday.Columns.id_user].ToString());
+                        string[] arrRandomedMessage = {
+                            $"{Config.Emoji.birthdayCake} Everyone, let's give a wonderful birthday wishes for: {MentionUtils.MentionUser(userId)} ",
+                            $"{Config.Emoji.birthdayCake} Happy birthday to our wonderful friend: {MentionUtils.MentionUser(userId)} . " +
+                            $"Please give the wonderful birthday wishes for {MentionUtils.MentionUser(userId)}.",
+                            $"{Config.Emoji.birthdayCake} Looks like someone was having their birthday today! " +
+                            $"Let's give some wonderful birthday wishes for {MentionUtils.MentionUser(userId)}."
+                        };
+                        var birthdayMessage = arrRandomedMessage[new Random().Next(0, arrRandomedMessage.Length)];
+
                         try
                         {
-                            var user = guild.GetUser(Convert.ToUInt64(key));
-
-                            if ((DateTime.TryParseExact(val, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out date) ||
-                                DateTime.TryParseExact(val, "dd/MM", CultureInfo.InvariantCulture, DateTimeStyles.None, out date)) &&
-                                (Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour &&
-                                Int32.Parse(DateTime.Now.ToString("HH")) <= Config.Core.maxGlobalTimeHour))
-                            {
-                                if (date.ToString("dd/MM") == DateTime.Now.ToString("dd/MM"))
-                                {
-
-                                    string[] arrRandomedMessage = {
-                                    $"{Config.Emoji.birthdayCake} Everyone, let's give a wonderful birthday wishes for: {MentionUtils.MentionUser(user.Id)} ",
-                                    $"{Config.Emoji.birthdayCake} Happy birthday to our wonderful friend: {MentionUtils.MentionUser(user.Id)} . " +
-                                    $"Please give the wonderful birthday wishes for {MentionUtils.MentionUser(user.Id)}.",
-                                    $"{Config.Emoji.birthdayCake} Everyone, we have important birthday announcement! Please give some wonderful birthday wishes for {MentionUtils.MentionUser(user.Id)}."
-                                };
-                                    var birthdayMessage = arrRandomedMessage[new Random().Next(0, arrRandomedMessage.Length)];
-
-                                    try
-                                    {
-                                        await client
-                                        .GetGuild(guild.Id)
-                                        .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "id_birthday_announcement")))
-                                        .SendMessageAsync(birthdayMessage);
-                                    }
-                                    catch
-                                    {
-                                        Console.WriteLine($"Doremi Birthday Announcement Exception: Send message permissions has been missing on {guild.Name}");
-                                    }
-                                    birthdayExisted = true;
-                                }
-                            }
+                            await client
+                            .GetGuild(guild.Id)
+                            .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement].ToString()))
+                            .SendMessageAsync(birthdayMessage);
                         }
                         catch
                         {
-                            //guildJsonFile.Property(key).Remove();
-                            //File.WriteAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json", guildJsonFile.ToString());
+                            Console.WriteLine($"Doremi Birthday Announcement Exception: Send message permissions is missing at {guild.Name}");
                         }
-
+                        birthdayExisted = true;
                     }
 
                     if (birthdayExisted)
                     {
                         EmbedBuilder builder = new EmbedBuilder();
-                        builder.ThumbnailUrl = "https://i.4pcdn.org/s4s/1508005628768.jpg";
+                        builder.ImageUrl = "https://media.discordapp.net/attachments/706770454697738300/745492527070576670/1508005628768.png";
                         builder.Color = Config.Doremi.EmbedColor;
 
                         await client
                         .GetGuild(guild.Id)
-                        .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "id_birthday_announcement")))
+                        .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guildId, "id_birthday_announcement")))
                         .SendMessageAsync(embed: builder.Build());
-                    }
 
+                        query = @$"UPDATE {DBM_Guild.tableName} 
+                                SET {DBM_Guild.Columns.birthday_announcement_date_last}=@{DBM_Guild.Columns.birthday_announcement_date_last} 
+                                WHERE {DBM_Guild.Columns.id_guild}=@{DBM_Guild.Columns.id_guild}";
+                        Dictionary<string, object> columnsFilter = new Dictionary<string, object>();
+                        columnsFilter[DBM_Guild.Columns.birthday_announcement_date_last] = DateTime.Now.ToString("dd");
+                        columnsFilter[DBM_Guild.Columns.id_guild] = guildId.ToString();
+                        new DBC().update(query, columnsFilter);
+                    }
+                }
                 },
                 null,
                 TimeSpan.FromSeconds(10), //time to wait before executing the timer for the first time
                 TimeSpan.FromHours(24) //time to wait before executing the timer again
-                );
-            }
+            );
 
             //set random event timer
-            if (Config.Guild.hasPropertyValues(guild.Id.ToString(), "id_random_event"))
-            {
-                //start rotates random event
-                Config.Doremi._timerRandomEvent[$"{guild.Id.ToString()}"] = new Timer(async _ =>
-                {
-                    Random rnd = new Random();
-                    int rndIndex = rnd.Next(0, Config.Doremi.listRandomEvent.Count); //random the list value
-                    Console.WriteLine("Doremi Random Event : " + Config.Doremi.listRandomEvent[rndIndex]);
+            //if (Config.Guild.hasPropertyValues(guild.Id.ToString(), "id_random_event"))
+            //{
+            //    //start rotates random event
+            //    Config.Doremi._timerRandomEvent[$"{guild.Id.ToString()}"] = new Timer(async _ =>
+            //    {
+            //        Random rnd = new Random();
+            //        int rndIndex = rnd.Next(0, Config.Doremi.listRandomEvent.Count); //random the list value
+            //        Console.WriteLine("Doremi Random Event : " + Config.Doremi.listRandomEvent[rndIndex]);
+            //        try
+            //        {
+            //            await client
+            //            .GetGuild(guild.Id)
+            //            .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "id_random_event")))
+            //            .SendMessageAsync(Config.Doremi.listRandomEvent[rndIndex]);
+            //        }
+            //        catch
+            //        {
+            //            Console.WriteLine($"Doremi Random Event Exception: Send message permissions has been missing on {guild.Name}");
+            //        }
+            //    },
+            //    null,
+            //    TimeSpan.FromHours(Config.Doremi.Randomeventinterval), //time to wait before executing the timer for the first time
+            //    TimeSpan.FromHours(Config.Doremi.Randomeventinterval) //time to wait before executing the timer again
+            //    );
+            //}
 
-                    try
-                    {
-                        await client
-                        .GetGuild(guild.Id)
-                        .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "id_random_event")))
-                        .SendMessageAsync(Config.Doremi.listRandomEvent[rndIndex]);
-                    }
-                    catch
-                    {
-                        Console.WriteLine($"Doremi Random Event Exception: Send message permissions has been missing on {guild.Name}");
-                    }
-                },
-                null,
-                TimeSpan.FromHours(Config.Doremi.Randomeventinterval), //time to wait before executing the timer for the first time
-                TimeSpan.FromHours(Config.Doremi.Randomeventinterval) //time to wait before executing the timer again
-                );
-            }
-
-            //init variable
-            //Config.Doremi._tradingCardSpawnedId[guild.Id.ToString()] = "";
-            //Config.Doremi._tradingCardSpawnedCategory[guild.Id.ToString()] = "";
-
-            //set random card spawn timer
-            if (Config.Guild.hasPropertyValues(guild.Id.ToString(), "trading_card_spawn"))
+            //trading card timer
+            var guildCardSpawnData = TradingCardGuildCore.getGuildData(guildId);
+            if (guildCardSpawnData[DBM_Trading_Card_Guild.Columns.id_channel_spawn].ToString() != "")
             {
                 Config.Doremi._stopwatchCardSpawn[guild.Id.ToString()] = new Stopwatch();
                 Config.Doremi._stopwatchCardSpawn[guild.Id.ToString()].Start();
@@ -392,20 +395,18 @@ namespace OjamajoBot.Bot
                     if (Config.Doremi._stopwatchCardSpawn.ContainsKey(guild.Id.ToString()))
                         if (Config.Doremi._stopwatchCardSpawn[guild.Id.ToString()].IsRunning)
                             Config.Doremi._stopwatchCardSpawn[guild.Id.ToString()].Restart();
-                    
-                    await TradingCardCore.generateCardSpawn(guild.Id);
+
+                    await TradingCardCore.generateCardSpawn(guildId);
                 },
                 null,
-                TimeSpan.FromMinutes(Convert.ToInt32(Config.Guild.getPropertyValue(guild.Id, "trading_card_spawn_interval"))), //time to wait before executing the timer for the first time
-                TimeSpan.FromMinutes(Convert.ToInt32(Config.Guild.getPropertyValue(guild.Id, "trading_card_spawn_interval"))) //time to wait before executing the timer again
+                TimeSpan.FromMinutes(Convert.ToInt32(guildCardSpawnData[DBM_Trading_Card_Guild.Columns.spawn_interval])), //time to wait before executing the timer for the first time
+                TimeSpan.FromMinutes(Convert.ToInt32(guildCardSpawnData[DBM_Trading_Card_Guild.Columns.spawn_interval])) //time to wait before executing the timer again
                 );
             }
-
+          
             //var channel = client.GetChannel(guild.SystemChannel.Id) as SocketTextChannel;
             //await channel.SendMessageAsync(guild.SystemChannel.Id.ToString());
 
-
-            Config.Guild.init(guild.Id);
             //Config.Music.storedLavaTrack[guild.Id.ToString()] = new List<LavaTrack>();
         }
 
@@ -416,39 +417,56 @@ namespace OjamajoBot.Bot
 
         public async Task AnnounceJoinedUser(SocketGuildUser user) //Welcomes the new user
         {
-            var channel = client.GetChannel(user.Guild.SystemChannel.Id) as SocketTextChannel; // Gets the channel to send the message in
+            var channel = client.GetChannel(user.Guild.SystemChannel.Id) as SocketTextChannel; 
+            // Gets the channel to send the message in
             //var uses = invites.First(x => x.Code == inviteID).Uses.Value;
+
+            var guildData = Config.Guild.getGuildData(user.Guild.Id);
+            string welcomeMessage = guildData[DBM_Guild.Columns.welcome_message].ToString();
+            string welcomeImage = guildData[DBM_Guild.Columns.welcome_image].ToString();
 
             if (user.Id != Config.Hazuki.Id && user.Id != Config.Aiko.Id &&
                 user.Id != Config.Onpu.Id && user.Id != Config.Momoko.Id)
             {
-                string[] arrRandomWelcomeMessage = {
-                    $"We hope you enjoy and happy with all of us, {MentionUtils.MentionUser(user.Id)}.",
-                    $"We're really happy that you join our group, {MentionUtils.MentionUser(user.Id)}.",
-                    $"We're expecting you to come and hopefully you're enjoying your stay on the group, {MentionUtils.MentionUser(user.Id)}.",
-                    $"Hope you enjoy your stay, {MentionUtils.MentionUser(user.Id)}."
-                };
+                //for initialization purpose
+                var userData = GuildUserAvatarCore.getUserData(user.Guild.Id, user.Id);
+                if (welcomeMessage == "")
+                {
+                    string[] arrRandomWelcomeMessage = {
+                        $"We hope you enjoy and happy with all of us, {MentionUtils.MentionUser(user.Id)}.",
+                        $"We're really happy that you join our group, {MentionUtils.MentionUser(user.Id)}.",
+                        $"We're expecting you to come and hopefully you're enjoying your stay on the group, {MentionUtils.MentionUser(user.Id)}.",
+                        $"Hope you enjoy your stay, {MentionUtils.MentionUser(user.Id)}."
+                    };
 
-                string[] arrRandomPictures =
-                {"https://66.media.tumblr.com/c8f9c5455355f8e522d52bacb8155ab0/tumblr_mswho8nWx11r98a5go1_400.gif",
-                "https://thumbs.gfycat.com/DamagedGrouchyBarracuda-small.gif",
-                "https://data.whicdn.com/images/39976659/original.gif",
-                "https://cdn140.picsart.com/316023608328211.png?type=webp&to=min&r=640",
-                "https://cdn.discordapp.com/attachments/706770454697738300/706770708147208323/the-ojamajos.png",
-                "https://cdn.discordapp.com/attachments/706770454697738300/706770837558263928/TW361403.png"};
+                    string[] arrRandomPictures =
+                    {"https://66.media.tumblr.com/c8f9c5455355f8e522d52bacb8155ab0/tumblr_mswho8nWx11r98a5go1_400.gif"};
 
-                int rndIndexWelcomeMessage = new Random().Next(0, arrRandomWelcomeMessage.GetLength(0));
-                int rndIndexRandomPictures = new Random().Next(0, arrRandomPictures.GetLength(0));
+                    int rndIndexWelcomeMessage = new Random().Next(0, arrRandomWelcomeMessage.GetLength(0));
+                    int rndIndexRandomPictures = new Random().Next(0, arrRandomPictures.GetLength(0));
 
-                await channel.SendMessageAsync(embed: new EmbedBuilder()
-                    .WithTitle($"Welcome to {channel.Guild.Name}, {user.Username}")
-                    .WithDescription($"{arrRandomWelcomeMessage[rndIndexWelcomeMessage]} " +
-                    $"Please introduce yourself and don't forget to always follow & read the rule guidelines.")
-                    .WithColor(Config.Doremi.EmbedColor)
-                    .WithThumbnailUrl(user.GetAvatarUrl())
-                    .WithImageUrl(arrRandomPictures[rndIndexRandomPictures])
-                    .Build());
+                    await channel.SendMessageAsync(embed: new EmbedBuilder()
+                        .WithTitle($"Welcome to {channel.Guild.Name}, {user.Username}")
+                        .WithDescription($"{arrRandomWelcomeMessage[rndIndexWelcomeMessage]} " +
+                        $"Please introduce yourself and don't forget to always follow & read the rule guidelines.")
+                        .WithColor(Config.Doremi.EmbedColor)
+                        .WithThumbnailUrl(user.GetAvatarUrl())
+                        .WithImageUrl(arrRandomPictures[rndIndexRandomPictures])
+                        .Build());
+                } else
+                {
+                    welcomeMessage = welcomeMessage.Replace("#", "<#");
+                    
+                    welcomeMessage = welcomeMessage.Replace("$user$", MentionUtils.MentionUser(user.Id));
 
+                    await channel.SendMessageAsync(embed: new EmbedBuilder()
+                        .WithColor(Config.Doremi.EmbedColor)
+                        .WithThumbnailUrl(user.GetAvatarUrl())
+                        .WithTitle($"Welcome to {channel.Guild.Name}, {user.Username}")
+                        .WithDescription(welcomeMessage)
+                        .WithImageUrl(welcomeImage)
+                        .Build());
+                }
                 //sending dm to the joined user
                 //var dmchannel = await user.GetOrCreateDMChannelAsync();
                 //await dmchannel.SendMessageAsync(arrRandomWelcomeMessage[rndIndexWelcomeMessage] +
@@ -458,39 +476,28 @@ namespace OjamajoBot.Bot
                 //            .WithImageUrl(arrRandomPictures[rndIndexRandomPictures])
                 //            .Build());
             }
-
-
         }
 
         public async Task AnnounceLeavingUser(SocketGuildUser user) //Send a leaving user notifications
         {
             var channel = client.GetChannel(user.Guild.SystemChannel.Id) as SocketTextChannel; // Gets the channel to send the message in
 
-            JObject guildConfig = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{user.Guild.Id}/{user.Guild.Id}.json"));
+            //if (guildConfig.GetValue("user_leaving_notification").ToString() == "1")
+            //{
+            //    string[] arrRandomLeavingMessage = {
+            //       $":sob: Oh no, {user.Mention} has leave the {channel.Guild.Name} and we are really sad.",
+            //       $":sob: It's nice to have {user.Mention} on {channel.Guild.Name}. We wish that you can stay more longer on our groups."
+            //    };
 
-            //remove user birthday
-            if (((JObject)guildConfig["user_birthday"]).ContainsKey(user.Id.ToString()))
-            {
-                ((JObject)guildConfig.GetValue("user_birthday")).Remove(user.Id.ToString());
-                File.WriteAllText($"{Config.Core.headConfigGuildFolder}{user.Guild.Id}/{user.Guild.Id}.json", guildConfig.ToString());
-            }
+            //    string[] arrRandomPictures = {"https://vignette.wikia.nocookie.net/ojamajowitchling/images/d/d7/ODN-EP1-013.png",
+            //    "https://vignette.wikia.nocookie.net/ojamajowitchling/images/e/e1/Linesticker39.png"};
 
-            if (guildConfig.GetValue("user_leaving_notification").ToString() == "1")
-            {
-                string[] arrRandomLeavingMessage = {
-                   $":sob: Oh no, {user.Mention} has leave the {channel.Guild.Name} and we are really sad.",
-                   $":sob: It's nice to have {user.Mention} on {channel.Guild.Name}. We wish that you can stay more longer on our groups."
-                };
-
-                string[] arrRandomPictures = {"https://vignette.wikia.nocookie.net/ojamajowitchling/images/d/d7/ODN-EP1-013.png",
-                "https://vignette.wikia.nocookie.net/ojamajowitchling/images/e/e1/Linesticker39.png"};
-
-                await channel.SendMessageAsync(arrRandomLeavingMessage[new Random().Next(0, arrRandomLeavingMessage.GetLength(0))],
-                    embed: new EmbedBuilder()
-                            .WithColor(Config.Doremi.EmbedColor)
-                            .WithImageUrl(arrRandomPictures[new Random().Next(0, arrRandomPictures.GetLength(0))])
-                            .Build()); //say goodbye to user
-            }
+            //    await channel.SendMessageAsync(arrRandomLeavingMessage[new Random().Next(0, arrRandomLeavingMessage.GetLength(0))],
+            //        embed: new EmbedBuilder()
+            //                .WithColor(Config.Doremi.EmbedColor)
+            //                .WithImageUrl(arrRandomPictures[new Random().Next(0, arrRandomPictures.GetLength(0))])
+            //                .Build()); //say goodbye to user
+            //}
         }
 
         public void HookReactionAdded(BaseSocketClient client) => client.ReactionAdded += HandleReactionAddedAsync;
@@ -683,25 +690,64 @@ namespace OjamajoBot.Bot
             //                        $"to {message.Author}'s message ({message.Id}).");
         }
 
-        private Task MessageReceived(SocketMessage message)
+        private async Task MessageReceived(SocketMessage message)
         {
+            if (message.Author.IsBot) return;
             // check if the message is a user message as opposed to a system message (e.g. Clyde, pins, etc.)
-            if (!(message is SocketUserMessage userMessage)) return Task.CompletedTask;
+            //if (message.Author.Id == Config.Doremi.Id) return;
+            //if (message.Author.Id == Config.Hazuki.Id) return;
+            //if (message.Author.Id == Config.Aiko.Id) return;
+            //if (message.Author.Id == Config.Onpu.Id) return;
+            //if (message.Author.Id == Config.Momoko.Id) return;
+            if (!(message is SocketUserMessage userMessage)) return;
+            //original:
+            //if (!(message is SocketUserMessage userMessage)) return Task.CompletedTask;
             // check if the message origin is a guild message channel
-            if (!(userMessage.Channel is SocketTextChannel textChannel)) return Task.CompletedTask;
+            if (!(userMessage.Channel is SocketTextChannel textChannel)) return;
 
-            SocketTextChannel textchannel = (SocketTextChannel)message.Channel;
-            SocketUserMessage usrmsg = (SocketUserMessage)message;
+            int argPos = 0;
 
-            try
+            SocketUserMessage msg = (SocketUserMessage)message;
+            if (!msg.HasStringPrefix(Config.Doremi.PrefixParent[0], ref argPos)&&
+                !msg.HasStringPrefix(Config.Hazuki.PrefixParent[0], ref argPos)&&
+                !msg.HasStringPrefix(Config.Aiko.PrefixParent[0], ref argPos) &&
+                !msg.HasStringPrefix(Config.Onpu.PrefixParent[0], ref argPos) &&
+                !msg.HasStringPrefix(Config.Momoko.PrefixParent[0], ref argPos))
             {
-                using (StreamWriter sw = (File.Exists($"logs/{textchannel.Guild.Id}/{DateTime.Now.ToString("yyyy_MM_dd")}.txt")) ? File.AppendText($"logs/{textchannel.Guild.Id}/{DateTime.Now.ToString("yyyy_MM_dd")}.txt") :
-                    File.CreateText($"logs/{textchannel.Guild.Id}/{DateTime.Now.ToString("yyyy_MM_dd")}.txt"))
-                    sw.WriteLine($"[{DateTime.Now.ToString("yyyy/MM/dd HH:mm")}] {usrmsg.Author.Mention}{usrmsg.Author.Username} : {message}");
-            }
-            catch { }
+                SocketTextChannel textchannel = (SocketTextChannel)message.Channel;
+                SocketUserMessage usrmsg = (SocketUserMessage)message;
 
-            return Task.CompletedTask;
+                try
+                {
+                    ulong guildId = textchannel.Guild.Id;
+                    SocketUser user = usrmsg.Author;
+
+                    using (StreamWriter sw = (File.Exists($"logs/{textchannel.Guild.Id}/{DateTime.Now.ToString("yyyy_MM_dd")}.txt")) ? File.AppendText($"logs/{textchannel.Guild.Id}/{DateTime.Now.ToString("yyyy_MM_dd")}.txt") :
+                        File.CreateText($"logs/{textchannel.Guild.Id}/{DateTime.Now.ToString("yyyy_MM_dd")}.txt"))
+                        sw.WriteLine($"[{DateTime.Now.ToString("yyyy/MM/dd HH:mm")}] {usrmsg.Author.Mention}{usrmsg.Author.Username} : {message}");
+
+                    int expRandomChance = new Random().Next(0, 7);
+                    if (expRandomChance <= 5)
+                    {
+                        await UserDataCore.updateChatExp(user,1);
+                        await GuildUserAvatarCore.updateChatExp(client, textchannel, guildId, user, 1);
+                        //if (guildData[DBM_Guild.Columns.id_channel_notification_chat_level_up].ToString() != "")
+                        //{
+                        //    //level up notification
+                        //    ulong channelNotificationId = Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_notification_chat_level_up]);
+                        //    var systemChannel = client.GetChannel(channelNotificationId) as SocketTextChannel; // Gets the channel to send the message in
+                        //    await systemChannel.SendMessageAsync($"",
+                        //    embed: new EmbedBuilder()
+                        //    .WithColor(Config.Doremi.EmbedColor)
+                        //    .WithDescription("Has just leveled up!")
+                        //    .Build());
+                        //}
+                    }
+                }
+                catch { }
+            }
+
+            //return Task.CompletedTask;
         }
 
         private Task MessageUpdated(Cacheable<IMessage, ulong> before,
@@ -709,23 +755,23 @@ namespace OjamajoBot.Bot
         {
 
             // check if the message is a user message as opposed to a system message (e.g. Clyde, pins, etc.)
-            if (!(after is SocketUserMessage userMessage)) return Task.CompletedTask;
-            // check if the message origin is a guild message channel
-            if (!(after.Channel is SocketTextChannel textChannel)) return Task.CompletedTask;
+            //if (!(after is SocketUserMessage userMessage)) return Task.CompletedTask;
+            //// check if the message origin is a guild message channel
+            //if (!(after.Channel is SocketTextChannel textChannel)) return Task.CompletedTask;
 
-            SocketTextChannel textchannel = (SocketTextChannel)after.Channel;
-            SocketUserMessage usrmsg = (SocketUserMessage)after;
+            //SocketTextChannel textchannel = (SocketTextChannel)after.Channel;
+            //SocketUserMessage usrmsg = (SocketUserMessage)after;
 
-            // If the message was not in the cache, downloading it will result in getting a copy of `after`.
-            try
-            {
-                var message = before.GetOrDownloadAsync();
+            //// If the message was not in the cache, downloading it will result in getting a copy of `after`.
+            //try
+            //{
+            //    var message = before.GetOrDownloadAsync();
 
-                using (StreamWriter sw = (File.Exists($"logs/{textchannel.Guild.Id}/{DateTime.Now.ToString("yyyy_MM_dd")}.txt")) ? File.AppendText($"logs/{textchannel.Guild.Id}/{DateTime.Now.ToString("yyyy_MM_dd")}.txt") :
-                    File.CreateText($"logs/{textchannel.Guild.Id}/{DateTime.Now.ToString("yyyy_MM_dd")}.txt"))
-                    sw.WriteLine($"[{DateTime.Now.ToString("yyyy/MM/dd HH:mm")}] {usrmsg.Author.Mention}{usrmsg.Author.Username} : [update]{after}");
-            }
-            catch { }
+            //    using (StreamWriter sw = (File.Exists($"logs/{textchannel.Guild.Id}/{DateTime.Now.ToString("yyyy_MM_dd")}.txt")) ? File.AppendText($"logs/{textchannel.Guild.Id}/{DateTime.Now.ToString("yyyy_MM_dd")}.txt") :
+            //        File.CreateText($"logs/{textchannel.Guild.Id}/{DateTime.Now.ToString("yyyy_MM_dd")}.txt"))
+            //        sw.WriteLine($"[{DateTime.Now.ToString("yyyy/MM/dd HH:mm")}] {usrmsg.Author.Mention}{usrmsg.Author.Username} : [update]{after}");
+            //}
+            //catch { }
             return Task.CompletedTask;
             //using (StreamWriter w = File.AppendText($"attachments/{Context.Guild.Id}/feedback_{Context.Guild.Id}.txt"))
             //    w.WriteLine($"[{DateTime.Now.ToString("MM/dd/yyyy HH:mm")}]{message}:{feedback_message}");
@@ -743,10 +789,12 @@ namespace OjamajoBot.Bot
             await commands.AddModuleAsync(typeof(DoremiMinigameInteractive), services);
             await commands.AddModuleAsync(typeof(DoremiWiki), services);
             await commands.AddModuleAsync(typeof(DoremiModerator), services);
+            await commands.AddModuleAsync(typeof(DoremiUserAvatarInteractive), services);
             //await commands.AddModuleAsync(typeof(DoremiModeratorChannels), services);
             await commands.AddModuleAsync(typeof(DoremiMagicalStageModule), services);
             await commands.AddModuleAsync(typeof(DoremiGardenInteractive), services);
             await commands.AddModuleAsync(typeof(DoremiTradingCardInteractive), services);
+            //await commands.AddModuleAsync(typeof(DoremiTradingCardEvent), services);
         }
 
         private async Task HandleCommandAsync(SocketMessage arg)
@@ -759,18 +807,19 @@ namespace OjamajoBot.Bot
 
             //for copied and pasted if mentioned
             int argPos = 0;
-            if (Config.Guild.getPropertyValue(context.Guild.Id, "doremi_role_id") != "" &&
-                message.HasStringPrefix($"<@&{Config.Guild.getPropertyValue(context.Guild.Id, "doremi_role_id")}>", ref argPos))
-            {
-                await message.Channel.SendMessageAsync(embed: new EmbedBuilder()
-                .WithAuthor(Config.Doremi.EmbedNameError)
-                .WithDescription($"Sorry {context.User.Username}, it seems you're calling me with the role prefix. " +
-                            "Please use the non role prefix.")
-                .WithColor(Config.Doremi.EmbedColor)
-                .WithThumbnailUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/d/d2/ODN-EP1-011.png")
-                .Build());
-            }
-            else if (message.HasStringPrefix(Config.Doremi.PrefixParent[0], ref argPos) ||
+            //if (Config.Guild.getPropertyValue(context.Guild.Id, "doremi_role_id") != "" &&
+            //    message.HasStringPrefix($"<@&{Config.Guild.getPropertyValue(context.Guild.Id, "doremi_role_id")}>", ref argPos))
+            //{
+            //    await message.Channel.SendMessageAsync(embed: new EmbedBuilder()
+            //    .WithAuthor(Config.Doremi.EmbedNameError)
+            //    .WithDescription($"Sorry {context.User.Username}, it seems you're calling me with the role prefix. " +
+            //                "Please use the non role prefix.")
+            //    .WithColor(Config.Doremi.EmbedColor)
+            //    .WithThumbnailUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/d/d2/ODN-EP1-011.png")
+            //    .Build());
+            //}
+            //else 
+            if (message.HasStringPrefix(Config.Doremi.PrefixParent[0], ref argPos) ||
               message.HasStringPrefix(Config.Doremi.PrefixParent[1], ref argPos) ||
               message.HasMentionPrefix(client.CurrentUser, ref argPos))
             {

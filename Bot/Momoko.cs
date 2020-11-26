@@ -102,25 +102,25 @@ namespace OjamajoBot.Bot
         public async Task GuildAvailable(SocketGuild guild)
         {
             //set Momoko birthday announcement timer
-            if (Config.Guild.hasPropertyValues(guild.Id.ToString(), "id_birthday_announcement"))
-            {
-                Config.Momoko._timerBirthdayAnnouncement[guild.Id.ToString()] = new Timer(async _ =>
-                {
-                    //announce doremi birthday
-                    if (Config.Doremi.Status.isBirthday())
-                    {
-                        await client
-                        .GetGuild(guild.Id)
-                        .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "id_birthday_announcement")))
-                        .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday, {MentionUtils.MentionUser(Config.Doremi.Id)} chan. " +
-                        $"She has turned into {Config.Doremi.birthdayCalculatedYear} on this year. Let's give some big steak and wonderful birthday wishes for her.");
-                    }
-                },
-                null,
-                TimeSpan.FromSeconds(10), //time to wait before executing the timer for the first time
-                TimeSpan.FromHours(24) //time to wait before executing the timer again
-                );
-            }
+            //if (Config.Guild.hasPropertyValues(guild.Id.ToString(), "id_birthday_announcement"))
+            //{
+            //    Config.Momoko._timerBirthdayAnnouncement[guild.Id.ToString()] = new Timer(async _ =>
+            //    {
+            //        //announce doremi birthday
+            //        if (Config.Doremi.Status.isBirthday(guild.Id))
+            //        {
+            //            await client
+            //            .GetGuild(guild.Id)
+            //            .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "id_birthday_announcement")))
+            //            .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday, {MentionUtils.MentionUser(Config.Doremi.Id)} chan. " +
+            //            $"She has turned into {Config.Doremi.birthdayCalculatedYear} on this year. Let's give some big steak and wonderful birthday wishes for her.");
+            //        }
+            //    },
+            //    null,
+            //    TimeSpan.FromSeconds(10), //time to wait before executing the timer for the first time
+            //    TimeSpan.FromHours(24) //time to wait before executing the timer again
+            //    );
+            //}
         }
 
         public async Task RegisterCommandsAsync()
@@ -129,7 +129,7 @@ namespace OjamajoBot.Bot
             await commands.AddModuleAsync(typeof(MomokoModule), services);
             await commands.AddModuleAsync(typeof(MomokoMagicalStageModule), services);
             await commands.AddModuleAsync(typeof(MomokoRandomEventModule), services);
-            await commands.AddModuleAsync(typeof(MomokoBakery), services);
+            //await commands.AddModuleAsync(typeof(MomokoSweetHouse), services);
             await commands.AddModuleAsync(typeof(MomokoMinigameInteractive), services);
             await commands.AddModuleAsync(typeof(MomokoTradingCardInteractive), services);
         }

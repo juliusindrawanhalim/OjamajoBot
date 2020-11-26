@@ -1,0 +1,7 @@
+v1.6 (24-11-2020)
+======================================
+-bots can now set custom welcome messsage & image
+-added user avatar system. parent command: avatar
+-added autorole for time join
+-added autorole level system when reach certain level
+-onpu voice related command has been disabled temporarily

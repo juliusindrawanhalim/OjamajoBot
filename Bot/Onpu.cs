@@ -113,26 +113,26 @@ namespace OjamajoBot.Bot
         public async Task GuildAvailable(SocketGuild guild)
         {
             //set Onpu birthday announcement timer
-            if (Config.Guild.hasPropertyValues(guild.Id.ToString(), "id_birthday_announcement"))
-            {
-                Config.Onpu._timerBirthdayAnnouncement[guild.Id.ToString()] = new Timer(async _ =>
-                {
-                    //announce doremi birthday
-                    if (Config.Doremi.Status.isBirthday())
-                    {
-                        await client
-                        .GetGuild(guild.Id)
-                        .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "id_birthday_announcement")))
-                        .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday, {MentionUtils.MentionUser(Config.Doremi.Id)} chan. " +
-                        $"She has turned into {Config.Doremi.birthdayCalculatedYear} on this year. Let's give some big steak and wonderful birthday wishes for her.");
-                    }
+            //if (Config.Guild.hasPropertyValues(guild.Id.ToString(), "id_birthday_announcement"))
+            //{
+            //    Config.Onpu._timerBirthdayAnnouncement[guild.Id.ToString()] = new Timer(async _ =>
+            //    {
+            //        //announce doremi birthday
+            //        if (Config.Doremi.Status.isBirthday(guild.Id))
+            //        {
+            //            await client
+            //            .GetGuild(guild.Id)
+            //            .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "id_birthday_announcement")))
+            //            .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday, {MentionUtils.MentionUser(Config.Doremi.Id)} chan. " +
+            //            $"She has turned into {Config.Doremi.birthdayCalculatedYear} on this year. Let's give some big steak and wonderful birthday wishes for her.");
+            //        }
 
-                },
-                null,
-                TimeSpan.FromSeconds(10), //time to wait before executing the timer for the first time
-                TimeSpan.FromHours(24) //time to wait before executing the timer again
-                );
-            }
+            //    },
+            //    null,
+            //    TimeSpan.FromSeconds(10), //time to wait before executing the timer for the first time
+            //    TimeSpan.FromHours(24) //time to wait before executing the timer again
+            //    );
+            //}
         }
 
         /// <summary>
@@ -144,7 +144,7 @@ namespace OjamajoBot.Bot
         {
             client.MessageReceived += HandleCommandAsync;
             await commands.AddModuleAsync(typeof(OnpuModule), services);
-            await commands.AddModuleAsync(typeof(OnpuVictoriaMusic), services);
+            //await commands.AddModuleAsync(typeof(OnpuVictoriaMusic), services);
             await commands.AddModuleAsync(typeof(OnpuMagicalStageModule), services);
             await commands.AddModuleAsync(typeof(OnpuMinigameInteractive), services);
             await commands.AddModuleAsync(typeof(OnpuTradingCardInteractive), services);

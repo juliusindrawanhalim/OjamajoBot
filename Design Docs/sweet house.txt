@@ -1,0 +1,19 @@
+//exam: 
+The witches exam will be reseted weekly, and can only be participated 3 times each week. To participate the exam you need to make the desserts first with `mo!sweethouse create <recipe>` (more explanation will be explained on the next part)
+
+To participate the exam, you need to submit the required ingredients that can be purchased from Dela. The ingredients can be purchased with magic seeds using the command:`mo!sweethouse buy <ingredients>`. The available and quality points of the ingredients will be varied from 10-100 along with the price every time she arrive. You cannot buy the same ingredients that you already own. Should you want to buy another same ingredients you need to use or donate it.
+
+Creating the desserts recipe:
+Open the recipe with: `mo!sweethouse recipe`. You can also see your sweethouse progress status with `mo!sweethouse status`.
+You can only create the desserts 3 times each week with:`mo!sweethouse create <recipe name>`. Each recipe will have the requirement recipe level and you can level up. When creating the recipe, all required ingredients that you currently have will be used. With the higher overall quality number of the ingredients that you have, you will receive higher rewards and approval chances from the exam results.
+
+Recipe:
+1: scones
+flour 2
+
+2: choux pastry
+3: ice cream sandwich
+4: tourbillon cake
+
+Ingredients:
+flour,sugar,eggs,butter,oil,baking soda,baking powder

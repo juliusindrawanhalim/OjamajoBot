@@ -33,7 +33,13 @@ namespace Config
         public static string headLogsFolder = "logs/";
         public static string minigameDataFileName = "minigame_data.json";
         public static string tradingCardDataFileName = "trading_card_list.json";
-        public static string lastUpdate = "May 6,2020";
+        public static string configFileName = "config.json";
+
+
+        public static string sweethouseRecipeDataFileName = "sweethouse_recipe_data.json";
+
+        public static string version = "1.6";
+        public static string lastUpdate = "Nov 25,2020";
         public static JObject jObjWiki;
         public static string wikiParentUrl = "https://ojamajowitchling.fandom.com/wiki/";
         public static int minGlobalTimeHour = 11;
@@ -42,7 +48,7 @@ namespace Config
         public Core()
         {
             try {
-                jobjectconfig = JObject.Parse(File.ReadAllText($"{headConfigFolder}config.json"));
+                jobjectconfig = JObject.Parse(File.ReadAllText($"{headConfigFolder}{configFileName}"));
                 jobjectRandomMoments = JObject.Parse(File.ReadAllText($"{headConfigFolder}randomMoments.json"));
                 jobjectQuiz = JObject.Parse(File.ReadAllText($"{headConfigFolder}quiz.json"));
                 
@@ -104,6 +110,9 @@ namespace Config
                 }
                 catch { Console.WriteLine("Error: Momoko configuration array is not properly formatted"); Console.ReadLine(); }
 
+                //init database
+                
+
                 //init pop config
                 //try
                 //{
@@ -149,7 +158,7 @@ namespace Config
 
         public class BotStatus
         {
-            public static object[] statusSleeping = { "sleeping time", $"*snores* ZZZzzzz...", UserStatus.DoNotDisturb };
+            public static object[] statusSleeping = { "bed time", $"Oyasumi...", UserStatus.DoNotDisturb };
             public static object[] statusSchool = { $"at misora elementary school {Emoji.school}", "I'm still at the school right now.", UserStatus.DoNotDisturb };
             public static object[] statusGlobalMahoDou = {"at maho dou","I'm working on maho-dou right now. Please come and visit the shop any time~", UserStatus.Idle};
             public static List<List<object>> arrPlayingWith = new List<List<object>>();
@@ -174,8 +183,8 @@ namespace Config
             //    { "with Onpu", $"I'm playing with {MentionUtils.MentionUser(Onpu.Id)} right now.", UserStatus.Online },
             //    { "with Momoko", $"I'm playing with {MentionUtils.MentionUser(Momoko.Id)} right now.", UserStatus.Online }
             //};
-            public static string myBirthdayActivity = $"my birthday party {Config.Emoji.birthdayCake}";
-            public static string myBirthdayActivityReply = "we're celebrating my birthday party now.";
+            public static string myBirthdayActivity = $"at my birthday party {Config.Emoji.birthdayCake}";
+            public static string myBirthdayActivityReply = "it's my birthday party today!";
             public static UserStatus myBirthdayActivityUserStatus = UserStatus.Online;
 
             public static Tuple<object[]> checkStatusActivity(BotClass caller, object[,] arrRandomActivity)
@@ -313,15 +322,15 @@ namespace Config
                 if (!forceChange)
                 {
                     int hourNow = Convert.ToInt32(DateTime.Now.ToString("%H"));
-                    if ( hourNow >= 0 && hourNow < 6)
+                    if ( hourNow >= 22 || hourNow < 4)
                     {
                         returnStatus = statusSleeping;
                     }
-                    else if (isWeekday && hourNow >= 6 && hourNow <= 12)
+                    else if (isWeekday && hourNow >= 4 && hourNow <= 10)
                     {
                         returnStatus = statusSchool;
                     }
-                    else if (isWeekday && hourNow >= 13 && hourNow <= 14)
+                    else if (isWeekday && hourNow >= 11 && hourNow <= 12)
                     {
                         returnStatus = statusGlobalMahoDou;
                     }
@@ -333,9 +342,11 @@ namespace Config
                         Random rnd = new Random();
                         int rndIndex = rnd.Next(0, arrRandomActivity.GetLength(0));
 
+                        //original:
                         returnStatus = new object[]{ arrRandomActivity[rndIndex, 0],
                             arrRandomActivity[rndIndex, 1],
                             arrRandomActivity[rndIndex, 2] };
+
                     }
                 }
                 
@@ -409,14 +420,14 @@ namespace Config
             };
 
             public static object[,] arrPlayingWith = {
-                { "with Hazuki", $"I'm playing with {MentionUtils.MentionUser(Hazuki.Id)} right now." , UserStatus.Online},
+                {"with Hazuki", $"I'm playing with {MentionUtils.MentionUser(Hazuki.Id)} right now." , UserStatus.Online},
                 {"with Aiko",$"I'm playing with {MentionUtils.MentionUser(Aiko.Id)} right now. " +
                 "Please come and join us to make takoyaki together, will you?", UserStatus.Online},
                 { "with Onpu", $"I'm playing with {MentionUtils.MentionUser(Onpu.Id)} right now.", UserStatus.Online },
                 { "with Momoko", $"I'm playing with {MentionUtils.MentionUser(Momoko.Id)} right now.", UserStatus.Online }
             };
 
-            public static string birthdayActivity = $"Doremi birthday {Config.Emoji.birthdayCake}";
+            public static string birthdayActivity = $"at Doremi birthday {Config.Emoji.birthdayCake}";
 
             public static string currentActivity = "";
             public static string currentActivityReply = "";
@@ -426,9 +437,22 @@ namespace Config
             public static Boolean isBirthday()
             {
                 Boolean isBirthday = false;
-                if(DateTime.Now.ToString("dd") == Config.Doremi.birthdayDate.ToString("dd") &&
+                if (DateTime.Now.ToString("dd") == Config.Doremi.birthdayDate.ToString("dd") &&
                 DateTime.Now.ToString("MM") == Config.Doremi.birthdayDate.ToString("MM") &&
                 Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour)
+                {
+                    isBirthday = true;
+                }
+                return isBirthday;
+            }
+
+            public static Boolean isBirthday(ulong idGuild)
+            {
+                Boolean isBirthday = false;
+                if(DateTime.Now.ToString("dd") == Config.Doremi.birthdayDate.ToString("dd") &&
+                DateTime.Now.ToString("MM") == Config.Doremi.birthdayDate.ToString("MM") &&
+                Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour &&
+                DateTime.Now.ToString("dd") != Config.Guild.getPropertyValue(idGuild, "birthday_announcement_date_last"))
                 {
                     isBirthday = true;
                 }
@@ -477,7 +501,7 @@ namespace Config
                 { "with Momoko", $"I'm playing with {MentionUtils.MentionUser(Momoko.Id)} right now.", UserStatus.Online }
             };
 
-            public static string birthdayActivity = $"Hazuki birthday {Config.Emoji.birthdayCake}";
+            public static string birthdayActivity = $"at Hazuki birthday {Config.Emoji.birthdayCake}";
 
             public static string currentActivity = "";
             public static string currentActivityReply = "";
@@ -544,7 +568,7 @@ namespace Config
                 { "with Momoko", $"I'm playing with {MentionUtils.MentionUser(Momoko.Id)} right now.", UserStatus.Online }
             };
 
-            public static string birthdayActivity = $"Aiko birthday {Config.Emoji.birthdayCake}";
+            public static string birthdayActivity = $"at Aiko birthday {Config.Emoji.birthdayCake}";
 
             public static string currentActivity = "";
             public static string currentActivityReply = "";
@@ -605,7 +629,7 @@ namespace Config
                 { "with Momoko", $"I'm playing with {MentionUtils.MentionUser(Momoko.Id)} right now.", UserStatus.Online }
             };
 
-            public static string birthdayActivity = $"Onpu birthday {Config.Emoji.birthdayCake}";
+            public static string birthdayActivity = $"at Onpu birthday {Config.Emoji.birthdayCake}";
 
             public static string currentActivity = "";
             public static string currentActivityReply = "";
@@ -668,7 +692,7 @@ namespace Config
                 { "with Onpu", $"I'm playing with {MentionUtils.MentionUser(Onpu.Id)} right now.", UserStatus.Online }
             };
 
-            public static string birthdayActivity = $"Momoko birthday {Config.Emoji.birthdayCake}";
+            public static string birthdayActivity = $"at Momoko birthday {Config.Emoji.birthdayCake}";
 
 
             public static string currentActivity = "";
