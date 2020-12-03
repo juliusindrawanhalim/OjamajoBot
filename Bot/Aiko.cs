@@ -150,18 +150,10 @@ namespace OjamajoBot.Bot
             if (message.Author.Id == Config.Aiko.Id) return;
             //if (message.Author.IsBot) return; //prevent any bot from sending the commands
             int argPos = 0;
-            if (Config.Guild.getPropertyValue(context.Guild.Id, "aiko_role_id") != "" &&
-                message.HasStringPrefix($"<@&{Config.Guild.getPropertyValue(context.Guild.Id, "aiko_role_id")}>", ref argPos)){
-                await message.Channel.SendMessageAsync(embed: new EmbedBuilder()
-                .WithAuthor(Config.Aiko.EmbedNameError)
-                .WithDescription($"Gomen ne {context.User.Username}, it seems you're calling me with the role prefix. " +
-                "Please use the non role prefix.")
-                .WithColor(Config.Aiko.EmbedColor)
-                .WithThumbnailUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/5/55/ODN-EP11-084.png")
-                .Build());
-            } else if (message.HasStringPrefix(Config.Aiko.PrefixParent[0], ref argPos) ||
+            if (message.HasStringPrefix(Config.Aiko.PrefixParent[0], ref argPos) ||
                 message.HasStringPrefix(Config.Aiko.PrefixParent[1], ref argPos) ||
-                message.HasMentionPrefix(client.CurrentUser, ref argPos)){
+                message.HasMentionPrefix(client.CurrentUser, ref argPos))
+            {
                 var result = await commands.ExecuteAsync(context, argPos, services);
                 switch (result.Error)
                 {

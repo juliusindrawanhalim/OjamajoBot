@@ -587,7 +587,6 @@ namespace OjamajoBot.Module
         [Command("capture", RunMode = RunMode.Async), Alias("catch"), Summary("Capture spawned card with Onpu.")]
         public async Task<RuntimeResult> trading_card_onpu_capture(string boost = "")
         {
-
             //reference: https://www.newtonsoft.com/json/help/html/ModifyJson.htm
             var guildId = Context.Guild.Id;
             var clientId = Context.User.Id;

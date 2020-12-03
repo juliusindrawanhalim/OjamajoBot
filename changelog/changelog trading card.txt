@@ -171,3 +171,8 @@ Doremi Trading Card - Update 1.30 - 22.11.20
 -spawn command has been removed
 -new command: verify. This will let you get verified to get the card badge
 -new command: status complete. This will let you see your/other ojamajo trading card completion date
+
+Doremi Trading Card - Update 1.31 - 30.11.20
+===============================================================
+-Bug fix for card capture
+-New feature: fragment points. Capturing a duplicate card now rewards you with fragment points seeds. 

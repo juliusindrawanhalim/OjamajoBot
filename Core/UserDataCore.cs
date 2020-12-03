@@ -156,7 +156,7 @@ namespace OjamajoBot
             dbUpdate.update(query, columns);
         }
 
-        public static async Task updateChatExp(SocketUser user, int amount)
+        public static void updateChatExp(SocketUser user, int amount)
         {
             //return type: boolean: true if level up
             //update chat exp & level up
@@ -205,5 +205,6 @@ namespace OjamajoBot
                 dbUpdate.update(query, columns);
             }
         }
+
     }
 }

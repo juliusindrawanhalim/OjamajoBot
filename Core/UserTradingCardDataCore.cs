@@ -69,6 +69,7 @@ namespace OjamajoBot
                     ret[DBM_User_Trading_Card_Data.Columns.boost_momoko_ojamajos] = row[DBM_User_Trading_Card_Data.Columns.boost_momoko_ojamajos];
 
                     ret[DBM_User_Trading_Card_Data.Columns.boost_other_special] = row[DBM_User_Trading_Card_Data.Columns.boost_other_special];
+                    ret[DBM_User_Trading_Card_Data.Columns.fragment_point] = row[DBM_User_Trading_Card_Data.Columns.fragment_point];
                     ret[DBM_User_Trading_Card_Data.Columns.created_at] = row[DBM_User_Trading_Card_Data.Columns.created_at];
 
                 }
@@ -145,7 +146,7 @@ namespace OjamajoBot
             if (dt.Rows.Count <= 0)
                 insertUserData(clientId);
 
-            //update magic seeds
+            //update catch attempt
             query = $"UPDATE {DBM_User_Trading_Card_Data.tableName} " +
             $" SET {DBM_User_Trading_Card_Data.Columns.catch_attempt} = {DBM_User_Trading_Card_Data.Columns.catch_attempt}+1 ";
             if (guildCaptureToken != "")
@@ -160,8 +161,6 @@ namespace OjamajoBot
 
             dbUpdate.update(query, columns);
         }
-
-
 
         public static Boolean checkCardCompletion(ulong userId,string pack)
         {
@@ -248,6 +247,43 @@ namespace OjamajoBot
             }
 
             return ret;
+        }
+
+
+        public static void updateFragmentPoints(ulong clientId, int amount)
+        {
+            int maximumCap = 100;
+            //check if user data exists/not
+            DBC db = new DBC();
+            string query = $"SELECT * " +
+            $" FROM {DBM_User_Trading_Card_Data.tableName} " +
+            $" WHERE {DBM_User_Trading_Card_Data.Columns.id_user}=@{DBM_User_Trading_Card_Data.Columns.id_user}";
+
+            Dictionary<string, object> colSelect = new Dictionary<string, object>();
+            colSelect[DBM_User_Data.Columns.id_user] = clientId.ToString();
+            DataTable dt = db.selectAll(query, colSelect);
+            if (dt.Rows.Count <= 0)
+                insertUserData(clientId);
+
+            //update magic seeds
+            query = $"UPDATE {DBM_User_Trading_Card_Data.tableName} ";
+            if (amount >= 1) //add
+                query += $" SET {DBM_User_Trading_Card_Data.Columns.fragment_point} = CASE " +
+                    $" WHEN {DBM_User_Trading_Card_Data.Columns.fragment_point}+{amount}>={maximumCap} THEN {maximumCap} " +
+                    $" ELSE {DBM_User_Trading_Card_Data.Columns.fragment_point}+{amount} " +
+                    $" END ";
+            else //negative/substract
+                query += $" SET {DBM_User_Trading_Card_Data.Columns.fragment_point} = CASE " +
+                    $" WHEN {DBM_User_Trading_Card_Data.Columns.fragment_point}>={amount} THEN  {DBM_User_Trading_Card_Data.Columns.fragment_point}-{amount} " +
+                    $" ELSE 0 " +
+                    $" END ";
+            query += $" WHERE {DBM_User_Trading_Card_Data.Columns.id_user}=@{DBM_User_Trading_Card_Data.Columns.id_user}";
+
+            DBC dbUpdate = new DBC();
+            Dictionary<string, object> columns = new Dictionary<string, object>();
+            columns[DBM_User_Trading_Card_Data.Columns.id_user] = clientId.ToString();
+
+            dbUpdate.update(query, columns);
         }
 
     }

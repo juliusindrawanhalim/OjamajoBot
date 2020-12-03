@@ -247,8 +247,8 @@ namespace OjamajoBot.Bot
         public async Task GuildAvailable(SocketGuild guild)
         {
             ulong guildId = guild.Id;
-            Config.Guild.init(guild.Id);
-            var guildData = Config.Guild.getGuildData(guildId);
+            //Config.Guild.init(guild.Id);
+            //var guildData = Config.Guild.getGuildData(guildId);
 
             //Config.Hazuki._timerBirthdayAnnouncement[guild.Id.ToString()] = new Timer(async _ =>
             //    {
@@ -301,18 +301,10 @@ namespace OjamajoBot.Bot
             //if (message.Author.IsBot) return; //prevent any bot from sending the commands
 
             int argPos = 0;
-            if (Config.Guild.getPropertyValue(context.Guild.Id, "hazuki_role_id") != "" &&
-                message.HasStringPrefix($"<@&{Config.Guild.getPropertyValue(context.Guild.Id, "hazuki_role_id")}>", ref argPos)){
-                await message.Channel.SendMessageAsync(embed: new EmbedBuilder()
-                    .WithAuthor(Config.Hazuki.EmbedNameError)
-                    .WithDescription($"I'm sorry {context.User.Username}, it seems you're calling me with the role prefix. " +
-                            "Please use the non role prefix.")
-                    .WithColor(Config.Hazuki.EmbedColor)
-                    .WithThumbnailUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/8/82/ODN-EP6-078.png")
-                    .Build());
-            } else if (message.HasStringPrefix(Config.Hazuki.PrefixParent[0], ref argPos) ||
+            if (message.HasStringPrefix(Config.Hazuki.PrefixParent[0], ref argPos) ||
                 message.HasStringPrefix(Config.Hazuki.PrefixParent[1], ref argPos) ||
-                message.HasMentionPrefix(client.CurrentUser, ref argPos)){
+                message.HasMentionPrefix(client.CurrentUser, ref argPos))
+            {
                 var result = await commands.ExecuteAsync(context, argPos, services);
                 switch (result.Error)
                 {

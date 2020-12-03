@@ -12,6 +12,7 @@ namespace OjamajoBot.Database.Model
         {
             public static readonly string id_guild = "id_guild";
             public static readonly string id_channel_spawn = "id_channel_spawn";
+            public static readonly string id_card_catcher = "id_card_catcher";
             public static readonly string spawn_interval = "spawn_interval";
             public static readonly string spawn_id = "spawn_id";
             public static readonly string spawn_parent = "spawn_parent";

@@ -43,6 +43,7 @@ namespace OjamajoBot.Database.Model
             public static readonly string boost_momoko_ojamajos = "boost_momoko_ojamajos";
 
             public static readonly string boost_other_special = "boost_other_special";
+            public static readonly string fragment_point = "fragment_point";
             public static readonly string created_at = "created_at";
         }
 

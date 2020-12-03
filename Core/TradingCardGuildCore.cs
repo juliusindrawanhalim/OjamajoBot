@@ -40,6 +40,7 @@ namespace OjamajoBot
                 {
                     ret[DBM_Trading_Card_Guild.Columns.id_guild] = row[DBM_Trading_Card_Guild.Columns.id_guild];
                     ret[DBM_Trading_Card_Guild.Columns.id_channel_spawn] = row[DBM_Trading_Card_Guild.Columns.id_channel_spawn];
+                    ret[DBM_Trading_Card_Guild.Columns.id_card_catcher] = row[DBM_Trading_Card_Guild.Columns.id_card_catcher];
                     ret[DBM_Trading_Card_Guild.Columns.spawn_interval] = row[DBM_Trading_Card_Guild.Columns.spawn_interval];
                     ret[DBM_Trading_Card_Guild.Columns.spawn_id] = row[DBM_Trading_Card_Guild.Columns.spawn_id];
                     ret[DBM_Trading_Card_Guild.Columns.spawn_parent] = row[DBM_Trading_Card_Guild.Columns.spawn_parent];

@@ -56,19 +56,18 @@ namespace Config
                     ret[DBM_Guild.Columns.id_channel_birthday_announcement] = row[DBM_Guild.Columns.id_channel_birthday_announcement];
                     ret[DBM_Guild.Columns.id_channel_notification_chat_level_up] = row[DBM_Guild.Columns.id_channel_notification_chat_level_up];
                     ret[DBM_Guild.Columns.id_channel_notification_user_welcome] = row[DBM_Guild.Columns.id_channel_notification_user_welcome];
+                    ret[DBM_Guild.Columns.id_channel_user_leaving_log] = row[DBM_Guild.Columns.id_channel_user_leaving_log];
+                    ret[DBM_Guild.Columns.id_autorole_user_join] = row[DBM_Guild.Columns.id_autorole_user_join];
                     ret[DBM_Guild.Columns.welcome_message] = row[DBM_Guild.Columns.welcome_message];
                     ret[DBM_Guild.Columns.welcome_image] = row[DBM_Guild.Columns.welcome_image];
-                    ret[DBM_Guild.Columns.id_channel_user_leaving_log] = row[DBM_Guild.Columns.id_channel_user_leaving_log];
                     ret[DBM_Guild.Columns.birthday_announcement_date_last] = row[DBM_Guild.Columns.birthday_announcement_date_last];
-                    ret[DBM_Guild.Columns.user_leaving_notification] = row[DBM_Guild.Columns.user_leaving_notification];
-                    ret[DBM_Guild.Columns.user_leaving_notification] = row[DBM_Guild.Columns.welcome_message];
-                    ret[DBM_Guild.Columns.user_leaving_notification] = row[DBM_Guild.Columns.welcome_image];
                     ret[DBM_Guild.Columns.role_id_doremi] = row[DBM_Guild.Columns.role_id_doremi];
                     ret[DBM_Guild.Columns.role_id_hazuki] = row[DBM_Guild.Columns.role_id_hazuki];
                     ret[DBM_Guild.Columns.role_id_aiko] = row[DBM_Guild.Columns.role_id_aiko];
                     ret[DBM_Guild.Columns.role_id_onpu] = row[DBM_Guild.Columns.role_id_onpu];
                     ret[DBM_Guild.Columns.role_id_momoko] = row[DBM_Guild.Columns.role_id_momoko];
                     ret[DBM_Guild.Columns.role_detention] = row[DBM_Guild.Columns.role_detention];
+                    ret[DBM_Guild.Columns.custom_prefix] = row[DBM_Guild.Columns.custom_prefix];
                 }
             }
             catch (Exception e)
@@ -82,7 +81,10 @@ namespace Config
         public static void init(ulong guildId)
         {
             var guildData = getGuildData(guildId);
-
+            //initialize custom prefix if exists
+            if (guildData[DBM_Guild.Columns.custom_prefix].ToString() != "")
+                Config.Core.customPrefix[guildId.ToString()] = guildData[DBM_Guild.Columns.custom_prefix].ToString();
+            
             //check if directory exists
             if (!Directory.Exists($"attachments/{guildId.ToString()}"))
                 Directory.CreateDirectory($"attachments/{guildId.ToString()}");

@@ -264,7 +264,7 @@ namespace OjamajoBot
 
             var userData = UserTradingCardDataCore.getUserData(userId);
 
-            int boostDoremiNormal = Convert.ToInt32(userData[DBM_User_Trading_Card_Data.Columns.boost_doremi_normal])*10; 
+            int boostDoremiNormal = Convert.ToInt32(userData[DBM_User_Trading_Card_Data.Columns.boost_doremi_normal])*10;
             int boostDoremiPlatinum = Convert.ToInt32(userData[DBM_User_Trading_Card_Data.Columns.boost_doremi_platinum]) * 10;
             int boostDoremiMetal = Convert.ToInt32(userData[DBM_User_Trading_Card_Data.Columns.boost_doremi_metal]) * 10; 
             int boostDoremiOjamajos = Convert.ToInt32(userData[DBM_User_Trading_Card_Data.Columns.boost_doremi_ojamajos]) * 10;
@@ -291,33 +291,32 @@ namespace OjamajoBot
 
             int boostOtherSpecial = Convert.ToInt32(userData[DBM_User_Trading_Card_Data.Columns.boost_other_special]) * 10;
 
+            string doremiBoost = $"Normal: {boostDoremiNormal}%\n" +
+                $"Platinum: {boostDoremiPlatinum}%\n" +
+                $"Metal: {boostDoremiMetal}%\n" +
+                $"Ojamajos: {boostDoremiOjamajos}%".Replace(" 0%","-");
 
-            string doremiBoost = $"**Normal: {(boostDoremiNormal).ToString().Replace("0", "-")}%**\n" +
-                $"**Platinum: {(boostDoremiPlatinum).ToString().Replace("0", "-")}%**\n" +
-                $"**Metal: {(boostDoremiMetal).ToString().Replace("0", " - ")}%**\n" +
-                $"**Ojamajos: {(boostDoremiOjamajos).ToString().Replace("0", "-")}%**";
+            string hazukiBoost = $"Normal: {boostHazukiNormal}%\n" +
+                $"Platinum: {boostHazukiPlatinum}%\n" +
+                $"Metal: {boostHazukiMetal}%\n" +
+                $"Ojamajos: {boostHazukiOjamajos}%".Replace(" 0%", "-");
 
-            string hazukiBoost = $"**Normal: {(boostHazukiNormal).ToString().Replace("0", "-")}%**\n" +
-                $"**Platinum: {(boostHazukiPlatinum).ToString().Replace("0", "-")}%**\n" +
-                $"**Metal: {(boostHazukiMetal).ToString().Replace("0", "-")}%**\n" +
-                $"**Ojamajos: {(boostHazukiOjamajos).ToString().Replace("0", "-")}%**";
+            string aikoBoost = $"Normal: {boostAikoNormal}%\n" +
+                $"Platinum: {boostAikoPlatinum}%\n" +
+                $"Metal: {boostAikoMetal}%\n" +
+                $"Ojamajos: {boostAikoOjamajos}%".Replace(" 0%", "-");
 
-            string aikoBoost = $"**Normal: {(boostAikoNormal).ToString().Replace("0", "-")}%**\n" +
-                $"**Platinum: {(boostAikoPlatinum).ToString().Replace("0", "-")}%**\n" +
-                $"**Metal: {(boostAikoMetal).ToString().Replace("0", " - ")}%**\n" +
-                $"**Ojamajos: {(boostAikoOjamajos).ToString().Replace("0", " - ")}%**";
+            string onpuBoost = $"Normal: {boostOnpuNormal}%\n" +
+                $"Platinum: {boostOnpuPlatinum}%\n" +
+                $"Metal: {boostOnpuMetal}%\n" +
+                $"Ojamajos: {boostOnpuOjamajos}%".Replace(" 0%", "-");
 
-            string onpuBoost = $"**Normal: {(boostOnpuNormal).ToString().Replace("0", "-")}%**\n" +
-                $"**Platinum: {(boostOnpuPlatinum).ToString().Replace("0", "-")}%**\n" +
-                $"**Metal: {(boostOnpuMetal).ToString().Replace("0", "-")}%**\n" +
-                $"**Ojamajos: {(boostOnpuOjamajos).ToString().Replace("0", "-")}%**";
+            string momokoBoost = $"Normal: {boostMomokoNormal}%\n" +
+                $"Platinum: {boostMomokoPlatinum}%\n" +
+                $"Metal: {boostMomokoMetal}%\n" +
+                $"Ojamajos: {boostMomokoOjamajos}%".Replace(" 0%", "-");
 
-            string momokoBoost = $"**Normal: {(boostMomokoNormal).ToString().Replace("0", "-")}%**\n" +
-                $"**Platinum: {(boostMomokoPlatinum).ToString().Replace("0", "-")}%**\n" +
-                $"**Metal: {(boostMomokoMetal).ToString().Replace("0", "-")}%**\n" +
-                $"**Ojamajos: {(boostMomokoOjamajos).ToString().Replace("0", "-")}%**".Replace("0%", "-");
-
-            string otherBoost = $"**Special: {boostOtherSpecial * 10}%**";
+            string otherBoost = $"**Special: {boostOtherSpecial * 10}%**".Replace(" 0%", "-");
 
             return new EmbedBuilder()
                 .WithColor(color)
@@ -1209,7 +1208,6 @@ namespace OjamajoBot
 
                                 new DBC().insert(DBM_User_Trading_Card_Inventory.tableName, columnFilter);
                                 UserTradingCardDataCore.addCatchAttempt(context.User.Id);
-
                             }
                         }
                         else if (badCardType == "seeds")
@@ -1265,10 +1263,6 @@ namespace OjamajoBot
             string name = ""; string imgUrl = ""; string rank = ""; string star = ""; string point = "";
 
             //get guild spawned card information
-            //string query = $"SELECT * " +
-            //    $" FROM {DBM_Trading_Card_Guild.tableName} " +
-            //    $" WHERE {DBM_Trading_Card_Guild.Columns.id_guild}=@{DBM_Trading_Card_Guild.Columns.id_guild} ";
-            //columns[DBM_Trading_Card_Guild.Columns.id_guild] = guildId;
             var guildSpawnData = TradingCardGuildCore.getGuildData(guildId);
 
             //get spawn info
@@ -1287,14 +1281,27 @@ namespace OjamajoBot
                     
                 spawnedIsZone = Convert.ToInt32(guildSpawnData[DBM_Trading_Card_Guild.Columns.spawn_is_zone]);
                 spawnedToken = guildSpawnData[DBM_Trading_Card_Guild.Columns.spawn_token].ToString();
-            } else {
+            } 
+            else 
+            {
                 returnEmbedBuilder = new EmbedBuilder()
                 .WithColor(color)
                 .WithDescription(":x: Sorry, either this card has been captured by someone or not spawned anymore. " +
                 "Please wait for the card to spawn again.")
                 .WithThumbnailUrl(emojiError);
                 return Tuple.Create("", returnEmbedBuilder, "", returnCompleted);
-            } 
+            }
+
+            //check if spawned token same with user
+            if (userData[DBM_User_Trading_Card_Data.Columns.catch_token].ToString() == spawnedToken)
+            {
+                //check if spawned token is same like guild
+                returnEmbedBuilder = new EmbedBuilder()
+                .WithColor(color)
+                .WithDescription($":x: Sorry, please wait for the next card spawn.")
+                .WithThumbnailUrl(emojiError);
+                return Tuple.Create("", returnEmbedBuilder, "", returnCompleted);
+            }
 
             //end get guild spawned card information
 
@@ -1357,6 +1364,9 @@ namespace OjamajoBot
             } 
             else
             {
+                spawnedCardPack = guildSpawnData[DBM_Trading_Card_Guild.Columns.spawn_parent].ToString();
+                spawnedCardCategory = guildSpawnData[DBM_Trading_Card_Guild.Columns.spawn_category].ToString();
+                spawnedCardId = guildSpawnData[DBM_Trading_Card_Guild.Columns.spawn_id].ToString();
                 if(spawnedCardCategory == "ojamajos"){
                     //ojamajo card category
                     string query = $"SELECT * " +
@@ -1371,7 +1381,7 @@ namespace OjamajoBot
                         imgUrl = rows[DBM_Trading_Card_Data.Columns.url].ToString();
                         rank = rows[DBM_Trading_Card_Data.Columns.attr_0].ToString();
                         star = rows[DBM_Trading_Card_Data.Columns.attr_1].ToString();
-                        point = rows[DBM_Trading_Card_Data.Columns.url].ToString();
+                        point = rows[DBM_Trading_Card_Data.Columns.attr_2].ToString();
                     }
                 } else
                 {
@@ -1387,11 +1397,10 @@ namespace OjamajoBot
                         imgUrl = rows[DBM_Trading_Card_Data.Columns.url].ToString();
                         rank = rows[DBM_Trading_Card_Data.Columns.attr_0].ToString();
                         star = rows[DBM_Trading_Card_Data.Columns.attr_1].ToString();
-                        point = rows[DBM_Trading_Card_Data.Columns.url].ToString();
+                        point = rows[DBM_Trading_Card_Data.Columns.attr_2].ToString();
                     }
                 }
             }
-            
             //get card information end
 
             //get card boost information
@@ -1445,12 +1454,13 @@ namespace OjamajoBot
             {
                 //update token
                 UserTradingCardDataCore.addCatchAttempt(clientId, spawnedToken);
+                replyText = ":x: Sorry, you guessed the wrong mystery card.";
 
-                returnEmbedBuilder = new EmbedBuilder()
-                .WithColor(color)
-                .WithDescription($":x: Sorry, you guessed the wrong mystery card.")
-                .WithThumbnailUrl(emojiError);
-                return Tuple.Create("", returnEmbedBuilder, "", returnCompleted);
+                //returnEmbedBuilder = new EmbedBuilder()
+                //.WithColor(color)
+                //.WithDescription($":x: Sorry, you guessed the wrong mystery card.")
+                //.WithThumbnailUrl(emojiError);
+                //return Tuple.Create("", returnEmbedBuilder, "", returnCompleted);
             }
             else if (spawnedIsZone==1||
             (spawnedCardId != "" && spawnedCardCategory != ""))
@@ -1460,379 +1470,396 @@ namespace OjamajoBot
                 {
                     int catchState = 0;
 
-                    if (userData[DBM_User_Trading_Card_Data.Columns.catch_token].ToString() == spawnedToken)
-                    {
-                        //check if spawned token is same like guild
-                        returnEmbedBuilder = new EmbedBuilder()
-                        .WithColor(color)
-                        .WithDescription($":x: Sorry, please wait for the next card spawn.")
-                        .WithThumbnailUrl(emojiError);
-                        return Tuple.Create("", returnEmbedBuilder, "", returnCompleted);
-                    }
-
                     //check last capture time
                     try
                     {
-                        if (spawnedToken!="" && 
-                             userData[DBM_User_Trading_Card_Data.Columns.catch_token].ToString() != spawnedToken)
-                        {
-                            int boostPlayerRank = 0;
-                            if (playerRank >= 2) boostPlayerRank = playerRank;
-                            int catchRate = new Random().Next(10 - boostPlayerRank);
-
-                            //check if user have the card/not
-                            if (checkUserHaveCard(clientId,parent,spawnedCardId))
-                            {//card already exist on inventory
-                                if (spawnedIsMystery != 1)
-                                    replyText = $":x: Sorry, I can't capture **{spawnedCardId} - {name}** because you have it already.";
-                                else
-                                    replyText = $":x: You guessed the mystery card correctly but I can't capture **{spawnedCardId} - {name}** because you have it already.";
-
-                                if (spawnedIsZone == 1)
-                                {
-                                    UserTradingCardDataCore.addCatchAttempt(clientId, spawnedToken);
-                                }
-                            }
+                        int boostPlayerRank = 0;
+                        if (playerRank >= 2) boostPlayerRank = playerRank;
+                        int catchRate = new Random().Next(10 - boostPlayerRank);
+                        
+                        //check if user have the card/not
+                        if (checkUserHaveCard(clientId,parent,spawnedCardId))
+                        {//card already exist on inventory
+                            if (spawnedIsMystery != 1)
+                                replyText = $":x: Sorry, I can't capture **{spawnedCardId} - {name}** because you already have it. " +
+                                    $"";
                             else
-                            {
-                                //user don't have card yet
-                                int maxCard = 0; string boostRate = "";
-                                //init RNG catch rate
-                                //if boost: change the TradingCardCore.captureRate
-
-                                if (spawnedCardCategory.ToLower() == "normal")
-                                {
-                                    if (!useBoost)
-                                    {
-                                        if ((catchRate < TradingCardCore.captureRateNormal && spawnedIsMystery != 1) ||
-                                            (catchRate < TradingCardCore.captureRateNormal + 1 && spawnedIsMystery != 1)) catchState = 1;
-                                    }
-                                    else
-                                    {
-                                        boostRate = $"{boostNormal * 10}%";
-                                        if ((catchRate < boostNormal && spawnedIsMystery != 1) ||
-                                            (catchRate < boostNormal + 1 && spawnedIsMystery == 1)) catchState = 1;
-                                    }
-                                }
-                                else if (spawnedCardCategory.ToLower() == "platinum")
-                                {
-                                    if (!useBoost)
-                                    {
-                                        if ((catchRate < TradingCardCore.captureRatePlatinum && spawnedIsMystery != 1) ||
-                                            (catchRate < TradingCardCore.captureRatePlatinum + 1 && spawnedIsMystery == 1)) catchState = 1;
-                                    }
-                                    else
-                                    {
-                                        boostRate = $"{boostPlatinum * 10}%";
-                                        if ((catchRate < boostPlatinum && spawnedIsMystery != 1) ||
-                                            (catchRate < boostPlatinum + 1 && spawnedIsMystery == 1)) catchState = 1;
-                                    }
-                                }
-                                else if (spawnedCardCategory.ToLower() == "metal")
-                                {
-                                    if (!useBoost)
-                                    {
-                                        if ((catchRate < TradingCardCore.captureRateMetal && spawnedIsMystery != 1) ||
-                                            (catchRate < TradingCardCore.captureRateMetal + 2 && spawnedIsMystery == 1)) catchState = 1;
-                                    }
-                                    else
-                                    {
-                                        boostRate = $"{boostMetal * 10}%";
-                                        if ((catchRate < boostMetal && spawnedIsMystery != 1) ||
-                                            (catchRate < boostMetal + 2 && spawnedIsMystery == 1)) catchState = 1;
-                                    }
-                                }
-                                else if (spawnedCardCategory.ToLower() == "ojamajos")
-                                {
-                                    if (!useBoost && catchRate < TradingCardCore.captureRateOjamajos)
-                                        catchState = 1;
-                                    else if (useBoost && catchRate < boostOjamajos)
-                                        catchState = 1;
-                                    if (useBoost) boostRate = $"{boostOjamajos * 10}%";
-                                }
-                                else if (spawnedCardCategory.ToLower() == "special")
-                                {
-                                    if (!useBoost && catchRate < TradingCardCore.captureRateSpecial)
-                                        catchState = 1;
-                                    else if (useBoost && catchRate < boostSpecial)
-                                        catchState = 1;
-                                    if (useBoost) boostRate = $"{boostSpecial * 10}%";
-                                }
-
-                                Console.WriteLine($"Catch state: {spawnedCardCategory}");
-
-                                if (spawnedIsBadCard == 1)
-                                {
-                                    //bad card trigger
-                                    emojiError = BadCards.imgBadCardActivated;
-
-                                    switch (spawnedBadCardType)
-                                    {
-                                        case "seeds":
-                                            int randomLost = new Random().Next(1, 11);
-                                            replyText = $":skull: Oh no, **{spawnedBadCardType}** bad card effect has activated! " +
-                                                $"**{username}** just lost {randomLost} magic seeds!";
-
-                                            UserDataCore.updateMagicSeeds(Convert.ToUInt64(clientId), -randomLost);
-                                            break;
-                                        case "curse":
-                                            string parentLost = parent;
-                                            if (parent != "doremi" && parent != "hazuki" && parent != "aiko" && parent != "onpu" && parent != "momoko")
-                                                parentLost = "doremi";
-
-                                            //get the random lost card information from user
-                                            string query = @$"select * 
-                                                from {DBM_User_Trading_Card_Inventory.tableName} inv, {DBM_Trading_Card_Data.tableName} tc 
-                                                where inv.{DBM_User_Trading_Card_Inventory.Columns.id_user}=@{DBM_User_Trading_Card_Inventory.Columns.id_user} and                                       inv.{DBM_User_Trading_Card_Inventory.Columns.id_card} = tc.{DBM_User_Trading_Card_Inventory.Columns.id_card} and 
-                                                tc.{DBM_Trading_Card_Data.Columns.pack}=@{DBM_Trading_Card_Data.Columns.pack} and 
-                                                tc.{DBM_Trading_Card_Data.Columns.category}=@{DBM_Trading_Card_Data.Columns.category} 
-                                                order by rand() 
-                                                limit 1";
-                                            columns = new Dictionary<string, object>();
-                                            columns[DBM_User_Trading_Card_Inventory.Columns.id_user] = clientId.ToString();
-                                            columns[DBM_Trading_Card_Data.Columns.pack] = parentLost;
-                                            columns[DBM_Trading_Card_Data.Columns.category] = "normal";
-                                            var resultLost = new DBC().selectAll(query, columns);
-
-                                            if (resultLost.Rows.Count >= 1)
-                                            {
-                                                string stolenCardId = ""; string stolenName = "";
-
-                                                foreach (DataRow rows in resultLost.Rows)
-                                                {
-                                                    stolenCardId = rows[DBM_User_Trading_Card_Inventory.Columns.id_card].ToString();
-                                                }
-
-                                                //delete
-                                                query = $"DELETE FROM {DBM_User_Trading_Card_Inventory.tableName} " +
-                                                    $" WHERE {DBM_User_Trading_Card_Inventory.Columns.id_card}=@{DBM_User_Trading_Card_Inventory.Columns.id_card} AND " +
-                                                    $" {DBM_User_Trading_Card_Inventory.Columns.id_user}=@{DBM_User_Trading_Card_Inventory.Columns.id_user} ";
-                                                columns = new Dictionary<string, object>();
-                                                columns[DBM_User_Trading_Card_Inventory.Columns.id_card] = stolenCardId;
-                                                columns[DBM_User_Trading_Card_Inventory.Columns.id_user] = clientId.ToString();
-                                                new DBC().delete(query, columns);
-
-                                                replyText = $":skull: Oh no, **{spawnedBadCardType}** bad card effect has activated! " +
-                                                    $"**{username}** just lost **{parentLost} normal** card: **{stolenCardId} - {stolenName}**!";
-                                            }
-                                            else
-                                            {
-                                                replyText = $":skull: Oh no, **{spawnedBadCardType}** bad card effect has activated! But **{username}** don't have any card to lose...";
-                                            }
-                                            break;
-                                        case "failure":
-                                            replyText = $":skull: Oh no, **{spawnedBadCardType}** bad card effect has activated! " +
-                                                $"**{username}** just lost a chance to catch a card on this spawn turn!";
-
-                                            //update
-                                            query = $"UPDATE {DBM_User_Trading_Card_Data.tableName} " +
-                                                $" SET {DBM_User_Trading_Card_Data.Columns.catch_token}=@{DBM_User_Trading_Card_Data.Columns.catch_token} " +
-                                                $" WHERE {DBM_User_Trading_Card_Data.Columns.id_user}=@{DBM_User_Trading_Card_Data.Columns.id_user} ";
-                                            columns = new Dictionary<string, object>();
-                                            columns[DBM_User_Trading_Card_Data.Columns.catch_token] = spawnedToken;
-                                            columns[DBM_User_Trading_Card_Data.Columns.id_user] = clientId;
-                                            new DBC().update(query, columns);
-                                            break;
-                                    }
-
-                                    //bad card ends
-                                }
-                                else if (catchState == 1)
-                                {
-                                    columns = new Dictionary<string, object>();
-                                    columns["boost"] = 0;
-                                    //card not exist yet
-                                    if (useBoost)
-                                    {//reset boost
-                                        string query = "";
-                                        replyText = $":arrow_double_up: **{GlobalFunctions.UppercaseFirst(spawnedCardPack)} {GlobalFunctions.UppercaseFirst(spawnedCardCategory)}** " +
-                                            $"Card capture boost has been used and boosted into **{boostRate}**!\n";
-                                        switch (spawnedCardCategory)
-                                        {
-                                            case "special":
-                                                query = $"UPDATE {DBM_User_Trading_Card_Data.tableName} " +
-                                                $" SET {DBM_User_Trading_Card_Data.Columns.boost_other_special}=@boost " +
-                                                $" WHERE {DBM_User_Trading_Card_Data.Columns.id_user}=@{DBM_User_Trading_Card_Data.Columns.id_user} ";
-
-                                                //arrInventory["boost"]["other"]["special"] = "0";
-                                                break;
-                                            default:
-                                                query = $"UPDATE {DBM_User_Trading_Card_Data.tableName} " +
-                                                $" SET boost_{spawnedCardPack.ToLower()}_{spawnedCardCategory.ToLower()}=@boost " +
-                                                $" WHERE {DBM_User_Trading_Card_Data.Columns.id_user}=@{DBM_User_Trading_Card_Data.Columns.id_user} ";
-
-                                                //arrInventory["boost"][parent][spawnedCardCategory] = "0";
-                                                break;
-                                        }
-                                        new DBC().update(query, columns);
-                                    }
-
-                                    //item.Add(spawnedCardId,);
-
-                                    //add card to inventory
-                                    if (spawnedCardCategory == "ojamajos")
-                                    {   //card type is ojamajos
-                                        //check related card pack
-                                        string query = $"SELECT * " +
-                                            $" FROM {DBM_User_Trading_Card_Inventory_Ojamajos.tableName} " +
-                                            $" WHERE {DBM_User_Trading_Card_Inventory_Ojamajos.Columns.id_card}=@{DBM_User_Trading_Card_Inventory_Ojamajos.Columns.id_card}";
-                                        columns = new Dictionary<string, object>();
-                                        columns[DBM_User_Trading_Card_Inventory_Ojamajos.Columns.id_card] = spawnedCardId;
-                                        var relatedResult = new DBC().selectAll(query, columns);
-
-                                        foreach(DataRow rows in relatedResult.Rows)
-                                        {
-                                            string[] related = rows["pack"].ToString().Split(",");
-                                            for(int i = 0;i<related.Length;i++)
-                                            {
-                                                try
-                                                {
-                                                    columns = new Dictionary<string, object>();
-                                                    columns[DBM_User_Trading_Card_Inventory_Ojamajos.Columns.id_user] = clientId;
-                                                    columns[DBM_User_Trading_Card_Inventory_Ojamajos.Columns.pack] = related[i];
-                                                    columns[DBM_User_Trading_Card_Inventory_Ojamajos.Columns.id_card] = spawnedCardId;
-                                                    db.insert(DBM_User_Trading_Card_Inventory_Ojamajos.tableName, columns);
-                                                }
-                                                catch { }
-                                            }
-                                        }
-                                    } else
-                                    {   //card type is normal/non ojamajos 
-                                        columns = new Dictionary<string, object>();
-                                        columns[DBM_User_Trading_Card_Inventory.Columns.id_user] = clientId;
-                                        columns[DBM_User_Trading_Card_Inventory.Columns.id_card] = spawnedCardId;
-                                        db.insert(DBM_User_Trading_Card_Inventory.tableName, columns);
-                                    }
-
-                                    //level up notification
-                                    string returnLevelUp = "";
-                                    if ((int)userData["catch_attempt"] == 100 || (int)userData["catch_attempt"] == 200 ||
-                                        (int)userData["catch_attempt"] == 300 || (int)userData["catch_attempt"] == 400 ||
-                                        (int)userData["catch_attempt"] == 500)
-                                    {
-                                        returnLevelUp = $":up: Congratulations! **{username}** is now rank {getUserRank((int)userData["catch_attempt"])}!";
-                                    }
-
-                                    string[] arrRandomFirstSentence = {
-                                        "Congratulations,","Nice Catch!","Nice one!","Yatta!"
-                                    };
-
-                                    if (spawnedIsMystery == 1)
-                                        replyText += $":white_check_mark: {arrRandomFirstSentence[new Random().Next(0, arrRandomFirstSentence.Length)]} " +
-                                        $"**{username}** have successfully revealed & captured **{spawnedCardCategory}** mystery card: **{name}**";
-                                    else
-                                    {
-                                        replyText += $":white_check_mark: {arrRandomFirstSentence[new Random().Next(0, arrRandomFirstSentence.Length)]} " +
-                                        $"**{username}** have successfully captured **{spawnedCardCategory}** card: **{name}**";
-
-                                        if (spawnedIsZone == 1)
-                                        {
-                                            replyText += " from the zone card.";
-                                        }
-                                    }
-
-                                    //get latest total data
-                                    int currentTotal = 0;
-                                    if (parent == "ojamajos")
-                                    {
-                                        new DBC().insert(DBM_User_Trading_Card_Inventory_Ojamajos.tableName, columns);
-                                        string query = @$"select count(distinct(inv.{DBM_User_Trading_Card_Inventory_Ojamajos.Columns.id_card})) as total 
-                                                from {DBM_User_Trading_Card_Inventory_Ojamajos.tableName} inv, {DBM_Trading_Card_Data_Ojamajos.tableName} tc 
-                                                where inv.{DBM_User_Trading_Card_Inventory_Ojamajos.Columns.id_user}=@{DBM_User_Trading_Card_Inventory_Ojamajos.Columns.id_user} and 
-                                                inv.{DBM_User_Trading_Card_Inventory.Columns.id_card} = tc.{DBM_User_Trading_Card_Inventory.Columns.id_card} and 
-                                                tc.{DBM_Trading_Card_Data_Ojamajos.Columns.pack} like @{DBM_Trading_Card_Data_Ojamajos.Columns.pack}";
-                                        columns = new Dictionary<string, object>();
-                                        columns[DBM_User_Trading_Card_Inventory_Ojamajos.Columns.id_user] = clientId.ToString();
-                                        columns[DBM_Trading_Card_Data_Ojamajos.Columns.pack] = $"%{parent}%";
-                                        currentTotal = new DBC().selectAll(query, columns).Rows.Count;
-                                    } else
-                                    {
-                                        new DBC().insert(DBM_User_Trading_Card_Inventory.tableName, columns);
-                                        string query = @$"select count(*) as total  
-                                                from {DBM_User_Trading_Card_Inventory.tableName} inv, {DBM_Trading_Card_Data.tableName} tc 
-                                                where inv.{DBM_User_Trading_Card_Inventory.Columns.id_user}=@{DBM_User_Trading_Card_Inventory.Columns.id_user} and 
-                                                inv.{DBM_User_Trading_Card_Inventory.Columns.id_card} = tc.{DBM_User_Trading_Card_Inventory.Columns.id_card} and 
-                                                tc.{DBM_Trading_Card_Data.Columns.pack}=@{DBM_Trading_Card_Data.Columns.pack} and 
-                                                tc.{DBM_Trading_Card_Data.Columns.category}=@{DBM_Trading_Card_Data.Columns.category}";
-                                        columns = new Dictionary<string, object>();
-                                        columns[DBM_User_Trading_Card_Inventory.Columns.id_user] = clientId.ToString();
-                                        columns[DBM_Trading_Card_Data.Columns.pack] = parent;
-                                        columns[DBM_Trading_Card_Data.Columns.category] = spawnedCardCategory;
-                                        currentTotal = new DBC().selectAll(query, columns).Rows.Count;
-                                    }
-
-                                    returnEmbedBuilder = TradingCardCore.printCardCaptureTemplate(color, name, imgUrl,
-                                    spawnedCardId, spawnedCardCategory, rank, star, point, username, embedAvatarUrl,
-                                    currentTotal, maxCard);
-
-                                    //check card completion
-                                    if (UserTradingCardDataCore.checkCardCompletion(clientId, parent))
-                                        returnCompleted[parent] = true;
-
-                                    //if (UserTradingCardDataCore.checkCardCompletion(clientId,"doremi"))
-                                    //    returnCompleted["doremi"] = true;
-
-                                    //if (UserTradingCardDataCore.checkCardCompletion(clientId, "hazuki"))
-                                    //    returnCompleted["hazuki"] = true;
-
-                                    //if (UserTradingCardDataCore.checkCardCompletion(clientId, "aiko"))
-                                    //    returnCompleted["aiko"] = true;
-
-                                    //if (UserTradingCardDataCore.checkCardCompletion(clientId, "onpu"))
-                                    //    returnCompleted["onpu"] = true;
-
-                                    //if (UserTradingCardDataCore.checkCardCompletion(clientId, "momoko"))
-                                    //    returnCompleted["momoko"] = true;
-
-                                    //if (UserTradingCardDataCore.checkCardCompletion(clientId, "other"))
-                                    //    returnCompleted["other"] = true;
-
-                                    //erase spawned instance if not zone card
-                                    if (spawnedIsZone == 0)
-                                        TradingCardCore.resetSpawnInstance(guildId);
-
-                                    return Tuple.Create(replyText, returnEmbedBuilder, returnLevelUp, returnCompleted);
-                                }
-                                else
-                                {
-                                    //fail to catch & update catch attempt & token
-                                    UserTradingCardDataCore.addCatchAttempt(clientId, spawnedToken);
-
-                                    if (useBoost)
-                                    {   //reset boost
-                                        columns = new Dictionary<string, object>();
-                                        columns["boost"] = 0;
-                                        string query = "";
-                                        replyText = $":arrow_double_up: **{GlobalFunctions.UppercaseFirst(parent)} {GlobalFunctions.UppercaseFirst(spawnedCardCategory)}** " +
-                                            $"Card Capture Boost has been used!\n";
-                                        if (spawnedCardCategory.ToLower() == "special")
-                                        {
-                                            query = $"UPDATE {DBM_User_Trading_Card_Data.tableName} " +
-                                                $" SET {DBM_User_Trading_Card_Data.Columns.boost_other_special}=@boost " +
-                                                $" WHERE {DBM_User_Trading_Card_Data.Columns.id_user}=@{DBM_User_Trading_Card_Data.Columns.id_user} ";
-                                        }   
-                                        else
-                                        {
-                                            query = $"UPDATE {DBM_User_Trading_Card_Data.tableName} " +
-                                                $" SET boost_{spawnedCardPack.ToLower()}_{spawnedCardCategory.ToLower()}=@boost " +
-                                                $" WHERE {DBM_User_Trading_Card_Data.Columns.id_user}=@{DBM_User_Trading_Card_Data.Columns.id_user} ";
-                                        }
-
-                                        new DBC().update(query, columns);
-                                    }
-
-                                    if (spawnedIsMystery == 1)
-                                        replyText += $":x: Card revealed correctly! " +
-                                            $"But sorry, {username} **fail** to catch the mystery card. Better luck next time.";
-                                    else
-                                        replyText += $":x: Sorry {username}, **fail** to catch the card. Better luck next time.";
-                                }
-                            }
+                                replyText = $":x: You guessed the mystery card correctly but I can't capture **{spawnedCardId} - {name}** because you aleady have it. " +
+                                    $"";
+                            //UserDataCore.updateMagicSeeds(clientId, 1);
+                            //UserTradingCardDataCore.updateFragmentPoints(clientId, 1);
+                            UserTradingCardDataCore.addCatchAttempt(clientId, spawnedToken);
                         }
                         else
                         {
-                            replyText = ":x: Sorry, please wait for the next card spawn.";
+                            //user don't have card yet
+                            int maxCard = 0; string boostRate = "";
+                            //init RNG catch rate
+                            //if boost: change the TradingCardCore.captureRate
+
+                            if (spawnedCardCategory.ToLower() == "normal")
+                            {
+                                if (!useBoost)
+                                {
+                                    if ((catchRate < TradingCardCore.captureRateNormal && spawnedIsMystery != 1) ||
+                                        (catchRate < TradingCardCore.captureRateNormal + 1 && spawnedIsMystery != 1)) catchState = 1;
+                                }
+                                else
+                                {
+                                    boostRate = $"{boostNormal * 10}%";
+                                    if ((catchRate < boostNormal && spawnedIsMystery != 1) ||
+                                        (catchRate < boostNormal + 1 && spawnedIsMystery == 1)) catchState = 1;
+                                }
+                            }
+                            else if (spawnedCardCategory.ToLower() == "platinum")
+                            {
+                                if (!useBoost)
+                                {
+                                    if ((catchRate < TradingCardCore.captureRatePlatinum && spawnedIsMystery != 1) ||
+                                        (catchRate < TradingCardCore.captureRatePlatinum + 1 && spawnedIsMystery == 1)) catchState = 1;
+                                }
+                                else
+                                {
+                                    boostRate = $"{boostPlatinum * 10}%";
+                                    if ((catchRate < boostPlatinum && spawnedIsMystery != 1) ||
+                                        (catchRate < boostPlatinum + 1 && spawnedIsMystery == 1)) catchState = 1;
+                                }
+                            }
+                            else if (spawnedCardCategory.ToLower() == "metal")
+                            {
+                                if (!useBoost)
+                                {
+                                    if ((catchRate < TradingCardCore.captureRateMetal && spawnedIsMystery != 1) ||
+                                        (catchRate < TradingCardCore.captureRateMetal + 2 && spawnedIsMystery == 1)) catchState = 1;
+                                }
+                                else
+                                {
+                                    boostRate = $"{boostMetal * 10}%";
+                                    if ((catchRate < boostMetal && spawnedIsMystery != 1) ||
+                                        (catchRate < boostMetal + 2 && spawnedIsMystery == 1)) catchState = 1;
+                                }
+                            }
+                            else if (spawnedCardCategory.ToLower() == "ojamajos")
+                            {
+                                if (!useBoost && catchRate < TradingCardCore.captureRateOjamajos)
+                                    catchState = 1;
+                                else if (useBoost && catchRate < boostOjamajos)
+                                    catchState = 1;
+                                if (useBoost) boostRate = $"{boostOjamajos * 10}%";
+                            }
+                            else if (spawnedCardCategory.ToLower() == "special")
+                            {
+                                if (!useBoost && catchRate < TradingCardCore.captureRateSpecial)
+                                    catchState = 1;
+                                else if (useBoost && catchRate < boostSpecial)
+                                    catchState = 1;
+                                if (useBoost) boostRate = $"{boostSpecial * 10}%";
+                            }
+
+                            if (spawnedIsBadCard == 1)
+                            {
+                                //bad card trigger
+                                emojiError = BadCards.imgBadCardActivated;
+
+                                switch (spawnedBadCardType)
+                                {
+                                    case "seeds":
+                                        int randomLost = new Random().Next(1, 11);
+                                        replyText = $":skull: Oh no, **{spawnedBadCardType}** bad card effect has activated! " +
+                                            $"**{username}** just lost {randomLost} magic seeds!";
+
+                                        UserDataCore.updateMagicSeeds(Convert.ToUInt64(clientId), -randomLost);
+                                        break;
+                                    case "curse":
+                                        string parentLost = parent;
+                                        if (parent != "doremi" && parent != "hazuki" && parent != "aiko" && parent != "onpu" && parent != "momoko")
+                                            parentLost = "doremi";
+
+                                        //get the random lost card information from user
+                                        string query = @$"select * 
+                                            from {DBM_User_Trading_Card_Inventory.tableName} inv, {DBM_Trading_Card_Data.tableName} tc 
+                                            where inv.{DBM_User_Trading_Card_Inventory.Columns.id_user}=@{DBM_User_Trading_Card_Inventory.Columns.id_user} and                                       inv.{DBM_User_Trading_Card_Inventory.Columns.id_card} = tc.{DBM_User_Trading_Card_Inventory.Columns.id_card} and 
+                                            tc.{DBM_Trading_Card_Data.Columns.pack}=@{DBM_Trading_Card_Data.Columns.pack} and 
+                                            tc.{DBM_Trading_Card_Data.Columns.category}=@{DBM_Trading_Card_Data.Columns.category} 
+                                            order by rand() 
+                                            limit 1";
+                                        columns = new Dictionary<string, object>();
+                                        columns[DBM_User_Trading_Card_Inventory.Columns.id_user] = clientId.ToString();
+                                        columns[DBM_Trading_Card_Data.Columns.pack] = parentLost;
+                                        columns[DBM_Trading_Card_Data.Columns.category] = "normal";
+                                        var resultLost = new DBC().selectAll(query, columns);
+
+                                        if (resultLost.Rows.Count >= 1)
+                                        {
+                                            string stolenCardId = ""; string stolenName = "";
+
+                                            foreach (DataRow rows in resultLost.Rows)
+                                            {
+                                                stolenCardId = rows[DBM_User_Trading_Card_Inventory.Columns.id_card].ToString();
+                                            }
+
+                                            //delete
+                                            query = $"DELETE FROM {DBM_User_Trading_Card_Inventory.tableName} " +
+                                                $" WHERE {DBM_User_Trading_Card_Inventory.Columns.id_card}=@{DBM_User_Trading_Card_Inventory.Columns.id_card} AND " +
+                                                $" {DBM_User_Trading_Card_Inventory.Columns.id_user}=@{DBM_User_Trading_Card_Inventory.Columns.id_user} ";
+                                            columns = new Dictionary<string, object>();
+                                            columns[DBM_User_Trading_Card_Inventory.Columns.id_card] = stolenCardId;
+                                            columns[DBM_User_Trading_Card_Inventory.Columns.id_user] = clientId.ToString();
+                                            new DBC().delete(query, columns);
+
+                                            replyText = $":skull: Oh no, **{spawnedBadCardType}** bad card effect has activated! " +
+                                                $"**{username}** just lost **{parentLost} normal** card: **{stolenCardId} - {stolenName}**!";
+                                        }
+                                        else
+                                        {
+                                            replyText = $":skull: Oh no, **{spawnedBadCardType}** bad card effect has activated! But **{username}** don't have any card to lose...";
+                                        }
+                                        break;
+                                    case "failure":
+                                        replyText = $":skull: Oh no, **{spawnedBadCardType}** bad card effect has activated! " +
+                                            $"**{username}** just lost a chance to catch a card on this spawn turn!";
+
+                                        //update
+                                        query = $"UPDATE {DBM_User_Trading_Card_Data.tableName} " +
+                                            $" SET {DBM_User_Trading_Card_Data.Columns.catch_token}=@{DBM_User_Trading_Card_Data.Columns.catch_token} " +
+                                            $" WHERE {DBM_User_Trading_Card_Data.Columns.id_user}=@{DBM_User_Trading_Card_Data.Columns.id_user} ";
+                                        columns = new Dictionary<string, object>();
+                                        columns[DBM_User_Trading_Card_Data.Columns.catch_token] = spawnedToken;
+                                        columns[DBM_User_Trading_Card_Data.Columns.id_user] = clientId;
+                                        new DBC().update(query, columns);
+                                        break;
+                                }
+
+                                //bad card ends
+                            }
+                            else if (catchState == 1)
+                            {
+                                columns = new Dictionary<string, object>();
+                                columns["boost"] = 0;
+                                //card not exist yet
+                                if (useBoost)
+                                {//reset boost
+                                    string query = "";
+                                    replyText = $":arrow_double_up: **{GlobalFunctions.UppercaseFirst(spawnedCardPack)} {GlobalFunctions.UppercaseFirst(spawnedCardCategory)}** " +
+                                        $"Card capture boost has been used and boosted into **{boostRate}**!\n";
+                                    switch (spawnedCardCategory)
+                                    {
+                                        case "special":
+                                            query = $"UPDATE {DBM_User_Trading_Card_Data.tableName} " +
+                                            $" SET {DBM_User_Trading_Card_Data.Columns.boost_other_special}=@boost " +
+                                            $" WHERE {DBM_User_Trading_Card_Data.Columns.id_user}=@{DBM_User_Trading_Card_Data.Columns.id_user} ";
+
+                                            //arrInventory["boost"]["other"]["special"] = "0";
+                                            break;
+                                        default:
+                                            query = $"UPDATE {DBM_User_Trading_Card_Data.tableName} " +
+                                            $" SET boost_{spawnedCardPack.ToLower()}_{spawnedCardCategory.ToLower()}=@boost " +
+                                            $" WHERE {DBM_User_Trading_Card_Data.Columns.id_user}=@{DBM_User_Trading_Card_Data.Columns.id_user} ";
+
+                                            //arrInventory["boost"][parent][spawnedCardCategory] = "0";
+                                            break;
+                                    }
+                                    new DBC().update(query, columns);
+                                }
+
+                                //item.Add(spawnedCardId,);
+
+                                //add card to inventory
+                                if (spawnedCardCategory == "ojamajos")
+                                {   //card type is ojamajos
+                                    //check related card pack
+                                    string query = $"SELECT * " +
+                                        $" FROM {DBM_User_Trading_Card_Inventory_Ojamajos.tableName} " +
+                                        $" WHERE {DBM_User_Trading_Card_Inventory_Ojamajos.Columns.id_card}=@{DBM_User_Trading_Card_Inventory_Ojamajos.Columns.id_card}";
+                                    columns = new Dictionary<string, object>();
+                                    columns[DBM_User_Trading_Card_Inventory_Ojamajos.Columns.id_card] = spawnedCardId;
+                                    var relatedResult = new DBC().selectAll(query, columns);
+
+                                    foreach(DataRow rows in relatedResult.Rows)
+                                    {
+                                        string[] related = rows["pack"].ToString().Split(",");
+                                        for(int i = 0;i<related.Length;i++)
+                                        {
+                                            try
+                                            {
+                                                columns = new Dictionary<string, object>();
+                                                columns[DBM_User_Trading_Card_Inventory_Ojamajos.Columns.id_user] = clientId;
+                                                columns[DBM_User_Trading_Card_Inventory_Ojamajos.Columns.pack] = related[i];
+                                                columns[DBM_User_Trading_Card_Inventory_Ojamajos.Columns.id_card] = spawnedCardId;
+                                                db.insert(DBM_User_Trading_Card_Inventory_Ojamajos.tableName, columns);
+                                            }
+                                            catch { }
+                                        }
+                                    }
+                                } else
+                                {   //card type is normal/non ojamajos 
+                                    columns = new Dictionary<string, object>();
+                                    columns[DBM_User_Trading_Card_Inventory.Columns.id_user] = clientId;
+                                    columns[DBM_User_Trading_Card_Inventory.Columns.id_card] = spawnedCardId;
+                                    db.insert(DBM_User_Trading_Card_Inventory.tableName, columns);
+                                }
+
+                                //level up notification
+                                string returnLevelUp = "";
+                                if ((int)userData["catch_attempt"] == 100 || (int)userData["catch_attempt"] == 200 ||
+                                    (int)userData["catch_attempt"] == 300 || (int)userData["catch_attempt"] == 400 ||
+                                    (int)userData["catch_attempt"] == 500)
+                                {
+                                    returnLevelUp = $":up: Congratulations! **{username}** is now rank {getUserRank((int)userData["catch_attempt"])}!";
+                                }
+
+                                string[] arrRandomFirstSentence = {
+                                    "Congratulations,","Nice Catch!","Nice one!","Yatta!"
+                                };
+
+                                if (spawnedIsMystery == 1)
+                                    replyText += $":white_check_mark: {arrRandomFirstSentence[new Random().Next(0, arrRandomFirstSentence.Length)]} " +
+                                    $"**{username}** have successfully revealed & captured **{spawnedCardCategory}** mystery card: **{name}**";
+                                else
+                                {
+                                    replyText += $":white_check_mark: {arrRandomFirstSentence[new Random().Next(0, arrRandomFirstSentence.Length)]} " +
+                                    $"**{username}** have successfully captured **{spawnedCardCategory}** card: **{name}**";
+
+                                    if (spawnedIsZone == 1)
+                                    {
+                                        replyText += " from the zone card.";
+                                    }
+                                }
+
+                                //get latest total data
+                                int currentTotal = 0;
+                                if (parent == "ojamajos")
+                                {
+                                    //get max current
+                                    string query = @$"select count(distinct(inv.{DBM_User_Trading_Card_Inventory_Ojamajos.Columns.id_card})) as total 
+                                            from {DBM_User_Trading_Card_Inventory_Ojamajos.tableName} inv, {DBM_Trading_Card_Data_Ojamajos.tableName} tc 
+                                            where inv.{DBM_User_Trading_Card_Inventory_Ojamajos.Columns.id_user}=@{DBM_User_Trading_Card_Inventory_Ojamajos.Columns.id_user} and 
+                                            inv.{DBM_User_Trading_Card_Inventory_Ojamajos.Columns.id_card}=tc.{DBM_Trading_Card_Data_Ojamajos.Columns.id_card} and 
+                                            tc.{DBM_Trading_Card_Data_Ojamajos.Columns.pack} like @{DBM_Trading_Card_Data_Ojamajos.Columns.pack}";
+                                    columns = new Dictionary<string, object>();
+                                    columns[DBM_User_Trading_Card_Inventory_Ojamajos.Columns.id_user] = clientId.ToString();
+                                    columns[DBM_Trading_Card_Data_Ojamajos.Columns.pack] = $"%{parent}%";
+                                    var result = new DBC().selectAll(query, columns);
+                                    foreach(DataRow row in result.Rows)
+                                    {
+                                        currentTotal = Convert.ToInt32(row["total"]);
+                                    }
+
+                                    //get max total
+                                    query = @$"select count(distinct(inv.{DBM_Trading_Card_Data_Ojamajos.Columns.id_card})) as total 
+                                            from {DBM_Trading_Card_Data_Ojamajos.tableName} tc 
+                                            tc.{DBM_Trading_Card_Data_Ojamajos.Columns.pack} like @{DBM_Trading_Card_Data_Ojamajos.Columns.pack}";
+                                    columns = new Dictionary<string, object>();
+                                    columns[DBM_Trading_Card_Data_Ojamajos.Columns.pack] = $"%{parent}%";
+                                    result = new DBC().selectAll(query, columns);
+                                    foreach (DataRow row in result.Rows)
+                                    {
+                                        maxCard = Convert.ToInt32(row["total"]);
+                                    }
+                                } else
+                                {
+                                    //get max current
+                                    string query = @$"select count(distinct(inv.{DBM_User_Trading_Card_Inventory.Columns.id_card})) as total  
+                                            from {DBM_User_Trading_Card_Inventory.tableName} inv, {DBM_Trading_Card_Data.tableName} tc 
+                                            where inv.{DBM_User_Trading_Card_Inventory.Columns.id_user}=@{DBM_User_Trading_Card_Inventory.Columns.id_user} and 
+                                            tc.{DBM_Trading_Card_Data.Columns.id_card}=inv.{DBM_User_Trading_Card_Inventory.Columns.id_card} and 
+                                            tc.{DBM_Trading_Card_Data.Columns.pack}=@{DBM_Trading_Card_Data.Columns.pack} and 
+                                            tc.{DBM_Trading_Card_Data.Columns.category}=@{DBM_Trading_Card_Data.Columns.category}";
+                                    columns = new Dictionary<string, object>();
+                                    columns[DBM_User_Trading_Card_Inventory.Columns.id_user] = clientId.ToString();
+                                    columns[DBM_Trading_Card_Data.Columns.pack] = spawnedCardPack;
+                                    columns[DBM_Trading_Card_Data.Columns.category] = spawnedCardCategory;
+                                        
+                                    var result = new DBC().selectAll(query, columns);
+                                    foreach (DataRow row in result.Rows)
+                                    {
+                                        currentTotal = Convert.ToInt32(row["total"]);
+                                    }
+
+                                    //get max total
+                                    query = @$"select count(distinct(tc.{DBM_Trading_Card_Data.Columns.id_card})) as total  
+                                        from {DBM_Trading_Card_Data.tableName} tc 
+                                        where tc.{DBM_Trading_Card_Data.Columns.pack}=@{DBM_Trading_Card_Data.Columns.pack} and 
+                                        tc.{DBM_Trading_Card_Data.Columns.category}=@{DBM_Trading_Card_Data.Columns.category}";
+                                    columns = new Dictionary<string, object>();
+                                    columns[DBM_Trading_Card_Data.Columns.pack] = spawnedCardPack;
+                                    columns[DBM_Trading_Card_Data.Columns.category] = spawnedCardCategory;
+                                    result = new DBC().selectAll(query, columns);
+                                    foreach (DataRow row in result.Rows)
+                                    {
+                                        maxCard = Convert.ToInt32(row["total"]);
+                                    }
+                                }
+
+                                returnEmbedBuilder = TradingCardCore.printCardCaptureTemplate(color, name, imgUrl,
+                                spawnedCardId, spawnedCardCategory, rank, star, point, username, embedAvatarUrl,
+                                currentTotal, maxCard);
+
+                                //check card completion
+                                if (UserTradingCardDataCore.checkCardCompletion(clientId, parent))
+                                    returnCompleted[parent] = true;
+
+                                //if (UserTradingCardDataCore.checkCardCompletion(clientId,"doremi"))
+                                //    returnCompleted["doremi"] = true;
+
+                                //if (UserTradingCardDataCore.checkCardCompletion(clientId, "hazuki"))
+                                //    returnCompleted["hazuki"] = true;
+
+                                //if (UserTradingCardDataCore.checkCardCompletion(clientId, "aiko"))
+                                //    returnCompleted["aiko"] = true;
+
+                                //if (UserTradingCardDataCore.checkCardCompletion(clientId, "onpu"))
+                                //    returnCompleted["onpu"] = true;
+
+                                //if (UserTradingCardDataCore.checkCardCompletion(clientId, "momoko"))
+                                //    returnCompleted["momoko"] = true;
+
+                                //if (UserTradingCardDataCore.checkCardCompletion(clientId, "other"))
+                                //    returnCompleted["other"] = true;
+
+                                //erase spawned instance if not zone card
+                                if (spawnedIsZone == 0)
+                                    TradingCardCore.resetSpawnInstance(guildId);
+
+                                UserTradingCardDataCore.addCatchAttempt(clientId, spawnedToken);
+                                return Tuple.Create(replyText, returnEmbedBuilder, returnLevelUp, returnCompleted);
+                            }
+                            else
+                            {
+                                //fail to catch & update catch attempt & token
+                                UserTradingCardDataCore.addCatchAttempt(clientId, spawnedToken);
+
+                                if (useBoost)
+                                {   //reset boost
+                                    columns = new Dictionary<string, object>();
+                                    columns["boost"] = 0;
+                                    string query = "";
+                                    replyText = $":arrow_double_up: **{GlobalFunctions.UppercaseFirst(parent)} {GlobalFunctions.UppercaseFirst(spawnedCardCategory)}** " +
+                                        $"Card Capture Boost has been used!\n";
+                                    if (spawnedCardCategory.ToLower() == "special")
+                                    {
+                                        query = $"UPDATE {DBM_User_Trading_Card_Data.tableName} " +
+                                            $" SET {DBM_User_Trading_Card_Data.Columns.boost_other_special}=@boost " +
+                                            $" WHERE {DBM_User_Trading_Card_Data.Columns.id_user}=@{DBM_User_Trading_Card_Data.Columns.id_user} ";
+                                    }   
+                                    else
+                                    {
+                                        query = $"UPDATE {DBM_User_Trading_Card_Data.tableName} " +
+                                            $" SET boost_{spawnedCardPack.ToLower()}_{spawnedCardCategory.ToLower()}=@boost " +
+                                            $" WHERE {DBM_User_Trading_Card_Data.Columns.id_user}=@{DBM_User_Trading_Card_Data.Columns.id_user} ";
+                                    }
+
+                                    new DBC().update(query, columns);
+                                }
+
+                                if (spawnedIsMystery == 1)
+                                    replyText += $":x: Card revealed correctly! " +
+                                        $"But sorry, {username} **fail** to catch the mystery card. Better luck next time.";
+                                else
+                                    replyText += $":x: Sorry {username}, **fail** to catch the card. Better luck next time.";
+                            }
                         }
+                        
                     }
                     catch (Exception e)
                     {
@@ -2182,7 +2209,6 @@ namespace OjamajoBot
         public static async Task generateCardSpawn(ulong guildId)
         {
             DBC dbUpdate = new DBC();
-            
             int randomParent = new Random().Next(0, 6);
             int randomCategory = new Random().Next(11);
             int randomMystery = new Random().Next(0, 2);
@@ -2190,11 +2216,13 @@ namespace OjamajoBot
 
             var tokenTime = $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}";
 
-            var CardCatcherRoles = Config.Guild.getPropertyValue(guildId, "id_card_catcher");
+            //get card catcher notifier
+            var guildTradingCardData = TradingCardGuildCore.getGuildData(guildId);
             string mentionedCardCatcherRoles = "";
-            if (CardCatcherRoles != "")
+            if (guildTradingCardData[DBM_Trading_Card_Guild.Columns.id_card_catcher].ToString()!="")
             {
-                mentionedCardCatcherRoles = MentionUtils.MentionRole(Convert.ToUInt64(CardCatcherRoles));
+                mentionedCardCatcherRoles = MentionUtils.MentionRole(Convert.ToUInt64(
+                    guildTradingCardData[DBM_Trading_Card_Guild.Columns.id_card_catcher].ToString()));
             }
 
             int randomZone = new Random().Next(0, 20);
@@ -2225,21 +2253,7 @@ namespace OjamajoBot
                 columnsZone[DBM_Trading_Card_Guild.Columns.spawn_is_zone] = 1;
                 columnsZone[DBM_Trading_Card_Guild.Columns.spawn_time] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                 columnsZone[DBM_Trading_Card_Guild.Columns.id_guild] = guildId.ToString();
-
                 dbUpdate.update(queryZone, columnsZone);
-
-                //reset default & assign all
-                Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyId, "");
-                Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyCategory, "");
-                Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyToken, GlobalFunctions.RandomString(8));
-                Config.Guild.setPropertyValue(guildId, TradingCardCore.CardEvent.propertyToken, GlobalFunctions.RandomString(8));//for event only
-                Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyMystery, "0");
-                Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCard, "");
-                Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardEquation, "");
-                Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardNumber1, "");
-                Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardNumber2, "");
-                Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyTokenTime, tokenTime);
-                Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyIsZone, "1");
 
                 var embed = new EmbedBuilder()
                 .WithAuthor("Zone Card")

@@ -98,43 +98,44 @@ namespace OjamajoBot.Bot
 
             //start rotates weather
             _rotatesWeather = new Timer(async _ =>
+            {
+                int randomWeather = new Random().Next(0, 51);
+                int selectedWeatherIndex = 0;
+                //Console.WriteLine(randomWeather);
+                if (randomWeather <= 30)
                 {
-                    int randomWeather = new Random().Next(0, 51);
-                    int selectedWeatherIndex = 0;
-                    //Console.WriteLine(randomWeather);
-                    if (randomWeather <= 30)
-                    {
-                        selectedWeatherIndex = 0;
-                        //GardenCore.weather = new string[]{ $"☀️", "sunny","A perfect time to water the plant~","5"};
-                        
-                    } else if (randomWeather <= 40)
-                    {
-                        selectedWeatherIndex = 1;
-                        //GardenCore.weather = new string[] { $"☁️", "cloudy","There might be a chance to rain soon...","4"};
-                    }
-                    else if (randomWeather <= 45)
-                    {
-                        selectedWeatherIndex = 2;
-                        //GardenCore.weather = new string[] { $"🌧️", "raining","Not sure if it's a good time to water the plant.","3"};
-                    }
-                    else if (randomWeather <= 50)
-                    {
-                        selectedWeatherIndex = 3;
-                        //GardenCore.weather = new string[] { $"⛈️", "thunder storm","I don't think it's the best time to water the plant now...","2"};
-                    }
+                    selectedWeatherIndex = 0;
+                    //GardenCore.weather = new string[]{ $"☀️", "sunny","A perfect time to water the plant~","5"};
 
-                    for(int i = 0; i<=4; i++)
-                    {
-                        GardenCore.weather[i] = GardenCore.arrRandomWeather[selectedWeatherIndex, i];
-                    }
-                    
-                    //GardenCore.weather[1] = GardenCore.arrRandomWeather[selectedWeatherIndex,1];
-                    //GardenCore.weather[2] = GardenCore.arrRandomWeather[selectedWeatherIndex,2];
-                    //GardenCore.weather[3] = GardenCore.arrRandomWeather[selectedWeatherIndex,3];
-                    //GardenCore.weather[4] = GardenCore.arrRandomWeather[selectedWeatherIndex,4];
+                }
+                else if (randomWeather <= 40)
+                {
+                    selectedWeatherIndex = 1;
+                    //GardenCore.weather = new string[] { $"☁️", "cloudy","There might be a chance to rain soon...","4"};
+                }
+                else if (randomWeather <= 45)
+                {
+                    selectedWeatherIndex = 2;
+                    //GardenCore.weather = new string[] { $"🌧️", "raining","Not sure if it's a good time to water the plant.","3"};
+                }
+                else if (randomWeather <= 50)
+                {
+                    selectedWeatherIndex = 3;
+                    //GardenCore.weather = new string[] { $"⛈️", "thunder storm","I don't think it's the best time to water the plant now...","2"};
+                }
 
-                    //GardenCore.weather = new string[] { GardenCore.arrRandomWeather[selectedWeatherIndex, 0] };
-                },
+                for (int i = 0; i <= 4; i++)
+                {
+                    GardenCore.weather[i] = GardenCore.arrRandomWeather[selectedWeatherIndex, i];
+                }
+
+                //GardenCore.weather[1] = GardenCore.arrRandomWeather[selectedWeatherIndex,1];
+                //GardenCore.weather[2] = GardenCore.arrRandomWeather[selectedWeatherIndex,2];
+                //GardenCore.weather[3] = GardenCore.arrRandomWeather[selectedWeatherIndex,3];
+                //GardenCore.weather[4] = GardenCore.arrRandomWeather[selectedWeatherIndex,4];
+
+                //GardenCore.weather = new string[] { GardenCore.arrRandomWeather[selectedWeatherIndex, 0] };
+            },
                 null,
                 TimeSpan.FromSeconds(1),
                 TimeSpan.FromHours(2)
@@ -152,7 +153,7 @@ namespace OjamajoBot.Bot
                 Config.Doremi.Status.currentActivityReply = returnObjectActivity[1].ToString();
                 await client.SetGameAsync(Config.Doremi.Status.currentActivity);
                 await client.SetStatusAsync((UserStatus)returnObjectActivity[2]);
-                
+
                 //if (!forceStatusChange && returnDailyRoutine.Item1)
                 //{
                 //    //Config.Doremi.Status.userStatus = returnDailyRoutine.Item2[
@@ -163,7 +164,7 @@ namespace OjamajoBot.Bot
                 //    int rndIndex = rnd.Next(0, Config.Doremi.Status.arrRandomActivity.GetLength(0)); //random the list value
                 //    await client.SetGameAsync(Config.Doremi.Status.arrRandomActivity[rndIndex, 0].ToString(), type: Discord.ActivityType.Playing); //set activity to current index position
                 //    Config.Doremi.Status.currentActivityReply = Config.Doremi.Status.arrRandomActivity[rndIndex, 1].ToString();
-                    
+
                 //    string updLog = $"Updated Doremi Activity - Playing: {Config.Doremi.Status.currentActivity}";
                 //    Console.WriteLine(updLog);
                 //}
@@ -252,7 +253,7 @@ namespace OjamajoBot.Bot
                     {
                         await client
                         .GetGuild(guildId)
-                        .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guildId, "id_birthday_announcement")))
+                        .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement]))
                         .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday to you, {MentionUtils.MentionUser(Config.Hazuki.Id)} chan. " +
                         $"She has turned into {Config.Hazuki.birthdayCalculatedYear} on this year. Let's give wonderful birthday wishes for her.");
                         birthdayExisted = true;
@@ -263,7 +264,7 @@ namespace OjamajoBot.Bot
                     {
                         await client
                         .GetGuild(guildId)
-                        .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guildId, "id_birthday_announcement")))
+                        .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement]))
                         .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday to our dear osakan friend: {MentionUtils.MentionUser(Config.Aiko.Id)} chan. " +
                         $"She has turned into {Config.Aiko.birthdayCalculatedYear} on this year. Let's give some takoyaki and wonderful birthday wishes for her.");
                         birthdayExisted = true;
@@ -274,7 +275,7 @@ namespace OjamajoBot.Bot
                     {
                         await client
                         .GetGuild(guildId)
-                        .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guildId, "id_birthday_announcement")))
+                        .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement]))
                         .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday to our wonderful idol friend: {MentionUtils.MentionUser(Config.Onpu.Id)} chan. " +
                         $"She has turned into {Config.Onpu.birthdayCalculatedYear} on this year. Let's give some wonderful birthday wishes for her.");
                         birthdayExisted = true;
@@ -285,7 +286,7 @@ namespace OjamajoBot.Bot
                     {
                         await client
                         .GetGuild(guildId)
-                        .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guildId, "id_birthday_announcement")))
+                        .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement]))
                         .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday to our wonderful friend: {MentionUtils.MentionUser(Config.Momoko.Id)} chan. " +
                         $"She has turned into {Config.Momoko.birthdayCalculatedYear} on this year. Let's give some wonderful birthday wishes for her.");
                         birthdayExisted = true;
@@ -350,7 +351,7 @@ namespace OjamajoBot.Bot
                         new DBC().update(query, columnsFilter);
                     }
                 }
-                },
+            },
                 null,
                 TimeSpan.FromSeconds(10), //time to wait before executing the timer for the first time
                 TimeSpan.FromHours(24) //time to wait before executing the timer again
@@ -403,7 +404,7 @@ namespace OjamajoBot.Bot
                 TimeSpan.FromMinutes(Convert.ToInt32(guildCardSpawnData[DBM_Trading_Card_Guild.Columns.spawn_interval])) //time to wait before executing the timer again
                 );
             }
-          
+
             //var channel = client.GetChannel(guild.SystemChannel.Id) as SocketTextChannel;
             //await channel.SendMessageAsync(guild.SystemChannel.Id.ToString());
 
@@ -417,13 +418,27 @@ namespace OjamajoBot.Bot
 
         public async Task AnnounceJoinedUser(SocketGuildUser user) //Welcomes the new user
         {
-            var channel = client.GetChannel(user.Guild.SystemChannel.Id) as SocketTextChannel; 
+            var channel = client.GetChannel(user.Guild.SystemChannel.Id) as SocketTextChannel;
+
             // Gets the channel to send the message in
             //var uses = invites.First(x => x.Code == inviteID).Uses.Value;
 
             var guildData = Config.Guild.getGuildData(user.Guild.Id);
             string welcomeMessage = guildData[DBM_Guild.Columns.welcome_message].ToString();
             string welcomeImage = guildData[DBM_Guild.Columns.welcome_image].ToString();
+
+            //check & set autorole when user joined
+            try
+            {
+                if (guildData[DBM_Guild.Columns.id_autorole_user_join].ToString() != "")
+                {
+                    var roleMaster = channel.Guild.Roles.FirstOrDefault(x => x.Id == 
+                    Convert.ToUInt64(guildData[DBM_Guild.Columns.id_autorole_user_join].ToString()));
+                    if (roleMaster != null) await user.AddRoleAsync(roleMaster);
+                }
+
+            } catch(Exception e) { }
+            
 
             if (user.Id != Config.Hazuki.Id && user.Id != Config.Aiko.Id &&
                 user.Id != Config.Onpu.Id && user.Id != Config.Momoko.Id)
@@ -453,11 +468,13 @@ namespace OjamajoBot.Bot
                         .WithThumbnailUrl(user.GetAvatarUrl())
                         .WithImageUrl(arrRandomPictures[rndIndexRandomPictures])
                         .Build());
-                } else
+                }
+                else
                 {
                     welcomeMessage = welcomeMessage.Replace("#", "<#");
-                    
+
                     welcomeMessage = welcomeMessage.Replace("$user$", MentionUtils.MentionUser(user.Id));
+                    welcomeMessage = welcomeMessage.Replace("$servername$", channel.Guild.Name);
 
                     await channel.SendMessageAsync(embed: new EmbedBuilder()
                         .WithColor(Config.Doremi.EmbedColor)
@@ -467,7 +484,8 @@ namespace OjamajoBot.Bot
                         .WithImageUrl(welcomeImage)
                         .Build());
                 }
-                //sending dm to the joined user
+
+                //send dm to the joined user
                 //var dmchannel = await user.GetOrCreateDMChannelAsync();
                 //await dmchannel.SendMessageAsync(arrRandomWelcomeMessage[rndIndexWelcomeMessage] +
                 //    " Please introduce yourself on the group, also don't forget to always follow and read the rule guidelines :smile:",
@@ -480,8 +498,27 @@ namespace OjamajoBot.Bot
 
         public async Task AnnounceLeavingUser(SocketGuildUser user) //Send a leaving user notifications
         {
-            var channel = client.GetChannel(user.Guild.SystemChannel.Id) as SocketTextChannel; // Gets the channel to send the message in
+            var guildData = Config.Guild.getGuildData(user.Guild.Id);
+            
+            try
+            {
+                string username = user.Username;
+                var channel = client.GetChannel(Convert.ToUInt64(
+                guildData[DBM_Guild.Columns.id_channel_user_leaving_log])) as SocketTextChannel; // Gets the channel to send the message in
+                EmbedBuilder eb = new EmbedBuilder()
+                    .WithColor(Config.Doremi.EmbedColor)
+                    .WithTitle("User leaving")
+                    .WithDescription($":wave: Good bye, {user.Username}.")
+                    .WithThumbnailUrl(user.GetAvatarUrl())
+                    .AddField("Username:",user.Mention)
+                    .WithFooter($"User ID: {user.Id}");
 
+                await channel.SendMessageAsync(embed: eb.Build());
+
+            } catch(Exception e)
+            {
+
+            }
             //if (guildConfig.GetValue("user_leaving_notification").ToString() == "1")
             //{
             //    string[] arrRandomLeavingMessage = {
@@ -507,151 +544,81 @@ namespace OjamajoBot.Bot
         ISocketMessageChannel originChannel, SocketReaction reaction)
         {
             //https://discordapp.com/channels/646244365928497162/651069058556362753/719763968171966545
-
             var message = await cachedMessage.GetOrDownloadAsync();
             //var context = new SocketCommandContext(client, cachedMessage);
             var messageId = message.GetJumpUrl().Split('/').Last();
-            var guildId = message.GetJumpUrl().Split('/')[4];
             SocketGuildUser guildUser = (SocketGuildUser)reaction.User;
             var channel = client.GetChannel(originChannel.Id) as SocketTextChannel;
+            var guildId = channel.Guild.Id;
             if (message != null && reaction.User.IsSpecified)
             {
-                JObject guildConfig = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json"));
                 //custom reaction
                 if (!guildUser.IsBot)
                 {
                     try
                     {
                         //non custom role emoticon
-                        var dataReaction = (JObject)guildConfig["roles_react"][messageId]["data"];
-                        if (dataReaction.ContainsKey(reaction.Emote.ToString()))
+                        Dictionary<string, object> columns = new Dictionary<string, object>();
+                        string query = $"SELECT * " +
+                        $" FROM {DBM_Guild_Role_React.tableName} " +
+                        $" WHERE {DBM_Guild_Role_React.Columns.id_guild}=@{DBM_Guild_Role_React.Columns.id_guild} AND " +
+                        $" {DBM_Guild_Role_React.Columns.id_message}=@{DBM_Guild_Role_React.Columns.id_message} AND " +
+                        $" { DBM_Guild_Role_React.Columns.emoji}=@{ DBM_Guild_Role_React.Columns.emoji}";
+                            columns[DBM_Guild_Role_React.Columns.id_guild] = guildId.ToString();
+                            columns[DBM_Guild_Role_React.Columns.id_message] = messageId.ToString();
+                        if (reaction.Emote.ToString().Substring(0,1)=="<")
+                        {//custom emote
+                            columns[DBM_Guild_Role_React.Columns.emoji] = reaction.Emote.ToString();
+                        } else
                         {
-                            //if (!Config.Doremi._imReactionRole.ContainsKey(guildId))
-                            //    Config.Doremi._imReactionRole.Add(guildId, new List<IMessage>());
-
-                            var roleId = guildConfig["roles_react"][messageId]["data"][reaction.Emote.ToString()];
-
-                            var roleMaster = channel.Guild.Roles.FirstOrDefault(x => x.Id == Convert.ToUInt64(roleId));
-                            var roleSearch = guildUser.Roles.FirstOrDefault(x => x.Id == Convert.ToUInt64(roleId));
-                            if (roleSearch == null)
+                            string hexValue = "";
+                            for (var i = 0; i < reaction.Emote.ToString().Length; i += char.IsSurrogatePair(reaction.Emote.ToString(), i) ? 2 : 1)
                             {
-                                await guildUser.AddRoleAsync(roleMaster);
-
-                                //IMessage im = await originChannel.SendMessageAsync(embed: new EmbedBuilder()
-                                //.WithColor(Config.Doremi.EmbedColor)
-                                //.WithDescription($":white_check_mark: {MentionUtils.MentionUser(guildUser.Id)} " +
-                                //$"have been assigned with new role: " +
-                                //$"{MentionUtils.MentionRole(roleMaster.Id)}")
-                                //.Build());
-
-                                //sending dm notification
-                                var dmchannel = await guildUser.GetOrCreateDMChannelAsync();
-                                await dmchannel.SendMessageAsync(embed: new EmbedBuilder()
-                                            .WithColor(Config.Doremi.EmbedColor)
-                                            .WithTitle("Your role has been set!")
-                                            .WithDescription($":white_check_mark: You have been assigned with the new role: **{roleMaster.Name}**")
-                                            .WithThumbnailUrl(TradingCardCore.Doremi.emojiOk)
-                                            .WithFooter($"From: {channel.Guild.Name}")
-                                            .Build());
-
-                                //new Timer(async _ =>
-                                //{
-                                //    if (im == default || im == null) return;
-                                //    else
-                                //    {
-                                //        await Task.Run(async () =>
-                                //        {
-                                //            await im.DeleteAsync();
-                                //        });
-                                //    }
-                                //},
-                                //null,
-                                //20000,
-                                //Timeout.Infinite //time to wait before executing the timer again
-                                //);
-
-                                //IMessage im = await originChannel.SendMessageAsync(embed: new EmbedBuilder()
-                                //.WithColor(Config.Doremi.EmbedColor)
-                                //.WithDescription($":white_check_mark: {MentionUtils.MentionUser(guildUser.Id)} now have new role: " +
-                                //$"{MentionUtils.MentionRole(roleMaster.Id)}")
-                                //.Build());
-                                //Config.Doremi._imReactionRole[guildId].Add(im);
-
-                                //new Timer(async _ =>
-                                //{
-                                //    for (int i = 0; i < Config.Doremi._imReactionRole[guildId].Count(); i++)
-                                //    {
-                                //        await Config.Doremi._imReactionRole[guildId][i].DeleteAsync();
-                                //    }
-                                //    Config.Doremi._imReactionRole[guildId].Clear();
-                                //},
-                                //null,
-                                //20000,
-                                //Timeout.Infinite //time to wait before executing the timer again
-                                //);
-                            }
-                            else
-                            {
-                                await guildUser.RemoveRoleAsync(roleMaster);
-
-                                //IMessage im = await originChannel.SendMessageAsync(embed: new EmbedBuilder()
-                                //.WithColor(Config.Doremi.EmbedColor)
-                                //.WithDescription($":x: {MentionUtils.MentionUser(guildUser.Id)} removed from the role: " +
-                                //$"**{roleMaster.Name}**")
-                                //.Build());
-
-                                //send dm notification
-                                var dmchannel = await guildUser.GetOrCreateDMChannelAsync();
-                                await dmchannel.SendMessageAsync(embed: new EmbedBuilder()
-                                .WithColor(Config.Doremi.EmbedColor)
-                                .WithTitle("Your role has been removed.")
-                                .WithDescription($":x: You have been removed from the role: **{roleMaster.Name}**")
-                                .WithThumbnailUrl(TradingCardCore.Doremi.emojiOk)
-                                .WithFooter($"From: {channel.Guild.Name}")
-                                .Build());
-
-                                //IMessage im = await originChannel.SendMessageAsync(embed: new EmbedBuilder()
-                                //    .WithColor(Config.Doremi.EmbedColor)
-                                //    .WithDescription($":white_check_mark: {MentionUtils.MentionUser(guildUser.Id)} have been removed from the role: " +
-                                //    $"{MentionUtils.MentionRole(roleMaster.Id)}")
-                                //    .Build());
-                                //Config.Doremi._imReactionRole[guildId].Add(im);
-
-                                //try
-                                //{
-                                //    if (Config.Doremi._imReactionRole[guildId].Count() >= 1)
-                                //    {
-                                //        new Timer(async _ =>
-                                //        {
-                                //            for (int i = 0; i < Config.Doremi._imReactionRole[guildId].Count(); i++)
-                                //            {
-                                //                await Config.Doremi._imReactionRole[guildId][i].DeleteAsync();
-                                //            }
-
-                                //            Config.Doremi._imReactionRole[guildId].Clear();
-
-                                //            //await im.DeleteAsync();
-                                //            //await originChannel.DeleteMessageAsync(im.Id);
-                                //            //await im.DeleteAsync();
-                                //        },
-                                //        null,
-                                //        30000,
-                                //        Timeout.Infinite //time to wait before executing the timer again
-                                //        );
-                                //    }
-
-                                //}
-                                //catch { }
+                                var decValue = char.ConvertToUtf32(reaction.Emote.ToString(), i);
+                                hexValue += "+" + decValue.ToString("X");
                             }
 
-                            await message.RemoveReactionAsync(reaction.Emote, guildUser);
+                            columns[DBM_Guild_Role_React.Columns.emoji] = hexValue;
+                        }
+                            
+                        var result = new DBC().selectAll(query, columns);
+
+                        if (result.Rows.Count>=1)
+                        {
+                            var roleId  = "";
+                            foreach (DataRow row in result.Rows)
+                            {
+                                roleId = row[DBM_Guild_Role_React.Columns.id_role].ToString();
+                            }
+                            if (roleId != "")
+                            {
+                                var roleMaster = channel.Guild.Roles.FirstOrDefault(x => x.Id == Convert.ToUInt64(roleId));
+                                //var roleSearch = guildUser.Roles.FirstOrDefault(x => x.Id == Convert.ToUInt64(roleId));
+                                if (roleMaster != null)
+                                {
+                                    await guildUser.AddRoleAsync(roleMaster);
+
+                                    //sending dm notification
+                                    var dmchannel = await guildUser.GetOrCreateDMChannelAsync();
+                                    await dmchannel.SendMessageAsync(embed: new EmbedBuilder()
+                                                .WithColor(Config.Doremi.EmbedColor)
+                                                .WithTitle("Your role has been set!")
+                                                .WithDescription($":white_check_mark: You have been assigned with the new role: **{roleMaster.Name}**")
+                                                .WithThumbnailUrl(TradingCardCore.Doremi.emojiOk)
+                                                .WithFooter($"From: {channel.Guild.Name}")
+                                                .Build());
+                                }
+                            }
+
+                            //await message.RemoveReactionAsync(reaction.Emote, guildUser);
 
                         }
                     }
                     catch (Exception e)
                     {
                     }
-                } else if (reaction.Emote.Equals(new Discord.Emoji("\u2B50")))
+                }
+                else if (reaction.Emote.Equals(new Discord.Emoji("\u2B50")))
                 {
                     //star react
                     if (message.Reactions.TryGetValue(new Discord.Emoji("\u2B50"), out var metadata))
@@ -684,10 +651,83 @@ namespace OjamajoBot.Bot
         public async Task HandleReactionRemovedAsync(Cacheable<IUserMessage, ulong> cachedMessage,
         ISocketMessageChannel originChannel, SocketReaction reaction)
         {
-            //var message = await cachedMessage.GetOrDownloadAsync();
-            //if (message != null && reaction.User.IsSpecified)
-            //    Console.WriteLine($"{reaction.User.Value} just remove a reaction '{reaction.Emote}' " +
-            //                        $"to {message.Author}'s message ({message.Id}).");
+            var message = await cachedMessage.GetOrDownloadAsync();
+            var messageId = message.GetJumpUrl().Split('/').Last();
+            SocketGuildUser guildUser = (SocketGuildUser)reaction.User;
+            var channel = client.GetChannel(originChannel.Id) as SocketTextChannel;
+            var guildId = channel.Guild.Id;
+            if (message != null && reaction.User.IsSpecified)
+            {
+                //custom reaction
+                if (!guildUser.IsBot)
+                {
+                    try
+                    {
+                        //non custom role emoticon
+                        Dictionary<string, object> columns = new Dictionary<string, object>();
+                        string query = $"SELECT * " +
+                        $" FROM {DBM_Guild_Role_React.tableName} " +
+                        $" WHERE {DBM_Guild_Role_React.Columns.id_guild}=@{DBM_Guild_Role_React.Columns.id_guild} AND " +
+                        $" {DBM_Guild_Role_React.Columns.id_message}=@{DBM_Guild_Role_React.Columns.id_message} AND " +
+                        $" {DBM_Guild_Role_React.Columns.emoji}=@{DBM_Guild_Role_React.Columns.emoji} ";
+                        columns[DBM_Guild_Role_React.Columns.id_guild] = guildId.ToString();
+                        columns[DBM_Guild_Role_React.Columns.id_message] = messageId.ToString();
+
+                        if (reaction.Emote.ToString().Substring(0, 1) == "<")
+                        {//custom emote
+                            columns[DBM_Guild_Role_React.Columns.emoji] = reaction.Emote.ToString();
+                        }
+                        else
+                        {
+                            string hexValue = "";
+                            for (var i = 0; i < reaction.Emote.ToString().Length; i += char.IsSurrogatePair(reaction.Emote.ToString(), i) ? 2 : 1)
+                            {
+                                var decValue = char.ConvertToUtf32(reaction.Emote.ToString(), i);
+                                hexValue += "+" + decValue.ToString("X");
+                            }
+
+                            columns[DBM_Guild_Role_React.Columns.emoji] = hexValue;
+                        }
+
+                        var result = new DBC().selectAll(query, columns);
+
+                        if (result.Rows.Count >= 1)
+                        {
+                            var roleId = "";
+                            foreach (DataRow row in result.Rows)
+                            {
+                                roleId = row[DBM_Guild_Role_React.Columns.id_role].ToString();
+                            }
+                            //if (!Config.Doremi._imReactionRole.ContainsKey(guildId))
+                            //    Config.Doremi._imReactionRole.Add(guildId, new List<IMessage>());
+                            if (roleId != "")
+                            {
+                                var roleMaster = channel.Guild.Roles.FirstOrDefault(x => x.Id == Convert.ToUInt64(roleId));
+                                if (roleMaster != null)
+                                {
+                                    await guildUser.RemoveRoleAsync(roleMaster);
+
+                                    var dmchannel = await guildUser.GetOrCreateDMChannelAsync();
+                                    await dmchannel.SendMessageAsync(embed: new EmbedBuilder()
+                                    .WithColor(Config.Doremi.EmbedColor)
+                                    .WithTitle("Your role has been removed.")
+                                    .WithDescription($":x: You have been removed from the role: **{roleMaster.Name}**")
+                                    .WithThumbnailUrl(TradingCardCore.Doremi.emojiOk)
+                                    .WithFooter($"From: {channel.Guild.Name}")
+                                    .Build());
+                                }
+                            }
+                            
+
+                            //await message.RemoveReactionAsync(reaction.Emote, guildUser);
+
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                    }
+                }
+            }
         }
 
         private async Task MessageReceived(SocketMessage message)
@@ -708,8 +748,8 @@ namespace OjamajoBot.Bot
             int argPos = 0;
 
             SocketUserMessage msg = (SocketUserMessage)message;
-            if (!msg.HasStringPrefix(Config.Doremi.PrefixParent[0], ref argPos)&&
-                !msg.HasStringPrefix(Config.Hazuki.PrefixParent[0], ref argPos)&&
+            if (!msg.HasStringPrefix(Config.Doremi.PrefixParent[0], ref argPos) &&
+                !msg.HasStringPrefix(Config.Hazuki.PrefixParent[0], ref argPos) &&
                 !msg.HasStringPrefix(Config.Aiko.PrefixParent[0], ref argPos) &&
                 !msg.HasStringPrefix(Config.Onpu.PrefixParent[0], ref argPos) &&
                 !msg.HasStringPrefix(Config.Momoko.PrefixParent[0], ref argPos))
@@ -729,7 +769,7 @@ namespace OjamajoBot.Bot
                     int expRandomChance = new Random().Next(0, 7);
                     if (expRandomChance <= 5)
                     {
-                        await UserDataCore.updateChatExp(user,1);
+                        UserDataCore.updateChatExp(user, 1);
                         await GuildUserAvatarCore.updateChatExp(client, textchannel, guildId, user, 1);
                         //if (guildData[DBM_Guild.Columns.id_channel_notification_chat_level_up].ToString() != "")
                         //{
@@ -801,6 +841,7 @@ namespace OjamajoBot.Bot
         {
             var message = arg as SocketUserMessage;
             var context = new SocketCommandContext(client, message);
+            ulong guildId = context.Guild.Id;
 
             if (message.Author.Id == Config.Doremi.Id) return;
             //if (message.Author.IsBot) return; //prevent any bot from sending the commands
@@ -819,9 +860,42 @@ namespace OjamajoBot.Bot
             //    .Build());
             //}
             //else 
+
+            if (Config.Core.customPrefix.ContainsKey(guildId.ToString()) && (Config.Core.customPrefix[guildId.ToString()] != ""))
+            {
+                //custom command
+                try
+                {
+                    if (message.HasStringPrefix(Config.Core.customPrefix[guildId.ToString()], ref argPos))
+                    {
+                        var newMessage = message.Content.Replace(Config.Core.customPrefix[guildId.ToString()], "");
+                        foreach (string splitted in newMessage.Split(" "))
+                        {
+                            string query = $"SELECT * " +
+                            $" FROM {DBM_Custom_Command.tableName} " +
+                            $" WHERE {DBM_Custom_Command.Columns.id_guild}=@{DBM_Custom_Command.Columns.id_guild} AND " +
+                            $" {DBM_Custom_Command.Columns.command} = @{DBM_Custom_Command.Columns.command} " +
+                            $" order by rand() " +
+                            $" limit 1";
+                            Dictionary<string, object> columns = new Dictionary<string, object>();
+                            columns[DBM_Custom_Command.Columns.id_guild] = guildId.ToString();
+                            columns[DBM_Custom_Command.Columns.command] = $"{splitted.ToString()}";
+                            var results = new DBC().selectAll(query, columns);
+                            foreach (DataRow row in results.Rows)
+                            {
+                                await context.Channel.SendMessageAsync(
+                                    row[DBM_Custom_Command.Columns.content].ToString());
+                            }
+                            return;
+                        }
+                    }
+                }
+                catch (Exception e) { }
+            }
+            
             if (message.HasStringPrefix(Config.Doremi.PrefixParent[0], ref argPos) ||
-              message.HasStringPrefix(Config.Doremi.PrefixParent[1], ref argPos) ||
-              message.HasMentionPrefix(client.CurrentUser, ref argPos))
+            message.HasStringPrefix(Config.Doremi.PrefixParent[1], ref argPos) ||
+            message.HasMentionPrefix(client.CurrentUser, ref argPos))
             {
                 var result = await commands.ExecuteAsync(context, argPos, services);
 

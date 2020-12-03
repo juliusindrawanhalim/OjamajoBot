@@ -22,6 +22,7 @@ namespace Config
 
     public class Core
     {
+        public static Dictionary<string, string> customPrefix = new Dictionary<string, string>();
         public static JObject jobjectconfig; public static JObject jobjectQuiz;
         public static JObject jobjectRandomMoments;
         public static string headTradingCardConfigFolder = "trading_card";
@@ -169,7 +170,7 @@ namespace Config
                 arrPlayingWith.Add(new List<object>{ "with Hazuki", $"I'm playing with {MentionUtils.MentionUser(Hazuki.Id)} right now.", UserStatus.Online });
                 arrPlayingWith.Add(new List<object> {"with Aiko",$"I'm playing with {MentionUtils.MentionUser(Aiko.Id)} right now. " +
                 "Please come and join us to make takoyaki together, will you?", UserStatus.Online});
-                arrPlayingWith.Add(new List<object> { "with Onpu", $"I'm playing with {MentionUtils.MentionUser(Onpu.Id)} right now.", UserStatus.Online });arrPlayingWith.Add(new List<object> { "with Onpu", $"I'm playing with {MentionUtils.MentionUser(Onpu.Id)} right now.", UserStatus.Online });
+                arrPlayingWith.Add(new List<object> { "with Onpu", $"I'm playing with {MentionUtils.MentionUser(Onpu.Id)} right now.", UserStatus.Online });
                 arrPlayingWith.Add(new List<object> { "with Momoko", $"I'm playing with {MentionUtils.MentionUser(Momoko.Id)} right now.", UserStatus.Online });
 
             }
