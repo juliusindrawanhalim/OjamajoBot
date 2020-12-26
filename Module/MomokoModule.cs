@@ -333,7 +333,7 @@ namespace OjamajoBot.Module
         public async Task momokoHello()
         {
             List<string> listRandomRespond = new List<string>() {
-                $"Hello there, {MentionUtils.MentionUser(Context.User.Id)}. ",
+                $"Hello, {MentionUtils.MentionUser(Context.User.Id)}. ",
                 $"Hey, {MentionUtils.MentionUser(Context.User.Id)}. ",
                 $"Hi, {MentionUtils.MentionUser(Context.User.Id)}. ",
             };
@@ -341,22 +341,11 @@ namespace OjamajoBot.Module
             int rndIndex = new Random().Next(0, listRandomRespond.Count);
             string tempReply = listRandomRespond[rndIndex] + Config.Momoko.Status.currentActivityReply;
 
-            await ReplyAsync(tempReply);
-        }
-
-        [Command("hugs"), Alias("hug"), Summary("I will give warm hug for you or <username>")]
-        public async Task HugUser(SocketGuildUser username = null)
-        {
-            if (username == null)
-            {
-                string message = $"*hugs back*. Thank you for the warm hugs {MentionUtils.MentionUser(Context.User.Id)} :hugging:";
-                await Context.Channel.SendMessageAsync(message);
-            }
-            else
-            {
-                string message = $"Let's give a warm hugs for {MentionUtils.MentionUser(username.Id)} :hugging:";
-                await Context.Channel.SendMessageAsync(message);
-            }
+            await ReplyAsync(embed: new EmbedBuilder()
+                .WithDescription(tempReply)
+                .WithColor(Config.Momoko.EmbedColor)
+                .WithImageUrl("https://cdn.discordapp.com/attachments/706770454697738300/790614647904403506/016406434152f0d59b71d66c44b1b4f2d3bbbb93_00.png")
+                .Build());
         }
 
         [Command("random"), Alias("moments"), Summary("Show any random Momoko moments. " +
@@ -415,8 +404,9 @@ namespace OjamajoBot.Module
         {
             await ReplyAsync("Peruton Peton Pararira Pon! Show my biography info!",
             embed: new EmbedBuilder()
-            .WithAuthor("Momoko Asuka")
-            .WithDescription("Momoko Asuka (飛鳥ももこ, Asuka Momoko) is the sixth main character and the secondary tritagonist of Ojamajo Doremi, who became part of the group at the start of Motto. " +
+            .WithAuthor("Momoko Asuka", Config.Momoko.EmbedAvatarUrl)
+            .WithColor(Config.Momoko.EmbedColor)
+            .WithDescription("Momoko Asuka (飛鳥ももこ, Asuka Momoko) is the sixth main character of Ojamajo Doremi, who became part of the group at the start of Motto. " +
             "She was called in by the Witch Queen to help the girls run their brand new Sweet Shop Maho-do.")
             .AddField("Full Name", "飛鳥ももこ Asuka Momoko", true)
             .AddField("Gender", "female", true)
@@ -425,9 +415,8 @@ namespace OjamajoBot.Module
             .AddField("Instrument", "Guitar", true)
             .AddField("Favorite Food", "Madeleines, Strawberry Tart", true)
             .AddField("Debut", "[Doremi, a Stormy New Semester](https://ojamajowitchling.fandom.com/wiki/Doremi,_a_Stormy_New_Semester)", true)
-            .WithColor(Config.Momoko.EmbedColor)
-            .WithImageUrl("https://images-na.ssl-images-amazon.com/images/I/71ZPWJmdThL._AC_SL1268_.jpg")
-            .WithFooter("Source: [Ojamajo Witchling Wiki](https://ojamajowitchling.fandom.com/wiki/Momoko_Asuka)")
+            .WithImageUrl("https://static.wikia.nocookie.net/ojamajowitchling/images/c/c2/O.D_LFMD%27_Momoko_Asuka.png")
+            .WithFooter("Source: [Ojamajo Doremi Wiki](https://ojamajowitchling.fandom.com/wiki/Momoko_Asuka)")
             .Build());
         }
 
@@ -449,17 +438,6 @@ namespace OjamajoBot.Module
             embed: new EmbedBuilder()
             .WithColor(Config.Momoko.EmbedColor)
             .WithImageUrl(arrRandomImages[new Random().Next(0,arrRandomImages.Length)])
-            .Build());
-        }
-
-        [Command("turn"), Alias("transform"), Summary("Turn <username> into <wishes>")]
-        public async Task spells(IUser username, [Remainder] string wishes)
-        {
-            //await Context.Message.DeleteAsync();
-            await ReplyAsync($"Peruton Peton Pararira Pon! Turn {username.Mention} into {wishes}",
-            embed: new EmbedBuilder()
-            .WithColor(Config.Momoko.EmbedColor)
-            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/99/Momo-spell.gif")
             .Build());
         }
 
@@ -491,18 +469,19 @@ namespace OjamajoBot.Module
             await ReplyAsync(embed: MinigameCore.printLeaderboard(Context, Config.Momoko.EmbedColor).Build());
         }
 
-        [Command("rockpaperscissor", RunMode = RunMode.Async), Alias("rps"), Summary("Play the Rock Paper Scissor minigame with Hazuki. 20 score points reward.")]
+        [Command("jankenpon", RunMode = RunMode.Async), Alias("rps", "rockpaperscissor"), Summary("Play the Rock Paper Scissors minigame with Momoko. " +
+            "Reward: 20 minigame score points & 1 magic seeds.")]
         public async Task RockPaperScissor(string guess = "")
         {
             if (guess == "")
             {
-                await ReplyAsync($"Please enter the valid parameter: **rock** or **paper** or **scissor**");
+                await ReplyAsync($"Please enter the valid parameter: **rock** or **paper** or **scissors**");
                 return;
             }
-            else if (guess.ToLower() != "rock" && guess.ToLower() != "paper" && guess.ToLower() != "scissor")
+            else if (guess.ToLower() != "rock" && guess.ToLower() != "paper" && guess.ToLower() != "scissors")
             {
                 await ReplyAsync($"Sorry **{Context.User.Username}**. " +
-                    $"Please enter the valid parameter: **rock** or **paper** or **scissor**");
+                    $"Please enter the valid parameter: **rock** or **paper** or **scissors**");
                 return;
             }
 
@@ -510,10 +489,10 @@ namespace OjamajoBot.Module
             int randomGuess = new Random().Next(0, 3);//generate random
 
             string[] arrWinReaction = { $"Better luck next time, {Context.User.Username}.", "I win the game this round!" };//bot win
-            string[] arrLoseReaction = { "I lose from the game." };//bot lose
+            string[] arrLoseReaction = { "I loss." };//bot lose
             string[] arrDrawReaction = { "Well, it's a draw." };//bot draw
 
-            Tuple<string, EmbedBuilder, Boolean> result = MinigameCore.rockPaperScissor.rpsResults(Config.Momoko.EmbedColor, Config.Momoko.EmbedAvatarUrl, randomGuess, guess, "momoko", Context.User.Username,
+            Tuple<string, EmbedBuilder, Boolean> result = MinigameCore.rockPaperScissors.rpsResults(Config.Momoko.EmbedColor, Config.Momoko.EmbedAvatarUrl, randomGuess, guess, "momoko", Context.User.Username,
                 arrWinReaction, arrLoseReaction, arrDrawReaction,
                 Context.Guild.Id, Context.User.Id);
 
@@ -556,174 +535,178 @@ namespace OjamajoBot.Module
 
     }
 
-    //[Name("sweethouse"), Group("sweethouse"), Summary("This category contains all Momoko Sweeethouse command.")]
-    //public class MomokoSweetHouse : InteractiveBase
-    //{
-    //    // NextMessageAsync will wait for the next message to come in over the gateway, given certain criteria
-    //    // By default, this will be limited to messages from the source user in the source channel
-    //    // This method will block the gateway, so it should be ran in async mode.
-    //    //[Command("interact", RunMode = RunMode.Async)]
-    //    //public async Task Test_NextMessageAsync()
-    //    //{
-    //    //    await ReplyAsync("What is 2+2?");
-    //    //    var response = await NextMessageAsync();
-    //    //    if (response != null)
-    //    //        await ReplyAsync($"You replied: {response.Content}");
-    //    //    else
-    //    //        await ReplyAsync("You did not reply before the timeout");
-    //    //}
-    //    //reference: https://github.com/PassiveModding/Discord.Addons.Interactive/blob/master/SocketSampleBot/Module.cs
+    [Name("patissiere"), Group("patissiere"), Summary("This category contains all Momoko Sweeethouse command.")]
+    public class MomokoPatissiere : InteractiveBase
+    {
+        // NextMessageAsync will wait for the next message to come in over the gateway, given certain criteria
+        // By default, this will be limited to messages from the source user in the source channel
+        // This method will block the gateway, so it should be ran in async mode.
+        //[Command("interact", RunMode = RunMode.Async)]
+        //public async Task Test_NextMessageAsync()
+        //{
+        //    await ReplyAsync("What is 2+2?");
+        //    var response = await NextMessageAsync();
+        //    if (response != null)
+        //        await ReplyAsync($"You replied: {response.Content}");
+        //    else
+        //        await ReplyAsync("You did not reply before the timeout");
+        //}
+        //reference: https://github.com/PassiveModding/Discord.Addons.Interactive/blob/master/SocketSampleBot/Module.cs
 
-    //    //memorization minigame
+        //memorization minigame
+        [Command("schedule"), Summary("Show the witch exam schedule.")]
+        public async Task Show_Exam_Schedule()
+        {
 
-    //    [Command("schedule"), Summary("Show the witch exam schedule.")]
-    //    public async Task Show_Exam_Schedule()  
-    //    {
+        }
 
-    //    }
+        //exam: reset weekly, you can participate exam 1 time for each week. There are 3 witches examiners 
+        //Participating a witch exam will grant you patissiere point
+        //other user can help to contribute the exam. 
+        //User that contribute for the exam will receive the exp multiplied by the amount of people that are joining.
 
-    //    //exam: reset weekly, you can participate exam 1 time for each week. There are 3 witches examiners 
-    //    //Participating a witch exam will grant you 
-    //    //other user can help to contribute the exam. 
-    //    //User that contribute for the exam will receive the exp multiplied by the amount of people that are joining.
+        //1: scones
+        //2: choux pastry
+        //3: ice cream sandwich
+        //4: tourbillon cake
 
-    //    //1: scones
-    //    //2: choux pastry
-    //    //3: ice cream sandwich
-    //    //4: tourbillon cake
+        [Command("recipe"), Summary("Open the recipe diary.")]
+        public async Task Open_Recipe()
+        {
+            string query = $"SELECT * " +
+                $" FROM  ";
+        }
 
-    //    [Command("recipe"), Summary("Open the recipe diary.")]
-    //    public async Task Open_Recipe()
-    //    {
+        [Command("status"), Summary("Show your patissiere Status progress. " +
+            "You can add the optional username parameter to see the patissiere status of that user.")]
+        public async Task sweethouse_status(SocketGuildUser username = null)
+        {
 
-    //    }
+        }
 
-    //    [Command("status"), Summary("Show your sweethouse Status progress. " +
-    //        "You can add the optional username parameter to see the card status of that user.")]
-    //    public async Task sweethouse_status(SocketGuildUser username = null)
-    //    {
+        [Command("buy"), Summary("Buy the available ingredients from Dela.")]
+        public async Task Buy_Ingredients([Remainder] string ingredients = "")
+        {
+            //strawberry,cream,milk,flour,sugar,eggs,butter,oil,baking soda,baking powder,eggs
 
-    //    }
+        }
 
-    //    [Command("buy"), Summary("Buy the required ingredients from Dela to make the desserts.")]
-    //    public async Task Buy_Ingredients([Remainder]string ingredients="")
-    //    {
-    //        //strawberry,cream,milk,flour,sugar,eggs,butter,oil,baking soda,baking powder,eggs
+        [Command("order", RunMode = RunMode.Async), Summary("I will give you the available listed menu and you can try to order it up.")]
+        public async Task Interact_Bakery()
+        {
+            if (!Config.Momoko.isRunningBakery.ContainsKey(Context.User.Id.ToString()))
+                Config.Momoko.isRunningBakery.Add(Context.User.Id.ToString(), false);
 
-    //    }
+            if (!Config.Momoko.isRunningBakery[Context.User.Id.ToString()])
+            {
+                Config.Momoko.isRunningBakery[Context.User.Id.ToString()] = true;
 
-    //    [Command("order", RunMode = RunMode.Async), Summary("I will give you the available listed menu and you can try to order it up.")]
-    //    public async Task Interact_Bakery()
-    //    {
-    //        if (!Config.Momoko.isRunningBakery.ContainsKey(Context.User.Id.ToString()))
-    //            Config.Momoko.isRunningBakery.Add(Context.User.Id.ToString(), false);
+                string[] menu = {
+                "apple pie","cake","cookies","chocolate","croissant","cupcakes","donut",
+                "eclair","gingerbread","pancake","pudding","waffle","scones" };
 
-    //        if (!Config.Momoko.isRunningBakery[Context.User.Id.ToString()]){
-    //            Config.Momoko.isRunningBakery[Context.User.Id.ToString()] = true;
+                string concatMenu = ""; foreach (string item in menu) concatMenu += $"**-{item}**\n";
+                concatMenu += $"Please reply with one of the menu choices, for example: **donut**.\nTo leave or cancel your order, type `cancel`.";
 
-    //            string[] menu = {
-    //            "apple pie","cake","cookies","chocolate","croissant","cupcakes","donut",
-    //            "eclair","gingerbread","pancake","pudding","waffle","scones" };
+                string replyTimeout = "I'm sorry, I can't process your order.";
 
-    //            string concatMenu = ""; foreach (string item in menu) concatMenu += $"**-{item}**\n";
-    //            concatMenu += $"Please reply with one of the menu choices, for example: **donut**.\nTo leave or cancel your order, type `cancel`.";
+                await ReplyAsync(embed: new EmbedBuilder()
+                    .WithAuthor("Sweet house Maho-dou", "https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/9f/Sweet2.jpg")
+                    .WithDescription("Hello, welcome to the sweet house Maho-dou. " +
+                    "Your order will be placed within 20 seconds, please wait shortly right after confirming your order. " +
+                    "Please order something up from the menu listed below:")
+                    .AddField("Menu list", concatMenu)
+                    .WithColor(Config.Momoko.EmbedColor)
+                    .WithThumbnailUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/c/cc/ODN-EP11-027.png")
+                    .Build());
 
-    //            string replyTimeout = "I'm sorry, I can't process your order.";
+                Boolean procedureFinish = false;
 
-    //            await ReplyAsync(embed: new EmbedBuilder()
-    //                .WithAuthor("Sweet house Maho-dou", "https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/9f/Sweet2.jpg")
-    //                .WithDescription("Hello, welcome to the sweet house Maho-dou. " +
-    //                "Your order will be placed within 20 seconds, please wait shortly right after confirming your order. " +
-    //                "Please order something up from the menu listed below:")
-    //                .AddField("Menu list", concatMenu)
-    //                .WithColor(Config.Momoko.EmbedColor)
-    //                .WithThumbnailUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/c/cc/ODN-EP11-027.png")
-    //                .Build());
+                while (!procedureFinish)
+                {
+                    var response = await NextMessageAsync(timeout: TimeSpan.FromSeconds(30));
+                    string ordered = response.Content.ToLower().ToString();
 
-    //            Boolean procedureFinish = false;
+                    if (response == null)
+                    {
+                        Config.Momoko.isRunningBakery[Context.User.Id.ToString()] = false;
+                        await ReplyAsync(replyTimeout);
+                        return;
+                    }
+                    else if (ordered == "cancel")
+                    {
+                        Config.Momoko.isRunningBakery[Context.User.Id.ToString()] = false;
+                        await ReplyAsync(embed: new EmbedBuilder()
+                            .WithAuthor("Sweet house Maho-dou", "https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/9f/Sweet2.jpg")
+                            .WithDescription("It seems you don't want to order anything for now. " +
+                            "Thank you for stopping by and please come back again soon.")
+                            .WithColor(Config.Momoko.EmbedColor)
+                            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/c/cc/ODN-EP11-027.png")
+                            .Build());
+                        return;
+                    }
+                    else if (!menu.Any(ordered.Contains))
+                    {
+                        await ReplyAsync("Sorry, I can't find that menu. Please retype the correct order menu choice.");
+                    }
+                    else if (menu.Any(ordered.Contains))
+                    {
+                        await ReplyAsync($"Your orders: **{ordered}** will be arrived soon. " +
+                            $"Please wait within 20 seconds while we're going to process it.");
+                        procedureFinish = true;
 
-    //            while (!procedureFinish)
-    //            {
-    //                var response = await NextMessageAsync(timeout: TimeSpan.FromSeconds(30));
-    //                string ordered = response.Content.ToLower().ToString();
+                        Config.Momoko.isRunningBakery[Context.User.Id.ToString()] = false;
+                        Config.Momoko.timerProcessBakery[Context.User.Id.ToString()] = new Timer(async _ => await ReplyAsync($"Hello {MentionUtils.MentionUser(Context.User.Id)}, your order: **{ordered}** has arrived. " +
+                            $"Thank you for ordering from our sweet house maho-dou. Please come back next time :smile:",
+                            embed: new EmbedBuilder()
+                            .WithAuthor("Sweet house Maho-dou", "https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/9f/Sweet2.jpg")
+                            .WithColor(Config.Momoko.EmbedColor)
+                            .WithImageUrl(getHtmlResult(ordered))
+                            .Build()),
+                            null, 20000, Timeout.Infinite);
+                        //send thank you image
+                        Config.Momoko.timerProcessBakery[Context.User.Id.ToString() + "ty"] = new Timer(async _ => await ReplyAsync(
+                              embed: new EmbedBuilder()
+                              .WithColor(Config.Momoko.EmbedColor)
+                              .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/9d/Linesticker23.png")
+                              .Build()),
+                            null, 25000, Timeout.Infinite);
 
-    //                if (response == null)
-    //                {
-    //                    Config.Momoko.isRunningBakery[Context.User.Id.ToString()] = false;
-    //                    await ReplyAsync(replyTimeout);
-    //                    return;
-    //                }
-    //                else if (ordered == "cancel")
-    //                {
-    //                    Config.Momoko.isRunningBakery[Context.User.Id.ToString()] = false;
-    //                    await ReplyAsync(embed: new EmbedBuilder()
-    //                        .WithAuthor("Sweet house Maho-dou", "https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/9f/Sweet2.jpg")
-    //                        .WithDescription("It seems you don't want to order anything for now. " +
-    //                        "Thank you for stopping by and please come back again soon.")
-    //                        .WithColor(Config.Momoko.EmbedColor)
-    //                        .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/c/cc/ODN-EP11-027.png")
-    //                        .Build());
-    //                    return;
-    //                }
-    //                else if (!menu.Any(ordered.Contains))
-    //                {
-    //                    await ReplyAsync("Sorry, I can't find that menu. Please retype the correct order menu choice.");
-    //                }
-    //                else if (menu.Any(ordered.Contains))
-    //                {
-    //                    await ReplyAsync($"Your orders: **{ordered}** will be arrived soon. " +
-    //                        $"Please wait within 20 seconds while we're going to process it.");
-    //                    procedureFinish = true;
+                        return;
+                    }
+                }
 
-    //                    Config.Momoko.isRunningBakery[Context.User.Id.ToString()] = false;
-    //                    Config.Momoko.timerProcessBakery[Context.User.Id.ToString()] = new Timer(async _ => await ReplyAsync($"Hello {MentionUtils.MentionUser(Context.User.Id)}, your order: **{ordered}** has arrived. " +
-    //                        $"Thank you for ordering from our sweet house maho-dou. Please come back next time :smile:",
-    //                        embed: new EmbedBuilder()
-    //                        .WithAuthor("Sweet house Maho-dou", "https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/9f/Sweet2.jpg")
-    //                        .WithColor(Config.Momoko.EmbedColor)
-    //                        .WithImageUrl(getHtmlResult(ordered))
-    //                        .Build()),
-    //                        null, 20000, Timeout.Infinite);
-    //                    //send thank you image
-    //                    Config.Momoko.timerProcessBakery[Context.User.Id.ToString() + "ty"] = new Timer(async _ => await ReplyAsync(
-    //                          embed: new EmbedBuilder()
-    //                          .WithColor(Config.Momoko.EmbedColor)
-    //                          .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/9d/Linesticker23.png")
-    //                          .Build()),
-    //                        null, 25000, Timeout.Infinite);
+            }
+            else
+                await ReplyAsync($"Sorry, but you still have a running the bakery commands, please finish it first.");
 
-    //                    return;
-    //                }
-    //            }
+        }
 
-    //        }
-    //        else
-    //            await ReplyAsync($"Sorry, but you still have a running the bakery commands, please finish it first.");
-            
-    //    }
+        public string getHtmlResult(string order)
+        {
+            //HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://source.unsplash.com/random/?"+order);
 
-    //    public string getHtmlResult(string order)
-    //    {
-    //        //HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://source.unsplash.com/random/?"+order);
+            try
+            {
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://pixabay.com/api/?key=14962595-31091f9e5ebfbdd912a540e0f&q=" + order +
+                "&per_page=50&category=food");
+                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                StreamReader reader = new StreamReader(response.GetResponseStream());
+                string jsonresp = reader.ReadToEnd().ToString();
+                JObject jobject = JObject.Parse(jsonresp);
+                JArray items = (JArray)jobject.GetValue("hits");
+                int totalItems = items.Count;
+                int randomedIndex = new Random().Next(0, totalItems);
+                return items[randomedIndex]["webformatURL"].ToString();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+                return e.ToString();
+            }
+        }
 
-    //        try{
-    //            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://pixabay.com/api/?key=14962595-31091f9e5ebfbdd912a540e0f&q=" + order +
-    //            "&per_page=50&category=food");
-    //            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-    //            StreamReader reader = new StreamReader(response.GetResponseStream());
-    //            string jsonresp = reader.ReadToEnd().ToString();
-    //            JObject jobject = JObject.Parse(jsonresp);
-    //            JArray items = (JArray)jobject.GetValue("hits");
-    //            int totalItems = items.Count;
-    //            int randomedIndex = new Random().Next(0, totalItems);
-    //            return items[randomedIndex]["webformatURL"].ToString();
-    //        } catch(Exception e) {
-    //            Console.WriteLine(e.ToString());
-    //            return e.ToString();
-    //        }
-    //    }
-
-    //}
+    }
 
     [Name("Card"), Group("card"), Summary("This category contains all Momoko Trading card command.")]
     public class MomokoTradingCardInteractive : InteractiveBase
@@ -742,8 +725,8 @@ namespace OjamajoBot.Module
                 string userCardZone = userTradingCardData[DBM_User_Trading_Card_Data.Columns.card_zone].ToString();
                 if (!userCardZone.Contains("momoko"))
                 {
-                    await ReplyAndDeleteAsync(":x: Sorry, you are not on the correct card zone. " +
-                        $"Please assign yourself on the correct card zone with **{Config.Momoko.PrefixParent[0]}card zone set <category>** command.", timeout: TimeSpan.FromSeconds(20));
+                    await ReplyAsync(":x: Sorry, you are not on the correct card zone. " +
+                        $"Please assign yourself on the correct card zone with **{Config.Momoko.PrefixParent[0]}card zone set <category>** command.");
                     return Ok();
                 }
             }
@@ -757,7 +740,7 @@ namespace OjamajoBot.Module
 
             if (cardCaptureReturn.Item1 == "")
             {
-                await ReplyAndDeleteAsync(null, embed: cardCaptureReturn.Item2.Build(), timeout: TimeSpan.FromSeconds(15));
+                await ReplyAsync(null, embed: cardCaptureReturn.Item2.Build());
             }
             else
                 await ReplyAsync(cardCaptureReturn.Item1,
@@ -780,8 +763,9 @@ namespace OjamajoBot.Module
                     await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
                         Context.Guild.Roles.First(x => x.Name == TradingCardCore.Doremi.roleCompletionist)
                     );
+                }
 
-                    await Bot.Doremi.client
+                await Bot.Doremi.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
                     .SendFileAsync(TradingCardCore.Doremi.imgCompleteAllCard, null, embed: TradingCardCore
@@ -789,7 +773,6 @@ namespace OjamajoBot.Module
                     TradingCardCore.Doremi.imgCompleteAllCard, TradingCardCore.Doremi.roleCompletionist)
                     .Build());
 
-                }
             }
 
             //check if player have captured all hazuki card/not
@@ -800,15 +783,16 @@ namespace OjamajoBot.Module
                     await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
                         Context.Guild.Roles.First(x => x.Name == TradingCardCore.Hazuki.roleCompletionist)
                         );
+                }
 
-                    await Bot.Hazuki.client
+                await Bot.Hazuki.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
                     .SendFileAsync(TradingCardCore.Hazuki.imgCompleteAllCard, null, embed: TradingCardCore
                     .userCompleteTheirList(Context, Config.Hazuki.EmbedColor, Config.Hazuki.EmbedAvatarUrl, "hazuki",
                     TradingCardCore.Hazuki.imgCompleteAllCard, TradingCardCore.Hazuki.roleCompletionist)
                     .Build());
-                }
+
             }
 
             //check if player have captured all aiko card/not
@@ -819,15 +803,16 @@ namespace OjamajoBot.Module
                     await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
                         Context.Guild.Roles.First(x => x.Name == TradingCardCore.Aiko.roleCompletionist)
                         );
+                }
 
-                    await Bot.Aiko.client
+                await Bot.Aiko.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
                     .SendFileAsync(TradingCardCore.Aiko.imgCompleteAllCard, null, embed: TradingCardCore
                     .userCompleteTheirList(Context, Config.Aiko.EmbedColor, Config.Aiko.EmbedAvatarUrl, "aiko",
                     TradingCardCore.Aiko.imgCompleteAllCard, TradingCardCore.Aiko.roleCompletionist)
                     .Build());
-                }
+
             }
 
             //check if player have captured all onpu card/not
@@ -838,15 +823,16 @@ namespace OjamajoBot.Module
                     await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
                         Context.Guild.Roles.First(x => x.Name == TradingCardCore.Onpu.roleCompletionist)
                         );
+                }
 
-                    await Bot.Onpu.client
+                await Bot.Onpu.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
                     .SendFileAsync(TradingCardCore.Aiko.imgCompleteAllCard, null, embed: TradingCardCore
                     .userCompleteTheirList(Context, Config.Onpu.EmbedColor, Config.Onpu.EmbedAvatarUrl, "onpu",
                     TradingCardCore.Onpu.imgCompleteAllCard, TradingCardCore.Onpu.roleCompletionist)
                     .Build());
-                }
+
             }
 
             //check if player have captured all momoko card/not
@@ -857,15 +843,16 @@ namespace OjamajoBot.Module
                     await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
                         Context.Guild.Roles.First(x => x.Name == TradingCardCore.Momoko.roleCompletionist)
                         );
+                }
 
-                    await Bot.Momoko.client
+                await Bot.Momoko.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
                     .SendFileAsync(TradingCardCore.Aiko.imgCompleteAllCard, null, embed: TradingCardCore
                     .userCompleteTheirList(Context, Config.Momoko.EmbedColor, Config.Momoko.EmbedAvatarUrl, "momoko",
                     TradingCardCore.Momoko.imgCompleteAllCard, TradingCardCore.Momoko.roleCompletionist)
                     .Build());
-                }
+
             }
 
             //check if player have captured all other special card/not
@@ -876,15 +863,16 @@ namespace OjamajoBot.Module
                     await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
                         Context.Guild.Roles.First(x => x.Name == TradingCardCore.roleCompletionistSpecial)
                         );
+                }
 
-                    await Bot.Momoko.client
+                await Bot.Momoko.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
                     .SendFileAsync(TradingCardCore.Momoko.imgCompleteAllCard, null, embed: TradingCardCore
                     .userCompleteTheirList(Context, Config.Momoko.EmbedColor, Config.Momoko.EmbedAvatarUrl, "other",
                     TradingCardCore.imgCompleteAllCardSpecial, TradingCardCore.roleCompletionistSpecial)
                     .Build());
-                }
+
             }
 
             return Ok();
@@ -1155,19 +1143,30 @@ namespace OjamajoBot.Module
 
             if (UserTradingCardDataCore.checkCardCompletion(userId, cardPack))
             {
-                if (Context.Guild.Roles.Where(x => x.Name == TradingCardCore.Momoko.roleCompletionist).ToList().Count >= 1)
+                try
                 {
-                    await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
-                        Context.Guild.Roles.First(x => x.Name == TradingCardCore.Momoko.roleCompletionist)
-                    );
+                    if (Context.Guild.Roles.Where(x => x.Name == TradingCardCore.Momoko.roleCompletionist).ToList().Count >= 1)
+                    {
+                        await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
+                            Context.Guild.Roles.First(x => x.Name == TradingCardCore.Momoko.roleCompletionist)
+                        );
+                    }
+                } catch(Exception e) { }
+                
+                EmbedBuilder embedReturn = TradingCardCore
+                .userCompleteTheirList(Context, Config.Momoko.EmbedColor, Config.Momoko.EmbedAvatarUrl, cardPack,
+                TradingCardCore.Momoko.imgCompleteAllCard, TradingCardCore.Momoko.roleCompletionist);
 
+                if (embedReturn != null)
+                {
                     await Bot.Momoko.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
-                    .SendFileAsync(TradingCardCore.Momoko.imgCompleteAllCard, null, embed: TradingCardCore
-                    .userCompleteTheirList(Context, Config.Momoko.EmbedColor, Config.Momoko.EmbedAvatarUrl, cardPack,
-                    TradingCardCore.Momoko.imgCompleteAllCard, TradingCardCore.Momoko.roleCompletionist)
+                    .SendFileAsync(TradingCardCore.Momoko.imgCompleteAllCard, null, embed: embedReturn
                     .Build());
+                } else
+                {
+                    await ReplyAsync(":white_check_mark: Your **momoko** card completion status has been verified");
                 }
             }
         }

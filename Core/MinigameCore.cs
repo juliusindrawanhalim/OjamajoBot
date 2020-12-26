@@ -22,7 +22,7 @@ namespace OjamajoBot
             DRAW
         }
 
-        public class rockPaperScissor{
+        public class rockPaperScissors{
 
             public static Tuple<string,EmbedBuilder,Boolean> rpsResults(Color color, string embedIcon, int randomGuess, string guess, string parent, string username,
                 string[] arrWinReaction, string[] arrLoseReaction, string[] arrDrawReaction, 
@@ -63,7 +63,7 @@ namespace OjamajoBot
                             case "paper":
                                 gameState = GAME_STATE.DRAW;
                                 break;
-                            case "scissor":
+                            case "scissors":
                                 gameState = GAME_STATE.WIN;
                                 break;
                             default:
@@ -73,10 +73,10 @@ namespace OjamajoBot
                         break;
 
                     default: //scissor
-                        randomResult = "✂️ scissor";
+                        randomResult = "✂️ scissors";
                         switch (guess)
                         {
-                            case "scissor":
+                            case "scissors":
                                 gameState = GAME_STATE.DRAW;
                                 break;
                             case "rock":
@@ -122,8 +122,8 @@ namespace OjamajoBot
 
                 switch (guess)
                 {
-                    case "scissor":
-                        guess = guess.Replace("scissor", "✂️ scissor");
+                    case "scissors":
+                        guess = guess.Replace("scissors", "✂️ scissors");
                         break;
                     case "paper":
                         guess = guess.Replace("paper", "📜 paper");
@@ -140,7 +140,7 @@ namespace OjamajoBot
                     Color = color,
                     Author = new EmbedAuthorBuilder
                     {
-                        Name = "Rock Paper Scissor!",
+                        Name = "Rock Paper Scissors Shoot!",
                         IconUrl = embedIcon
                     },
                     Title = embedTitle,

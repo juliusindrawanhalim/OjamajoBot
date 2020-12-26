@@ -127,8 +127,8 @@ namespace OjamajoBot
             DBC db = new DBC();
 
             Dictionary<string, object> columns = new Dictionary<string, object>();
-            columns[DBM_User_Data.Columns.id_user] = clientId.ToString();
-            db.insert(DBM_User_Data.tableName, columns);
+            columns[DBM_User_Trading_Card_Data.Columns.id_user] = clientId.ToString();
+            db.insert(DBM_User_Trading_Card_Data.tableName, columns);
         }
 
         public static void addCatchAttempt(ulong clientId,string guildCaptureToken = "")
@@ -218,7 +218,6 @@ namespace OjamajoBot
 
                     foreach (DataRow rows in new DBC().selectAll(query, colSelect).Rows)
                     {
-                        Console.WriteLine($"{pack} : {Convert.ToInt32(rows["total"]).ToString()}");
                         if (Convert.ToInt32(rows["total"]) >= totalTarget)
                             ret = true;
                     }

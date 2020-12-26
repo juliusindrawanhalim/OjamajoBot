@@ -68,21 +68,6 @@ namespace OjamajoBot.Module
         //    await ReplyAsync(tempReply);
         //}
 
-        [Name("countdown"), Command("countdown"), Summary("Countdown to Doremi Movie")]
-        public async Task countdownTimer()
-        {
-            DateTime endTime = new DateTime(2020, 11, 13, 2, 0, 0);//japan: time+2
-            TimeSpan ts = endTime.Subtract(DateTime.Now);
-            string timeLeft = ts.ToString("d' Days 'h' Hours 'm' Minutes 's' Seconds'");
-
-            await ReplyAsync(embed: new EmbedBuilder()
-                .WithAuthor(":alarm_clock: Ojamajo Doremi: Majo Minarai o Sagashite has been released!", Config.Doremi.EmbedAvatarUrl)
-                .WithColor(Config.Doremi.EmbedColor)
-                .WithDescription($"[Looking for Magical Doremi](https://www.lookingfor-magical-doremi.com/)")
-                .WithImageUrl("https://cdn.upstation.asia/wp-content/uploads/sites/2/2020/08/18072017/105742.jpeg")
-                .Build());
-        }
-
         [Name("help"), Command("help"), Summary("Show all Doremi bot Commands.")]
         public async Task Help([Remainder] string CategoryOrCommands = "")
         {
@@ -91,9 +76,8 @@ namespace OjamajoBot.Module
 
             if (CategoryOrCommands == "")
             {
-                output.WithAuthor(Config.Doremi.EmbedName, Config.Doremi.EmbedAvatarUrl);
-                output.Title = $"Command List";
-                output.Description = "Pretty Witchy Doremi Chi~ You can tell me what to do with " +
+                output.WithAuthor($"{Config.Doremi.EmbedName} Command List", Config.Doremi.EmbedAvatarUrl);
+                output.Description = "Pretty Witchy Doremi Chi! You can call me with " +
                     $"**{Config.Doremi.PrefixParent[2]} or {Config.Doremi.PrefixParent[0]} or {Config.Doremi.PrefixParent[1]}** as starting prefix.\n" +
                     $"Use **{Config.Doremi.PrefixParent[0]}help <category or commands>** for more help details.\n" +
                     $"Example: **{Config.Doremi.PrefixParent[0]}help general** or **{Config.Doremi.PrefixParent[0]}help hello**";
@@ -164,7 +148,6 @@ namespace OjamajoBot.Module
         public void HelpDetails(ref EmbedBuilder builder, string category, string summary,
             string alias, string group, string commands, string parameters)
         {
-
             var completedText = ""; commands = commands.ToLower(); category = category.ToLower();
             if (summary != "") completedText += $"{summary}\n";
             completedText += $"**Category:** {category}\n";
@@ -388,7 +371,7 @@ namespace OjamajoBot.Module
         [Command("fairy"), Summary("I will show you my fairy info")]
         public async Task showFairy()
         {
-            await ReplyAsync("Meet one of my fairy, Dodo.",
+            await ReplyAsync("Meet one of my fairy: Dodo.",
             embed: new EmbedBuilder()
             .WithAuthor("Dodo")
             .WithDescription("Dodo has fair skin and big mulberry eyes and blushed cheeks. She has pink antennae and short straightened bangs, and she has hair worn in large buns. Her dress is salmon-pink with a pale pink collar." +
@@ -399,18 +382,47 @@ namespace OjamajoBot.Module
             .Build());
         }
 
-        [Command("feedback"), Summary("Give feedback for Doremi Bot and other related bots.")]
-        public async Task userFeedback([Remainder] string feedback_message)
+        [Command("birthday thismonth"), Alias("birthday thismonth"), Summary("Show all user that will have birthday on this month.")]
+        public async Task showAllBirthdayThisMonth()
         {
-            using (StreamWriter sw = (File.Exists($"attachments/{Context.Guild.Id}/feedback_{Context.Guild.Id}.txt")) ? File.AppendText($"attachments/{Context.Guild.Id}/feedback_{Context.Guild.Id}.txt") :
-                    File.CreateText($"attachments/{Context.Guild.Id}/feedback_{Context.Guild.Id}.txt"))
-                sw.WriteLine($"[{DateTime.Now.ToString("MM/dd/yyyy HH:mm")}]{Context.User.Mention}{Context.User.Username}:{feedback_message}");
+            Boolean birthdayExisted = false;
+            EmbedBuilder builder = new EmbedBuilder();
+            var guildId = Context.Guild.Id;
 
-            await ReplyAsync($"Thank you for your feedback. Doremi bot and her other friends will be improved soon with your feedback.",
-                embed: new EmbedBuilder()
-                .WithColor(Config.Doremi.EmbedColor)
-                .WithImageUrl("https://66.media.tumblr.com/c8f9c5455355f8e522d52bacb8155ab0/tumblr_mswho8nWx11r98a5go1_400.gif")
-                .Build());
+            string query = $"SELECT * " +
+                $" FROM {DBM_Guild_User_Birthday.tableName} " +
+                $" WHERE {DBM_Guild_User_Birthday.Columns.id_guild}=@{DBM_Guild_User_Birthday.Columns.id_guild} AND " +
+                $" MONTH({DBM_Guild_User_Birthday.Columns.birthday_date})=@{DBM_Guild_User_Birthday.Columns.birthday_date} ";
+            Dictionary<string, object> columnsFilter = new Dictionary<string, object>();
+            columnsFilter[DBM_Guild_User_Birthday.Columns.id_guild] = guildId.ToString();
+            columnsFilter[DBM_Guild_User_Birthday.Columns.birthday_date] = DateTime.Now.ToString("MM");
+            var result = new DBC().selectAll(query, columnsFilter);
+            foreach (DataRow row in result.Rows)
+            {
+                try
+                {
+                    var username = Context.Guild.GetUser(
+                        Convert.ToUInt64(row[DBM_Guild_User_Birthday.Columns.id_user].ToString())).Username;
+                    var birthdayDate = DateTime.Parse(row[DBM_Guild_User_Birthday.Columns.birthday_date].ToString())
+                        .ToString("dd-MMMM");
+                    builder.AddField(username, birthdayDate, true);
+                    birthdayExisted = true;
+                }
+                catch { }
+            }
+
+            if (birthdayExisted)
+            {
+                builder.Title = $"{Config.Emoji.birthdayCake} {DateTime.Now.ToString("MMMM")} Birthday List";
+                builder.Description = $"Here are the list of all wonderful people that will have birthday on this month:";
+                builder.Color = Config.Doremi.EmbedColor;
+                await ReplyAsync(embed: builder.Build());
+            }
+            else
+            {
+                await ReplyAsync("We don't have birthday celebration for this month.");
+            }
+
         }
 
         [Command("happy birthday"), Summary("Give Doremi some wonderful birthday wishes. This commands only available on her birthday.")]
@@ -435,7 +447,7 @@ namespace OjamajoBot.Module
             }
             else
             {
-                await ReplyAsync("I'm sorry, but it's not my birthday yet.",
+                await ReplyAsync("Sorry, but it's not my birthday yet.",
                 embed: new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
                 .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/6/6e/Hanabou2.jpg")
@@ -454,37 +466,42 @@ namespace OjamajoBot.Module
             int rndIndex = new Random().Next(0, listRandomRespond.Count);
             string tempReply = listRandomRespond[rndIndex] + Config.Doremi.Status.currentActivityReply;
 
-            await ReplyAsync(tempReply);
+            await ReplyAsync(embed:new EmbedBuilder()
+                .WithDescription(tempReply)
+                .WithColor(Config.Doremi.EmbedColor)
+                .WithImageUrl("https://cdn.discordapp.com/attachments/706770454697738300/790613769733799946/wMuLt-rH2mxh6mztcb9HTt4JE3KumFTgNSa7CTv4-AyUQRiQXAkSt529hIC8_n_S5lyHKwASh0oZ0cz96ModT2fCjE1ddj6NvBqo.png")
+                .Build());
         }
 
-        [Command("hugs"), Alias("hug"), Summary("I will give a hug for you or <username>")]
-        public async Task HugUser(SocketGuildUser username = null)
+        [Command("hug"), Summary("Give a hug for <username>")]
+        public async Task HugUser([Remainder]string username)
         {
-            if (username == null)
-            {
-                string message = $"*hugs back*. Hugs time! {MentionUtils.MentionUser(Context.User.Id)} :hugging:";
-                await Context.Channel.SendMessageAsync(message);
-            }
-            else
-            {
-                string message = $"Let's give a warm hugs for {MentionUtils.MentionUser(username.Id)} :hugging:";
-                await Context.Channel.SendMessageAsync(message);
-            }
+            List<string> listRandomImage = new List<string>() {
+                "https://media.tenor.com/images/f51ff7041983283592e13e3e0c3b29b9/tenor.gif",
+                "https://cdn.discordapp.com/attachments/706770454697738300/790768946894602290/hanahug.gif"
+            };
+
+            int rndIndex = new Random().Next(0, listRandomImage.Count);
+
+            await ReplyAsync(embed:new EmbedBuilder()
+                .WithDescription($"{MentionUtils.MentionUser(Context.User.Id)} has give a nice & friendly hug for {username}")
+                .WithColor(Config.Doremi.EmbedColor)
+                .WithImageUrl(listRandomImage[rndIndex])
+                .Build());
         }
 
-        [Command("invite"), Summary("Generate the invitation links for related ojamajo bot")]
+        [Command("invite"), Summary("Generate the related invitation links for ojamajo bot")]
         public async Task invite()
         {
             await ReplyAsync(embed: new EmbedBuilder()
             .WithColor(Config.Doremi.EmbedColor)
-            .WithAuthor(Config.Doremi.EmbedName, Config.Doremi.EmbedAvatarUrl)
             .WithTitle("Bot Invitation Links")
             .WithDescription($"Pirika pirilala poporina peperuto! Generate the bot links!")
-            .AddField("Doremi Bot", "[Invite Doremi Bot](https://discordapp.com/api/oauth2/authorize?client_id=" + Config.Doremi.Id + "&permissions=2117532736&scope=bot)", true)
-            .AddField("Hazuki Bot", "[Invite Hazuki Bot](https://discordapp.com/api/oauth2/authorize?client_id=" + Config.Hazuki.Id + "&permissions=238419008&scope=bot)", true)
-            .AddField("Aiko Bot", "[Invite Aiko Bot](https://discordapp.com/api/oauth2/authorize?client_id=" + Config.Aiko.Id + "&permissions=238419008&scope=bot)", true)
-            .AddField("Onpu Bot", "[Invite Onpu Bot](https://discordapp.com/api/oauth2/authorize?client_id=" + Config.Onpu.Id + "&permissions=238419008&scope=bot)", true)
-            .AddField("Momoko Bot", "[Invite Momoko Bot](https://discordapp.com/api/oauth2/authorize?client_id=" + Config.Momoko.Id + "&permissions=238419008&scope=bot)", true)
+            .AddField("Doremi Bot", $"[Invite Doremi Bot](https://discordapp.com/api/oauth2/authorize?client_id={Bot.Doremi.client.CurrentUser.Id}&permissions=470154308&scope=bot)", true)
+            .AddField("Hazuki Bot", $"[Invite Hazuki Bot](https://discordapp.com/api/oauth2/authorize?client_id={Bot.Hazuki.client.CurrentUser.Id}&permissions=470154440&scope=bot)", true)
+            .AddField("Aiko Bot", $"[Invite Aiko Bot](https://discordapp.com/api/oauth2/authorize?client_id={Bot.Aiko.client.CurrentUser.Id}&permissions=470154440&scope=bot)", true)
+            .AddField("Onpu Bot", $"[Invite Onpu Bot](https://discordapp.com/api/oauth2/authorize?client_id={Bot.Onpu.client.CurrentUser.Id}&permissions=470154440&scope=bot)", true)
+            .AddField("Momoko Bot", $"[Invite Momoko Bot](https://discordapp.com/api/oauth2/authorize?client_id={Bot.Momoko.client.CurrentUser.Id}&permissions=470154440&scope=bot)", true)
             //.AddField("Pop Bot", "[Invite Pop Bot](https://discordapp.com/api/oauth2/authorize?client_id=" + Config.Pop.Id + "&permissions=238419008&scope=bot)", true)
             .Build());
         }
@@ -507,103 +524,92 @@ namespace OjamajoBot.Module
             }
         }
 
-        [Command("dorememes"), Summary("I will give you some random doremi related memes. " +
-            "You can fill <contributor> with one of the available to make it spesific contributor.\nUse `list` as parameter to list all people who have contribute the dorememes.")]
-        public async Task givedorememe([Remainder] string contributor = "")
-        {
-            string finalUrl = ""; JArray getDataObject = null;
-            contributor = contributor.ToLower();
+        //dorememes disabled for now
+        //[Command("dorememes"), Summary("I will give you some random doremi related memes. " +
+        //    "You can fill <contributor> with one of the available to make it spesific contributor.\nUse `list` as parameter to list all people who have contribute the dorememes.")]
+        //public async Task givedorememe([Remainder] string contributor = "")
+        //{
+        //    string finalUrl = ""; JArray getDataObject = null;
+        //    contributor = contributor.ToLower();
 
-            if (contributor == "list")
-            {
-                var key = Config.Doremi.jobjectdorememes.Properties().ToList();
-                string listedContributor = "";
-                for (int i = 0; i < key.Count; i++) listedContributor += $"{key[i].Name}\n";
+        //    if (contributor == "list")
+        //    {
+        //        var key = Config.Doremi.jobjectdorememes.Properties().ToList();
+        //        string listedContributor = "";
+        //        for (int i = 0; i < key.Count; i++) listedContributor += $"{key[i].Name}\n";
 
-                await base.ReplyAsync(embed: new EmbedBuilder()
-                    .WithTitle("Dorememes listed contributor")
-                    .WithDescription("Thank you to all of these peoples that have contributed the dorememes:")
-                    .AddField("Contributor in List", listedContributor)
-                    .WithColor(Config.Doremi.EmbedColor)
-                    .Build());
-                return;
-            }
-            else if (contributor == "")
-            {
-                var key = Config.Doremi.jobjectdorememes.Properties().ToList();
-                var randIndex = new Random().Next(0, key.Count);
-                contributor = key[randIndex].Name;
-                getDataObject = (JArray)Config.Doremi.jobjectdorememes[contributor];
-                finalUrl = getDataObject[new Random().Next(0, getDataObject.Count)].ToString();
-            }
-            else
-            {
-                if (Config.Doremi.jobjectdorememes.ContainsKey(contributor))
-                {
-                    getDataObject = (JArray)Config.Doremi.jobjectdorememes[contributor];
-                    finalUrl = getDataObject[new Random().Next(0, getDataObject.Count)].ToString();
-                }
-                else
-                {
-                    await base.ReplyAsync($"Oops, I can't found the specified contributor. " +
-                        $"See `{Config.Doremi.PrefixParent[0]}help dorememe` for commands help.");
-                    return;
-                }
-            }
+        //        await base.ReplyAsync(embed: new EmbedBuilder()
+        //            .WithTitle("Dorememes listed contributor")
+        //            .WithDescription("Thank you to all of these peoples that have contributed the dorememes:")
+        //            .AddField("Contributor in List", listedContributor)
+        //            .WithColor(Config.Doremi.EmbedColor)
+        //            .Build());
+        //        return;
+        //    }
+        //    else if (contributor == "")
+        //    {
+        //        var key = Config.Doremi.jobjectdorememes.Properties().ToList();
+        //        var randIndex = new Random().Next(0, key.Count);
+        //        contributor = key[randIndex].Name;
+        //        getDataObject = (JArray)Config.Doremi.jobjectdorememes[contributor];
+        //        finalUrl = getDataObject[new Random().Next(0, getDataObject.Count)].ToString();
+        //    }
+        //    else
+        //    {
+        //        if (Config.Doremi.jobjectdorememes.ContainsKey(contributor))
+        //        {
+        //            getDataObject = (JArray)Config.Doremi.jobjectdorememes[contributor];
+        //            finalUrl = getDataObject[new Random().Next(0, getDataObject.Count)].ToString();
+        //        }
+        //        else
+        //        {
+        //            await base.ReplyAsync($"Oops, I can't found the specified contributor. " +
+        //                $"See `{Config.Doremi.PrefixParent[0]}help dorememe` for commands help.");
+        //            return;
+        //        }
+        //    }
 
-            await base.ReplyAsync(embed: new EmbedBuilder()
-            .WithColor(Config.Doremi.EmbedColor)
-            .WithImageUrl(finalUrl)
-            .WithFooter("Contributed by: " + contributor)
-            .Build());
+        //    await base.ReplyAsync(embed: new EmbedBuilder()
+        //    .WithColor(Config.Doremi.EmbedColor)
+        //    .WithImageUrl(finalUrl)
+        //    .WithFooter("Contributed by: " + contributor)
+        //    .Build());
 
-        }
+        //}
 
-        [Command("meme", RunMode = RunMode.Async), Alias("memes"), Summary("I will give you some random memes")]
-        public async Task givememe()
-        {
-            try
-            {
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create("http://meme-api.herokuapp.com/gimme/memes/10");
-                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                StreamReader reader = new StreamReader(response.GetResponseStream());
-                string jsonResp = reader.ReadToEnd().ToString();
-                JObject jobject = JObject.Parse(jsonResp);
+        //[Command("meme", RunMode = RunMode.Async), Alias("memes"), Summary("I will give you some random memes")]
+        //public async Task givememe()
+        //{
+        //    try
+        //    {
+        //        HttpWebRequest request = (HttpWebRequest)WebRequest.Create("http://meme-api.herokuapp.com/gimme/memes/10");
+        //        HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+        //        StreamReader reader = new StreamReader(response.GetResponseStream());
+        //        string jsonResp = reader.ReadToEnd().ToString();
+        //        JObject jobject = JObject.Parse(jsonResp);
 
-                int randomIndex = new Random().Next(0, 11);
-                var description = jobject.GetValue("memes")[randomIndex]["title"];
-                var imgUrl = jobject.GetValue("memes")[randomIndex]["url"];
+        //        int randomIndex = new Random().Next(0, 11);
+        //        var description = jobject.GetValue("memes")[randomIndex]["title"];
+        //        var imgUrl = jobject.GetValue("memes")[randomIndex]["url"];
 
-                await base.ReplyAsync(embed: new EmbedBuilder()
-                .WithDescription(description.ToString())
-                .WithColor(Config.Doremi.EmbedColor)
-                .WithImageUrl(imgUrl.ToString())
-                .Build());
+        //        await base.ReplyAsync(embed: new EmbedBuilder()
+        //        .WithDescription(description.ToString())
+        //        .WithColor(Config.Doremi.EmbedColor)
+        //        .WithImageUrl(imgUrl.ToString())
+        //        .Build());
 
-            }
-            catch
-            {
-                //Console.Write(e.ToString());
-            }
+        //    }
+        //    catch
+        //    {
+        //        //Console.Write(e.ToString());
+        //    }
 
-        }
+        //}
 
-        [Command("ping")]
+        [Command("ping"), Summary("Show the ping of ojamajo bot.")]
         public async Task printPing()
         {
             await ReplyAsync($"Hello! I'm running at **{Context.Client.Latency} ms**");
-        }
-
-        [Command("quotes"), Summary("I will mention random Doremi quotes")]
-        public async Task quotes()
-        {
-            string[] arrQuotes = {
-                "I'm the world's most unluckiest pretty girl!",
-                "Happy! Lucky! For all of you!",
-                "I like Steak very much"
-            };
-
-            await ReplyAsync(arrQuotes[new Random().Next(0, arrQuotes.Length)]);
         }
 
         [Command("random"), Alias("moments"), Summary("Show any random Doremi moments. " +
@@ -660,11 +666,11 @@ namespace OjamajoBot.Module
             .Build());
         }
 
-        //[Command("debug"), Summary("I will show you my biography info")]
-        //public async Task debug()
-        //{
-        //    await TradingCardCore.generateCardSpawn(Context.Guild.Id);
-        //}
+        [Command("debug"), Summary("Debug command")]
+        public async Task debug()
+        {
+            await TradingCardCore.generateCardSpawn(Context.Guild.Id);
+        }
 
         [Command("stats"), Alias("bio"), Summary("I will show you my biography info")]
         public async Task showStats()
@@ -672,7 +678,7 @@ namespace OjamajoBot.Module
             await ReplyAsync("Pirika pirilala poporina peperuto! Show my biography info!",
             embed: new EmbedBuilder()
             .WithAuthor("Doremi Harukaze", Config.Doremi.EmbedAvatarUrl)
-            .WithDescription("Doremi Harukaze (春風どれみ, Harukaze Doremi) is the main protagonist and the titular character of Ojamajo Doremi. " +
+            .WithDescription("Doremi Harukaze (春風どれみ, Harukaze Doremi) is the main character of Ojamajo Doremi. " +
             "She is an average, eight-year-old unlucky girl dealing with argumentative parents, a spiteful little sister, a lack of romance and terrible grades. " +
             "But after a particularly foul day, she learns the owner of Misora's Magical Shop is really a witch.")
             .AddField("Full Name", "春風どれみ Harukaze Doremi", true)
@@ -683,67 +689,68 @@ namespace OjamajoBot.Module
             .AddField("Favorite Food", "Steak", true)
             .AddField("Debut", "[I'm Doremi! Becoming a Witch Apprentice!](https://ojamajowitchling.fandom.com/wiki/I%27m_Doremi!_Becoming_a_Witch_Apprentice!)", true)
             .WithColor(Config.Doremi.EmbedColor)
-            .WithImageUrl("https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcRBfCfThqVYdJWQzWJOvILjx-Acf-DgRQidfN1s11-fxc0ShEe3")
-            .WithFooter("Source: [Ojamajo Witchling Wiki](https://ojamajowitchling.fandom.com/wiki/Doremi_Harukaze)")
+            .WithImageUrl("https://static.wikia.nocookie.net/ojamajowitchling/images/0/07/O.D_LFMD%27_Doremi_Harukaze.png")
+            .WithFooter("Source: [Ojamajo Doremi Wiki](https://ojamajowitchling.fandom.com/wiki/Doremi_Harukaze)")
             .Build());
         }
 
-        [Command("star"), Summary("I will pin this messsages if it has 5 stars reaction")]
-        [RequireBotPermission(ChannelPermission.ManageMessages,
-            ErrorMessage = "Oops, I need `manage channels` permission to use this command")]
-        public async Task starMessages([Remainder] string MessagesOrWithAttachment = "")
-        {
-            try
-            {
-                var attachments = Context.Message.Attachments;
-                WebClient myWebClient = new WebClient();
+        //temporarily disabled
+        //[Command("star"), Summary("I will pin this messsages if it has 5 stars reaction")]
+        //[RequireBotPermission(ChannelPermission.ManageMessages,
+        //    ErrorMessage = "Oops, I need `manage channels` permission to use this command")]
+        //public async Task starMessages([Remainder] string MessagesOrWithAttachment = "")
+        //{
+        //    try
+        //    {
+        //        var attachments = Context.Message.Attachments;
+        //        WebClient myWebClient = new WebClient();
 
-                string file = attachments.ElementAt(0).Filename;
-                string url = attachments.ElementAt(0).Url;
-                string extension = Path.GetExtension(attachments.ElementAt(0).Filename).ToLower();
-                string randomedFileName = DateTime.Now.ToString("yyyyMMdd_HHmm") + new Random().Next(0, 10000) + extension;
-                string completePath = $"attachments/{Context.Guild.Id}/{randomedFileName}";
+        //        string file = attachments.ElementAt(0).Filename;
+        //        string url = attachments.ElementAt(0).Url;
+        //        string extension = Path.GetExtension(attachments.ElementAt(0).Filename).ToLower();
+        //        string randomedFileName = DateTime.Now.ToString("yyyyMMdd_HHmm") + new Random().Next(0, 10000) + extension;
+        //        string completePath = $"attachments/{Context.Guild.Id}/{randomedFileName}";
 
-                //if (extension == ".jpg" || extension == ".jpeg" || extension == ".png" || extension == ".gif")
-                //{
-                // Download the resource and load the bytes into a buffer.
-                byte[] buffer = myWebClient.DownloadData(url);
-                Config.Core.ByteArrayToFile($"attachments/{Context.Guild.Id}/{randomedFileName}", buffer);
+        //        //if (extension == ".jpg" || extension == ".jpeg" || extension == ".png" || extension == ".gif")
+        //        //{
+        //        // Download the resource and load the bytes into a buffer.
+        //        byte[] buffer = myWebClient.DownloadData(url);
+        //        Config.Core.ByteArrayToFile($"attachments/{Context.Guild.Id}/{randomedFileName}", buffer);
 
-                await Context.Message.DeleteAsync();
-                var sentMessage = await ReplyAsync($"{MentionUtils.MentionUser(Context.User.Id)} has a star messages:\n{MessagesOrWithAttachment}");
-                var sentAttachment = await Context.Channel.SendFileAsync(completePath);
-                if (sentAttachment != null)
-                {
-                    await sentAttachment.AddReactionAsync(new Discord.Emoji("\u2B50"));
-                }
-                else
-                {
-                    await sentMessage.AddReactionAsync(new Discord.Emoji("\u2B50"));
-                }
+        //        await Context.Message.DeleteAsync();
+        //        var sentMessage = await ReplyAsync($"{MentionUtils.MentionUser(Context.User.Id)} has a star messages:\n{MessagesOrWithAttachment}");
+        //        var sentAttachment = await Context.Channel.SendFileAsync(completePath);
+        //        if (sentAttachment != null)
+        //        {
+        //            await sentAttachment.AddReactionAsync(new Discord.Emoji("\u2B50"));
+        //        }
+        //        else
+        //        {
+        //            await sentMessage.AddReactionAsync(new Discord.Emoji("\u2B50"));
+        //        }
 
-                File.Delete(completePath);
-                return;
+        //        File.Delete(completePath);
+        //        return;
 
-                //} else {
-                //    await ReplyAsync($"Oops, sorry only ``.jpg/.jpeg/.png/.gif`` format is allowed to use ``star`` commands.");
-                //    return;
-                //}
-            }
-            catch
-            {
-                //Console.WriteLine(e.ToString());
-            }
+        //        //} else {
+        //        //    await ReplyAsync($"Oops, sorry only ``.jpg/.jpeg/.png/.gif`` format is allowed to use ``star`` commands.");
+        //        //    return;
+        //        //}
+        //    }
+        //    catch
+        //    {
+        //        //Console.WriteLine(e.ToString());
+        //    }
 
-            if (MessagesOrWithAttachment == "")
-            {
-                await ReplyAsync("Please write some text to be starred on.");
-                return;
-            }
-            await Context.Message.DeleteAsync();
-            var sentWithoutAttached = await ReplyAsync($"{MentionUtils.MentionUser(Context.User.Id)} has a star messages:\n{MessagesOrWithAttachment}");
-            await sentWithoutAttached.AddReactionAsync(new Discord.Emoji("\u2B50"));
-        }
+        //    if (MessagesOrWithAttachment == "")
+        //    {
+        //        await ReplyAsync("Please write some text to be starred on.");
+        //        return;
+        //    }
+        //    await Context.Message.DeleteAsync();
+        //    var sentWithoutAttached = await ReplyAsync($"{MentionUtils.MentionUser(Context.User.Id)} has a star messages:\n{MessagesOrWithAttachment}");
+        //    await sentWithoutAttached.AddReactionAsync(new Discord.Emoji("\u2B50"));
+        //}
 
         [Command("steak"), Summary("Show any random doremi and her steak moments")]
         public async Task randomsteakmoments()
@@ -763,9 +770,9 @@ namespace OjamajoBot.Module
             Random rnd = new Random();
             int rndIndex = rnd.Next(0, arrRandom.GetLength(0));
 
-            await ReplyAsync(arrRandom[rndIndex, 0],
-                embed: new EmbedBuilder()
+            await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
+                .WithDescription(arrRandom[rndIndex, 0])
                 .WithImageUrl(arrRandom[rndIndex, 1])
                 .Build());
         }
@@ -774,17 +781,6 @@ namespace OjamajoBot.Module
         public async Task thankYou([Remainder] string messages = "")
         {
             await ReplyAsync($"Your welcome, {MentionUtils.MentionUser(Context.User.Id)}. I'm glad that you're happy with it :smile:");
-        }
-
-        [Command("turn"), Alias("transform"), Summary("Turn <username> into <wishes>")]
-        public async Task spells(IUser username, [Remainder] string wishes)
-        {
-            //await Context.Message.DeleteAsync();
-            await ReplyAsync($"Pirika pirilala poporina peperuto! Turn {username.Mention} into {wishes}",
-            embed: new EmbedBuilder()
-            .WithColor(Config.Doremi.EmbedColor)
-            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/9/98/Dore-spell.gif")
-            .Build());
         }
 
         [Command("wish"), Summary("I will grant you a <wishes>")]
@@ -806,7 +802,7 @@ namespace OjamajoBot.Module
             .WithTitle($"Ojamajo Bot v{Config.Core.version}")
             .AddField("**Introducing: Avatar Profile**:",
             "This is a new feature where you can see your user avatar profile. " +
-            "The maximum level available are 200. " +
+            "Level can be increased up to 200. " +
             "Everytime you post something on the server you'll have a chance to get 1 exp. " +
             "Available command:\n" +
             $"**{Config.Doremi.PrefixParent[0]}avatar profile <optional username>**: see your/other avatar\n" +
@@ -882,7 +878,7 @@ namespace OjamajoBot.Module
 
                 await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
-                .WithDescription($":x: Sorry **{Context.User.Username}**, you already water the plant today.\n" +
+                .WithDescription($":x: Sorry **{Context.User.Username}**, you already watered the plant today.\n" +
                 $"Please wait for **{Math.Floor(totalHours)}** hour(s) " +
                 $"**{Math.Ceiling(60 * (totalHours - Math.Floor(totalHours)))}** more minute(s) until the next growing time.")
                 .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build());
@@ -890,7 +886,7 @@ namespace OjamajoBot.Module
 
         }
 
-        [Command("seeds"), Summary("See the total amount of seeds that you have.")]
+        [Command("seeds"), Summary("See the total amount of seeds currency that you have.")]
         public async Task showTotalSeeds()
         {
             var clientId = Context.User.Id;
@@ -906,6 +902,14 @@ namespace OjamajoBot.Module
                 .WithThumbnailUrl(userAvatar)
                 .Build());
 
+        }
+
+        [Command("profile", RunMode = RunMode.Async), Alias("status"), Summary("See your avatar profile. " +
+            "You can also put username as optional parameter to see other user avatar.")]
+        public async Task user_avatar_other([Remainder] SocketGuildUser username = null)
+        {
+            await ReplyAsync(embed:
+                GuildUserAvatarCore.printAvatarStatus(Context, username).Build());
         }
 
         //[Command("achievement"), Alias("achievement"), Summary("See your achievements")]
@@ -926,10 +930,10 @@ namespace OjamajoBot.Module
         //present to someone: give a random present on reaction unwrapped
         //todo/more upcoming commands: easter egg/hidden commands, set daily message announcement 
         //contribute caption for random things
-        //user card maker, sing lyrics together with other ojamajo bot, birthday reminder, voting for best ojamajo bot, witch seeds to cast a spells
+        //user card maker, sing lyrics together with other ojamajo bot, voting for best ojamajo bot, witch seeds to cast a spells
     }
 
-    [Name("Garden"), Group("garden"), Summary("This commands category related with gardenning/server shop.")]
+    [Name("Garden"), Group("garden"), Summary("This commands category related with gardening.")]
     public class DoremiGardenInteractive : InteractiveBase
     {
         [Command("weather", RunMode = RunMode.Async), Summary("See the weather forecast for today.")]
@@ -954,146 +958,15 @@ namespace OjamajoBot.Module
             string reminder = "";
             if (DateTime.Parse(userGardenData[DBM_User_Garden_Data.Columns.last_water_time].ToString()).ToString("dd")
                 != DateTime.Now.ToString("dd"))
-                reminder = ":exclamation: Friendly reminder: the plant is not watered yet today.";
+                reminder = "Friendly reminder: the plant is not watered yet today.";
 
             await ReplyAsync(embed: new EmbedBuilder()
             .WithColor(Config.Doremi.EmbedColor)
-            .WithTitle($"{Context.User.Username}'s Garden Progress.")
+            .WithAuthor($"Context.User.Username,Context.User.GetAvatarUrl()' Garden Progress")
             .WithDescription($"{MentionUtils.MentionUser(userId)} plant growth progress currently at: " +
             $"**{userGardenData[DBM_User_Garden_Data.Columns.plant_growth]}%**")
             .WithFooter(reminder)
             .Build());
-        }
-
-    }
-
-    [Name("Birthday"), Group("birthday"), Summary("This commands category related with the birthday reminder.")]
-    public class DoremiBirthdayModule : InteractiveBase
-    {
-        [Command("set"), Summary("I will set your birthday date reminder. Proper date format need to be: **dd/mm/yyyy** or **dd/mm**. " +
-            "Example: `do!birthday set 31/01` or `do!birthday set 31/01/1993`")]
-        public async Task setBirthdayDate(string DateMonthYear)
-        {
-            var guildId = Context.Guild.Id;
-            var userId = Context.User.Id;
-
-            DateTime date;
-            if (DateTime.TryParseExact(DateMonthYear, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out date) ||
-                DateTime.TryParseExact(DateMonthYear, "dd/MM", CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
-            {
-                var guildJsonFile = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json"));
-                var jobjbirthday = (JObject)guildJsonFile.GetValue("user_birthday");
-                if (!jobjbirthday.ContainsKey(userId.ToString()))
-                    jobjbirthday.Add(new JProperty(userId.ToString(), DateMonthYear));
-                else
-                    jobjbirthday[userId.ToString()] = DateMonthYear;
-
-                File.WriteAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json", guildJsonFile.ToString());
-
-                await ReplyAsync(embed: new EmbedBuilder()
-                        .WithColor(Config.Doremi.EmbedColor)
-                        .WithDescription($"{Config.Emoji.birthdayCake} Ok! Your birthday date has been set into: **{DateMonthYear}**. " +
-                        $"I will remind everyone on your birthday date.")
-                        .WithThumbnailUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/0/06/DoremiLineOK.png")
-                        .Build());
-
-            }
-            else
-            {
-                await ReplyAsync("Sorry, you need to give me the correct birthday date format: `dd/mm/yyyy` or `dd/mm`.");
-            }
-        }
-
-        [Command("search"), Summary("Search the birthday date for mentioned <username>. Returned birthday date format will be: `dd/mm`")]
-        public async Task searchBirthdayDate(IUser username)
-        {
-            var guildId = Context.Guild.Id;
-            var userId = username.Id; EmbedBuilder builder = new EmbedBuilder();
-            var guildJsonFile = (JObject)JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json")).GetValue("user_birthday");
-            var jobjbirthday = guildJsonFile.Properties().ToList();
-            for (int i = 0; i < jobjbirthday.Count; i++)
-            {
-                var key = jobjbirthday[i].Name; var val = jobjbirthday[i].Value.ToString();
-                if (userId.ToString() == key)
-                {
-                    builder.ThumbnailUrl = username.GetAvatarUrl();
-                    builder.Color = Config.Doremi.EmbedColor;
-                    builder.Description = $"{username.Username} birthday will be celebrated on {val}";
-                    await ReplyAsync(embed: builder.Build());
-                    return;
-                }
-            }
-
-            await ReplyAsync("Sorry, I can't found the birthday date for that user."); return;
-        }
-
-        [Command("show"), Summary("Show all wonderful people that will have birthday on this month.")]
-        public async Task showAllBirthdayDate()
-        {
-            DateTime date; Boolean birthdayExisted = false;
-            EmbedBuilder builder = new EmbedBuilder();
-            var guildId = Context.Guild.Id;
-
-            var guildJsonFile = (JObject)JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json")).GetValue("user_birthday");
-            var jobjbirthday = guildJsonFile.Properties().ToList();
-
-            for (int i = 0; i < jobjbirthday.Count; i++)
-            {
-                var key = jobjbirthday[i].Name; var val = jobjbirthday[i].Value.ToString();
-                //var birthdayMonth = "";
-                if (DateTime.TryParseExact(val, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out date) ||
-                    DateTime.TryParseExact(val, "dd/MM", CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
-                {
-                    if (date.ToString("MM") == DateTime.Now.ToString("MM"))
-                    {
-                        try
-                        {
-                            var username = Context.Guild.GetUser(Convert.ToUInt64(key)).Username;
-                            builder.AddField(username, val, true);
-                            birthdayExisted = true;
-                        }
-                        catch { }
-
-                    }
-                }
-            }
-
-            if (birthdayExisted)
-            {
-                builder.Title = $"{Config.Emoji.birthdayCake} {DateTime.Now.ToString("MMMM")} Birthday List";
-                builder.Description = $"Here are the list of all wonderful people that will have birthday on this month:";
-                builder.Color = Config.Doremi.EmbedColor;
-                await ReplyAsync(embed: builder.Build());
-            }
-            else
-            {
-                await ReplyAsync("We don't have birthday celebration for this month.");
-            }
-
-        }
-
-        [Command("remove"), Summary("Remove the birthday date reminder settings.")]
-        public async Task removeBirthdayDate()
-        {
-            var guildId = Context.Guild.Id;
-            var userId = Context.User.Id;
-            var guildJsonFile = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json"));
-            var jobjbirthday = (JObject)guildJsonFile.GetValue("user_birthday");
-            if (jobjbirthday.ContainsKey(userId.ToString()))
-            {
-                jobjbirthday.Remove(userId.ToString());
-                File.WriteAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json", guildJsonFile.ToString());
-                await ReplyAsync(embed: new EmbedBuilder()
-                    .WithDescription("Ok, your birthday date settings has been removed.")
-                    .WithColor(Config.Doremi.EmbedColor)
-                    .WithThumbnailUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/0/06/DoremiLineOK.png")
-                    .Build());
-            }
-            else
-            {
-                await ReplyAsync("Sorry, it seems you haven't set your birthday date yet.");
-            }
-
         }
 
     }
@@ -1218,7 +1091,7 @@ namespace OjamajoBot.Module
             }
         }
 
-        [Command("wizards", RunMode = RunMode.Async), Alias("wizard"), Summary("I will give all wizards characters list. " +
+        [Command("wizards", RunMode = RunMode.Async), Alias("wizard"), Summary("Show all ojamajo doremi wizards characters list. " +
             "Fill the optional <characters> parameter with the available wizards characters name.")]
         public async Task showCharactersWizards([Remainder] string characters = "")
         {
@@ -1272,212 +1145,213 @@ namespace OjamajoBot.Module
 
     }
 
-    [Name("role"), Group("role"), Summary("These contains role commands category.")]
-    public class DoremiRoles : InteractiveBase
-    {
-        [Command("statistics"), Summary("Display the role statistics.")]
-        public async Task showRoleStatistics()
-        {
-            var guildId = Context.Guild.Id;
-            var guildJsonFile = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json"));
+    //archived for now
+    //[Name("role"), Group("role"), Summary("These contains role commands category.")]
+    //public class DoremiRoles : InteractiveBase
+    //{
+    //    [Command("statistics"), Summary("Display the role statistics.")]
+    //    public async Task showRoleStatistics()
+    //    {
+    //        var guildId = Context.Guild.Id;
+    //        var guildJsonFile = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json"));
 
-            PaginatedAppearanceOptions pao = new PaginatedAppearanceOptions();
-            pao.JumpDisplayOptions = JumpDisplayOptions.Never;
-            pao.DisplayInformationIcon = false;
+    //        PaginatedAppearanceOptions pao = new PaginatedAppearanceOptions();
+    //        pao.JumpDisplayOptions = JumpDisplayOptions.Never;
+    //        pao.DisplayInformationIcon = false;
 
-            List<string> pageContent = new List<string>();
-            string title = $"";
-            JArray arrList = (JArray)guildJsonFile["roles_list"];
+    //        List<string> pageContent = new List<string>();
+    //        string title = $"";
+    //        JArray arrList = (JArray)guildJsonFile["roles_list"];
 
-            string tempVal = title;
-            int currentIndex = 0;
-            for (int i = 0; i < arrList.ToList().Count(); i++)
-            {
-                var roleSearch = Context.Guild.Roles.FirstOrDefault(x => x.Id == Convert.ToUInt64(arrList[i]));
-                var roleSearchMembers = Context.Guild.Roles.FirstOrDefault(x => x.Id == Convert.ToUInt64(arrList[i])).Members;
+    //        string tempVal = title;
+    //        int currentIndex = 0;
+    //        for (int i = 0; i < arrList.ToList().Count(); i++)
+    //        {
+    //            var roleSearch = Context.Guild.Roles.FirstOrDefault(x => x.Id == Convert.ToUInt64(arrList[i]));
+    //            var roleSearchMembers = Context.Guild.Roles.FirstOrDefault(x => x.Id == Convert.ToUInt64(arrList[i])).Members;
 
-                if (roleSearch != null)
-                {
-                    var usersList = Context.Guild.Users.Select(
-                        x => x.Roles.FirstOrDefault(y => y.Id == Convert.ToUInt64(arrList[i]))
-                    ).ToList();
-                    int tempCtr = 0;
-                    for (int j = 0; j < usersList.Count; j++)
-                    {
-                        if (usersList[j] != null)
-                        {
-                            if (usersList[j].Id == roleSearch.Id)
-                                tempCtr++;
-                        }
-                    }
+    //            if (roleSearch != null)
+    //            {
+    //                var usersList = Context.Guild.Users.Select(
+    //                    x => x.Roles.FirstOrDefault(y => y.Id == Convert.ToUInt64(arrList[i]))
+    //                ).ToList();
+    //                int tempCtr = 0;
+    //                for (int j = 0; j < usersList.Count; j++)
+    //                {
+    //                    if (usersList[j] != null)
+    //                    {
+    //                        if (usersList[j].Id == roleSearch.Id)
+    //                            tempCtr++;
+    //                    }
+    //                }
 
-                    tempVal += $"**{MentionUtils.MentionRole(roleSearch.Id)}**: **{tempCtr} members**\n";
-                }
+    //                tempVal += $"**{MentionUtils.MentionRole(roleSearch.Id)}**: **{tempCtr} members**\n";
+    //            }
 
-                if (currentIndex <= 10) currentIndex++;
-                else
-                {
-                    pageContent.Add(tempVal);
-                    currentIndex = 0;
-                    tempVal = title;
-                }
+    //            if (currentIndex <= 10) currentIndex++;
+    //            else
+    //            {
+    //                pageContent.Add(tempVal);
+    //                currentIndex = 0;
+    //                tempVal = title;
+    //            }
 
-                if (i == arrList.ToList().Count - 1) pageContent.Add(tempVal);
-            }
+    //            if (i == arrList.ToList().Count - 1) pageContent.Add(tempVal);
+    //        }
 
-            if (arrList.ToList().Count == 0)
-            {
-                tempVal = "There are no self assignable role list yet.";
-                pageContent.Add(tempVal);
-            }
+    //        if (arrList.ToList().Count == 0)
+    //        {
+    //            tempVal = "There are no self assignable role list yet.";
+    //            pageContent.Add(tempVal);
+    //        }
 
-            var pager = new PaginatedMessage
-            {
-                Title = $"**Role Statistics**\n",
-                Pages = pageContent,
-                Color = Config.Doremi.EmbedColor,
-                Options = pao
-            };
+    //        var pager = new PaginatedMessage
+    //        {
+    //            Title = $"**Role Statistics**\n",
+    //            Pages = pageContent,
+    //            Color = Config.Doremi.EmbedColor,
+    //            Options = pao
+    //        };
 
-            await Context.Message.DeleteAsync();
-            await PagedReplyAsync(pager);
+    //        await Context.Message.DeleteAsync();
+    //        await PagedReplyAsync(pager);
 
-        }
+    //    }
 
-        [Command("list"), Summary("Show all the available self assignable role list.")]
-        public async Task showRoleList()
-        {
-            var guildId = Context.Guild.Id;
-            var guildJsonFile = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json"));
+    //    [Command("list"), Summary("Show all the available self assignable role list.")]
+    //    public async Task showRoleList()
+    //    {
+    //        var guildId = Context.Guild.Id;
+    //        var guildJsonFile = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json"));
 
-            PaginatedAppearanceOptions pao = new PaginatedAppearanceOptions();
-            pao.JumpDisplayOptions = JumpDisplayOptions.Never;
-            pao.DisplayInformationIcon = false;
+    //        PaginatedAppearanceOptions pao = new PaginatedAppearanceOptions();
+    //        pao.JumpDisplayOptions = JumpDisplayOptions.Never;
+    //        pao.DisplayInformationIcon = false;
 
-            List<string> pageContent = new List<string>();
-            string title = $"";
-            JArray arrList = (JArray)guildJsonFile["roles_list"];
+    //        List<string> pageContent = new List<string>();
+    //        string title = $"";
+    //        JArray arrList = (JArray)guildJsonFile["roles_list"];
 
-            string tempVal = title;
-            int currentIndex = 0;
-            for (int i = 0; i < arrList.ToList().Count(); i++)
-            {
-                var roleSearch = Context.Guild.Roles.FirstOrDefault(x => x.Id == Convert.ToUInt64(arrList[i]));
-                var roleSearchMembers = Context.Guild.Roles.FirstOrDefault(x => x.Id == Convert.ToUInt64(arrList[i])).Members;
+    //        string tempVal = title;
+    //        int currentIndex = 0;
+    //        for (int i = 0; i < arrList.ToList().Count(); i++)
+    //        {
+    //            var roleSearch = Context.Guild.Roles.FirstOrDefault(x => x.Id == Convert.ToUInt64(arrList[i]));
+    //            var roleSearchMembers = Context.Guild.Roles.FirstOrDefault(x => x.Id == Convert.ToUInt64(arrList[i])).Members;
 
-                if (roleSearch != null)
-                {
-                    var usersList = Context.Guild.Users.Select(
-                        x => x.Roles.FirstOrDefault(y => y.Id == Convert.ToUInt64(arrList[i]))
-                    ).ToList();
-                    int tempCtr = 0;
-                    for (int j = 0; j < usersList.Count; j++)
-                    {
-                        if (usersList[j] != null)
-                        {
-                            if (usersList[j].Id == roleSearch.Id)
-                                tempCtr++;
-                        }
-                    }
+    //            if (roleSearch != null)
+    //            {
+    //                var usersList = Context.Guild.Users.Select(
+    //                    x => x.Roles.FirstOrDefault(y => y.Id == Convert.ToUInt64(arrList[i]))
+    //                ).ToList();
+    //                int tempCtr = 0;
+    //                for (int j = 0; j < usersList.Count; j++)
+    //                {
+    //                    if (usersList[j] != null)
+    //                    {
+    //                        if (usersList[j].Id == roleSearch.Id)
+    //                            tempCtr++;
+    //                    }
+    //                }
 
-                    tempVal += $"**{MentionUtils.MentionRole(roleSearch.Id)}**: **{tempCtr} members**\n";
-                }
+    //                tempVal += $"**{MentionUtils.MentionRole(roleSearch.Id)}**: **{tempCtr} members**\n";
+    //            }
 
-                if (currentIndex <= 10) currentIndex++;
-                else
-                {
-                    pageContent.Add(tempVal);
-                    currentIndex = 0;
-                    tempVal = title;
-                }
+    //            if (currentIndex <= 10) currentIndex++;
+    //            else
+    //            {
+    //                pageContent.Add(tempVal);
+    //                currentIndex = 0;
+    //                tempVal = title;
+    //            }
 
-                if (i == arrList.ToList().Count - 1) pageContent.Add(tempVal);
-            }
+    //            if (i == arrList.ToList().Count - 1) pageContent.Add(tempVal);
+    //        }
 
-            if (arrList.ToList().Count == 0)
-            {
-                tempVal = "There are no self assignable role list yet.";
-                pageContent.Add(tempVal);
-            }
+    //        if (arrList.ToList().Count == 0)
+    //        {
+    //            tempVal = "There are no self assignable role list yet.";
+    //            pageContent.Add(tempVal);
+    //        }
 
-            var pager = new PaginatedMessage
-            {
-                Title = $"**Self Assignable Role List**\n",
-                Pages = pageContent,
-                Color = Config.Doremi.EmbedColor,
-                Options = pao
-            };
+    //        var pager = new PaginatedMessage
+    //        {
+    //            Title = $"**Self Assignable Role List**\n",
+    //            Pages = pageContent,
+    //            Color = Config.Doremi.EmbedColor,
+    //            Options = pao
+    //        };
 
-            await PagedReplyAsync(pager);
+    //        await PagedReplyAsync(pager);
 
-        }
+    //    }
 
-        [Command("set"), Summary("Set your roles with given role parameter. Use `do!role list` to display all self assignable roles list.")]
-        public async Task setRole([Remainder] string role)
-        {
-            var guildId = Context.Guild.Id;
-            var guildJsonFile = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json"));
-            var embed = new EmbedBuilder().WithColor(Config.Doremi.EmbedColor);
+    //    [Command("set"), Summary("Set your roles with given role parameter. Use `do!role list` to display all self assignable roles list.")]
+    //    public async Task setRole([Remainder] string role)
+    //    {
+    //        var guildId = Context.Guild.Id;
+    //        var guildJsonFile = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigGuildFolder}{guildId}/{guildId}.json"));
+    //        var embed = new EmbedBuilder().WithColor(Config.Doremi.EmbedColor);
 
-            var roleSearch = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == role.ToLower());
-            var userRoles = Context.Guild.GetUser(Context.User.Id).Roles.FirstOrDefault(x => x.Name.ToLower() == role.ToLower());
+    //        var roleSearch = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == role.ToLower());
+    //        var userRoles = Context.Guild.GetUser(Context.User.Id).Roles.FirstOrDefault(x => x.Name.ToLower() == role.ToLower());
 
-            if (roleSearch == null)
-                await ReplyAsync($"Sorry, I can't find that role. See the available roles with **{Config.Doremi.PrefixParent[0]}role list**");
-            else
-            {
-                JArray item = (JArray)guildJsonFile["roles_list"];
-                if (userRoles != null)
-                {
-                    await ReplyAsync("You already have that roles.");
-                }
-                else
-                {
-                    if (item.ToString().Contains(roleSearch.Id.ToString()))
-                    {
-                        await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(roleSearch);
-                        await ReplyAsync(embed: embed
-                            .WithTitle("Role updated!")
-                            .WithDescription($":white_check_mark: **{Context.User.Username}** have new role: {MentionUtils.MentionRole(roleSearch.Id)}")
-                            .Build());
-                    }
-                    else
-                    {
-                        await ReplyAsync("Sorry, you can't assign into that role.");
-                    }
-                }
-            }
-        }
+    //        if (roleSearch == null)
+    //            await ReplyAsync($"Sorry, I can't find that role. See the available roles with **{Config.Doremi.PrefixParent[0]}role list**");
+    //        else
+    //        {
+    //            JArray item = (JArray)guildJsonFile["roles_list"];
+    //            if (userRoles != null)
+    //            {
+    //                await ReplyAsync("You already have that roles.");
+    //            }
+    //            else
+    //            {
+    //                if (item.ToString().Contains(roleSearch.Id.ToString()))
+    //                {
+    //                    await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(roleSearch);
+    //                    await ReplyAsync(embed: embed
+    //                        .WithTitle("Role updated!")
+    //                        .WithDescription($":white_check_mark: **{Context.User.Username}** have new role: {MentionUtils.MentionRole(roleSearch.Id)}")
+    //                        .Build());
+    //                }
+    //                else
+    //                {
+    //                    await ReplyAsync("Sorry, you can't assign into that role.");
+    //                }
+    //            }
+    //        }
+    //    }
 
-        [Command("remove"), Summary("Remove your roles from given role parameter.")]
-        public async Task removeRole([Remainder] string role)
-        {
-            var guildId = Context.Guild.Id;
-            var embed = new EmbedBuilder().WithColor(Config.Doremi.EmbedColor);
+    //    [Command("remove"), Summary("Remove your roles from given role parameter.")]
+    //    public async Task removeRole([Remainder] string role)
+    //    {
+    //        var guildId = Context.Guild.Id;
+    //        var embed = new EmbedBuilder().WithColor(Config.Doremi.EmbedColor);
 
-            var roleSearch = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == role.ToLower());
-            var userRoles = Context.Guild.GetUser(Context.User.Id).Roles.FirstOrDefault(x => x.Name.ToLower() == role.ToLower());
+    //        var roleSearch = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == role.ToLower());
+    //        var userRoles = Context.Guild.GetUser(Context.User.Id).Roles.FirstOrDefault(x => x.Name.ToLower() == role.ToLower());
 
-            if (roleSearch == null)
-            {
-                await ReplyAsync($"Sorry, I can't find that role. See the available roles with **{Config.Doremi.PrefixParent[0]}role list**");
-            }
-            else if (userRoles == null)
-            {
-                await ReplyAsync("You already have that roles.");
-            }
-            else
-            {
-                await Context.Guild.GetUser(Context.User.Id).RemoveRoleAsync(roleSearch);
-                await ReplyAsync(embed: embed
-                    .WithTitle("Role removed!")
-                    .WithDescription($":white_check_mark: **{Context.User.Username}** role has been removed from: {MentionUtils.MentionRole(roleSearch.Id)}")
-                    .Build());
-            }
-        }
-    }
+    //        if (roleSearch == null)
+    //        {
+    //            await ReplyAsync($"Sorry, I can't find that role. See the available roles with **{Config.Doremi.PrefixParent[0]}role list**");
+    //        }
+    //        else if (userRoles == null)
+    //        {
+    //            await ReplyAsync("You already have that roles.");
+    //        }
+    //        else
+    //        {
+    //            await Context.Guild.GetUser(Context.User.Id).RemoveRoleAsync(roleSearch);
+    //            await ReplyAsync(embed: embed
+    //                .WithTitle("Role removed!")
+    //                .WithDescription($":white_check_mark: **{Context.User.Username}** role has been removed from: {MentionUtils.MentionRole(roleSearch.Id)}")
+    //                .Build());
+    //        }
+    //    }
+    //}
 
-    [Name("mod"), Group("mod"), Summary("Basic moderator commands. Require `manage channels` permission")]
+    [Name("mod"), Group("mod"), Summary("Basic moderator commands. Require `manage channels` & `manage roles` permission")]
     [RequireUserPermission(GuildPermission.ManageChannels,
         ErrorMessage = "Sorry, you need the `manage channels` permission",
         NotAGuildErrorMessage = "Sorry, you need the `manage channels` permission")]
@@ -1486,7 +1360,8 @@ namespace OjamajoBot.Module
         NotAGuildErrorMessage = "Sorry, you need the `manage roles` permission")]
     public class DoremiModerator : InteractiveBase
     {
-        [Command("prefix"), Summary("Update the custom prefix. Maximum length:1.")]
+        [Command("customprefix"), Summary("Update the custom prefix for custom command. Maximum length:1. " +
+            "If the parameter is empty then it'll be removed.")]
         public async Task updateCustomPrefix(string prefix = "")
         {
             var idGuild = Context.Guild.Id;
@@ -1509,79 +1384,101 @@ namespace OjamajoBot.Module
             if (prefix == "")
                 await ReplyAsync("Custom prefix has removed.");
             else
-                await ReplyAsync($"Custom prefix has been updated with **{prefix}**.");
+                await ReplyAsync($"Custom prefix has been updated with **{prefix}**");
         }
 
         [Name("mod command"), Group("command"), Summary("These commands contains all custom command related. " +
         "Requires `manage roles permission`.")]
         public class DoremiModeratorCustomCommand : InteractiveBase
         {
-            [Command("list"), Summary("List the custom command information.")]
-            public async Task listCustomCommand(string command)
+            [Command("list"), Summary("List the custom command that has been added. " +
+                "You can put the custom command as parameter to list all the custom command that has been added.")]
+            public async Task listCustomCommand(string command="")
             {
                 ulong guildId = Context.Guild.Id;
-                string query = $"SELECT * " +
-                                $" FROM {DBM_Custom_Command.tableName} " +
-                                $" WHERE {DBM_Custom_Command.Columns.id_guild}=@{DBM_Custom_Command.Columns.id_guild} AND " +
-                                $" {DBM_Custom_Command.Columns.command}=@{DBM_Custom_Command.Columns.command}";
-                Dictionary<string, object> columns = new Dictionary<string, object>();
-                columns[DBM_Custom_Command.Columns.id_guild] = guildId.ToString();
-                columns[DBM_Custom_Command.Columns.command] = command;
-                var results = new DBC().selectAll(query, columns);
-
-                List<string> pageContent = new List<string>();
-
-                string title = $"";
-
-                string tempVal = title;
-
-                var i = 0;
-                int currentIndex = 0;
-
-                foreach (DataRow row in results.Rows)
+                if (command == "")
                 {
-                    string id = row[DBM_Custom_Command.Columns.id].ToString();
-                    string content = "";
-                    try
+                    string query = @$"select distinct({DBM_Guild_Custom_Command.Columns.command}) as {DBM_Guild_Custom_Command.Columns.command} 
+                    from {DBM_Guild_Custom_Command.tableName} 
+                    where {DBM_Guild_Custom_Command.Columns.id_guild}=@{DBM_Guild_Custom_Command.Columns.id_guild} 
+                    order by {DBM_Guild_Custom_Command.Columns.command} asc";
+                    Dictionary<string, object> columns = new Dictionary<string, object>();
+                    columns[DBM_Guild_Custom_Command.Columns.id_guild] = guildId.ToString();
+                    var results = new DBC().selectAll(query, columns);
+                    if (results.Rows.Count <= 0)
                     {
-                        content = row[DBM_Custom_Command.Columns.content].ToString();
-                    } catch(Exception e)
-                    {
+                        await ReplyAsync($"There are no custom command that has been added yet"); return;
+                    }
+                    string customCommand = "";
+                    foreach(DataRow row in results.Rows)
+                        customCommand += $"`{row[DBM_Guild_Custom_Command.Columns.command]}`,";
+                    
+                    customCommand = customCommand.TrimEnd(',');
+                    await ReplyAsync($"Custom command that has been added: {customCommand}");
 
+                } else
+                {
+                    string query = $"SELECT * " +
+                                $" FROM {DBM_Guild_Custom_Command.tableName} " +
+                                $" WHERE {DBM_Guild_Custom_Command.Columns.id_guild}=@{DBM_Guild_Custom_Command.Columns.id_guild} AND " +
+                                $" {DBM_Guild_Custom_Command.Columns.command}=@{DBM_Guild_Custom_Command.Columns.command}";
+                    Dictionary<string, object> columns = new Dictionary<string, object>();
+                    columns[DBM_Guild_Custom_Command.Columns.id_guild] = guildId.ToString();
+                    columns[DBM_Guild_Custom_Command.Columns.command] = command;
+                    var results = new DBC().selectAll(query, columns);
+
+                    if (results.Rows.Count <= 0)
+                    {
+                        await ReplyAsync($"Sorry, I cannot find any custom command: **{command}**"); return;
                     }
 
-                    tempVal += $"{id}: {content}\n";
+                    List<string> pageContent = new List<string>();
+                    string title = $"";
 
-                    if (i == results.Rows.Count - 1)
+                    string tempVal = title;
+
+                    var i = 0;
+                    int currentIndex = 0;
+
+                    foreach (DataRow row in results.Rows)
                     {
-                        pageContent.Add(tempVal);
-                    }
-                    else
-                    {
-                        if (currentIndex < 5) currentIndex++;
-                        else
+                        string id = row[DBM_Guild_Custom_Command.Columns.id].ToString();
+                        string content = row[DBM_Guild_Custom_Command.Columns.content].ToString();
+                        if (row[DBM_Guild_Custom_Command.Columns.content].ToString().Length >= 30)
+                            content = $"{row[DBM_Guild_Custom_Command.Columns.content].ToString().Substring(0, 28)}...";
+
+                        tempVal += $"{id}: {content}\n";
+
+                        if (i == results.Rows.Count - 1)
                         {
                             pageContent.Add(tempVal);
-                            currentIndex = 0;
-                            tempVal = title;
                         }
+                        else
+                        {
+                            if (currentIndex < 5) currentIndex++;
+                            else
+                            {
+                                pageContent.Add(tempVal);
+                                currentIndex = 0;
+                                tempVal = title;
+                            }
+                        }
+                        i++;
                     }
-                    i++;
+
+                    PaginatedAppearanceOptions pao = new PaginatedAppearanceOptions();
+                    pao.JumpDisplayOptions = JumpDisplayOptions.Never;
+                    pao.DisplayInformationIcon = false;
+                    var pager = new PaginatedMessage
+                    {
+                        Title = $"**Custom Command: {command}**\n",
+                        Pages = pageContent,
+                        Color = Config.Doremi.EmbedColor,
+                        Options = pao
+                    };
+
+                    await PagedReplyAsync(pager);
                 }
-
-                PaginatedAppearanceOptions pao = new PaginatedAppearanceOptions();
-                pao.JumpDisplayOptions = JumpDisplayOptions.Never;
-                pao.DisplayInformationIcon = false;
-                var pager = new PaginatedMessage
-                {
-                    Title = $"**Custom Command: {command}**\n",
-                    Pages = pageContent,
-                    Color = Config.Doremi.EmbedColor,
-                    Options = pao
-                };
-
-                await PagedReplyAsync(pager);
-
             }
 
             [Command("add"), Summary("Add the custom command.")]
@@ -1589,32 +1486,30 @@ namespace OjamajoBot.Module
             {
                 var idGuild = Context.Guild.Id;
                 Dictionary<string, object> columns = new Dictionary<string, object>();
-                columns[DBM_Custom_Command.Columns.id_guild] = idGuild.ToString();
-                columns[DBM_Custom_Command.Columns.command] = command;
-                columns[DBM_Custom_Command.Columns.content] = content;
-                new DBC().insert(DBM_Custom_Command.tableName, columns);
+                columns[DBM_Guild_Custom_Command.Columns.id_guild] = idGuild.ToString();
+                columns[DBM_Guild_Custom_Command.Columns.command] = command;
+                columns[DBM_Guild_Custom_Command.Columns.content] = content;
+                new DBC().insert(DBM_Guild_Custom_Command.tableName, columns);
 
                 //get latest id
                 string query = $"SELECT * " +
-                $" FROM {DBM_Custom_Command.tableName} " +
-                $" WHERE {DBM_Custom_Command.Columns.id_guild}=@{DBM_Custom_Command.Columns.id_guild} " +
-                $" ORDER BY {DBM_Custom_Command.Columns.created_at} desc " +
+                $" FROM {DBM_Guild_Custom_Command.tableName} " +
+                $" WHERE {DBM_Guild_Custom_Command.Columns.id_guild}=@{DBM_Guild_Custom_Command.Columns.id_guild} AND " +
+                $" {DBM_Guild_Custom_Command.Columns.command}=@{DBM_Guild_Custom_Command.Columns.command} " +
+                $" ORDER BY {DBM_Guild_Custom_Command.Columns.created_at} desc " +
                 $" LIMIT 1";
                 columns = new Dictionary<string, object>();
-                columns[DBM_Custom_Command.Columns.id_guild] = idGuild.ToString();
-                string newId = "";
+                columns[DBM_Guild_Custom_Command.Columns.id_guild] = idGuild.ToString();
+                columns[DBM_Guild_Custom_Command.Columns.command] = command.ToString();
                 var result = new DBC().selectAll(query, columns);
-                foreach(DataRow row in result.Rows)
-                    newId = row[DBM_Custom_Command.Columns.id].ToString();
+                string newId = "";
+                foreach (DataRow row in result.Rows)
+                    newId = row[DBM_Guild_Custom_Command.Columns.id].ToString();
                 
-
-                EmbedBuilder eb = new EmbedBuilder()
+                await ReplyAsync(embed: new EmbedBuilder()
                     .WithColor(Config.Doremi.EmbedColor)
-                    .WithTitle("Custom command added!")
-                    .AddField("Command:",command)
-                    .AddField("Content:",content)
-                    .WithFooter("ID:",newId);
-                await ReplyAsync(embed:eb.Build());
+                    .WithTitle($"Custom command added with id: **{newId}**")
+                    .Build());
             }
 
             [Command("remove"), Summary("Remove the custom command with **id** parameter.")]
@@ -1622,30 +1517,64 @@ namespace OjamajoBot.Module
             {
                 var guildId = Context.Guild.Id;
                 string query = $"SELECT * " +
-                                $" FROM {DBM_Custom_Command.tableName} " +
-                                $" WHERE {DBM_Custom_Command.Columns.id_guild}=@{DBM_Custom_Command.Columns.id_guild} AND " +
-                                $" {DBM_Custom_Command.Columns.id}=@{DBM_Custom_Command.Columns.id}";
+                                $" FROM {DBM_Guild_Custom_Command.tableName} " +
+                                $" WHERE {DBM_Guild_Custom_Command.Columns.id_guild}=@{DBM_Guild_Custom_Command.Columns.id_guild} AND " +
+                                $" {DBM_Guild_Custom_Command.Columns.id}=@{DBM_Guild_Custom_Command.Columns.id}";
                 Dictionary<string, object> columns = new Dictionary<string, object>();
-                columns[DBM_Custom_Command.Columns.id_guild] = guildId.ToString();
-                columns[DBM_Custom_Command.Columns.id] = Convert.ToInt32(id);
+                columns[DBM_Guild_Custom_Command.Columns.id_guild] = guildId.ToString();
+                columns[DBM_Guild_Custom_Command.Columns.id] = Convert.ToInt32(id);
                 var results = new DBC().selectAll(query, columns);
                 if (results.Rows.Count > 0)
                 {
-                    query = $"DELETE FROM {DBM_Custom_Command.tableName} " +
-                    $" WHERE {DBM_Custom_Command.Columns.id_guild}=@{DBM_Custom_Command.Columns.id_guild} AND " +
-                    $" {DBM_Custom_Command.Columns.id}=@{DBM_Custom_Command.Columns.id} ";
+                    query = $"DELETE FROM {DBM_Guild_Custom_Command.tableName} " +
+                    $" WHERE {DBM_Guild_Custom_Command.Columns.id_guild}=@{DBM_Guild_Custom_Command.Columns.id_guild} AND " +
+                    $" {DBM_Guild_Custom_Command.Columns.id}=@{DBM_Guild_Custom_Command.Columns.id} ";
 
                     columns = new Dictionary<string, object>();
-                    columns[DBM_Custom_Command.Columns.id_guild] = guildId.ToString();
-                    columns[DBM_Custom_Command.Columns.id] = Convert.ToInt32(id);
+                    columns[DBM_Guild_Custom_Command.Columns.id_guild] = guildId.ToString();
+                    columns[DBM_Guild_Custom_Command.Columns.id] = Convert.ToInt32(id);
                     new DBC().delete(query, columns);
-                    await ReplyAsync($"Custom command with id **{id}** has been removed.");
+                    await ReplyAsync($"Custom command with id: **{id}** has been removed.");
                 }
                 else
                 {
                     await ReplyAsync($"Cannot find custom command with id: **{id}**");
                 }
             }
+
+            [Command("view"), Summary("Preview the custom command with **id** parameter.")]
+            public async Task previewCustomCommand(string id)
+            {
+                var isNumeric = int.TryParse(id, out _);
+                if (!isNumeric)
+                {
+                    await ReplyAsync($"Please enter the id with number format.");
+                    return;
+                }
+
+                var guildId = Context.Guild.Id;
+                string query = $"SELECT * " +
+                                $" FROM {DBM_Guild_Custom_Command.tableName} " +
+                                $" WHERE {DBM_Guild_Custom_Command.Columns.id_guild}=@{DBM_Guild_Custom_Command.Columns.id_guild} AND " +
+                                $" {DBM_Guild_Custom_Command.Columns.id}=@{DBM_Guild_Custom_Command.Columns.id}";
+                Dictionary<string, object> columns = new Dictionary<string, object>();
+                columns[DBM_Guild_Custom_Command.Columns.id_guild] = guildId.ToString();
+                columns[DBM_Guild_Custom_Command.Columns.id] = Convert.ToInt32(id);
+                var results = new DBC().selectAll(query, columns);
+                if (results.Rows.Count > 0)
+                {
+                    foreach(DataRow row in results.Rows)
+                    {
+                        await ReplyAsync($"Preview of custom command with ID: **{id}** \n" +
+                            row[DBM_Guild_Custom_Command.Columns.content].ToString());
+                    }
+                }
+                else
+                {
+                    await ReplyAsync($"Cannot find custom command with id: **{id}**");
+                }
+            }
+
         }
 
         [Command("log"), Summary("Show the warning log.")]
@@ -1801,8 +1730,8 @@ namespace OjamajoBot.Module
             }
         }
 
-        [Name("mod role reaction"), Group("role reaction"), Summary("These commands contains all self assignable role react list command. " +
-            "Requires `manage roles permission`.")]
+        [Name("mod role react"), Group("role react"), Summary("These commands contains all self assignable role react list command. " +
+        "Requires `manage roles permission`.")]
         public class DoremiModeratorRolesReact : InteractiveBase
         {
             [Command("info", RunMode = RunMode.Async), Summary("See the role react list that have been assigned on the given message link.")]
@@ -2013,42 +1942,193 @@ namespace OjamajoBot.Module
 
         }
 
-        [Command("welcome message"), Summary("Set the welcome message announcement. " +
-            "Parameter: $servername$: server name. $user$: mention the user. #channelid> can be placed with any channel that you want. " +
+        [Name("mod welcome"), Group("welcome"), Summary("These commands contains all welcome message that can be set. " +
+        "Requires `manage channel permission`.")]
+        public class DoremiModeratorWelcome : InteractiveBase
+        {
+            [Command("remove"), Summary("Remove all welcome message settings")]
+            public async Task removeWelcomeMessageSettings()
+            {
+                ulong guildId = Context.Guild.Id;
+                string query = $"UPDATE {DBM_Guild.tableName} " +
+                    $" SET {DBM_Guild.Columns.welcome_title}=@{DBM_Guild.Columns.welcome_title}, " +
+                    $" {DBM_Guild.Columns.welcome_message}=@{DBM_Guild.Columns.welcome_message}, " +
+                    $" {DBM_Guild.Columns.welcome_image}=@{DBM_Guild.Columns.welcome_image} " +
+                    $" WHERE {DBM_Guild.Columns.id_guild}=@{DBM_Guild.Columns.id_guild}";
+                Dictionary<string, object> column = new Dictionary<string, object>();
+                column[DBM_Guild.Columns.welcome_title] = "";
+                column[DBM_Guild.Columns.welcome_message] = "";
+                column[DBM_Guild.Columns.welcome_image] = "";
+                column[DBM_Guild.Columns.id_guild] = guildId.ToString();
+                new DBC().update(query, column);
+                await ReplyAsync($"Welcome message announcement settings has been removed.");
+            }
+
+            [Command("color"), Summary("Set the embed welcome message color")]
+            public async Task setWelcomeColor(string r, string g, string b)
+            {
+                var isNumericR = int.TryParse(r, out _);
+                var isNumericG = int.TryParse(g, out _);
+                var isNumericB = int.TryParse(b, out _);
+
+                if (!isNumericR && !isNumericG && !isNumericB)
+                {
+                    await ReplyAsync("Please enter rgb values between 0 and 254"); return;
+                }
+
+                if (Convert.ToInt32(r) < 0 || Convert.ToInt32(r) > 254 ||
+                Convert.ToInt32(g) < 0 || Convert.ToInt32(g) > 254 ||
+                Convert.ToInt32(b) < 0 || Convert.ToInt32(b) > 254)
+                {
+                    await ReplyAsync("Please enter rgb values between 0 and 254"); return;
+                }
+
+                ulong guildId = Context.Guild.Id;
+                string query = $"UPDATE {DBM_Guild.tableName} " +
+                    $" SET {DBM_Guild.Columns.welcome_color}=@{DBM_Guild.Columns.welcome_color} " +
+                    $" WHERE {DBM_Guild.Columns.id_guild}=@{DBM_Guild.Columns.id_guild}";
+                Dictionary<string, object> column = new Dictionary<string, object>();
+                column[DBM_Guild.Columns.welcome_color] = $"{r},{g},{b}";
+                column[DBM_Guild.Columns.id_guild] = guildId.ToString();
+                new DBC().update(query, column);
+
+                await ReplyAsync("Welcome message embed color has been set");
+
+            }
+
+            [Command("title"), Summary("Set the welcome message title announcement. " +
+            "Some available built-in parameter that can be used:\n" +
+            "**$servername$:** give the server name. **$user$:** mention the username. " +
             "If the parameter is blank it'll be removed.")]
-        public async Task setWelcomeAnnouncementMessage([Remainder] string message = "")
-        {
-            ulong guildId = Context.Guild.Id;
-            string query = $"UPDATE {DBM_Guild.tableName} " +
-                $" SET {DBM_Guild.Columns.welcome_message}=@{DBM_Guild.Columns.welcome_message} " +
-                $" WHERE {DBM_Guild.Columns.id_guild}=@{DBM_Guild.Columns.id_guild}";
-            Dictionary<string, object> column = new Dictionary<string, object>();
-            column[DBM_Guild.Columns.welcome_message] = message;
-            column[DBM_Guild.Columns.id_guild] = guildId.ToString();
-            new DBC().update(query, column);
+            public async Task setWelcomeHeaderAnnouncementMessage([Remainder] string headerMessage = "")
+            {
+                ulong guildId = Context.Guild.Id;
+                string query = $"UPDATE {DBM_Guild.tableName} " +
+                    $" SET {DBM_Guild.Columns.welcome_title}=@{DBM_Guild.Columns.welcome_title} " +
+                    $" WHERE {DBM_Guild.Columns.id_guild}=@{DBM_Guild.Columns.id_guild}";
+                Dictionary<string, object> column = new Dictionary<string, object>();
+                column[DBM_Guild.Columns.welcome_title] = headerMessage;
+                column[DBM_Guild.Columns.id_guild] = guildId.ToString();
+                new DBC().update(query, column);
 
-            await ReplyAsync($"Welcome message announcement has been updated!");
-        }
+                if(headerMessage=="")
+                    await ReplyAsync($"Welcome title message announcement has been removed.");
+                else
+                    await ReplyAsync($"Welcome title message announcement has been updated.");
+            }
 
-        [Command("welcome image"), Summary("Set the welcome image url. If the parameter is blank it'll be removed.")]
-        public async Task setWelcomeAnnouncementImage(string imageurl = "")
-        {
-            ulong guildId = Context.Guild.Id;
-            string query = $"UPDATE {DBM_Guild.tableName} " +
-                $" SET {DBM_Guild.Columns.welcome_image}=@{DBM_Guild.Columns.welcome_image} " +
-                $" WHERE {DBM_Guild.Columns.id_guild}=@{DBM_Guild.Columns.id_guild}";
-            Dictionary<string, object> column = new Dictionary<string, object>();
-            column[DBM_Guild.Columns.welcome_message] = imageurl;
-            column[DBM_Guild.Columns.id_guild] = guildId.ToString();
-            new DBC().update(query, column);
-            await ReplyAsync($"Welcome image announcement has been updated!");
+            [Command("message"), Summary("Set the welcome message content announcement. " +
+                "Some available built-in parameter that can be used:\n" +
+                "**$servername$:** give the server name. **$user$:** mention the user. " +
+                "**#channelid>** can be placed with any channel that you want. " +
+                "If the parameter is blank it'll be removed.")]
+            public async Task setWelcomeAnnouncementMessage([Remainder] string message = "")
+            {
+                ulong guildId = Context.Guild.Id;
+                string query = $"UPDATE {DBM_Guild.tableName} " +
+                    $" SET {DBM_Guild.Columns.welcome_message}=@{DBM_Guild.Columns.welcome_message} " +
+                    $" WHERE {DBM_Guild.Columns.id_guild}=@{DBM_Guild.Columns.id_guild}";
+                Dictionary<string, object> column = new Dictionary<string, object>();
+                column[DBM_Guild.Columns.welcome_message] = message;
+                column[DBM_Guild.Columns.id_guild] = guildId.ToString();
+                new DBC().update(query, column);
+
+                if (message=="")
+                    await ReplyAsync($"Welcome message announcement has been removed.");
+                 else
+                    await ReplyAsync($"Welcome message announcement has been updated.");
+                
+                
+            }
+
+            [Command("image"), Summary("Set the welcome image url. If the parameter is blank it'll be removed.")]
+            public async Task setWelcomeAnnouncementImage(string imageurl = "")
+            {
+                ulong guildId = Context.Guild.Id;
+                string query = $"UPDATE {DBM_Guild.tableName} " +
+                    $" SET {DBM_Guild.Columns.welcome_image}=@{DBM_Guild.Columns.welcome_image} " +
+                    $" WHERE {DBM_Guild.Columns.id_guild}=@{DBM_Guild.Columns.id_guild}";
+                Dictionary<string, object> column = new Dictionary<string, object>();
+                column[DBM_Guild.Columns.welcome_image] = imageurl;
+                column[DBM_Guild.Columns.id_guild] = guildId.ToString();
+                new DBC().update(query, column);
+
+                if (imageurl == "")
+                    await ReplyAsync($"Welcome image announcement has been removed.");
+                else
+                    await ReplyAsync($"Welcome image announcement has been updated.");
+            }
+
+            [Command("view"), Summary("Display the current custom welcome message template")]
+            public async Task viewWelcomeMessage()
+            {
+                ulong guildId = Context.Guild.Id;
+                var guildData = Config.Guild.getGuildData(guildId);
+
+                string welcomeTitle = guildData[DBM_Guild.Columns.welcome_title].ToString();
+                string welcomeMessage = guildData[DBM_Guild.Columns.welcome_message].ToString();
+                string welcomeImage = guildData[DBM_Guild.Columns.welcome_image].ToString();
+
+                if (welcomeMessage != "")
+                {
+                    var channel = Bot.Doremi.client.GetChannel(
+                    Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_notification_user_welcome].ToString()))
+                    as SocketTextChannel;
+
+                    if (channel != null)
+                    {
+                        EmbedBuilder eb = new EmbedBuilder();
+                        if (guildData[DBM_Guild.Columns.welcome_color].ToString() != "")
+                        {
+                            string[] welcomeColor = guildData[DBM_Guild.Columns.welcome_color].ToString().Split(",");
+                            int colorR = Convert.ToInt32(welcomeColor[0]);
+                            int colorG = Convert.ToInt32(welcomeColor[1]);
+                            int colorB = Convert.ToInt32(welcomeColor[2]);
+                            eb = eb.WithColor(colorR, colorG, colorB);
+                        }
+                        else
+                        {
+                            eb = eb.WithColor(Config.Doremi.EmbedColor);
+                        }
+
+                        if (welcomeTitle != "")
+                        {
+                            eb = eb.WithTitle(welcomeTitle);
+                        }
+
+                        if (welcomeImage != "")
+                        {
+                            eb = eb.WithImageUrl(welcomeImage);
+                        }
+
+                        welcomeMessage = welcomeMessage.Replace("#", "<#");
+                        welcomeMessage = welcomeMessage.Replace("$servername$", channel.Guild.Name);
+
+                        await ReplyAsync(
+                            $"Welcome message will be announced at {channel.Mention}",
+                            embed: eb
+                            .WithDescription(welcomeMessage)
+                            .Build());
+                    } else
+                    {
+                        await ReplyAsync("I can't find the welcome message announcement channel. " +
+                            "Please set the welcome announcement channel first.");
+                    }
+                } else
+                {
+                    await ReplyAsync("Welcome message is not set yet.");
+                }
+
+            }
         }
 
         [Name("mod autorole"), Group("autorole"), Summary("These commands contains all autorole command. " +
         "Requires `manage roles permission`.")]
         public class DoremiModeratorAutoRoles : InteractiveBase
         {
-            [Command("join"), Summary("Set the autorole when user joined the guild.")]
+            [Command("join"), Summary("Set the autorole when user joined the guild. " +
+                "Make sure the roles that will be applied are in lower positions than the bots role. " +
+                "If the parameter is empty then it will be removed.")]
             public async Task setAutoroleJoinGuild(SocketRole role=null)
             {
                 var guildId = Context.Guild.Id;
@@ -2079,11 +2159,12 @@ namespace OjamajoBot.Module
                 new DBC().update(query, columns);
             }
 
-            [Command("add"), Summary("Add the autorole with minimum level parameter.")]
+            [Command("add"), Summary("Add the autorole with minimum level parameter. " +
+                "Make sure the roles that will be applied are in lower positions than the bots role.")]
             public async Task setAutoroleLevel(int level_min, SocketRole role)
             {
                 var guildId = Context.Guild.Id;
-                var embed = new EmbedBuilder().WithColor(Config.Doremi.EmbedColor);
+                var eb = new EmbedBuilder().WithColor(Config.Doremi.EmbedColor);
                 var roleSearch = Context.Guild.Roles.FirstOrDefault(x => x.Id == Convert.ToUInt64(role.Id));
                 if (roleSearch == null)
                     await ReplyAsync($"Sorry, I can't find that role.");
@@ -2104,7 +2185,7 @@ namespace OjamajoBot.Module
                     {
                         new DBC().insert(DBM_Guild_Autorole_Level.tableName, columns);
 
-                        await ReplyAsync(embed: embed
+                        await ReplyAsync(embed: eb
                         .WithDescription($"Auto role level {level_min} has been set with " +
                         $" {MentionUtils.MentionRole(Convert.ToUInt64(roleSearch.Id))}.")
                         .Build());
@@ -2115,7 +2196,7 @@ namespace OjamajoBot.Module
                 }
             }
 
-            [Command("remove"), Summary("Remove the autorole with minimum level parameter.")]
+            [Command("remove"), Summary("Remove the autorole with the minimum level parameter.")]
             public async Task removeAutoroleLevel(int level_min)
             {
                 var guildId = Context.Guild.Id;
@@ -2135,6 +2216,30 @@ namespace OjamajoBot.Module
                 .WithDescription($"Autorole level {level_min} has been removed.")
                 .Build());
                 
+            }
+
+            [Command("view"), Summary("View the current active autorole for new user that has join.")]
+            public async Task viewAutoroleJoinGuild() {
+                //current autorole settings:
+                ulong guildId = Context.Guild.Id;
+                var guildData = Config.Guild.getGuildData(guildId);
+
+                if (guildData[DBM_Guild.Columns.id_autorole_user_join].ToString() != "")
+                {
+                    var eb = new EmbedBuilder().WithColor(Config.Doremi.EmbedColor);
+                    var roleSearch = Context.Guild.Roles.FirstOrDefault(x => x.Id == 
+                    Convert.ToUInt64(guildData[DBM_Guild.Columns.id_autorole_user_join].ToString()));
+                    if (roleSearch != null)
+                        await ReplyAsync(embed: eb
+                            .WithDescription($"Current active autorole for new user: " +
+                            $"{MentionUtils.MentionRole(roleSearch.Id)}")
+                            .Build());
+                    else
+                        await ReplyAsync("Autorole for new user is not set yet.");
+                } else
+                {
+                    await ReplyAsync("Autorole for new user is not set yet.");
+                }
             }
         }
 
@@ -2231,46 +2336,6 @@ namespace OjamajoBot.Module
 
         }
 
-        //set doremi role id
-        [Command("doremi role id"), Summary("Set the default doremi role Id for default mentionable command prefix.")]
-        public async Task setDefaultDoremiRoleId(string roleId)
-        {
-            Config.Guild.setPropertyValue(Context.Guild.Id, "doremi_role_id", roleId);
-            await ReplyAsync($"**Doremi Role Id** has been updated successfully.");
-        }
-
-        //set hazuki role id
-        [Command("hazuki role id"), Summary("Set the default hazuki role Id for default mentionable command prefix.")]
-        public async Task setDefaultHazukiRoleId(string roleId)
-        {
-            Config.Guild.setPropertyValue(Context.Guild.Id, "hazuki_role_id", roleId);
-            await ReplyAsync($"**Hazuki Role Id** has been updated successfully.");
-        }
-
-        //set aiko role id
-        [Command("aiko role id"), Summary("Set the default aiko role Id for default mentionable command prefix.")]
-        public async Task setDefaultAikoRoleId(string roleId)
-        {
-            Config.Guild.setPropertyValue(Context.Guild.Id, "aiko_role_id", roleId);
-            await ReplyAsync($"**Aiko Role Id** has been updated successfully.");
-        }
-
-        //set onpu role id
-        [Command("onpu role id"), Summary("Set the default onpu role Id for default mentionable command prefix.")]
-        public async Task setDefaultOnpuRoleId(string roleId)
-        {
-            Config.Guild.setPropertyValue(Context.Guild.Id, "onpu_role_id", roleId);
-            await ReplyAsync($"**Onpu Role Id** has been updated successfully.");
-        }
-
-        //set momoko role id
-        [Command("momoko role id"), Summary("Set the default momoko role Id for default mentionable command prefix.")]
-        public async Task setDefaultMomokoRoleId(string roleId)
-        {
-            Config.Guild.setPropertyValue(Context.Guild.Id, "momoko_role_id", roleId);
-            await ReplyAsync($"**Momoko Role Id** has been updated successfully.");
-        }
-
         [Command("server info"), Summary("Give the Server Information")]
         public async Task getServerInfo()
         {
@@ -2284,157 +2349,520 @@ namespace OjamajoBot.Module
                 .Build());
         }
 
-        [Name("mod channel"), Group("channel"), Summary("These commands require `Manage Channel` permissions.")]
-        public class DoremiModeratorChannels : ModuleBase<SocketCommandContext>
+        [Name("mod birthday"), Group("birthday"), Summary("These commands require `Manage Channel` permissions.")]
+        public class DoremiModeratorBirthday : InteractiveBase
         {
-            [Command("birthday"), Summary("Set Doremi Bot to make birthday announcement on <channel_name>.")]
-            public async Task assignBirthdayChannel(SocketGuildChannel channel_name)
+            [Command("ojamajo"), Alias("ojamajos"), Summary("Set the ojamajo birthday announcement with parameter: **on** or **off**.")]
+            public async Task updateOjamajoBirthdayAnnouncement(string settings)
             {
-                var guildId = channel_name.Guild.Id;
-                var socketClient = Context.Client;
-                var guildData = Config.Guild.getGuildData(guildId);
-
-                //start update
-                string queryUpdate = $"UPDATE {DBM_Guild.tableName} " +
-                    $" SET {DBM_Guild.Columns.id_channel_birthday_announcement}=@{DBM_Guild.Columns.id_channel_birthday_announcement} " +
-                    $" WHERE {DBM_Guild.Columns.id_guild}=@{DBM_Guild.Columns.id_guild} ";
-                Dictionary<string, object> columns = new Dictionary<string, object>();
-                columns[DBM_Guild.Columns.id_channel_birthday_announcement] = channel_name.Id.ToString();
-                columns[DBM_Guild.Columns.id_guild] = guildId.ToString();
-                new DBC().update(queryUpdate, columns);
-
-                if (Config.Doremi._timerBirthdayAnnouncement.ContainsKey(guildId.ToString()))
-                    Config.Doremi._timerBirthdayAnnouncement[guildId.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
-                if (Config.Hazuki._timerBirthdayAnnouncement.ContainsKey(guildId.ToString()))
-                    Config.Hazuki._timerBirthdayAnnouncement[guildId.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
-                if (Config.Aiko._timerBirthdayAnnouncement.ContainsKey(guildId.ToString()))
-                    Config.Aiko._timerBirthdayAnnouncement[guildId.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
-                if (Config.Onpu._timerBirthdayAnnouncement.ContainsKey(guildId.ToString()))
-                    Config.Onpu._timerBirthdayAnnouncement[guildId.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
-                if (Config.Momoko._timerBirthdayAnnouncement.ContainsKey(guildId.ToString()))
-                    Config.Momoko._timerBirthdayAnnouncement[guildId.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
-
-                Config.Doremi._timerBirthdayAnnouncement[guildId.ToString()] = new Timer(async _ =>
+                var idGuild = Context.Guild.Id;
+                if (settings != "on" && settings != "off")
                 {
-                    //set birthday announcement timer
-                    if (guildData[DBM_Guild.Columns.birthday_announcement_date_last].ToString() !=
-                        DateTime.Now.ToString("dd"))
-                    {
-                        Boolean birthdayExisted = false;
+                    await ReplyAsync("Please enter the parameter with **on** or **off**");
+                    return;
+                }
 
-                        //announce hazuki birthday
-                        if (Config.Hazuki.Status.isBirthday())
-                        {
-                            await Bot.Doremi.client
-                            .GetGuild(guildId)
-                            .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement]))
-                            .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday to you, {MentionUtils.MentionUser(Config.Hazuki.Id)} chan. " +
-                            $"She has turned into {Config.Hazuki.birthdayCalculatedYear} on this year. Let's give wonderful birthday wishes for her.");
-                            birthdayExisted = true;
-                        }
+                string query = $"UPDATE {DBM_Guild.tableName} " +
+                    $" SET {DBM_Guild.Columns.birthday_announcement_ojamajo}=@{DBM_Guild.Columns.birthday_announcement_ojamajo} " +
+                    $" WHERE {DBM_Guild.Columns.id_guild}=@{DBM_Guild.Columns.id_guild}";
+                Dictionary<string, object> columns = new Dictionary<string, object>();
+                columns[DBM_Guild.Columns.id_guild] = idGuild.ToString();
+                columns[DBM_Guild.Columns.birthday_announcement_ojamajo] = Convert.ToInt32(settings.Replace("on", "1").Replace("off", "0"));
+                new DBC().update(query, columns);
 
-                        //announce aiko birthday
-                        if (Config.Aiko.Status.isBirthday())
-                        {
-                            await Bot.Doremi.client
-                            .GetGuild(guildId)
-                            .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement]))
-                            .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday to our dear osakan friend: {MentionUtils.MentionUser(Config.Aiko.Id)} chan. " +
-                            $"She has turned into {Config.Aiko.birthdayCalculatedYear} on this year. Let's give some takoyaki and wonderful birthday wishes for her.");
-                            birthdayExisted = true;
-                        }
+                await ReplyAsync($"Ojamajo birthday announcement has been set into **{settings}**");
+            }
 
-                        //announce onpu birthday
-                        if (Config.Onpu.Status.isBirthday())
-                        {
-                            await Bot.Doremi.client
-                            .GetGuild(guildId)
-                            .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement]))
-                            .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday to our wonderful idol friend: {MentionUtils.MentionUser(Config.Onpu.Id)} chan. " +
-                            $"She has turned into {Config.Onpu.birthdayCalculatedYear} on this year. Let's give some wonderful birthday wishes for her.");
-                            birthdayExisted = true;
-                        }
+            [Command("add"), Summary("Add new custom birthday message announcement. " +
+                "Parameter that must be filled with: `Image Url` `message`")]
+            public async Task addCustomBirthdayMessage(string imageUrl, [Remainder] string message)
+            {
+                var guildId = Context.Guild.Id;
+                Dictionary<string, object> columns = new Dictionary<string, object>();
+                columns[DBM_Guild_Custom_Birthday.Columns.id_guild] = guildId.ToString();
+                columns[DBM_Guild_Custom_Birthday.Columns.img_url] = imageUrl;
+                columns[DBM_Guild_Custom_Birthday.Columns.message] = message;
+                new DBC().insert(DBM_Guild_Custom_Birthday.tableName, columns);
 
-                        //announce momoko birthday
-                        if (Config.Momoko.Status.isBirthday())
-                        {
-                            await Bot.Doremi.client
-                            .GetGuild(guildId)
-                            .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement]))
-                            .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday to our friend: {MentionUtils.MentionUser(Config.Momoko.Id)} chan. " +
-                            $"She has turned into {Config.Momoko.birthdayCalculatedYear} on this year. Let's give some wonderful birthday wishes for her.");
-                            birthdayExisted = true;
-                        }
+                EmbedBuilder eb = new EmbedBuilder()
+                    .WithColor(Config.Doremi.EmbedColor)
+                    .WithTitle($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy Birthday!")
+                    .WithDescription(message)
+                    .WithImageUrl(imageUrl);
 
-                        //announce member birthday
-                        DBC db = new DBC();
-                        string query = @$"select * 
-                        from {DBM_Guild_User_Birthday.tableName} 
-                        where {DBM_Guild_User_Birthday.Columns.id_guild}=@{DBM_Guild_User_Birthday.Columns.id_guild} and 
-                        month({DBM_Guild_User_Birthday.Columns.birthday_date}) = month(curdate()) and 
-                        day({DBM_Guild_User_Birthday.Columns.birthday_date}) = day(curdate())";
+                //get latest id
+                string query = $"SELECT * " +
+                    $" FROM {DBM_Guild_Custom_Birthday.tableName} " +
+                    $" WHERE {DBM_Guild_Custom_Birthday.Columns.id_guild}=@{DBM_Guild_Custom_Birthday.Columns.id_guild} " +
+                    $" ORDER BY {DBM_Guild_Custom_Birthday.Columns.created_at} desc " +
+                    $" LIMIT 1";
+                columns = new Dictionary<string, object>();
+                columns[DBM_Guild_Custom_Birthday.Columns.id_guild] = guildId.ToString();
+                var results = new DBC().selectAll(query, columns);
 
-                        Dictionary<string, object> colSelect = new Dictionary<string, object>();
-                        colSelect[DBM_Guild_User_Birthday.Columns.id_guild] = guildId.ToString();
-
-                        var result = db.selectAll(query, colSelect);
-
-                        foreach (DataRow row in result.Rows)
-                        {
-                            ulong userId = Convert.ToUInt64(row[DBM_Guild_User_Birthday.Columns.id_user].ToString());
-                            string[] arrRandomedMessage = {
-                                $"{Config.Emoji.birthdayCake} Everyone, let's give a wonderful birthday wishes for: {MentionUtils.MentionUser(userId)} ",
-                                $"{Config.Emoji.birthdayCake} Happy birthday to our wonderful friend: {MentionUtils.MentionUser(userId)} . " +
-                                $"Please give the wonderful birthday wishes for {MentionUtils.MentionUser(userId)}.",
-                                $"{Config.Emoji.birthdayCake} Looks like someone was having their birthday today! " +
-                                $"Let's give some wonderful birthday wishes for {MentionUtils.MentionUser(userId)}."
-                            };
-                            var birthdayMessage = arrRandomedMessage[new Random().Next(0, arrRandomedMessage.Length)];
-
-                            try
-                            {
-                                await Bot.Doremi.client
-                                .GetGuild(guildId)
-                                .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement].ToString()))
-                                .SendMessageAsync(birthdayMessage);
-                            }
-                            catch
-                            { }
-                            birthdayExisted = true;
-                        }
-
-                        if (birthdayExisted)
-                        {
-                            EmbedBuilder builder = new EmbedBuilder();
-                            builder.ImageUrl = "https://media.discordapp.net/attachments/706770454697738300/745492527070576670/1508005628768.png";
-                            builder.Color = Config.Doremi.EmbedColor;
-
-                            await Bot.Doremi.client
-                            .GetGuild(guildId)
-                            .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guildId, "id_birthday_announcement")))
-                            .SendMessageAsync(embed: builder.Build());
-
-                            query = @$"UPDATE {DBM_Guild.tableName} 
-                                SET {DBM_Guild.Columns.birthday_announcement_date_last}=@{DBM_Guild.Columns.birthday_announcement_date_last} 
-                                WHERE {DBM_Guild.Columns.id_guild}=@{DBM_Guild.Columns.id_guild}";
-                            Dictionary<string, object> columnsFilter = new Dictionary<string, object>();
-                            columnsFilter[DBM_Guild.Columns.birthday_announcement_date_last] = DateTime.Now.ToString("dd");
-                            columnsFilter[DBM_Guild.Columns.id_guild] = guildId.ToString();
-                            new DBC().update(query, columnsFilter);
-                        }
-                    }
-                },
-                null,
-                TimeSpan.FromSeconds(10), //time to wait before executing the timer for the first time
-                TimeSpan.FromHours(24) //time to wait before executing the timer again
-            );
-
-                await ReplyAsync($"{Config.Emoji.birthdayCake} **Birthday Announcement Channels** has been assigned at: {MentionUtils.MentionChannel(channel_name.Id)}");
+                foreach (DataRow row in results.Rows)
+                {
+                    await ReplyAsync($"Custom birthday with id: **{row[DBM_Guild_Custom_Birthday.Columns.id].ToString()}** has been added with this preview:",
+                    embed: eb
+                    .WithFooter($"Best wishes from: {Context.Guild.Name} & friends")
+                    .Build());
+                }
 
             }
 
-            [Command("update"), Summary("Update & set the channel settings. " +
-                "Current available settings: `chatlevel`/`userleaving`")]
+            [Command("list"), Summary("List all custom birthday announcement that has been added.")]
+            public async Task listCustomBirthdayMessage()
+            {
+                ulong guildId = Context.Guild.Id;
+                string query = $"SELECT * " +
+                                $" FROM {DBM_Guild_Custom_Birthday.tableName} " +
+                                $" WHERE {DBM_Guild_Custom_Birthday.Columns.id_guild}=@{DBM_Guild_Custom_Command.Columns.id_guild}";
+                Dictionary<string, object> columns = new Dictionary<string, object>();
+                columns[DBM_Guild_Custom_Command.Columns.id_guild] = guildId.ToString();
+                var results = new DBC().selectAll(query, columns);
+
+                List<string> pageContent = new List<string>();
+
+                string title = $"";
+
+                string tempVal = title;
+
+                var i = 0;
+                int currentIndex = 0;
+
+                foreach (DataRow row in results.Rows)
+                {
+                    string id = row[DBM_Guild_Custom_Birthday.Columns.id].ToString();
+                    string content = row[DBM_Guild_Custom_Birthday.Columns.message].ToString();
+                    if (row[DBM_Guild_Custom_Birthday.Columns.message].ToString().Length >= 30)
+                        content = $"{row[DBM_Guild_Custom_Birthday.Columns.message].ToString().Substring(0, 25)}...";
+
+                    tempVal += $"{id}: {content}\n";
+
+                    if (i == results.Rows.Count - 1)
+                    {
+                        pageContent.Add(tempVal);
+                    }
+                    else
+                    {
+                        if (currentIndex < 5) currentIndex++;
+                        else
+                        {
+                            pageContent.Add(tempVal);
+                            currentIndex = 0;
+                            tempVal = title;
+                        }
+                    }
+                    i++;
+                }
+
+                PaginatedAppearanceOptions pao = new PaginatedAppearanceOptions();
+                pao.JumpDisplayOptions = JumpDisplayOptions.Never;
+                pao.DisplayInformationIcon = false;
+                var pager = new PaginatedMessage
+                {
+                    Title = $"**Custom Birthday Command List:**\n",
+                    Pages = pageContent,
+                    Color = Config.Doremi.EmbedColor,
+                    Options = pao
+                };
+
+                if (results.Rows.Count >= 1)
+                {
+                    await PagedReplyAsync(pager);
+                }
+                else
+                {
+                    await ReplyAsync("There are no custom birthday message yet.");
+                }
+
+            }
+
+            [Command("remove"), Summary("Remove the custom birthday announcement with the ID parameter")]
+            public async Task removeCustomBirthdayMessage(string id)
+            {
+                var isNumeric = int.TryParse(id, out int n);
+                if (!isNumeric)
+                {
+                    await ReplyAsync("Please enter the id in number format."); return;
+                }
+
+                ulong guildId = Context.Guild.Id;
+                string query = $"SELECT * " +
+                                $" FROM {DBM_Guild_Custom_Birthday.tableName} " +
+                                $" WHERE {DBM_Guild_Custom_Birthday.Columns.id_guild}=@{DBM_Guild_Custom_Command.Columns.id_guild} AND " +
+                                $" {DBM_Guild_Custom_Birthday.Columns.id}=@{DBM_Guild_Custom_Command.Columns.id} ";
+                Dictionary<string, object> columns = new Dictionary<string, object>();
+                columns[DBM_Guild_Custom_Command.Columns.id_guild] = guildId.ToString();
+                columns[DBM_Guild_Custom_Command.Columns.id] = Convert.ToInt32(id);
+                var results = new DBC().selectAll(query, columns);
+                if (results.Rows.Count <= 0)
+                    await ReplyAsync("I can't find that custom birthday ID.");
+                else
+                {
+                    new DBC().delete(query, columns);
+                    await ReplyAsync($"Custom birthday ID: **{id}** has been removed");
+                }
+            }
+
+            [Command("view"), Summary("Preview the custom birthday announcement with the ID parameter")]
+            public async Task viewCustomBirthdayMessage(string id)
+            {
+                var isNumeric = int.TryParse(id, out int n);
+                if (!isNumeric)
+                {
+                    await ReplyAsync("Please enter the id in number format."); return;
+                }
+
+                ulong guildId = Context.Guild.Id;
+                string query = $"SELECT * " +
+                                $" FROM {DBM_Guild_Custom_Birthday.tableName} " +
+                                $" WHERE {DBM_Guild_Custom_Birthday.Columns.id_guild}=@{DBM_Guild_Custom_Command.Columns.id_guild} AND " +
+                                $" {DBM_Guild_Custom_Birthday.Columns.id}=@{DBM_Guild_Custom_Command.Columns.id} ";
+                Dictionary<string, object> columns = new Dictionary<string, object>();
+                columns[DBM_Guild_Custom_Command.Columns.id_guild] = guildId.ToString();
+                columns[DBM_Guild_Custom_Command.Columns.id] = Convert.ToInt32(id);
+                var results = new DBC().selectAll(query, columns);
+                if (results.Rows.Count <= 0)
+                    await ReplyAsync("I can't find that custom birthday ID.");
+                else
+                {
+                    foreach (DataRow row in results.Rows)
+                    {
+                        await ReplyAsync(embed:new EmbedBuilder()
+                        .WithColor(Config.Doremi.EmbedColor)
+                        .WithTitle($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy Birthday!")
+                        .WithDescription(row[DBM_Guild_Custom_Birthday.Columns.message].ToString())
+                        .WithImageUrl(row[DBM_Guild_Custom_Birthday.Columns.img_url].ToString())
+                        .WithFooter($"Best wishes from: {Context.Guild.Name} & friends")
+                        .Build());
+                    }
+                    
+
+                }
+            }
+        }
+
+        [Name("mod channel"), Group("channel"), Summary("These commands require `Manage Channel` permissions.")]
+        public class DoremiModeratorChannels : ModuleBase<SocketCommandContext>
+        {
+            //archived for now
+            //[Command("birthday"), Summary("Set Doremi Bot to make birthday announcement on <channel_name>.")]
+            //public async Task assignBirthdayChannel(SocketGuildChannel channel_name)
+            //{
+            //    var guildId = channel_name.Guild.Id;
+            //    var socketClient = Context.Client;
+                
+            //    //start update
+            //    string queryUpdate = $"UPDATE {DBM_Guild.tableName} " +
+            //        $" SET {DBM_Guild.Columns.id_channel_birthday_announcement}=@{DBM_Guild.Columns.id_channel_birthday_announcement} " +
+            //        $" WHERE {DBM_Guild.Columns.id_guild}=@{DBM_Guild.Columns.id_guild} ";
+            //    Dictionary<string, object> columns = new Dictionary<string, object>();
+            //    columns[DBM_Guild.Columns.id_channel_birthday_announcement] = channel_name.Id.ToString();
+            //    columns[DBM_Guild.Columns.id_guild] = guildId.ToString();
+            //    new DBC().update(queryUpdate, columns);
+
+            //    if (Config.Doremi._timerBirthdayAnnouncement.ContainsKey(guildId.ToString()))
+            //        Config.Doremi._timerBirthdayAnnouncement[guildId.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
+            //    if (Config.Hazuki._timerBirthdayAnnouncement.ContainsKey(guildId.ToString()))
+            //        Config.Hazuki._timerBirthdayAnnouncement[guildId.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
+            //    if (Config.Aiko._timerBirthdayAnnouncement.ContainsKey(guildId.ToString()))
+            //        Config.Aiko._timerBirthdayAnnouncement[guildId.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
+            //    if (Config.Onpu._timerBirthdayAnnouncement.ContainsKey(guildId.ToString()))
+            //        Config.Onpu._timerBirthdayAnnouncement[guildId.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
+            //    if (Config.Momoko._timerBirthdayAnnouncement.ContainsKey(guildId.ToString()))
+            //        Config.Momoko._timerBirthdayAnnouncement[guildId.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
+
+            //    var guildData = Config.Guild.getGuildData(guildId);
+
+            //    string guildBirthdayLastAnnouncement = "";
+            //    if (guildData[DBM_Guild.Columns.birthday_announcement_date_last].ToString() != "")
+            //        guildBirthdayLastAnnouncement = guildData[DBM_Guild.Columns.birthday_announcement_date_last].ToString();
+            //    else
+            //        guildBirthdayLastAnnouncement = "1";
+
+            //    //set doremi timer
+            //    Config.Doremi._timerBirthdayAnnouncement[guildId.ToString()] = new Timer(async _ =>
+            //    {
+            //        guildData = Config.Guild.getGuildData(guildId);
+            //        if (guildData[DBM_Guild.Columns.birthday_announcement_date_last].ToString() != "")
+            //            guildBirthdayLastAnnouncement = guildData[DBM_Guild.Columns.birthday_announcement_date_last].ToString();
+            //        else
+            //            guildBirthdayLastAnnouncement = "1";
+
+            //        EmbedBuilder eb = new EmbedBuilder()
+            //        .WithColor(Config.Doremi.EmbedColor);
+
+            //        //set birthday announcement timer
+            //        if (guildBirthdayLastAnnouncement != DateTime.Now.ToString("dd"))
+            //        {
+            //            Boolean birthdayExisted = false;
+
+            //            //announce hazuki birthday
+            //            if (Config.Hazuki.Status.isBirthday() &&
+            //            Convert.ToInt32(guildData[DBM_Guild.Columns.birthday_announcement_ojamajo]) == 1)
+            //            {
+            //                eb = eb.WithTitle($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy Birthday, Hazuki Chan!")
+            //                .WithDescription($"Happy birthday to you, Hazuki chan. " +
+            //                $"She has turned into {Config.Hazuki.birthdayCalculatedYear} this year. Let's give wonderful birthday wishes for her.")
+            //                .WithImageUrl("https://cdn.discordapp.com/attachments/706770454697738300/791510757778784306/hazuki_birthday.jpg");
+            //                await Bot.Doremi.client
+            //                .GetGuild(guildId)
+            //                .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement]))
+            //                .SendMessageAsync(embed: eb.Build());
+            //                birthdayExisted = true;
+            //            }
+
+            //            //announce aiko birthday
+            //            if (Config.Aiko.Status.isBirthday() &&
+            //            Convert.ToInt32(guildData[DBM_Guild.Columns.birthday_announcement_ojamajo]) == 1)
+            //            {
+            //                eb = eb.WithTitle($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy Birthday, Aiko Chan!")
+            //                .WithDescription($"Happy birthday to our dear osakan friend: Aiko chan. " +
+            //                $"She has turned into {Config.Aiko.birthdayCalculatedYear} this year. Let's give some takoyaki and wonderful birthday wishes for her.")
+            //                .WithImageUrl("https://cdn.discordapp.com/attachments/706770454697738300/791579373324992512/happy_birthday_aiko_chan.jpg")
+            //                .WithFooter("Art By: Letter Three");
+
+            //                await Bot.Doremi.client
+            //                .GetGuild(guildId)
+            //                .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement]))
+            //                .SendMessageAsync(embed: eb.Build());
+            //                birthdayExisted = true;
+            //            }
+
+            //            //announce onpu birthday
+            //            if (Config.Onpu.Status.isBirthday() &&
+            //            Convert.ToInt32(guildData[DBM_Guild.Columns.birthday_announcement_ojamajo]) == 1)
+            //            {
+            //                eb = eb.WithTitle($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy Birthday, Onpu Chan!")
+            //                .WithDescription($"Happy birthday to our wonderful idol friend: Onpu chan. " +
+            //                $"She has turned into {Config.Onpu.birthdayCalculatedYear} this year. Let's give some wonderful birthday wishes for her.")
+            //                .WithImageUrl("https://cdn.discordapp.com/attachments/706770454697738300/790803480482021377/Onpu__Nintendo_Switch_Birthday_Pic.png")
+            //                .WithFooter("Art By: Letter Three");
+
+            //                await Bot.Doremi.client
+            //                .GetGuild(guildId)
+            //                .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement]))
+            //                .SendMessageAsync(embed: eb.Build());
+            //                birthdayExisted = true;
+            //            }
+
+            //            //announce momoko birthday
+            //            if (Config.Momoko.Status.isBirthday() &&
+            //            Convert.ToInt32(guildData[DBM_Guild.Columns.birthday_announcement_ojamajo]) == 1)
+            //            {
+            //                eb = eb.WithTitle($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy Birthday, Momoko Chan!")
+            //                .WithDescription($"Happy birthday to our wonderful friend: Momoko chan. " +
+            //                $"She has turned into {Config.Momoko.birthdayCalculatedYear} this year. Let's give some wonderful birthday wishes for her.")
+            //                .WithImageUrl("https://cdn.discordapp.com/attachments/706770454697738300/790803547209203722/Momoko_Birthday_Pic.png")
+            //                .WithFooter("Art By: Letter Three");
+
+            //                await Bot.Doremi.client
+            //                .GetGuild(guildId)
+            //                .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement]))
+            //                .SendMessageAsync();
+            //                birthdayExisted = true;
+            //            }
+
+            //            //announce member birthday
+            //            DBC db = new DBC();
+            //            string query = @$"select * 
+            //            from {DBM_Guild_User_Birthday.tableName} 
+            //            where {DBM_Guild_User_Birthday.Columns.id_guild}=@{DBM_Guild_User_Birthday.Columns.id_guild} and 
+            //            month({DBM_Guild_User_Birthday.Columns.birthday_date}) = month(curdate()) and 
+            //            day({DBM_Guild_User_Birthday.Columns.birthday_date}) = day(curdate())";
+
+            //            Dictionary<string, object> colSelect = new Dictionary<string, object>();
+            //            colSelect[DBM_Guild_User_Birthday.Columns.id_guild] = guildId.ToString();
+
+            //            var result = db.selectAll(query, colSelect);
+
+            //            string birthdayPeople = "";
+
+            //            foreach (DataRow row in result.Rows)
+            //            {
+            //                //check if user exists/not on the server
+            //                try
+            //                {
+            //                    SocketUser masterUser =
+            //                    Context.Guild.Users.FirstOrDefault(x => x.Id ==
+            //                    Convert.ToUInt64(row[DBM_Guild_User_Birthday.Columns.id_user].ToString()));
+            //                    if (masterUser != null)
+            //                    {
+            //                        birthdayPeople += MentionUtils.MentionUser(
+            //                            Convert.ToUInt64(row[DBM_Guild_User_Birthday.Columns.id_user].ToString()));
+            //                        birthdayExisted = true;
+            //                    }
+            //                }
+            //                catch (Exception e) { }
+            //            }
+
+            //            if (birthdayExisted)
+            //            {
+            //                if (birthdayPeople != "")
+            //                {
+            //                    //check if custom birthday message exists/not
+            //                    query = $"SELECT * " +
+            //                    $" FROM {DBM_Guild_Custom_Birthday.tableName} " +
+            //                    $" WHERE {DBM_Guild_Custom_Birthday.Columns.id_guild}=@{DBM_Custom_Command.Columns.id_guild} " +
+            //                    $" ORDER BY RAND() " +
+            //                    $" LIMIT 1";
+            //                    colSelect = new Dictionary<string, object>();
+            //                    colSelect[DBM_Guild_Custom_Birthday.Columns.id_guild] = guildId.ToString();
+            //                    var resultCustomBirthday = new DBC().selectAll(query, colSelect);
+            //                    if (resultCustomBirthday.Rows.Count >= 1)
+            //                    {
+            //                        foreach (DataRow row in resultCustomBirthday.Rows)
+            //                        {
+            //                            var custBirthdayMessage = row[DBM_Guild_Custom_Birthday.Columns.message].ToString();
+            //                            var custBirthdayImage = row[DBM_Guild_Custom_Birthday.Columns.img_url].ToString();
+
+            //                            await Bot.Doremi.client
+            //                            .GetGuild(guildId)
+            //                            .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement].ToString()))
+            //                            .SendMessageAsync(
+            //                                $"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday to: {birthdayPeople}",
+            //                                embed: new EmbedBuilder()
+            //                                .WithColor(Config.Doremi.EmbedColor)
+            //                                .WithDescription(custBirthdayMessage)
+            //                                .WithImageUrl(custBirthdayImage)
+            //                                .WithFooter($"From: {Context.Guild.Name} & friends")
+            //                                .Build());
+            //                        }
+            //                    }
+            //                    else
+            //                    {
+            //                        string[] arrRandomedMessage = {
+            //                        $"Everyone, please give some wonderful birthday wishes. ",
+            //                        $"Wishing you all the best and hapiness always."
+            //                    };
+
+            //                        await Bot.Doremi.client
+            //                        .GetGuild(guildId)
+            //                        .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement].ToString()))
+            //                        .SendMessageAsync(
+            //                            $"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday to: {birthdayPeople}",
+            //                            embed: new EmbedBuilder()
+            //                            .WithColor(Config.Doremi.EmbedColor)
+            //                            .WithDescription(arrRandomedMessage[new Random().Next(0, arrRandomedMessage.Length)])
+            //                            .WithImageUrl("https://media.discordapp.net/attachments/706770454697738300/745492527070576670/1508005628768.png")
+            //                            .WithFooter($"Best wishes from: {Context.Guild.Name} & friends")
+            //                            .Build());
+            //                    }
+            //                }
+
+            //                query = @$"UPDATE {DBM_Guild.tableName} 
+            //                    SET {DBM_Guild.Columns.birthday_announcement_date_last}=@{DBM_Guild.Columns.birthday_announcement_date_last} 
+            //                    WHERE {DBM_Guild.Columns.id_guild}=@{DBM_Guild.Columns.id_guild}";
+            //                Dictionary<string, object> columnsFilter = new Dictionary<string, object>();
+            //                columnsFilter[DBM_Guild.Columns.birthday_announcement_date_last] = DateTime.Now.ToString("dd");
+            //                columnsFilter[DBM_Guild.Columns.id_guild] = guildId.ToString();
+            //                new DBC().update(query, columnsFilter);
+            //            }
+            //        }
+            //    },
+            //    null,
+            //    TimeSpan.FromSeconds(10), //time to wait before executing the timer for the first time
+            //    TimeSpan.FromMinutes(1) //time to wait before executing the timer again
+            //    );
+
+            //    //hazuki timer
+            //    Config.Hazuki._timerBirthdayAnnouncement[guildId.ToString()] = new Timer(async _ =>
+            //    {
+            //        //set birthday announcement timer
+            //        if (guildBirthdayLastAnnouncement != DateTime.Now.ToString("dd") &&
+            //        Config.Doremi.Status.isBirthday())
+            //        {
+            //            await Bot.Hazuki.client
+            //            .GetGuild(guildId)
+            //            .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement].ToString()))
+            //            .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday, {MentionUtils.MentionUser(Config.Doremi.Id)} chan. " +
+            //            $"She has turned into {Config.Doremi.birthdayCalculatedYear} this year. Let's give some big steak and wonderful birthday wishes for her.");
+            //        }
+            //    },
+            //    null,
+            //    TimeSpan.FromSeconds(10), //time to wait before executing the timer for the first time
+            //    TimeSpan.FromMinutes(1) //time to wait before executing the timer again
+            //    );
+
+            //    //aiko timer
+            //    Config.Aiko._timerBirthdayAnnouncement[guildId.ToString()] = new Timer(async _ =>
+            //    {
+            //        //announce doremi birthday
+            //        if (guildBirthdayLastAnnouncement != DateTime.Now.ToString("dd") &&
+            //            Config.Doremi.Status.isBirthday())
+            //        {
+            //            await Bot.Aiko.client
+            //            .GetGuild(guildId)
+            //            .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement].ToString()))
+            //            .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday, {MentionUtils.MentionUser(Config.Doremi.Id)} chan. " +
+            //            $"She has turned into {Config.Doremi.birthdayCalculatedYear} this year. Let's give some big steak and wonderful birthday wishes for her.",
+            //            embed: new EmbedBuilder()
+            //            .WithColor(Config.Aiko.EmbedColor)
+            //            .WithImageUrl("https://cdn.discordapp.com/attachments/706770454697738300/790803590482493450/Doremi_Birthday_Pic.png")
+            //            .Build());
+
+            //        }
+            //    },
+            //    null,
+            //    TimeSpan.FromSeconds(10), //time to wait before executing the timer for the first time
+            //    TimeSpan.FromMinutes(1) //time to wait before executing the timer again
+            //    );
+
+            //    //onpu timer 
+            //    Config.Onpu._timerBirthdayAnnouncement[guildId.ToString()] = new Timer(async _ =>
+            //    {
+            //        //announce doremi birthday
+            //        if (guildBirthdayLastAnnouncement != DateTime.Now.ToString("dd") &&
+            //            Config.Doremi.Status.isBirthday())
+            //        {
+            //            await Bot.Onpu.client
+            //            .GetGuild(guildId)
+            //            .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement].ToString()))
+            //            .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday, {MentionUtils.MentionUser(Config.Doremi.Id)} chan. " +
+            //            $"She has turned into {Config.Doremi.birthdayCalculatedYear} this year. Let's give some big steak and wonderful birthday wishes for her.");
+
+            //        }
+            //    },
+            //    null,
+            //    TimeSpan.FromSeconds(10), //time to wait before executing the timer for the first time
+            //    TimeSpan.FromMinutes(1) //time to wait before executing the timer again
+            //    );
+
+            //    //momoko timer
+            //    Config.Momoko._timerBirthdayAnnouncement[guildId.ToString()] = new Timer(async _ =>
+            //    {
+            //        //announce doremi birthday
+            //        if (guildBirthdayLastAnnouncement != DateTime.Now.ToString("dd") &&
+            //            Config.Doremi.Status.isBirthday())
+            //        {
+            //            await Bot.Momoko.client
+            //            .GetGuild(guildId)
+            //            .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement].ToString()))
+            //            .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday, {MentionUtils.MentionUser(Config.Doremi.Id)} chan. " +
+            //            $"She has turned into {Config.Doremi.birthdayCalculatedYear} on this year. Let's give some big steak and wonderful birthday wishes for her.");
+
+            //            //update last birthday announcement date
+            //            string query = @$"UPDATE {DBM_Guild.tableName} 
+            //            SET {DBM_Guild.Columns.birthday_announcement_date_last}=@{DBM_Guild.Columns.birthday_announcement_date_last} 
+            //            WHERE {DBM_Guild.Columns.id_guild}=@{DBM_Guild.Columns.id_guild}";
+            //            Dictionary<string, object> columnsFilter = new Dictionary<string, object>();
+            //            columnsFilter[DBM_Guild.Columns.birthday_announcement_date_last] = DateTime.Now.ToString("dd");
+            //            columnsFilter[DBM_Guild.Columns.id_guild] = guildId.ToString();
+            //            new DBC().update(query, columnsFilter);
+            //        }
+            //    },
+            //    null,
+            //    TimeSpan.FromSeconds(10), //time to wait before executing the timer for the first time
+            //    TimeSpan.FromMinutes(1) //time to wait before executing the timer again
+            //    );
+
+            //    await ReplyAsync($"{Config.Emoji.birthdayCake} **Birthday Announcement Channels** has been assigned at: {MentionUtils.MentionChannel(channel_name.Id)}");
+
+            //}
+
+            [Command("update"), Summary("Update & set the channel announcement settings. " +
+                "Current available settings: `welcome`/`avatarlevel`/`birthday`/`userleaving`")]
             public async Task updateChannelSettings(string settings, SocketGuildChannel channel_name)
             {
                 if (settings == "")
@@ -2448,8 +2876,16 @@ namespace OjamajoBot.Module
 
                 switch (settings.ToLower())
                 {
-                    case "chatlevel":
-                        property = $"Chat Level Notification";
+                    case "welcome":
+                        property = $"Welcome Announcement";
+                        queryUpdate = $"UPDATE {DBM_Guild.tableName} " +
+                                $" SET {DBM_Guild.Columns.id_channel_notification_user_welcome}=@{DBM_Guild.Columns.id_channel_notification_user_welcome} " +
+                                $" WHERE {DBM_Guild.Columns.id_guild}=@{DBM_Guild.Columns.id_guild} ";
+                        columnFilter[DBM_Guild.Columns.id_channel_notification_user_welcome] = channel_name.Id.ToString();
+                        new DBC().update(queryUpdate, columnFilter);
+                        break;
+                    case "avatarlevel":
+                        property = $"Avatar Level Up Notification";
                         queryUpdate = $"UPDATE {DBM_Guild.tableName} " +
                                 $" SET {DBM_Guild.Columns.id_channel_notification_chat_level_up}=@{DBM_Guild.Columns.id_channel_notification_chat_level_up} " +
                                 $" WHERE {DBM_Guild.Columns.id_guild}=@{DBM_Guild.Columns.id_guild} ";
@@ -2464,50 +2900,323 @@ namespace OjamajoBot.Module
                         columnFilter[DBM_Guild.Columns.id_channel_user_leaving_log] = channel_name.Id.ToString();
                         new DBC().update(queryUpdate, columnFilter);
                         break;
+                    case "birthday":
+                        var socketClient = Context.Client;
+
+                        //start update
+                        queryUpdate = $"UPDATE {DBM_Guild.tableName} " +
+                            $" SET {DBM_Guild.Columns.id_channel_birthday_announcement}=@{DBM_Guild.Columns.id_channel_birthday_announcement} " +
+                            $" WHERE {DBM_Guild.Columns.id_guild}=@{DBM_Guild.Columns.id_guild} ";
+                        Dictionary<string, object> columns = new Dictionary<string, object>();
+                        columns[DBM_Guild.Columns.id_channel_birthday_announcement] = channel_name.Id.ToString();
+                        columns[DBM_Guild.Columns.id_guild] = guildId.ToString();
+                        new DBC().update(queryUpdate, columns);
+
+                        if (Config.Doremi._timerBirthdayAnnouncement.ContainsKey(guildId.ToString()))
+                            Config.Doremi._timerBirthdayAnnouncement[guildId.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
+                        if (Config.Hazuki._timerBirthdayAnnouncement.ContainsKey(guildId.ToString()))
+                            Config.Hazuki._timerBirthdayAnnouncement[guildId.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
+                        if (Config.Aiko._timerBirthdayAnnouncement.ContainsKey(guildId.ToString()))
+                            Config.Aiko._timerBirthdayAnnouncement[guildId.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
+                        if (Config.Onpu._timerBirthdayAnnouncement.ContainsKey(guildId.ToString()))
+                            Config.Onpu._timerBirthdayAnnouncement[guildId.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
+                        if (Config.Momoko._timerBirthdayAnnouncement.ContainsKey(guildId.ToString()))
+                            Config.Momoko._timerBirthdayAnnouncement[guildId.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
+
+                        var guildData = Config.Guild.getGuildData(guildId);
+
+                        string guildBirthdayLastAnnouncement = "";
+                        if (guildData[DBM_Guild.Columns.birthday_announcement_date_last].ToString() != "")
+                            guildBirthdayLastAnnouncement = guildData[DBM_Guild.Columns.birthday_announcement_date_last].ToString();
+                        else
+                            guildBirthdayLastAnnouncement = "1";
+
+                        //set doremi timer
+                        Config.Doremi._timerBirthdayAnnouncement[guildId.ToString()] = new Timer(async _ =>
+                        {
+                            guildData = Config.Guild.getGuildData(guildId);
+                            if (guildData[DBM_Guild.Columns.birthday_announcement_date_last].ToString() != "")
+                                guildBirthdayLastAnnouncement = guildData[DBM_Guild.Columns.birthday_announcement_date_last].ToString();
+                            else
+                                guildBirthdayLastAnnouncement = "1";
+
+                            EmbedBuilder eb = new EmbedBuilder()
+                            .WithColor(Config.Doremi.EmbedColor);
+
+                            //set birthday announcement timer
+                            if (guildBirthdayLastAnnouncement != DateTime.Now.ToString("dd"))
+                            {
+                                Boolean birthdayExisted = false;
+
+                                //announce hazuki birthday
+                                if (Config.Hazuki.Status.isBirthday() &&
+                                Convert.ToInt32(guildData[DBM_Guild.Columns.birthday_announcement_ojamajo]) == 1)
+                                {
+                                    eb = eb.WithTitle($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy Birthday, Hazuki Chan!")
+                                    .WithDescription($"Happy birthday to you, Hazuki chan. " +
+                                    $"She has turned into {Config.Hazuki.birthdayCalculatedYear} this year. Let's give wonderful birthday wishes for her.")
+                                    .WithImageUrl("https://cdn.discordapp.com/attachments/706770454697738300/791510757778784306/hazuki_birthday.jpg");
+                                    await Bot.Doremi.client
+                                    .GetGuild(guildId)
+                                    .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement]))
+                                    .SendMessageAsync(embed: eb.Build());
+                                    birthdayExisted = true;
+                                }
+
+                                //announce aiko birthday
+                                if (Config.Aiko.Status.isBirthday() &&
+                                Convert.ToInt32(guildData[DBM_Guild.Columns.birthday_announcement_ojamajo]) == 1)
+                                {
+                                    eb = eb.WithTitle($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy Birthday, Aiko Chan!")
+                                    .WithDescription($"Happy birthday to our dear osakan friend: Aiko chan. " +
+                                    $"She has turned into {Config.Aiko.birthdayCalculatedYear} this year. Let's give some takoyaki and wonderful birthday wishes for her.")
+                                    .WithImageUrl("https://cdn.discordapp.com/attachments/706770454697738300/791579373324992512/happy_birthday_aiko_chan.jpg")
+                                    .WithFooter("Art By: Letter Three");
+
+                                    await Bot.Doremi.client
+                                    .GetGuild(guildId)
+                                    .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement]))
+                                    .SendMessageAsync(embed: eb.Build());
+                                    birthdayExisted = true;
+                                }
+
+                                //announce onpu birthday
+                                if (Config.Onpu.Status.isBirthday() &&
+                                Convert.ToInt32(guildData[DBM_Guild.Columns.birthday_announcement_ojamajo]) == 1)
+                                {
+                                    eb = eb.WithTitle($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy Birthday, Onpu Chan!")
+                                    .WithDescription($"Happy birthday to our wonderful idol friend: Onpu chan. " +
+                                    $"She has turned into {Config.Onpu.birthdayCalculatedYear} this year. Let's give some wonderful birthday wishes for her.")
+                                    .WithImageUrl("https://cdn.discordapp.com/attachments/706770454697738300/790803480482021377/Onpu__Nintendo_Switch_Birthday_Pic.png")
+                                    .WithFooter("Art By: Letter Three");
+
+                                    await Bot.Doremi.client
+                                    .GetGuild(guildId)
+                                    .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement]))
+                                    .SendMessageAsync(embed: eb.Build());
+                                    birthdayExisted = true;
+                                }
+
+                                //announce momoko birthday
+                                if (Config.Momoko.Status.isBirthday() &&
+                                Convert.ToInt32(guildData[DBM_Guild.Columns.birthday_announcement_ojamajo]) == 1)
+                                {
+                                    eb = eb.WithTitle($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy Birthday, Momoko Chan!")
+                                    .WithDescription($"Happy birthday to our wonderful friend: Momoko chan. " +
+                                    $"She has turned into {Config.Momoko.birthdayCalculatedYear} this year. Let's give some wonderful birthday wishes for her.")
+                                    .WithImageUrl("https://cdn.discordapp.com/attachments/706770454697738300/790803547209203722/Momoko_Birthday_Pic.png")
+                                    .WithFooter("Art By: Letter Three");
+
+                                    await Bot.Doremi.client
+                                    .GetGuild(guildId)
+                                    .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement]))
+                                    .SendMessageAsync(embed: eb.Build());
+                                    birthdayExisted = true;
+                                }
+
+                                //announce member birthday
+                                DBC db = new DBC();
+                                string query = @$"select * 
+                                from {DBM_Guild_User_Birthday.tableName} 
+                                where {DBM_Guild_User_Birthday.Columns.id_guild}=@{DBM_Guild_User_Birthday.Columns.id_guild} and 
+                                month({DBM_Guild_User_Birthday.Columns.birthday_date}) = month(curdate()) and 
+                                day({DBM_Guild_User_Birthday.Columns.birthday_date}) = day(curdate())";
+
+                                Dictionary<string, object> colSelect = new Dictionary<string, object>();
+                                colSelect[DBM_Guild_User_Birthday.Columns.id_guild] = guildId.ToString();
+
+                                var result = db.selectAll(query, colSelect);
+
+                                string birthdayPeople = "";
+
+                                foreach (DataRow row in result.Rows)
+                                {
+                                    //check if user exists/not on the server
+                                    try
+                                    {
+                                        SocketUser masterUser =
+                                        Context.Guild.Users.FirstOrDefault(x => x.Id ==
+                                        Convert.ToUInt64(row[DBM_Guild_User_Birthday.Columns.id_user].ToString()));
+                                        if (masterUser != null)
+                                        {
+                                            birthdayPeople += $"{MentionUtils.MentionUser(Convert.ToUInt64(row[DBM_Guild_User_Birthday.Columns.id_user].ToString()))} ";
+                                            birthdayExisted = true;
+                                        }
+                                    }
+                                    catch (Exception e) { }
+                                }
+
+                                if (birthdayExisted)
+                                {
+                                    if (birthdayPeople != "")
+                                    {
+                                        //check if custom birthday message exists/not
+                                        query = $"SELECT * " +
+                                        $" FROM {DBM_Guild_Custom_Birthday.tableName} " +
+                                        $" WHERE {DBM_Guild_Custom_Birthday.Columns.id_guild}=@{DBM_Guild_Custom_Command.Columns.id_guild} " +
+                                        $" ORDER BY RAND() " +
+                                        $" LIMIT 1";
+                                        colSelect = new Dictionary<string, object>();
+                                        colSelect[DBM_Guild_Custom_Birthday.Columns.id_guild] = guildId.ToString();
+                                        var resultCustomBirthday = new DBC().selectAll(query, colSelect);
+                                        if (resultCustomBirthday.Rows.Count >= 1)
+                                        {
+                                            foreach (DataRow row in resultCustomBirthday.Rows)
+                                            {
+                                                var custBirthdayMessage = row[DBM_Guild_Custom_Birthday.Columns.message].ToString();
+                                                var custBirthdayImage = row[DBM_Guild_Custom_Birthday.Columns.img_url].ToString();
+
+                                                await Bot.Doremi.client
+                                                .GetGuild(guildId)
+                                                .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement].ToString()))
+                                                .SendMessageAsync(
+                                                    $"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday to: {birthdayPeople}",
+                                                    embed: new EmbedBuilder()
+                                                    .WithColor(Config.Doremi.EmbedColor)
+                                                    .WithDescription(custBirthdayMessage)
+                                                    .WithImageUrl(custBirthdayImage)
+                                                    .WithFooter($"Best wishes from: {Context.Guild.Name} & friends")
+                                                    .Build());
+                                            }
+                                        }
+                                        else
+                                        {
+                                            string[] arrRandomedMessage = {
+                                    $"Everyone, please give some wonderful birthday wishes. ",
+                                    $"Wishing you all the best and hapiness always."
+                                };
+
+                                            await Bot.Doremi.client
+                                            .GetGuild(guildId)
+                                            .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement].ToString()))
+                                            .SendMessageAsync(
+                                                $"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday to: {birthdayPeople}",
+                                                embed: new EmbedBuilder()
+                                                .WithColor(Config.Doremi.EmbedColor)
+                                                .WithDescription(arrRandomedMessage[new Random().Next(0, arrRandomedMessage.Length)])
+                                                .WithImageUrl("https://media.discordapp.net/attachments/706770454697738300/745492527070576670/1508005628768.png")
+                                                .WithFooter($"Best wishes from: {Context.Guild.Name} & friends")
+                                                .Build());
+                                        }
+                                    }
+
+                                    query = @$"UPDATE {DBM_Guild.tableName} 
+                                SET {DBM_Guild.Columns.birthday_announcement_date_last}=@{DBM_Guild.Columns.birthday_announcement_date_last} 
+                                WHERE {DBM_Guild.Columns.id_guild}=@{DBM_Guild.Columns.id_guild}";
+                                    Dictionary<string, object> columnsFilter = new Dictionary<string, object>();
+                                    columnsFilter[DBM_Guild.Columns.birthday_announcement_date_last] = DateTime.Now.ToString("dd");
+                                    columnsFilter[DBM_Guild.Columns.id_guild] = guildId.ToString();
+                                    new DBC().update(query, columnsFilter);
+                                }
+                            }
+                        },
+                        null,
+                        TimeSpan.FromSeconds(10), //time to wait before executing the timer for the first time
+                        TimeSpan.FromMinutes(40) //time to wait before executing the timer again
+                        );
+
+                        //hazuki timer
+                        Config.Hazuki._timerBirthdayAnnouncement[guildId.ToString()] = new Timer(async _ =>
+                        {
+                            //set birthday announcement timer
+                            if (guildBirthdayLastAnnouncement != DateTime.Now.ToString("dd") &&
+                            Config.Doremi.Status.isBirthday())
+                            {
+                                await Bot.Hazuki.client
+                                .GetGuild(guildId)
+                                .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement].ToString()))
+                                .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday, {MentionUtils.MentionUser(Config.Doremi.Id)} chan. " +
+                                $"She has turned into {Config.Doremi.birthdayCalculatedYear} this year. Let's give some big steak and wonderful birthday wishes for her.");
+                            }
+                        },
+                        null,
+                        TimeSpan.FromSeconds(10), //time to wait before executing the timer for the first time
+                        TimeSpan.FromMinutes(40) //time to wait before executing the timer again
+                        );
+
+                        //aiko timer
+                        Config.Aiko._timerBirthdayAnnouncement[guildId.ToString()] = new Timer(async _ =>
+                        {
+                            //announce doremi birthday
+                            if (guildBirthdayLastAnnouncement != DateTime.Now.ToString("dd") &&
+                                Config.Doremi.Status.isBirthday())
+                            {
+                                await Bot.Aiko.client
+                                .GetGuild(guildId)
+                                .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement].ToString()))
+                                .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday, {MentionUtils.MentionUser(Config.Doremi.Id)} chan. " +
+                                $"She has turned into {Config.Doremi.birthdayCalculatedYear} this year. Let's give some big steak and wonderful birthday wishes for her.",
+                                embed: new EmbedBuilder()
+                                .WithColor(Config.Aiko.EmbedColor)
+                                .WithImageUrl("https://cdn.discordapp.com/attachments/706770454697738300/790803590482493450/Doremi_Birthday_Pic.png")
+                                .Build());
+
+                                //update last birthday announcement date
+                                string query = @$"UPDATE {DBM_Guild.tableName} 
+                                SET {DBM_Guild.Columns.birthday_announcement_date_last}=@{DBM_Guild.Columns.birthday_announcement_date_last} 
+                                WHERE {DBM_Guild.Columns.id_guild}=@{DBM_Guild.Columns.id_guild}";
+                                Dictionary<string, object> columnsFilter = new Dictionary<string, object>();
+                                columnsFilter[DBM_Guild.Columns.birthday_announcement_date_last] = DateTime.Now.ToString("dd");
+                                columnsFilter[DBM_Guild.Columns.id_guild] = guildId.ToString();
+                                new DBC().update(query, columnsFilter);
+
+                            }
+                        },
+                        null,
+                        TimeSpan.FromSeconds(10), //time to wait before executing the timer for the first time
+                        TimeSpan.FromMinutes(40) //time to wait before executing the timer again
+                        );
+
+                        //onpu timer 
+                        Config.Onpu._timerBirthdayAnnouncement[guildId.ToString()] = new Timer(async _ =>
+                        {
+                            //announce doremi birthday
+                            if (guildBirthdayLastAnnouncement != DateTime.Now.ToString("dd") &&
+                                Config.Doremi.Status.isBirthday())
+                            {
+                                await Bot.Onpu.client
+                                .GetGuild(guildId)
+                                .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement].ToString()))
+                                .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday, {MentionUtils.MentionUser(Config.Doremi.Id)} chan. " +
+                                $"She has turned into {Config.Doremi.birthdayCalculatedYear} this year. Let's give some big steak and wonderful birthday wishes for her.");
+
+                            }
+                        },
+                        null,
+                        TimeSpan.FromSeconds(10), //time to wait before executing the timer for the first time
+                        TimeSpan.FromMinutes(40) //time to wait before executing the timer again
+                        );
+
+                        //momoko timer
+                        Config.Momoko._timerBirthdayAnnouncement[guildId.ToString()] = new Timer(async _ =>
+                        {
+                            //announce doremi birthday
+                            if (guildBirthdayLastAnnouncement != DateTime.Now.ToString("dd") &&
+                                Config.Doremi.Status.isBirthday())
+                            {
+                                await Bot.Momoko.client
+                                .GetGuild(guildId)
+                                .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement].ToString()))
+                                .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday, {MentionUtils.MentionUser(Config.Doremi.Id)} chan. " +
+                                $"She has turned into {Config.Doremi.birthdayCalculatedYear} on this year. Let's give some big steak and wonderful birthday wishes for her.");
+                            }
+                        },
+                        null,
+                        TimeSpan.FromSeconds(10), //time to wait before executing the timer for the first time
+                        TimeSpan.FromMinutes(40) //time to wait before executing the timer again
+                        );
+                        property = "Birthday";
+                        break;
                     default:
                         await ReplyAsync($"Sorry, I can't found that channel settings");
                         return;
                 }
 
-                await ReplyAsync($"**{property} Channels** settings has been updated.");
-            }
-
-            [Command("random event"), Summary("Schedule Doremi Bot to make random event message on <channel_name> for every 24 hours.")]
-            public async Task assignRandomEventChannel(IGuildChannel channel_name)
-            {
-                //Config.Guild.setPropertyValue(channel_name.GuildId, "id_random_event", channel_name.Id.ToString());
-
-                //if (Config.Doremi._timerRandomEvent.ContainsKey(channel_name.GuildId.ToString()))
-                //    Config.Doremi._timerRandomEvent[channel_name.GuildId.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
-
-                //Config.Doremi._timerRandomEvent[$"{channel_name.GuildId.ToString()}"] = new Timer(async _ =>
-                //{
-                //    int rndIndex = new Random().Next(0, Config.Doremi.listRandomEvent.Count); //random the list value
-                //    Console.WriteLine("Doremi Random Event : " + Config.Doremi.listRandomEvent[rndIndex]);
-
-                //    var socketClient = Context.Client;
-                //    try
-                //    {
-                //        await socketClient
-                //        .GetGuild(channel_name.GuildId)
-                //        .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(channel_name.GuildId, "id_random_event")))
-                //        .SendMessageAsync(Config.Doremi.listRandomEvent[rndIndex]);
-                //    }
-                //    catch
-                //    {
-                //        Console.WriteLine($"Doremi Random Event Exception: Send message permissions has been missing {channel_name.Guild.Name} : {channel_name.Name}");
-                //    }
-                //},
-                //    null,
-                //    TimeSpan.FromHours(Config.Doremi.Randomeventinterval), //time to wait before executing the timer for the first time
-                //    TimeSpan.FromHours(Config.Doremi.Randomeventinterval) //time to wait before executing the timer again
-                //);
-
-                //await ReplyAsync($"**Random Event Channels** has been assigned into: {MentionUtils.MentionChannel(channel_name.Id)}");
+                await ReplyAsync($"**{property} Channel** settings has been updated.");
             }
 
             [Command("remove"), Summary("Remove the settings on the assigned channels. " +
-                "Current available settings: `birthday`/`chatlevel`")]
+                "Current available settings: `welcome`/`avatarlevel`/`birthday`/`chatlevel`")]
             public async Task removeChannelSettings([Remainder] string settings)
             {
                 string property = ""; string queryUpdate = "";
@@ -2519,13 +3228,23 @@ namespace OjamajoBot.Module
 
                 switch (settings.ToLower())
                 {
+                    case "welcome":
+                        property = $"Welcome Announcement";
+                        queryUpdate = $"UPDATE {DBM_Guild.tableName} " +
+                                $" SET {DBM_Guild.Columns.id_channel_notification_user_welcome}=@{DBM_Guild.Columns.id_channel_notification_user_welcome} " +
+                                $" WHERE {DBM_Guild.Columns.id_guild}=@{DBM_Guild.Columns.id_guild} ";
+                        columnFilter[DBM_Guild.Columns.id_channel_notification_user_welcome] = "";
+                        new DBC().update(queryUpdate, columnFilter);
+                        break;
                     case "birthday":
                         property = $"{Config.Emoji.birthdayCake} Birthday Announcement";
 
                         queryUpdate = $"UPDATE {DBM_Guild.tableName} " +
-                                $" SET {DBM_Guild.Columns.id_channel_birthday_announcement}=@{DBM_Guild.Columns.id_channel_birthday_announcement} " +
+                                $" SET {DBM_Guild.Columns.id_channel_birthday_announcement}=@{DBM_Guild.Columns.id_channel_birthday_announcement}," +
+                                $" {DBM_Guild.Columns.birthday_announcement_ojamajo}=@{DBM_Guild.Columns.birthday_announcement_ojamajo} " +
                                 $" WHERE {DBM_Guild.Columns.id_guild}=@{DBM_Guild.Columns.id_guild} ";
                         columnFilter[DBM_Guild.Columns.id_channel_birthday_announcement] = "";
+                        columnFilter[DBM_Guild.Columns.birthday_announcement_ojamajo] = 0;
                         columnFilter[DBM_Guild.Columns.id_guild] = guildId.ToString();
                         new DBC().update(queryUpdate, columnFilter);
 
@@ -2548,8 +3267,8 @@ namespace OjamajoBot.Module
                         columnFilter[DBM_Guild.Columns.id_channel_user_leaving_log] = "";
                         new DBC().update(queryUpdate, columnFilter);
                         break;
-                    case "chatlevel":
-                        property = $"{Config.Emoji.birthdayCake} chat level notification";
+                    case "avatarlevel":
+                        property = $"Avatar Level Up notification";
                         queryUpdate = $"UPDATE {DBM_Guild.tableName} " +
                                 $" SET {DBM_Guild.Columns.id_channel_birthday_announcement}=@{DBM_Guild.Columns.id_channel_birthday_announcement} " +
                                 $" WHERE {DBM_Guild.Columns.id_guild}=@{DBM_Guild.Columns.id_guild} ";
@@ -2566,81 +3285,99 @@ namespace OjamajoBot.Module
 
         }
 
-        [Name("mod trading card"), Group("trading card"), Summary("These commands require `Manage Card`|`Manage Roles` permissions.")]
+        [Name("mod trading card"), Group("trading card"), Summary("These commands require `Manage Roles` permissions.")]
         public class DoremiModeratorTradingCards : ModuleBase<SocketCommandContext>
         {
             //trading card configuration section
             //assign trading card spawning channel
-            [Command("spawn"), Summary("Set Doremi Bot and the others to make the trading card spawned at <channel_name>.")]
-            public async Task assignTradingCardSpawnChannel(SocketGuildChannel channel_name)
+            [Command("spawn"), Summary("Set Doremi Bot and the others to make the trading card spawned at <channel_name> " +
+                " within <interval_minutes> minutes interval.")]
+            public async Task assignTradingCardSpawnChannel(SocketGuildChannel channel_name, int interval_minutes)
             {
                 var guildId = channel_name.Guild.Id;
-                var socketClient = Context.Client;
-
                 var guildCardSpawnData = TradingCardGuildCore.getGuildData(guildId);
 
-                //set random card spawn timer
-                if (guildCardSpawnData[DBM_Trading_Card_Guild.Columns.id_channel_spawn].ToString() != "")
-                {
-                    Config.Doremi._stopwatchCardSpawn[guildId.ToString()] = new Stopwatch();
-                    Config.Doremi._stopwatchCardSpawn[guildId.ToString()].Start();
-
-                    Config.Doremi._timerTradingCardSpawn[guildId.ToString()] = new Timer(async _ =>
-                    {
-                        if (Config.Doremi._stopwatchCardSpawn.ContainsKey(guildId.ToString()))
-                            if (Config.Doremi._stopwatchCardSpawn[guildId.ToString()].IsRunning)
-                                Config.Doremi._stopwatchCardSpawn[guildId.ToString()].Restart();
-
-                        await TradingCardCore.generateCardSpawn(guildId);
-                    },
-                    null,
-                    TimeSpan.FromMinutes(Convert.ToInt32(guildCardSpawnData[DBM_Trading_Card_Guild.Columns.spawn_interval])), //time to wait before executing the timer for the first time
-                    TimeSpan.FromMinutes(Convert.ToInt32(guildCardSpawnData[DBM_Trading_Card_Guild.Columns.spawn_interval])) //time to wait before executing the timer again
-                    );
-                }
-            }
-
-            //set spawning interval
-            [Command("interval"), Summary("Set the trading card spawn interval (in minutes).")]
-            public async Task setTradingCardSpawnInterval(int interval_minutes)
-            {
-                if (interval_minutes < 5 || interval_minutes > 1440) await ReplyAsync($"Please enter the interval(in minutes) between 5-1440");
+                if (interval_minutes < 5 || interval_minutes > 1440) await ReplyAsync($"Please enter the card spawn interval(in minutes) between 5-1440");
                 else
                 {
-                    var guildId = Context.Guild.Id;
-                    var guildCardSpawnData = TradingCardGuildCore.getGuildData(guildId);
-
                     //update data
-                    Dictionary<string, object> columnsFilter = new Dictionary<string, object>();
-                    columnsFilter[DBM_Trading_Card_Guild.Columns.spawn_interval] = interval_minutes;
-                    columnsFilter[DBM_Trading_Card_Guild.Columns.id_guild] = guildId.ToString();
                     string query = $"UPDATE {DBM_Trading_Card_Guild.tableName} " +
-                        $" SET {DBM_Trading_Card_Guild.Columns.id_channel_spawn}=@{DBM_Trading_Card_Guild.Columns.id_channel_spawn} " +
+                        $" SET {DBM_Trading_Card_Guild.Columns.id_channel_spawn}=@{DBM_Trading_Card_Guild.Columns.id_channel_spawn}," +
+                        $" {DBM_Trading_Card_Guild.Columns.spawn_interval}=@{DBM_Trading_Card_Guild.Columns.spawn_interval} " +
                         $" WHERE {DBM_Trading_Card_Guild.Columns.id_guild}=@{DBM_Trading_Card_Guild.Columns.id_guild} ";
+                    Dictionary<string, object> columnsFilter = new Dictionary<string, object>();
+                    columnsFilter[DBM_Trading_Card_Guild.Columns.id_channel_spawn] = channel_name.Id.ToString();
+                    columnsFilter[DBM_Trading_Card_Guild.Columns.spawn_interval] = Convert.ToInt32(interval_minutes);
+                    columnsFilter[DBM_Trading_Card_Guild.Columns.id_guild] = guildId.ToString();
                     new DBC().update(query, columnsFilter);
 
-                    //Config.Guild.setPropertyValue(guildId, "trading_card_spawn_interval", interval_minutes.ToString());
-                    await ReplyAsync($"**Trading Card Spawn interval** has been set into **{interval_minutes}** minute(s)");
-
-                    if (Config.Doremi._stopwatchCardSpawn.ContainsKey(Context.Guild.Id.ToString()))
-                    {
-                        Config.Doremi._stopwatchCardSpawn[guildId.ToString()].Restart();
-                    }
                     //get updated data
                     guildCardSpawnData = TradingCardGuildCore.getGuildData(guildId);
 
-                    //set random card spawn timer
-                    if (Config.Doremi._timerTradingCardSpawn.ContainsKey(guildId.ToString()))
+                    if (Config.Doremi._stopwatchCardSpawn.ContainsKey(Context.Guild.Id.ToString()))
                     {
                         Config.Doremi._timerTradingCardSpawn[guildId.ToString()].Change(
                             TimeSpan.FromMinutes(Convert.ToInt32(guildCardSpawnData[DBM_Trading_Card_Guild.Columns.spawn_interval].ToString())),
                             TimeSpan.FromMinutes(Convert.ToInt32(guildCardSpawnData[DBM_Trading_Card_Guild.Columns.spawn_interval].ToString()))
                         );
+                        Config.Doremi._stopwatchCardSpawn[guildId.ToString()].Restart();
+                    } else
+                    {
+                        Config.Doremi._timerTradingCardSpawn[guildId.ToString()] = new Timer(async _ =>
+                        {
+                            await TradingCardCore.generateCardSpawn(guildId);
+                        },
+                        null,
+                        TimeSpan.FromMinutes(Convert.ToInt32(guildCardSpawnData[DBM_Trading_Card_Guild.Columns.spawn_interval])), //time to wait before executing the timer for the first time
+                        TimeSpan.FromMinutes(Convert.ToInt32(guildCardSpawnData[DBM_Trading_Card_Guild.Columns.spawn_interval])) //time to wait before executing the timer again
+                        );
                     }
+
+                    await ReplyAsync($"**Trading Card** will be spawned at {MentionUtils.MentionChannel(channel_name.Id)} " +
+                        $"within {interval_minutes} minute(s) interval");
                 }
             }
 
-            [Command("badge role create"), Summary("Register the trading card role completionist.")]
+            //set spawning interval
+            //[Command("interval"), Summary("Set the trading card spawn interval (in minutes).")]
+            //public async Task setTradingCardSpawnInterval(int interval_minutes)
+            //{
+            //    if (interval_minutes < 5 || interval_minutes > 1440) await ReplyAsync($"Please enter the card spawn interval(in minutes) between 5-1440");
+            //    else
+            //    {
+            //        var guildId = Context.Guild.Id;
+            //        var guildCardSpawnData = TradingCardGuildCore.getGuildData(guildId);
+
+            //        //update data
+            //        Dictionary<string, object> columnsFilter = new Dictionary<string, object>();
+            //        columnsFilter[DBM_Trading_Card_Guild.Columns.spawn_interval] = interval_minutes;
+            //        columnsFilter[DBM_Trading_Card_Guild.Columns.id_guild] = guildId.ToString();
+            //        string query = $"UPDATE {DBM_Trading_Card_Guild.tableName} " +
+            //            $" SET {DBM_Trading_Card_Guild.Columns.id_channel_spawn}=@{DBM_Trading_Card_Guild.Columns.id_channel_spawn} " +
+            //            $" WHERE {DBM_Trading_Card_Guild.Columns.id_guild}=@{DBM_Trading_Card_Guild.Columns.id_guild} ";
+            //        new DBC().update(query, columnsFilter);
+
+            //        //Config.Guild.setPropertyValue(guildId, "trading_card_spawn_interval", interval_minutes.ToString());
+            //        await ReplyAsync($"**Trading Card Spawn interval** has been set into **{interval_minutes}** minute(s)");
+
+            //        if (Config.Doremi._stopwatchCardSpawn.ContainsKey(Context.Guild.Id.ToString()))
+            //            Config.Doremi._stopwatchCardSpawn[guildId.ToString()].Restart();
+                    
+            //        //get updated data
+            //        guildCardSpawnData = TradingCardGuildCore.getGuildData(guildId);
+
+            //        //set random card spawn timer
+            //        if (Config.Doremi._timerTradingCardSpawn.ContainsKey(guildId.ToString()))
+            //        {
+            //            Config.Doremi._timerTradingCardSpawn[guildId.ToString()].Change(
+            //                TimeSpan.FromMinutes(Convert.ToInt32(guildCardSpawnData[DBM_Trading_Card_Guild.Columns.spawn_interval].ToString())),
+            //                TimeSpan.FromMinutes(Convert.ToInt32(guildCardSpawnData[DBM_Trading_Card_Guild.Columns.spawn_interval].ToString()))
+            //            );
+            //        }
+            //    }
+            //}
+
+            [Command("create completionist role"), Alias("create badge role"), Summary("Register the trading card role completionist.")]
             public async Task initTradingCardRoleCompletionist()
             {
                 var roleDoremi = Context.Guild.Roles.Where(x => x.Name == TradingCardCore.Doremi.roleCompletionist).ToList();
@@ -2701,39 +3438,45 @@ namespace OjamajoBot.Module
             public async Task removeTradingCardSpawn()
             {
                 var guildId = Context.Guild.Id;
-                if (Config.Guild.hasPropertyValues(guildId.ToString(), "trading_card_spawn"))
-                {
-                    if (Config.Doremi._stopwatchCardSpawn.ContainsKey(Context.Guild.Id.ToString()))
-                    {
-                        Config.Doremi._stopwatchCardSpawn[guildId.ToString()].Reset();
-                    }
+                var guildTradingCardData = TradingCardGuildCore.getGuildData(guildId);
+                
+                if (Config.Doremi._stopwatchCardSpawn.ContainsKey(Context.Guild.Id.ToString()))
+                    Config.Doremi._stopwatchCardSpawn[guildId.ToString()].Reset();
+                    
+                if (Config.Doremi._timerTradingCardSpawn.ContainsKey(Context.Guild.Id.ToString()))
+                    Config.Doremi._timerTradingCardSpawn[Context.Guild.Id.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
 
-                    if (Config.Doremi._timerTradingCardSpawn.ContainsKey(Context.Guild.Id.ToString()))
-                        Config.Doremi._timerTradingCardSpawn[Context.Guild.Id.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
+                //reset spawn settings
+                string queryUpdate = $"UPDATE {DBM_Trading_Card_Guild.tableName} " +
+                    $" SET {DBM_Trading_Card_Guild.Columns.id_channel_spawn}=@{DBM_Trading_Card_Guild.Columns.id_channel_spawn}," +
+                    $" {DBM_Trading_Card_Guild.Columns.spawn_id}=@{DBM_Trading_Card_Guild.Columns.spawn_id}, " +
+                    $" {DBM_Trading_Card_Guild.Columns.spawn_parent}=@{DBM_Trading_Card_Guild.Columns.spawn_parent}, " +
+                    $" {DBM_Trading_Card_Guild.Columns.spawn_category}=@{DBM_Trading_Card_Guild.Columns.spawn_category}, " +
+                    $" {DBM_Trading_Card_Guild.Columns.spawn_badcard_question}=@{DBM_Trading_Card_Guild.Columns.spawn_badcard_question}, " +
+                    $" {DBM_Trading_Card_Guild.Columns.spawn_badcard_answer}=@{DBM_Trading_Card_Guild.Columns.spawn_badcard_answer}, " +
+                    $" {DBM_Trading_Card_Guild.Columns.spawn_interval}=@{DBM_Trading_Card_Guild.Columns.spawn_interval}, " +
+                    $" {DBM_Trading_Card_Guild.Columns.spawn_is_badcard}=@{DBM_Trading_Card_Guild.Columns.spawn_is_badcard}, " +
+                    $" {DBM_Trading_Card_Guild.Columns.spawn_is_mystery}=@{DBM_Trading_Card_Guild.Columns.spawn_is_mystery}, " +
+                    $" {DBM_Trading_Card_Guild.Columns.spawn_is_zone}=@{DBM_Trading_Card_Guild.Columns.spawn_is_zone}, " +
+                    $" {DBM_Trading_Card_Guild.Columns.spawn_token}=@{DBM_Trading_Card_Guild.Columns.spawn_token} " +
+                    $" WHERE {DBM_Trading_Card_Guild.Columns.id_guild}=@{DBM_Trading_Card_Guild.Columns.id_guild} ";
 
-                    //reset spawn settings
-                    string queryUpdate = $"UPDATE {DBM_Trading_Card_Guild.tableName} " +
-                        $" SET {DBM_Trading_Card_Guild.Columns.id_channel_spawn}=@{DBM_Trading_Card_Guild.Columns.id_channel_spawn}," +
-                        $" {DBM_Trading_Card_Guild.Columns.spawn_id}=@{DBM_Trading_Card_Guild.Columns.spawn_id}, " +
-                        $" {DBM_Trading_Card_Guild.Columns.spawn_parent}=@{DBM_Trading_Card_Guild.Columns.spawn_parent}, " +
-                        $" {DBM_Trading_Card_Guild.Columns.spawn_category}=@{DBM_Trading_Card_Guild.Columns.spawn_category}, " +
-                        $" WHERE {DBM_Trading_Card_Guild.Columns.id_guild}=@{DBM_Trading_Card_Guild.Columns.id_guild} ";
+                Dictionary<string, object> column = new Dictionary<string, object>();
+                column[DBM_Trading_Card_Guild.Columns.id_channel_spawn] = "";
+                column[DBM_Trading_Card_Guild.Columns.spawn_id] = "";
+                column[DBM_Trading_Card_Guild.Columns.spawn_parent] = "";
+                column[DBM_Trading_Card_Guild.Columns.spawn_category] = "";
+                column[DBM_Trading_Card_Guild.Columns.spawn_badcard_question] = "";
+                column[DBM_Trading_Card_Guild.Columns.spawn_badcard_answer] = "";
+                column[DBM_Trading_Card_Guild.Columns.spawn_interval] = 40;
+                column[DBM_Trading_Card_Guild.Columns.spawn_is_badcard] = 0;
+                column[DBM_Trading_Card_Guild.Columns.spawn_is_mystery] = 0;
+                column[DBM_Trading_Card_Guild.Columns.spawn_is_zone] = 0;
+                column[DBM_Trading_Card_Guild.Columns.spawn_token] = "";
+                column[DBM_Trading_Card_Guild.Columns.id_guild] = guildId.ToString();
+                new DBC().update(queryUpdate, column);
 
-                    Dictionary<string, object> column = new Dictionary<string, object>();
-                    column[DBM_Trading_Card_Guild.Columns.id_channel_spawn] = "";
-                    column[DBM_Trading_Card_Guild.Columns.spawn_id] = "";
-                    column[DBM_Trading_Card_Guild.Columns.spawn_parent] = "";
-                    column[DBM_Trading_Card_Guild.Columns.spawn_category] = "";
-                    column[DBM_Trading_Card_Guild.Columns.id_guild] = "";
-                    new DBC().update(queryUpdate, column);
-
-                    //Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyId, "");
-                    //Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyCategory, "");
-                    //Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyToken, "");
-                    await ReplyAsync($"**Trading Card Spawn Channels** settings has been removed.");
-                }
-                else
-                    await ReplyAsync($"**Trading Card Spawn Channels** has no settings yet.");
+                await ReplyAsync($"**Trading Card Spawn Channels** settings has been removed.");
             }
         }
 
@@ -2750,7 +3493,8 @@ namespace OjamajoBot.Module
                 GuildUserAvatarCore.printAvatarStatus(Context, username).Build());
         }
 
-        [Command("set info", RunMode = RunMode.Async), Summary("Set your avatar info.")]
+        [Command("set info", RunMode = RunMode.Async), Summary("Set your avatar info. " +
+            "You can put empty parameter to erase the info.")]
         public async Task set_avatar_info([Remainder] string info = "")
         {
             if (info.Length >= 75)
@@ -2774,14 +3518,21 @@ namespace OjamajoBot.Module
             columnFilter[DBM_Guild_User_Avatar.Columns.id_user] = userId.ToString();
             new DBC().update(query, columnFilter);
 
-            await ReplyAsync(embed: new EmbedBuilder()
+            EmbedBuilder eb = new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
-                .WithDescription($"{Context.User.Username} avatar info has been updated!")
-                .WithThumbnailUrl(TradingCardCore.Doremi.emojiOk)
+                .WithThumbnailUrl(TradingCardCore.Doremi.emojiOk);
+
+            if (info == "")
+                eb.WithDescription($"Your avatar info has been removed.");
+            else
+                eb.WithDescription($"Your avatar info has been updated.");
+
+            await ReplyAsync(embed: eb
                 .Build());
         }
 
-        [Command("set nickname", RunMode = RunMode.Async), Summary("Set your avatar info.")]
+        [Command("set nickname", RunMode = RunMode.Async), Summary("Set your avatar nickname." +
+            "You can put empty parameter to remove the nickname.")]
         public async Task set_avatar_nickname([Remainder] string nickname = "")
         {
             if (nickname.Length >= 15)
@@ -2804,20 +3555,114 @@ namespace OjamajoBot.Module
             columnFilter[DBM_Guild_User_Avatar.Columns.id_user] = userId.ToString();
             new DBC().update(query, columnFilter);
 
-            await ReplyAsync(embed: new EmbedBuilder()
+            EmbedBuilder eb = new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
-                .WithDescription($"{Context.User.Username} avatar nickname has been updated!")
-                .WithThumbnailUrl(TradingCardCore.Doremi.emojiOk)
+                .WithThumbnailUrl(TradingCardCore.Doremi.emojiOk);
+
+            if (nickname == "")
+                await ReplyAsync(embed: eb
+                .WithDescription($"Your avatar nickname has been removed.")
+                .Build());
+            else
+                await ReplyAsync(embed: eb
+                .WithDescription($"Your avatar nickname has been updated.")
                 .Build());
         }
 
-        [Command("set color", RunMode = RunMode.Async), Summary("Set your avatar color with rgb color format.")]
+        [Command("set birthday", RunMode = RunMode.Async), Summary(
+            "Set your avatar birthday date with parameter format:`dd mm`.Example: `31 12`" +
+            "You can put empty parameter to remove the birthday date.")]
+        public async Task set_avatar_birthday(string d = "", string m = "")
+        {
+            var guildId = Context.Guild.Id;
+            var userId = Context.User.Id;
+
+            var userData = GuildUserAvatarCore.getUserData(guildId, userId);
+
+            //search birthday if exists/not
+            string query = $"SELECT * " +
+                $" FROM {DBM_Guild_User_Birthday.tableName} " +
+                $" WHERE {DBM_Guild_User_Birthday.Columns.id_guild}=@{DBM_Guild_User_Birthday.Columns.id_guild} AND " +
+                $" {DBM_Guild_User_Birthday.Columns.id_user}=@{DBM_Guild_User_Birthday.Columns.id_user} ";
+            Dictionary<string, object> columnFilter = new Dictionary<string, object>();
+            columnFilter[DBM_Guild_User_Birthday.Columns.id_guild] = guildId.ToString();
+            columnFilter[DBM_Guild_User_Birthday.Columns.id_user] = userId.ToString();
+            var birthdayExists = new DBC().selectAll(query, columnFilter);
+
+            if (d != "" && m != "")
+            {
+                int birthdayDate = 0; int birthdayMonth = 0;
+                var isNumericDate = int.TryParse(d, out birthdayDate);
+                var isNumericMonth = int.TryParse(m, out birthdayMonth);
+                if (birthdayDate < 1 || birthdayDate > 31 ||
+                    birthdayMonth < 1 || birthdayMonth > 12)
+                {
+                    await ReplyAsync("Please enter the correct birthday format: **dd/mm**.");
+                    return;
+                }
+
+                columnFilter = new Dictionary<string, object>();
+                columnFilter[DBM_Guild_User_Birthday.Columns.birthday_date] = DateTime.Parse($"1990-{m}-{d} 00:00:00");
+                columnFilter[DBM_Guild_User_Birthday.Columns.id_guild] = guildId.ToString();
+                columnFilter[DBM_Guild_User_Birthday.Columns.id_user] = userId.ToString();
+
+                if (birthdayExists.Rows.Count <= 0)
+                {
+                    new DBC().insert(DBM_Guild_User_Birthday.tableName, columnFilter);
+                }
+                else
+                {
+                    query = $"UPDATE {DBM_Guild_User_Birthday.tableName} " +
+                    $" SET {DBM_Guild_User_Birthday.Columns.birthday_date}=@{DBM_Guild_User_Birthday.Columns.birthday_date} " +
+                    $" WHERE {DBM_Guild_User_Birthday.Columns.id_guild}=@{DBM_Guild_User_Birthday.Columns.id_guild} AND " +
+                    $" {DBM_Guild_User_Birthday.Columns.id_user}=@{DBM_Guild_User_Birthday.Columns.id_user} ";
+                    new DBC().update(query, columnFilter);
+                }
+
+                await ReplyAsync(embed: new EmbedBuilder()
+                    .WithColor(Config.Doremi.EmbedColor)
+                    .WithDescription($"Your avatar birthday date has been updated.")
+                    .WithThumbnailUrl(TradingCardCore.Doremi.emojiOk)
+                    .Build());
+            }
+            else
+            {//remove the birthday date
+                query = $"DELETE FROM {DBM_Guild_User_Birthday.tableName} " +
+                $" WHERE {DBM_Guild_User_Birthday.Columns.id_guild}=@{DBM_Guild_User_Birthday.Columns.id_guild} AND " +
+                $" {DBM_Guild_User_Birthday.Columns.id_user}=@{DBM_Guild_User_Birthday.Columns.id_user}";
+                columnFilter = new Dictionary<string, object>();
+                columnFilter[DBM_Guild_User_Birthday.Columns.id_guild] = guildId.ToString();
+                columnFilter[DBM_Guild_User_Birthday.Columns.id_user] = userId.ToString();
+                new DBC().delete(query, columnFilter);
+
+                await ReplyAsync(embed: new EmbedBuilder()
+                    .WithColor(Config.Doremi.EmbedColor)
+                    .WithDescription($"Your birthday date has been removed.")
+                    .WithThumbnailUrl(TradingCardCore.Doremi.emojiOk)
+                    .Build());
+            }
+
+        }
+
+        [Command("set color", RunMode = RunMode.Async), Summary("Set your avatar embed color with rgb color format parameter." +
+            "Example: `254 254 254`")]
         public async Task set_avatar_color(string r, string g, string b)
         {
-            if (Convert.ToInt32(r) < 0 || Convert.ToInt32(r) > 255 ||
-            Convert.ToInt32(g) < 0 || Convert.ToInt32(g) > 255 ||
-            Convert.ToInt32(b) < 0 || Convert.ToInt32(b) > 255) { 
-                await ReplyAsync("Please enter rgb values between 0 and 255"); return; }
+            var isNumericR = int.TryParse(r, out _);
+            var isNumericG = int.TryParse(g, out _);
+            var isNumericB = int.TryParse(b, out _);
+
+            if (!isNumericR && !isNumericG && !isNumericB)
+            {
+                await ReplyAsync("Please enter rgb values between 0 and 254"); return;
+            }
+
+            if (Convert.ToInt32(r) < 0 || Convert.ToInt32(r) > 254 ||
+            Convert.ToInt32(g) < 0 || Convert.ToInt32(g) > 254 ||
+            Convert.ToInt32(b) < 0 || Convert.ToInt32(b) > 254)
+            {
+                await ReplyAsync("Please enter rgb values between 0 and 254"); return;
+            }
             var guildId = Context.Guild.Id;
             var userId = Context.User.Id;
             string color = $"{r},{g},{b}";
@@ -2828,18 +3673,48 @@ namespace OjamajoBot.Module
                 $" WHERE {DBM_Guild_User_Avatar.Columns.id_guild}=@{DBM_Guild_User_Avatar.Columns.id_guild} AND " +
                 $" {DBM_Guild_User_Avatar.Columns.id_user}=@{DBM_Guild_User_Avatar.Columns.id_user} ";
             Dictionary<string, object> columnFilter = new Dictionary<string, object>();
-            columnFilter[DBM_Guild_User_Avatar.Columns.color] = color.ToString();
+            columnFilter[DBM_Guild_User_Avatar.Columns.color] = color;
             columnFilter[DBM_Guild_User_Avatar.Columns.id_guild] = guildId.ToString();
             columnFilter[DBM_Guild_User_Avatar.Columns.id_user] = userId.ToString();
             new DBC().update(query, columnFilter);
 
             await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
-                .WithDescription($"{Context.User.Username} avatar nickname has been updated!")
+                .WithDescription($"Your avatar embed color has been updated!")
                 .WithThumbnailUrl(TradingCardCore.Doremi.emojiOk)
                 .Build());
         }
 
+        [Command("set banner", RunMode = RunMode.Async),Alias("set image"), Summary("Set your avatar image banner with the provided link." +
+            " You can the empty parameter to remove the banner image.")]
+        public async Task set_avatar_banner(string image_url = "")
+        {
+            var guildId = Context.Guild.Id;
+            var userId = Context.User.Id;
+
+            string query = $"UPDATE {DBM_Guild_User_Avatar.tableName} " +
+                $" SET {DBM_Guild_User_Avatar.Columns.image_url}=@{DBM_Guild_User_Avatar.Columns.image_url} " +
+                $" WHERE {DBM_Guild_User_Avatar.Columns.id_guild}=@{DBM_Guild_User_Avatar.Columns.id_guild} AND " +
+                $" {DBM_Guild_User_Avatar.Columns.id_user}=@{DBM_Guild_User_Avatar.Columns.id_user} ";
+            Dictionary<string, object> columnFilter = new Dictionary<string, object>();
+            columnFilter[DBM_Guild_User_Avatar.Columns.image_url] = image_url.ToString();
+            columnFilter[DBM_Guild_User_Avatar.Columns.id_guild] = guildId.ToString();
+            columnFilter[DBM_Guild_User_Avatar.Columns.id_user] = userId.ToString();
+            new DBC().update(query, columnFilter);
+
+            EmbedBuilder eb = new EmbedBuilder()
+                .WithColor(Config.Doremi.EmbedColor)
+                .WithThumbnailUrl(TradingCardCore.Doremi.emojiOk);
+
+            if (image_url == "")
+                await ReplyAsync(embed: eb
+                .WithDescription($"Your avatar banner has been removed.")
+                .Build());
+            else
+                await ReplyAsync(embed: eb
+                .WithDescription($"Your avatar banner has been updated.")
+                .Build());
+        }
     }
 
     [Name("Card"), Group("card"), Summary("This category contains all Doremi Trading card command.")]
@@ -3012,7 +3887,8 @@ namespace OjamajoBot.Module
                     $"<bot> prefix available are: **{Config.Doremi.PrefixParent[0]} / {Config.Hazuki.PrefixParent[0]} / " +
                     $"{Config.Aiko.PrefixParent[0]} / {Config.Onpu.PrefixParent[0]} / " +
                     $"{Config.Momoko.PrefixParent[0]}**," +
-                    $"but **BEWARE OF MYSTERY CARD & BAD CARD!** (More explanation of mystery/bad card can be see on each faq)")
+                    $"but **BEWARE OF MYSTERY CARD & BAD CARD!** (More explanation of mystery/bad card can be see on each faq). " +
+                    $"If the card has been captured by someone you need to wait it until the next card spawn.")
                     .AddField("**How many card pack & type available upon the card spawn?**",
                     $"-6 cards pack: Doremi, Hazuki, Aiko, Onpu, Momoko & Other Pack.\n" +
                     $"-4 cards type: Normal ({TradingCardCore.captureRateNormal * 10} catch rate%), " +
@@ -3020,18 +3896,18 @@ namespace OjamajoBot.Module
                     $"Metal ({TradingCardCore.captureRateMetal * 10}% catch rate) & " +
                     $"Special({TradingCardCore.captureRateSpecial * 10}% catch rate, exclusive for **other-special** card Pack only).")
                     .AddField("What is Rank on my card status info?",
-                    "Your rank are determined based from your card exp. You will start your rank from 1 and can be raised up to 5 from your card exp. " +
-                    "For each time you're using the card capture command you'll get **1 exp** and will get rank up once you reach 100 exp. " +
+                    "Your rank are determined based from your card capture exp. You will start from rank 1 and can be raised up to 5. " +
+                    "For each time you're using the card capture command you'll get **1 exp** and will get rank up for every 100 exp. " +
                     "Starting from rank 2 and above you will gain free **+10/20/30/40% capture rate benefit** for each rank that you have.")
                     .AddField("**Getting Started**",
-                    $"-Gather daily magic seeds everyday (24 hour real time reset) with **{Config.Doremi.PrefixParent[0]}daily**. " +
+                    $"-Gather daily magic seeds everyday (24 hour bot server time reset) with **{Config.Doremi.PrefixParent[0]}daily**. " +
                     $"Magic seeds can be used for buying item for card collecting progression.\n" +
-                    $"-Capture the card based from the card spawn rules.\n" +
+                    $"-Capture the card based from the card spawn rules. Example: {Config.Doremi.PrefixParent[0]}card capture\n" +
                     $"-You can visit card shop for card collecting progression with: **{Config.Doremi.PrefixParent[0]}card shop**.\n" +
-                    $"-To see your card progression, you can use **<bot>!card inventory** or **<bot>!card status**\n" +
+                    $"-To see your card report, you can use **<bot>!card inventory** or **<bot>!card status**\n" +
                     $"For more card command & help you can use **<bot>!help card**")
                     .WithThumbnailUrl("https://cdn.discordapp.com/attachments/706770454697738300/706770837558263928/TW361403.png")
-                    .WithFooter($"Latest Revision: v1.30")
+                    .WithFooter($"Latest Revision: v1.31")
                     .Build());
             }
 
@@ -3042,12 +3918,12 @@ namespace OjamajoBot.Module
                     .WithColor(Config.Doremi.EmbedColor)
                     .WithTitle($"❓ Ojamajo Trading Card - Mystery Card FAQ")
                     .WithDescription($"Mystery card is a hidden card that contain more capture rate with a provided clue that you need to guess/answer it " +
-                    $"by calling the correct ojamajo bot: doremi/hazuki/aiko/onpu/momoko. " +
+                    $"by calling the correct ojamajo bot. " +
                     $"Should you answer it wrong you'll lose a chance to capture the card for that turn.")
                     .AddField("**How to capture mystery card?**",
-                    "It's same one with normal capture flow & rules, but like previously explained: there will be a provided clue and you need to guess/answer it " +
-                    $"with the correct ojamajo bot: doremi/hazuki/aiko/onpu/momoko. " +
-                    $"You can find the answer by looking up through the **info** " +
+                    "It's same one with normal capture flow & rules, but like previously explained: there will be a set of provided clue and you need to guess/answer it " +
+                    $"with the correct ojamajo bot. " +
+                    $"You can find the answer by looking up through the **bio** " +
                     $"You only have a chance to guess the mystery card, if you guess it wrong you have to wait for the next card spawn.")
                     .AddField("Provided hint/clue:",
                     "Number translator: Translate a set of number based from the alphabet order number. Example:1:A,2:B,3:C,etc. \n" +
@@ -3057,7 +3933,7 @@ namespace OjamajoBot.Module
                     ":girl: The front/surname of the ojamajos\n" +
                     ":fork_and_knife: Favorite food")
                     .WithThumbnailUrl("https://cdn.discordapp.com/attachments/709293222387777626/710869697972797440/mystery.jpg")
-                    .WithFooter($"Latest Revision: v1.30")
+                    .WithFooter($"Latest Revision: v1.31")
                     .Build());
             }
 
@@ -3075,38 +3951,34 @@ namespace OjamajoBot.Module
                     "-**seeds**: Steal your magic seeds after catch attempt. Some magic seeds will be rewarded upon removed.")
                     .AddField("How to remove bad card?", $"You can remove the bad cards with **{Config.Doremi.PrefixParent[0]}card pureleine**. After seeing the question you need to answer with **do!card pureleine <answer>** commands. " +
                     "When oyajide have clean the bad card, you can safely capture the card again.")
-                    .AddField("How to notice bad card?", " Bad cards are marked on the card spawn where there'll be a bad card image/mark attached upon it.")
+                    .AddField("How to notice bad card?", 
+                    " Bad cards are marked on the card spawn where there'll be a bad card image/mark attached upon it as seen on this guide.")
                     .AddField("Related command:",
                     "<bot>!card pureleine: see the bad card question\n" +
-                    "<bot>!card pureleine <answer> : remove the bad card. Example: **do!card pureleine 10**")
+                    "<bot>!card pureleine <answer> : remove the bad card with given <answer> parameter. Example: **do!card pureleine 10**")
                     .WithThumbnailUrl("https://cdn.discordapp.com/attachments/706770454697738300/715945298370887722/latest.png")
-                    .WithFooter($"Latest Revision: v1.30")
+                    .WithFooter($"Latest Revision: v1.31")
                     .Build());
             }
 
-            [Command("zone card", RunMode = RunMode.Async), Alias("badcard"), Summary("Shows all information regarding the bad card.")]
+            [Command("zone card", RunMode = RunMode.Async), Alias("badcard"), Summary("Shows all information regarding the zone card.")]
             public async Task trading_card_faq_zoneCard()
             {
                 await ReplyAsync(embed: new EmbedBuilder()
                     .WithColor(Config.Doremi.EmbedColor)
                     .WithTitle($"Ojamajo Trading Card - Card Zone FAQ")
                     .WithDescription($"Zone card are a card type that is limited to: doremi/hazuki/aiko/onpu/momoko card pack. " +
+                    $"This card spawn type let you catch card pack based from the assigned zone that you have set. " +
+                    $"With some note: this card spawn are instanced individually so everyone will get a chance to catch a card even if the card has been captured by the others. " +
                     $"By default you will be assigned to **doremi normal** card zone.")
                     .AddField("Related command:",
-                    "<bot>!card zone set <category>: let you set the card zone. Example: do!card zone set platinum\n" +
+                    "<bot>!card zone set <category>: set the card zone on doremi. Example: **do!card zone set platinum**\n" +
                     $"<bot>!card zone where: see your assigned card zone.\n" +
                     $"{Config.Doremi.PrefixParent[0]}card zone price: see the card zone price.")
                     .WithThumbnailUrl("https://cdn.discordapp.com/attachments/709293222387777626/710869697972797440/mystery.jpg")
-                    .WithFooter($"Latest Revision: v1.30")
+                    .WithFooter($"Latest Revision: v1.31")
                     .Build());
             }
-        }
-
-        [Command("pureleine", RunMode = RunMode.Async), Alias("oyajide"), Summary("Detect the bad card with the help from oyajide & pureleine computer. " +
-            "Insert the answer as parameter to remove the bad cards if it's existed. Example: do!card pureleine 10")]
-        public async Task trading_card_pureleine(string answer = "")
-        {
-            await ReplyAsync(embed: TradingCardCore.activatePureleine(Context, answer).Build());
         }
 
         [Command("capture", RunMode = RunMode.Async), Alias("catch"), Summary("Capture spawned card with Doremi.")]
@@ -3123,8 +3995,8 @@ namespace OjamajoBot.Module
                 string userCardZone = userTradingCardData[DBM_User_Trading_Card_Data.Columns.card_zone].ToString();
                 if (!userCardZone.Contains("doremi"))
                 {
-                    await ReplyAndDeleteAsync(":x: Sorry, you are not on the correct card zone. " +
-                        $"Please assign yourself on the correct card zone with **{Config.Doremi.PrefixParent[0]}card zone set <category>** command.", timeout: TimeSpan.FromSeconds(20));
+                    await ReplyAsync(":x: Sorry, you are not on the correct card zone. " +
+                        $"Please assign yourself on the correct card zone with **{Config.Doremi.PrefixParent[0]}card zone set <category>** command.");
                     return Ok();
                 }
             }
@@ -3138,7 +4010,7 @@ namespace OjamajoBot.Module
 
             if (cardCaptureReturn.Item1 == "")
             {
-                await ReplyAndDeleteAsync(null, embed: cardCaptureReturn.Item2.Build(), timeout: TimeSpan.FromSeconds(15));
+                await ReplyAsync(null, embed: cardCaptureReturn.Item2.Build());
             }
             else
                 await ReplyAsync(cardCaptureReturn.Item1,
@@ -3161,16 +4033,16 @@ namespace OjamajoBot.Module
                     await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
                         Context.Guild.Roles.First(x => x.Name == TradingCardCore.Doremi.roleCompletionist)
                     );
-
-                    await Bot.Doremi.client
-                    .GetGuild(Context.Guild.Id)
-                    .GetTextChannel(Context.Channel.Id)
-                    .SendFileAsync(TradingCardCore.Doremi.imgCompleteAllCard, null, embed: TradingCardCore
-                    .userCompleteTheirList(Context, Config.Doremi.EmbedColor, Config.Doremi.EmbedAvatarUrl, "doremi",
-                    TradingCardCore.Doremi.imgCompleteAllCard, TradingCardCore.Doremi.roleCompletionist)
-                    .Build());
-
                 }
+
+                await Bot.Doremi.client
+                .GetGuild(Context.Guild.Id)
+                .GetTextChannel(Context.Channel.Id)
+                .SendFileAsync(TradingCardCore.Doremi.imgCompleteAllCard, null, embed: TradingCardCore
+                .userCompleteTheirList(Context, Config.Doremi.EmbedColor, Config.Doremi.EmbedAvatarUrl, "doremi",
+                TradingCardCore.Doremi.imgCompleteAllCard, TradingCardCore.Doremi.roleCompletionist)
+                .Build());
+
             }
 
             //check if player have captured all hazuki card/not
@@ -3181,15 +4053,16 @@ namespace OjamajoBot.Module
                     await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
                         Context.Guild.Roles.First(x => x.Name == TradingCardCore.Hazuki.roleCompletionist)
                         );
-
-                    await Bot.Hazuki.client
-                    .GetGuild(Context.Guild.Id)
-                    .GetTextChannel(Context.Channel.Id)
-                    .SendFileAsync(TradingCardCore.Hazuki.imgCompleteAllCard, null, embed: TradingCardCore
-                    .userCompleteTheirList(Context, Config.Hazuki.EmbedColor, Config.Hazuki.EmbedAvatarUrl, "hazuki",
-                    TradingCardCore.Hazuki.imgCompleteAllCard, TradingCardCore.Hazuki.roleCompletionist)
-                    .Build());
                 }
+
+                await Bot.Hazuki.client
+                .GetGuild(Context.Guild.Id)
+                .GetTextChannel(Context.Channel.Id)
+                .SendFileAsync(TradingCardCore.Hazuki.imgCompleteAllCard, null, embed: TradingCardCore
+                .userCompleteTheirList(Context, Config.Hazuki.EmbedColor, Config.Hazuki.EmbedAvatarUrl, "hazuki",
+                TradingCardCore.Hazuki.imgCompleteAllCard, TradingCardCore.Hazuki.roleCompletionist)
+                .Build());
+
             }
 
             //check if player have captured all aiko card/not
@@ -3200,15 +4073,16 @@ namespace OjamajoBot.Module
                     await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
                         Context.Guild.Roles.First(x => x.Name == TradingCardCore.Aiko.roleCompletionist)
                         );
+                }
 
-                    await Bot.Aiko.client
+                await Bot.Aiko.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
                     .SendFileAsync(TradingCardCore.Aiko.imgCompleteAllCard, null, embed: TradingCardCore
                     .userCompleteTheirList(Context, Config.Aiko.EmbedColor, Config.Aiko.EmbedAvatarUrl, "aiko",
                     TradingCardCore.Aiko.imgCompleteAllCard, TradingCardCore.Aiko.roleCompletionist)
                     .Build());
-                }
+
             }
 
             //check if player have captured all onpu card/not
@@ -3219,15 +4093,16 @@ namespace OjamajoBot.Module
                     await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
                         Context.Guild.Roles.First(x => x.Name == TradingCardCore.Onpu.roleCompletionist)
                         );
+                }
 
-                    await Bot.Onpu.client
+                await Bot.Onpu.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
                     .SendFileAsync(TradingCardCore.Aiko.imgCompleteAllCard, null, embed: TradingCardCore
                     .userCompleteTheirList(Context, Config.Onpu.EmbedColor, Config.Onpu.EmbedAvatarUrl, "onpu",
                     TradingCardCore.Onpu.imgCompleteAllCard, TradingCardCore.Onpu.roleCompletionist)
                     .Build());
-                }
+
             }
 
             //check if player have captured all momoko card/not
@@ -3238,15 +4113,16 @@ namespace OjamajoBot.Module
                     await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
                         Context.Guild.Roles.First(x => x.Name == TradingCardCore.Momoko.roleCompletionist)
                         );
+                }
 
-                    await Bot.Momoko.client
+                await Bot.Momoko.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
                     .SendFileAsync(TradingCardCore.Aiko.imgCompleteAllCard, null, embed: TradingCardCore
                     .userCompleteTheirList(Context, Config.Momoko.EmbedColor, Config.Momoko.EmbedAvatarUrl, "momoko",
                     TradingCardCore.Momoko.imgCompleteAllCard, TradingCardCore.Momoko.roleCompletionist)
                     .Build());
-                }
+
             }
 
             //check if player have captured all other special card/not
@@ -3257,18 +4133,26 @@ namespace OjamajoBot.Module
                     await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
                         Context.Guild.Roles.First(x => x.Name == TradingCardCore.roleCompletionistSpecial)
                         );
+                }
 
-                    await Bot.Doremi.client
+                await Bot.Doremi.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
                     .SendFileAsync(TradingCardCore.Doremi.imgCompleteAllCard, null, embed: TradingCardCore
                     .userCompleteTheirList(Context, Config.Doremi.EmbedColor, Config.Doremi.EmbedAvatarUrl, "other",
                     TradingCardCore.imgCompleteAllCardSpecial, TradingCardCore.roleCompletionistSpecial)
                     .Build());
-                }
+
             }
             return Ok();
 
+        }
+
+        [Command("pureleine", RunMode = RunMode.Async), Alias("oyajide"), Summary("Detect the bad card with the help from oyajide & pureleine computer. " +
+            "Insert the answer as parameter to remove the bad cards if it's existed. Example: do!card pureleine 10")]
+        public async Task trading_card_pureleine(string answer = "")
+        {
+            await ReplyAsync(embed: TradingCardCore.activatePureleine(Context, answer).Build());
         }
 
         [Command("inventory", RunMode = RunMode.Async), Summary("Show the inventory of **Doremi** card category. " +
@@ -3670,8 +4554,8 @@ namespace OjamajoBot.Module
 
         }
 
-        [Command("verify", RunMode = RunMode.Async), Summary("Verify the doremi card pack to get the card completion role & badge on this server " +
-            " if you have completed it.")]
+        [Command("verify", RunMode = RunMode.Async), Summary("Verify the doremi,other,pop & hana card pack " +
+            "to get the card completion role & badge leaderboard on this server  if you have complete it already.")]
         public async Task verify_card_completion()
         {
             var guildId = Context.Guild.Id;
@@ -3683,73 +4567,123 @@ namespace OjamajoBot.Module
 
             if (UserTradingCardDataCore.checkCardCompletion(userId, cardPack))
             {
-                if (Context.Guild.Roles.Where(x => x.Name == TradingCardCore.Doremi.roleCompletionist).ToList().Count >= 1)
+                try
                 {
-                    await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
-                        Context.Guild.Roles.First(x => x.Name == TradingCardCore.Doremi.roleCompletionist)
-                    );
+                    if (Context.Guild.Roles.Where(x => x.Name == TradingCardCore.Doremi.roleCompletionist).ToList().Count >= 1)
+                    {
+                        await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
+                            Context.Guild.Roles.First(x => x.Name == TradingCardCore.Doremi.roleCompletionist)
+                        );
+                    }
+                } catch(Exception e) { }
+                
 
+                EmbedBuilder embedReturn = TradingCardCore
+                    .userCompleteTheirList(Context, Config.Doremi.EmbedColor, Config.Doremi.EmbedAvatarUrl, cardPack,
+                    TradingCardCore.Doremi.imgCompleteAllCard, TradingCardCore.Doremi.roleCompletionist);
+
+                if (embedReturn != null)
+                {
                     await Bot.Doremi.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
-                    .SendFileAsync(TradingCardCore.Doremi.imgCompleteAllCard, null, embed: TradingCardCore
-                    .userCompleteTheirList(Context, Config.Doremi.EmbedColor, Config.Doremi.EmbedAvatarUrl, cardPack,
-                    TradingCardCore.Doremi.imgCompleteAllCard, TradingCardCore.Doremi.roleCompletionist)
+                    .SendFileAsync(TradingCardCore.Doremi.imgCompleteAllCard, null, embed: embedReturn
                     .Build());
                 }
+                else
+                {
+                    await ReplyAsync(":white_check_mark: Your **doremi** card completion status has been verified");
+                }
+
             }
 
             if (UserTradingCardDataCore.checkCardCompletion(userId, "other"))
             {
-                if (Context.Guild.Roles.Where(x => x.Name == TradingCardCore.roleCompletionistSpecial).ToList().Count >= 1)
+                try
                 {
-                    await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
-                        Context.Guild.Roles.First(x => x.Name == TradingCardCore.roleCompletionistSpecial)
-                    );
+                    if (Context.Guild.Roles.Where(x => x.Name == TradingCardCore.roleCompletionistSpecial).ToList().Count >= 1)
+                    {
+                        await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
+                            Context.Guild.Roles.First(x => x.Name == TradingCardCore.roleCompletionistSpecial)
+                        );
+                    }
+                } catch(Exception e) { }
 
+                EmbedBuilder embedReturn = TradingCardCore
+                    .userCompleteTheirList(Context, Config.Doremi.EmbedColor, Config.Doremi.EmbedAvatarUrl, "other",
+                    TradingCardCore.imgCompleteAllCardSpecial, TradingCardCore.roleCompletionistSpecial);
+
+                if (embedReturn != null)
+                {
                     await Bot.Doremi.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
-                    .SendFileAsync(TradingCardCore.Doremi.imgCompleteAllCard, null, embed: TradingCardCore
-                    .userCompleteTheirList(Context, Config.Doremi.EmbedColor, Config.Doremi.EmbedAvatarUrl, cardPack,
-                    TradingCardCore.imgCompleteAllCardSpecial, TradingCardCore.roleCompletionistSpecial)
+                    .SendFileAsync(TradingCardCore.imgCompleteAllCardSpecial, null, embed: embedReturn
                     .Build());
+                } else
+                {
+                    await ReplyAsync(":white_check_mark: Your **special** card completion status has been verified");
                 }
+
             }
 
             if (UserTradingCardDataCore.checkCardCompletion(userId, "pop"))
             {
-                if (Context.Guild.Roles.Where(x => x.Name == TradingCardCore.Pop.roleCompletionist).ToList().Count >= 1)
+                try
                 {
-                    await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
-                        Context.Guild.Roles.First(x => x.Name == TradingCardCore.Pop.roleCompletionist)
-                    );
+                    if (Context.Guild.Roles.Where(x => x.Name == TradingCardCore.Pop.roleCompletionist).ToList().Count >= 1)
+                    {
+                        await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
+                            Context.Guild.Roles.First(x => x.Name == TradingCardCore.Pop.roleCompletionist)
+                        );
+                    }
+                } catch(Exception e) { }
+                
+                EmbedBuilder embedReturn = TradingCardCore
+                .userCompleteTheirList(Context, TradingCardCore.Hana.embedColor, Config.Doremi.EmbedAvatarUrl, "pop",
+                TradingCardCore.Pop.imgCompleteAllCard, TradingCardCore.Pop.roleCompletionist);
 
+                if (embedReturn != null)
+                {
                     await Bot.Doremi.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
-                    .SendFileAsync(TradingCardCore.Pop.imgCompleteAllCard, null, embed: TradingCardCore
-                    .userCompleteTheirList(Context, TradingCardCore.Hana.embedColor, Config.Doremi.EmbedAvatarUrl, cardPack,
-                    TradingCardCore.Pop.imgCompleteAllCard, TradingCardCore.Pop.roleCompletionist)
+                    .SendFileAsync(TradingCardCore.Pop.imgCompleteAllCard, null, embed: embedReturn
                     .Build());
+                } else
+                {
+                    await ReplyAsync(":white_check_mark: Your **pop** card completion status has been verified");
                 }
+
             }
 
             if (UserTradingCardDataCore.checkCardCompletion(userId, "hana"))
             {
-                if (Context.Guild.Roles.Where(x => x.Name == TradingCardCore.Hana.roleCompletionist).ToList().Count >= 1)
+                try
                 {
-                    await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
-                        Context.Guild.Roles.First(x => x.Name == TradingCardCore.Hana.roleCompletionist)
-                    );
+                    if (Context.Guild.Roles.Where(x => x.Name == TradingCardCore.Hana.roleCompletionist).ToList().Count >= 1)
+                    {
+                        await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
+                            Context.Guild.Roles.First(x => x.Name == TradingCardCore.Hana.roleCompletionist)
+                        );
+                    }
+                } catch(Exception e){}
+                    
 
+                EmbedBuilder embedReturn = TradingCardCore
+                .userCompleteTheirList(Context, TradingCardCore.Hana.embedColor, Config.Doremi.EmbedAvatarUrl, "hana",
+                TradingCardCore.Hana.imgCompleteAllCard, TradingCardCore.Hana.roleCompletionist);
+
+                if (embedReturn != null)
+                {
                     await Bot.Doremi.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
-                    .SendFileAsync(TradingCardCore.Hana.imgCompleteAllCard, null, embed: TradingCardCore
-                    .userCompleteTheirList(Context, TradingCardCore.Pop.embedColor, Config.Doremi.EmbedAvatarUrl, cardPack,
-                    TradingCardCore.Hana.imgCompleteAllCard, TradingCardCore.Hana.roleCompletionist)
+                    .SendFileAsync(TradingCardCore.Hana.imgCompleteAllCard, null, embed: embedReturn
                     .Build());
+                } else
+                {
+                    await ReplyAsync(":white_check_mark: Your **hana** card completion status has been verified");
                 }
             }
 
@@ -3964,7 +4898,7 @@ namespace OjamajoBot.Module
 
         }
 
-        [Command("status complete", RunMode = RunMode.Async), Summary("Show your trading card completion date status. " +
+        [Command("badge", RunMode = RunMode.Async),Alias("status complete"), Summary("Show your trading card badge/completionist date status. " +
             "You can add the optional username parameter to see the completion card status of that user.")]
         public async Task trading_card_status_complete([Remainder] SocketGuildUser otherUser = null)
         {
@@ -3998,1506 +4932,1505 @@ namespace OjamajoBot.Module
         }
 
         //trade
-        [Command("trade", RunMode = RunMode.Async), Summary("Open the trading card hub which lets you trade the card with each other.")]
-        public async Task<RuntimeResult> trading_card_trade()
-        {
-            await ReplyAndDeleteAsync(null, embed: new EmbedBuilder()
-                    .WithColor(Config.Doremi.EmbedColor)
-                    .WithDescription($":x: Sorry, trade command is under maintenance now.")
-                    .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build(), timeout: TimeSpan.FromSeconds(10));
-
-            return Ok();
-
-            var guildId = Context.Guild.Id;
-            var clientId = Context.User.Id;
-
-            if (!Config.Doremi.isRunningInteractive.ContainsKey(Context.User.Id.ToString()))
-                Config.Doremi.isRunningInteractive.Add(Context.User.Id.ToString(), false);
-
-            if (!Config.Doremi.isRunningInteractive[Context.User.Id.ToString()])
-            {
-                string userFolderDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}";
-
-                string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
-                var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
-
-                PaginatedAppearanceOptions pao = new PaginatedAppearanceOptions();
-                pao.JumpDisplayOptions = JumpDisplayOptions.Never;
-                pao.DisplayInformationIcon = false;
-
-                if (!File.Exists(playerDataDirectory)) //not registered yet
-                {
-                    await Context.Message.DeleteAsync();
-                    await ReplyAndDeleteAsync(null, embed: new EmbedBuilder()
-                    .WithColor(Config.Doremi.EmbedColor)
-                    .WithDescription($":x: I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
-                    .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build(), timeout: TimeSpan.FromSeconds(10));
-
-                    return Ok();
-                }
-                else
-                {
-                    var playerData = JObject.Parse(File.ReadAllText(playerDataDirectory));
-                    int fileCount = Directory.GetFiles(userFolderDirectory).Length;
-
-                    if (fileCount <= 1)
-                    {
-                        await ReplyAndDeleteAsync("Sorry, server need to have more than 1 user that register the trading card data.", timeout: TimeSpan.FromSeconds(10));
-                        return Ok();
-                    }
-                    else
-                    {
-                        try
-                        {
-                            //start read all user id
-                            List<string> arrUserId = new List<string>();
-                            List<string> pageContent = new List<string>();
-                            List<string> pageContentUserList = new List<string>();
-                            //List<string> pageUserContent = new List<string>();
-                            //List<string> pageUserCardList = new List<string>();
-                            //List<string> pageUserOtherCardList = new List<string>();
-
-                            //selection variables
-                            //other users
-                            string selectionUserId = ""; string selectionOtherUserCardChoiceId = ""; string selectionOtherUserCardPack = "";
-                            string selectionOtherUserCardCategory = "";
-                            //your selection
-                            string selectionYourCardChoiceId = ""; string selectionYourCardPack = "";
-                            string selectionYourCardCategory = "";
-
-                            DirectoryInfo d = new DirectoryInfo(userFolderDirectory);//Assuming Test is your Folder
-                            FileInfo[] Files = d.GetFiles("*.json"); //Getting Text files
-
-                            //user selection
-                            string titleUserSelection = $"**Step 1 - Select the user with numbers**\n";
-                            string tempVal = titleUserSelection;
-                            int currentIndex = 0;
-
-                            int ctr = 0;
-                            foreach (FileInfo file in Files)
-                            {
-                                ulong otherUserId = Convert.ToUInt64(Path.GetFileNameWithoutExtension(file.Name));
-                                var iguilduser = Context.Guild.Users.FirstOrDefault(x => x.Id == otherUserId);
-
-                                //var available = iguilduser.Guild.GetUserAsync(otherUserId);
-                                if (otherUserId != clientId && iguilduser != null)
-                                {
-                                    arrUserId.Add(otherUserId.ToString());
-                                }
-                            }
-
-                            for (int i = 0; i < arrUserId.Count; i++)
-                            {
-                                var iguilduser = Context.Guild.Users.FirstOrDefault(x => x.Id == Convert.ToUInt64(arrUserId[i]));
-                                tempVal += $"**{i + 1}. {MentionUtils.MentionUser(iguilduser.Id)}**\n";
-
-                                if (i == arrUserId.Count - 2) pageContentUserList.Add(tempVal);
-                                else
-                                {
-                                    if (currentIndex < 14) currentIndex++;
-                                    else
-                                    {
-                                        pageContentUserList.Add(tempVal);
-                                        currentIndex = 0;
-                                        tempVal = titleUserSelection;
-                                    }
-                                }
-                            }
-
-                            var pagerUserList = new PaginatedMessage
-                            {
-                                Pages = pageContentUserList,
-                                Color = Config.Doremi.EmbedColor,
-                                Options = pao
-                            };
-                            //end user selection
-
-                            Boolean isTrading = true;
-                            var timeoutDuration = TimeSpan.FromSeconds(60);
-                            string replyTimeout = ":stopwatch: I'm sorry, but you have reach your timeout. " +
-                                $"Please use the `{Config.Doremi.PrefixParent[0]}card trade` command again to retry the trade process.";
-                            int stepProcess = 1;//0/1:select the user,
-                                                //2: select your card pack, 3: select card category, 4: select 
-                                                //5:review process
-                            Boolean newStep = true;
-                            IUserMessage msg; IUserMessage msg2;
-                            //select user
-                            msg = await ReplyAsync(embed: new EmbedBuilder()
-                                .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
-                                .WithDescription($"Welcome to {TradingCardCore.Doremi.embedName}. " +
-                                $"Here you can trade your trading card with each other. " +
-                                $"You can type **cancel**/**exit** anytime on each steps to cancel the trade process.\n" +
-                                $"You can type **back** anytime on each steps to back into previous steps.\n" +
-                                $"Some of the trade rules that will be applied:\n" +
-                                $"-You **cannot** trade more than once to the same user at the same trade queue.\n" +
-                                $"-You **cannot** trade card that you or that user already had.")
-                                .WithColor(Config.Doremi.EmbedColor)
-                                .Build());
-                            Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = true;
-                            msg2 = await PagedReplyAsync(pagerUserList);
-                            var response = await NextMessageAsync(timeout: timeoutDuration);
-                            newStep = false;
-                            while (isTrading)
-                            {
-                                List<string> arrUserCardList = new List<string>();
-                                List<string> arrUserOtherCardList = new List<string>();
-
-                                try
-                                {
-                                    var checkNull = response.Content.ToLower().ToString();
-                                }
-                                catch
-                                {
-                                    try
-                                    {
-                                        await Context.Channel.DeleteMessageAsync(msg.Id);
-                                        await Context.Channel.DeleteMessageAsync(msg2.Id);
-                                    }
-                                    catch { }
-
-                                    await ReplyAndDeleteAsync(replyTimeout, timeout: TimeSpan.FromSeconds(15));
-                                    isTrading = false;
-                                    Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = false;
-                                    return Ok();
-                                }
-
-                                //response = await NextMessageAsync(timeout: timeoutDuration);
-                                //string responseText = response.Content.ToLower().ToString();
-
-                                if (response.Content.ToString().ToLower() == "cancel" ||
-                                    response.Content.ToString().ToLower() == "exit")
-                                {
-                                    try
-                                    {
-                                        await Context.Channel.DeleteMessageAsync(response.Id);
-                                        await Context.Channel.DeleteMessageAsync(msg.Id);
-                                    }
-                                    catch
-                                    {
-
-                                    }
-                                    try
-                                    {
-                                        await Context.Channel.DeleteMessageAsync(msg2.Id);
-                                    }
-                                    catch
-                                    {
-
-                                    }
-                                    await ReplyAsync(embed: new EmbedBuilder()
-                                        .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
-                                        .WithDescription($"You have cancel your trade. Thank you for using the {TradingCardCore.Doremi.embedName}")
-                                        .WithColor(Config.Doremi.EmbedColor)
-                                        .Build());
-                                    isTrading = false;
-                                    Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = false;
-                                    return Ok();
-                                }
-                                else if (stepProcess == 1)
-                                { //select user
-                                    var isNumeric = int.TryParse(response.Content.ToString().ToLower(), out int n);
-                                    if (newStep)
-                                    {
-                                        newStep = false;
-                                        try
-                                        {
-                                            await Context.Channel.DeleteMessageAsync(response.Id);
-                                            await Context.Channel.DeleteMessageAsync(msg.Id);
-                                        }
-                                        catch
-                                        {
-
-                                        }
-                                        try
-                                        {
-                                            await Context.Channel.DeleteMessageAsync(msg2.Id);
-                                        }
-                                        catch
-                                        {
-
-                                        }
-                                        msg = await PagedReplyAsync(pagerUserList);
-                                        response = await NextMessageAsync(timeout: timeoutDuration);
-                                    }
-                                    else
-                                    {
-                                        if (!isNumeric)
-                                        {
-                                            try
-                                            {
-                                                await Context.Channel.DeleteMessageAsync(response.Id);
-                                                await Context.Channel.DeleteMessageAsync(msg.Id);
-                                            }
-                                            catch
-                                            {
-
-                                            }
-                                            try
-                                            {
-                                                await Context.Channel.DeleteMessageAsync(msg2.Id);
-                                            }
-                                            catch
-                                            {
-
-                                            }
-                                            stepProcess = 1;
-                                            selectionUserId = "";
-                                            await ReplyAndDeleteAsync(":x: Please re-type the proper number selection.", timeout: TimeSpan.FromSeconds(10));
-                                            msg = await PagedReplyAsync(pagerUserList);
-                                            response = await NextMessageAsync(timeout: timeoutDuration);
-                                        }
-                                        //array length:2[0,1], selected:2
-                                        else if (Convert.ToInt32(response.Content.ToLower().ToString()) <= 0 ||
-                                        Convert.ToInt32(response.Content.ToString().ToLower()) > arrUserId.Count)
-                                        {
-                                            try
-                                            {
-                                                await Context.Channel.DeleteMessageAsync(response.Id);
-                                                await Context.Channel.DeleteMessageAsync(msg.Id);
-                                            }
-                                            catch
-                                            {
-
-                                            }
-                                            try
-                                            {
-                                                await Context.Channel.DeleteMessageAsync(msg2.Id);
-                                            }
-                                            catch
-                                            {
-
-                                            }
-
-                                            stepProcess = 1;
-                                            selectionUserId = "";
-                                            await ReplyAndDeleteAsync(":x: That number choice is not on the list. Please re-type the proper number selection.", timeout: TimeSpan.FromSeconds(10));
-                                            msg2 = await PagedReplyAsync(pagerUserList);
-                                            response = await NextMessageAsync(timeout: timeoutDuration);
-                                        }
-                                        else
-                                        {
-                                            selectionUserId = arrUserId[Convert.ToInt32(response.Content.ToString().ToLower()) - 1];
-                                            var otherUserData = JObject.Parse(File.ReadAllText(
-                                            $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{selectionUserId}.json"
-                                            ));
-                                            if (((JObject)(otherUserData["trading_queue"])).ContainsKey(clientId.ToString()))
-                                            {
-                                                try
-                                                {
-                                                    await Context.Channel.DeleteMessageAsync(response.Id);
-                                                    await Context.Channel.DeleteMessageAsync(msg.Id);
-                                                }
-                                                catch
-                                                {
-
-                                                }
-                                                try
-                                                {
-                                                    await Context.Channel.DeleteMessageAsync(msg2.Id);
-                                                }
-                                                catch
-                                                {
-
-                                                }
-
-                                                msg = await ReplyAsync(embed: new EmbedBuilder()
-                                                    .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
-                                                    .WithDescription($":x: Sorry, you cannot trade more than once with " +
-                                                    $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}.")
-                                                    .WithThumbnailUrl(TradingCardCore.Doremi.emojiError)
-                                                    .Build());
-                                                msg2 = await PagedReplyAsync(pagerUserList);
-                                                response = await NextMessageAsync(timeout: timeoutDuration);
-                                            }
-                                            else
-                                            {
-                                                stepProcess = 2; newStep = true;
-                                            }
-
-                                        }
-                                    }
-
-
-                                }
-                                else if (stepProcess == 2)
-                                { //card pack & category selection from other user
-                                    var otherUserData = JObject.Parse(File.ReadAllText(
-                                        $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{selectionUserId}.json"
-                                        ));
-                                    List<string> listCardPackCategory = TradingCardCore.tradeListAllowed((JObject)otherUserData);
-
-                                    try
-                                    {
-                                        await Context.Channel.DeleteMessageAsync(response.Id);
-                                        await Context.Channel.DeleteMessageAsync(msg.Id);
-                                    }
-                                    catch
-                                    {
-
-                                    }
-                                    try
-                                    {
-                                        await Context.Channel.DeleteMessageAsync(msg2.Id);
-                                    }
-                                    catch
-                                    {
-
-                                    }
-
-                                    if (listCardPackCategory.Count <= 0)
-                                    {
-
-                                        msg = await ReplyAsync(embed: new EmbedBuilder()
-                                            .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
-                                            .WithColor(Config.Doremi.EmbedColor)
-                                            .WithDescription($":x: Sorry, there are no cards that can be selected from " +
-                                            $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}.\n" +
-                                            $"Please select other users.")
-                                            .Build());
-                                        stepProcess = 1; newStep = true;
-                                        response = await NextMessageAsync(timeout: timeoutDuration);
-                                    }
-                                    else
-                                    {
-                                        string textConcatDoremi = ""; string textConcatHazuki = ""; string textConcatAiko = "";
-                                        string textConcatOnpu = ""; string textConcatMomoko = "";
-                                        for (int i = 0; i < listCardPackCategory.Count; i++)
-                                        {
-                                            if (listCardPackCategory[i].Contains("doremi"))
-                                                textConcatDoremi += $"{listCardPackCategory[i]}\n";
-                                            else if (listCardPackCategory[i].Contains("hazuki"))
-                                                textConcatHazuki += $"{listCardPackCategory[i]}\n";
-                                            else if (listCardPackCategory[i].Contains("aiko"))
-                                                textConcatAiko += $"{listCardPackCategory[i]}\n";
-                                            else if (listCardPackCategory[i].Contains("onpu"))
-                                                textConcatOnpu += $"{listCardPackCategory[i]}\n";
-                                            else if (listCardPackCategory[i].Contains("momoko"))
-                                                textConcatMomoko += $"{listCardPackCategory[i]}\n";
-                                        }
-
-                                        if (textConcatDoremi == "") textConcatDoremi = "No card trade for this pack.";
-                                        if (textConcatHazuki == "") textConcatHazuki = "No card trade for this pack.";
-                                        if (textConcatAiko == "") textConcatAiko = "No card trade for this pack.";
-                                        if (textConcatOnpu == "") textConcatOnpu = "No card trade for this pack.";
-                                        if (textConcatMomoko == "") textConcatMomoko = "No card trade for this pack.";
-
-                                        if (newStep)
-                                        {
-
-                                            newStep = false;
-                                            msg = await ReplyAsync(embed: new EmbedBuilder()
-                                            .WithTitle("Step 2 - Card Pack & Category Selection")
-                                            .WithDescription($"Type the **card pack & category** selection from " +
-                                            $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}. Example: **doremi normal**.\n" +
-                                            $"Type **back** to select other user.")
-                                            .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
-                                            .WithColor(Config.Doremi.EmbedColor)
-                                            .AddField("Doremi Card Pack", textConcatDoremi, true)
-                                            .AddField("Hazuki Card Pack", textConcatHazuki, true)
-                                            .AddField("Aiko Card Pack", textConcatAiko, true)
-                                            .AddField("Onpu Card Pack", textConcatOnpu, true)
-                                            .AddField("Momoko Card Pack", textConcatMomoko, true)
-                                            .Build());
-                                            response = await NextMessageAsync(timeout: timeoutDuration);
-                                        }
-                                        else
-                                        {
-                                            if (response.Content.ToString().ToLower() == "back")
-                                            {
-                                                stepProcess = 1;
-                                                newStep = true;
-                                            }
-                                            else if (!listCardPackCategory.Any(str => str.Contains(response.Content.ToString().ToLower())) ||
-                                                !response.Content.ToString().ToLower().Contains(" "))
-                                            {
-                                                msg = await ReplyAsync(":x: Please re-enter the proper card pack selection.",
-                                                embed: new EmbedBuilder()
-                                                .WithTitle("Step 2 - Card Pack & Category Selection")
-                                                .WithDescription($"Type the card pack & category selection from " +
-                                                $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}. Example: **doremi normal**.\n" +
-                                                $"Type **back** to select other user.")
-                                                .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
-                                                .WithColor(Config.Doremi.EmbedColor)
-                                                .AddField("Doremi Card Pack", textConcatDoremi, true)
-                                                .AddField("Hazuki Card Pack", textConcatHazuki, true)
-                                                .AddField("Aiko Card Pack", textConcatAiko, true)
-                                                .AddField("Onpu Card Pack", textConcatOnpu, true)
-                                                .AddField("Momoko Card Pack", textConcatMomoko, true)
-                                                .Build());
-                                                response = await NextMessageAsync(timeout: timeoutDuration);
-                                            }
-                                            else
-                                            {
-                                                stepProcess = 3;
-                                                string[] splittedChoice = response.Content.ToString().ToLower().Split(" ");
-                                                selectionOtherUserCardPack = splittedChoice[0]; selectionOtherUserCardCategory = splittedChoice[1];
-                                                newStep = true;
-                                            }
-                                        }
-                                    }
-                                }
-                                else if (stepProcess == 3)
-                                {
-                                    //select other user card id that you want to trade.
-                                    //your card id data
-                                    var yourData = JObject.Parse(File.ReadAllText(
-                                        $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{Convert.ToUInt64(clientId)}.json"
-                                        ));
-                                    var jYourData = (JArray)(yourData[selectionOtherUserCardPack][selectionOtherUserCardCategory]);
-                                    //other user card id data
-                                    var otherUserData = JObject.Parse(File.ReadAllText(
-                                        $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{selectionUserId}.json"
-                                        ));
-                                    var jOtherUserData = (JArray)(otherUserData[selectionOtherUserCardPack][selectionOtherUserCardCategory]);
-
-                                    //available list
-                                    var arrList = jOtherUserData;
-                                    var arrYourList = jYourData; int founded = 0;
-                                    //remove the card that you already have
-                                    for (int i = 0; i < arrList.Count; i++)
-                                    {
-                                        founded = 0;
-                                        for (int j = 0; j < arrYourList.Count; j++)
-                                        {
-                                            if (arrList[i].ToString().ToLower() == arrYourList[j].ToString().ToLower())
-                                            {
-                                                founded = 1;
-                                                j = arrYourList.Count;
-                                            }
-                                        }
-                                        if (founded == 0)
-                                            arrUserOtherCardList.Add(arrList[i].ToString());
-                                    }
-
-                                    pageContent = TradingCardCore.printTradeCardListTemplate(selectionOtherUserCardPack, selectionOtherUserCardCategory,
-                                        jObjTradingCardList, arrUserOtherCardList);
-                                    var pagerCardList = new PaginatedMessage
-                                    {
-                                        Pages = pageContent,
-                                        Color = Config.Doremi.EmbedColor,
-                                        Options = pao
-                                    };
-
-                                    //end available list
-                                    try
-                                    {
-                                        await Context.Channel.DeleteMessageAsync(response.Id);
-                                        await Context.Channel.DeleteMessageAsync(msg.Id);
-                                    }
-                                    catch
-                                    {
-
-                                    }
-                                    try
-                                    {
-                                        await Context.Channel.DeleteMessageAsync(msg2.Id);
-                                    }
-                                    catch
-                                    {
-
-                                    }
-
-                                    if (newStep)
-                                    {
-                                        newStep = false;
-
-                                        if (arrUserOtherCardList.Count >= 1)
-                                        {
-                                            msg = await ReplyAsync(embed: new EmbedBuilder()
-                                            .WithTitle("Step 3 - Card Id Selection")
-                                            .WithDescription($"Type the **card id** choice from " +
-                                            $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}. Example: **do001**.\n" +
-                                            $"Type **back** to select other card pack.")
-                                            .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
-                                            .WithColor(Config.Doremi.EmbedColor)
-                                            .Build());
-                                            msg2 = await PagedReplyAsync(pagerCardList);
-                                            response = await NextMessageAsync(timeout: timeoutDuration);
-                                        }
-                                        else
-                                        {
-                                            msg = await ReplyAsync(embed: new EmbedBuilder()
-                                                .WithTitle($"Step 3 - {GlobalFunctions.UppercaseFirst(selectionOtherUserCardPack)} {GlobalFunctions.UppercaseFirst(selectionOtherUserCardCategory)} Card Id Selection")
-                                                .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
-                                                .WithDescription($":x: Sorry, there are no **{GlobalFunctions.UppercaseFirst(selectionOtherUserCardPack)} {GlobalFunctions.UppercaseFirst(selectionOtherUserCardCategory)}** card that you can choose from " +
-                                                $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}.\n" +
-                                                "Type **back** to select other card pack.")
-                                                .WithColor(Config.Doremi.EmbedColor)
-                                                .Build());
-                                            response = await NextMessageAsync(timeout: timeoutDuration);
-                                        }
-                                    }
-                                    else
-                                    {
-                                        if (response.Content.ToString().ToLower() == "back")
-                                        {
-                                            stepProcess = 2;
-                                            newStep = true;
-                                        }
-                                        else if (arrUserOtherCardList.Count <= 0)
-                                        {
-                                            msg = await ReplyAsync(embed: new EmbedBuilder()
-                                                .WithTitle("Step 3 - Card Id Selection")
-                                                .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
-                                                .WithDescription($":x: Sorry, there are no **{GlobalFunctions.UppercaseFirst(selectionOtherUserCardPack)} {GlobalFunctions.UppercaseFirst(selectionOtherUserCardCategory)}** card that you can choose from " +
-                                                $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}.\n" +
-                                                "Type **back** to select other card pack.")
-                                                .WithColor(Config.Doremi.EmbedColor)
-                                                .Build());
-                                            response = await NextMessageAsync(timeout: timeoutDuration);
-                                        }
-                                        else if (!arrUserOtherCardList.Contains(response.Content.ToString(), StringComparer.Ordinal))
-                                        {
-                                            await ReplyAndDeleteAsync(":x: Please re-enter the correct **card id.**", timeout: TimeSpan.FromSeconds(10));
-                                            msg2 = await PagedReplyAsync(pagerCardList);
-                                            response = await NextMessageAsync(timeout: timeoutDuration);
-                                        }
-                                        else
-                                        {
-                                            stepProcess = 4; newStep = true;
-                                            selectionOtherUserCardChoiceId = response.Content.ToString();
-                                        }
-                                    }
-                                }
-                                else if (stepProcess == 4)
-                                {
-                                    //card pack & category selection from yours
-                                    var yourUserData = JObject.Parse(File.ReadAllText(
-                                        $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId.ToString()}.json"
-                                        ));
-                                    List<string> listCardPackCategory = TradingCardCore.tradeListAllowed((JObject)yourUserData);
-
-                                    try
-                                    {
-                                        await Context.Channel.DeleteMessageAsync(response.Id);
-                                        await Context.Channel.DeleteMessageAsync(msg.Id);
-                                    }
-                                    catch
-                                    {
-
-                                    }
-                                    try
-                                    {
-                                        await Context.Channel.DeleteMessageAsync(msg2.Id);
-                                    }
-                                    catch
-                                    {
-
-                                    }
-
-                                    if (listCardPackCategory.Count <= 0)
-                                    {
-                                        msg = await ReplyAsync(embed: new EmbedBuilder()
-                                            .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
-                                            .WithColor(Config.Doremi.EmbedColor)
-                                            .WithTitle($"Step 4 - Select Your Available Card Pack")
-                                            .WithDescription($"Sorry, there are no cards that you can trade. " +
-                                            $"Your card trading process has been canceled.")
-                                            .Build());
-                                        isTrading = false;
-                                        Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = false;
-                                        return Ok();
-                                    }
-                                    else
-                                    {
-                                        string textConcatDoremi = ""; string textConcatHazuki = ""; string textConcatAiko = "";
-                                        string textConcatOnpu = ""; string textConcatMomoko = "";
-                                        for (int i = 0; i < listCardPackCategory.Count; i++)
-                                        {
-                                            if (listCardPackCategory[i].Contains("doremi"))
-                                                textConcatDoremi += $"{listCardPackCategory[i]}\n";
-                                            else if (listCardPackCategory[i].Contains("hazuki"))
-                                                textConcatHazuki += $"{listCardPackCategory[i]}\n";
-                                            else if (listCardPackCategory[i].Contains("aiko"))
-                                                textConcatAiko += $"{listCardPackCategory[i]}\n";
-                                            else if (listCardPackCategory[i].Contains("onpu"))
-                                                textConcatOnpu += $"{listCardPackCategory[i]}\n";
-                                            else if (listCardPackCategory[i].Contains("momoko"))
-                                                textConcatMomoko += $"{listCardPackCategory[i]}\n";
-                                        }
-
-                                        if (textConcatDoremi == "") textConcatDoremi = "No card trade for this pack.";
-                                        if (textConcatHazuki == "") textConcatHazuki = "No card trade for this pack.";
-                                        if (textConcatAiko == "") textConcatAiko = "No card trade for this pack.";
-                                        if (textConcatOnpu == "") textConcatOnpu = "No card trade for this pack.";
-                                        if (textConcatMomoko == "") textConcatMomoko = "No card trade for this pack.";
-
-                                        if (newStep)
-                                        {
-                                            newStep = false;
-                                            msg = await ReplyAsync(embed: new EmbedBuilder()
-                                            .WithTitle("Step 4 - Select Your Available Card Pack")
-                                            .WithDescription($"Type the **card pack & category** selection from yours. Example: **doremi normal**.\n" +
-                                            $"Type **back** to re-select other card from {MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}.")
-                                            .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
-                                            .WithColor(Config.Doremi.EmbedColor)
-                                            .AddField("Doremi Card Pack", textConcatDoremi, true)
-                                            .AddField("Hazuki Card Pack", textConcatHazuki, true)
-                                            .AddField("Aiko Card Pack", textConcatAiko, true)
-                                            .AddField("Onpu Card Pack", textConcatOnpu, true)
-                                            .AddField("Momoko Card Pack", textConcatMomoko, true)
-                                            .Build());
-                                            response = await NextMessageAsync(timeout: timeoutDuration);
-                                        }
-                                        else
-                                        {
-                                            if (response.Content.ToString().ToLower() == "back")
-                                            {
-                                                stepProcess = 3;
-                                                newStep = true;
-                                            }
-                                            else if (!listCardPackCategory.Contains(response.Content.ToString().ToLower(), StringComparer.OrdinalIgnoreCase) ||
-                                              !response.Content.ToString().ToLower().Contains(" "))
-                                            {
-                                                msg = await ReplyAsync(":x: Please re-enter the proper card pack selection.",
-                                                embed: new EmbedBuilder()
-                                                .WithTitle("Step 4 - Select Your Available Card Pack")
-                                                .WithDescription($"Type the **card pack & category** selection from yours. Example: **doremi normal**.\n" +
-                                                $"Type **back** to re-select other card from {MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}.")
-                                                .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
-                                                .WithColor(Config.Doremi.EmbedColor)
-                                                .AddField("Doremi Card Pack", textConcatDoremi, true)
-                                                .AddField("Hazuki Card Pack", textConcatHazuki, true)
-                                                .AddField("Aiko Card Pack", textConcatAiko, true)
-                                                .AddField("Onpu Card Pack", textConcatOnpu, true)
-                                                .AddField("Momoko Card Pack", textConcatMomoko, true)
-                                                .Build());
-                                                response = await NextMessageAsync(timeout: timeoutDuration);
-                                            }
-                                            else
-                                            {
-                                                stepProcess = 5;
-                                                string[] splittedChoice = response.Content.ToString().ToLower().Split(" ");
-                                                selectionYourCardPack = splittedChoice[0]; selectionYourCardCategory = splittedChoice[1];
-                                                newStep = true;
-                                            }
-                                        }
-                                    }
-
-                                }
-                                else if (stepProcess == 5)
-                                {
-                                    //select other user card id that you want to trade.
-                                    //your card id data
-                                    var yourData = JObject.Parse(File.ReadAllText(
-                                        $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{Convert.ToUInt64(clientId)}.json"
-                                        ));
-                                    var jYourData = (JArray)(yourData[selectionYourCardPack][selectionYourCardCategory]);
-                                    //other user card id data
-                                    var otherUserData = JObject.Parse(File.ReadAllText(
-                                        $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{selectionUserId}.json"
-                                        ));
-                                    var jOtherUserData = (JArray)(otherUserData[selectionYourCardPack][selectionYourCardCategory]);
-
-                                    //available list
-                                    var arrList = jOtherUserData;
-                                    var arrYourList = jYourData; int founded = 0;
-                                    //remove the card that you already have
-                                    for (int i = 0; i < arrYourList.Count; i++)
-                                    {
-                                        founded = 0;
-                                        for (int j = 0; j < arrList.Count; j++)
-                                        {
-                                            if (arrYourList[i].ToString().ToLower() == arrList[j].ToString().ToLower())
-                                            {
-                                                founded = 1;
-                                                j = arrList.Count;
-                                            }
-                                        }
-                                        if (founded == 0)
-                                            arrUserCardList.Add(arrYourList[i].ToString());
-                                    }
-
-                                    pageContent = TradingCardCore.printTradeCardListTemplate(selectionYourCardPack, selectionYourCardCategory,
-                                        jObjTradingCardList, arrUserCardList);
-                                    var pagerYourCardList = new PaginatedMessage
-                                    {
-                                        Pages = pageContent,
-                                        Color = Config.Doremi.EmbedColor,
-                                        Options = pao
-                                    };
-
-                                    //end available list
-
-                                    try
-                                    {
-                                        await Context.Channel.DeleteMessageAsync(response.Id);
-                                        await Context.Channel.DeleteMessageAsync(msg.Id);
-                                    }
-                                    catch
-                                    {
-
-                                    }
-                                    try
-                                    {
-                                        await Context.Channel.DeleteMessageAsync(msg2.Id);
-                                    }
-                                    catch
-                                    {
-
-                                    }
-
-                                    if (newStep)
-                                    {
-                                        newStep = false;
-                                        if (arrUserCardList.Count <= 0)
-                                        {
-                                            msg = await ReplyAsync(embed: new EmbedBuilder()
-                                            .WithTitle("Step 5 - Card Id Selection")
-                                            .WithDescription($":x: Sorry, there are no **{GlobalFunctions.UppercaseFirst(selectionYourCardPack)} {GlobalFunctions.UppercaseFirst(selectionYourCardCategory)}** card that you can choose.\n" +
-                                                "Type **back** to select other card pack.")
-                                            .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
-                                            .WithColor(Config.Doremi.EmbedColor)
-                                            .Build());
-                                            response = await NextMessageAsync(timeout: timeoutDuration);
-                                        }
-                                        else
-                                        {
-                                            msg = await ReplyAsync(embed: new EmbedBuilder()
-                                            .WithTitle($"Step 5 - {GlobalFunctions.UppercaseFirst(selectionYourCardPack)} {GlobalFunctions.UppercaseFirst(selectionYourCardCategory)} Card Id Selection")
-                                            .WithDescription($"Type the **card id** selection from yours. Example: **do001**.\n" +
-                                            $"Type **back** to select other card pack.")
-                                            .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
-                                            .WithColor(Config.Doremi.EmbedColor)
-                                            .Build());
-                                            msg2 = await PagedReplyAsync(pagerYourCardList);
-                                            response = await NextMessageAsync(timeout: timeoutDuration);
-                                        }
-
-                                    }
-                                    else
-                                    {
-                                        if (response.Content.ToString().ToLower() == "back")
-                                        {
-                                            stepProcess = 4;
-                                            newStep = true;
-                                        }
-                                        else if (arrUserCardList.Count <= 0)
-                                        {
-                                            msg = await ReplyAsync(embed: new EmbedBuilder()
-                                                .WithTitle("Step 5 - Card Id Selection")
-                                                .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
-                                                .WithDescription($":x: Sorry, there are no **{GlobalFunctions.UppercaseFirst(selectionYourCardPack)} {GlobalFunctions.UppercaseFirst(selectionYourCardCategory)}** card that you can choose.\n" +
-                                                "Type **back** to select other card pack.")
-                                                .Build());
-                                            response = await NextMessageAsync(timeout: timeoutDuration);
-                                        }
-                                        else if (!arrUserCardList.Contains(response.Content.ToString(), StringComparer.Ordinal))
-                                        {
-                                            await ReplyAndDeleteAsync(":x: Please re-enter the correct **card id.**", timeout: TimeSpan.FromSeconds(10));
-                                            msg2 = await PagedReplyAsync(pagerYourCardList);
-                                            response = await NextMessageAsync(timeout: timeoutDuration);
-                                        }
-                                        else
-                                        {
-                                            stepProcess = 6; newStep = true;
-                                            selectionYourCardChoiceId = response.Content.ToString();
-                                        }
-                                    }
-                                }
-                                else if (stepProcess == 6)
-                                {
-                                    try
-                                    {
-                                        await Context.Channel.DeleteMessageAsync(response.Id);
-                                        await Context.Channel.DeleteMessageAsync(msg.Id);
-                                    }
-                                    catch
-                                    {
-
-                                    }
-                                    try
-                                    {
-                                        await Context.Channel.DeleteMessageAsync(msg2.Id);
-                                    }
-                                    catch
-                                    {
-
-                                    }
-
-                                    EmbedBuilder eb = new EmbedBuilder()
-                                    .WithTitle("Step 6 - Review Your Trade")
-                                    .WithDescription($"You will trade with {MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}. You can see your trade information review below.\n" +
-                                    $"Type **confirm** or **accept** to confirm the trade.\n" +
-                                    $"Type **back** to select other card pack.\n" +
-                                    $"Type **cancel** to cancel your trading process.")
-                                    .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
-                                    //other user:
-                                    .AddField($"You will receive:",
-                                    $"-Card Pack: " +
-                                    $"{GlobalFunctions.UppercaseFirst(selectionOtherUserCardPack)} {GlobalFunctions.UppercaseFirst(selectionOtherUserCardCategory)}\n" +
-                                    $"-Card Name: " +
-                                    $"**[{selectionOtherUserCardChoiceId} - " +
-                                    $"{TradingCardCore.getCardProperty(selectionOtherUserCardPack, selectionOtherUserCardCategory, selectionOtherUserCardChoiceId, "name")}](" +
-                                    $"{TradingCardCore.getCardProperty(selectionOtherUserCardPack, selectionOtherUserCardCategory, selectionOtherUserCardChoiceId, "url")})**")
-                                    //yours
-                                    .AddField($"You will send:",
-                                    $"-Card Pack: " +
-                                    $"{GlobalFunctions.UppercaseFirst(selectionYourCardPack)} {GlobalFunctions.UppercaseFirst(selectionYourCardCategory)}\n" +
-                                    $"-Card Name: " +
-                                    $"**[{selectionYourCardChoiceId} - " +
-                                    $"{TradingCardCore.getCardProperty(selectionYourCardPack, selectionYourCardCategory, selectionYourCardChoiceId, "name")}](" +
-                                    $"{TradingCardCore.getCardProperty(selectionYourCardPack, selectionYourCardCategory, selectionYourCardChoiceId, "url")})**")
-                                    .WithColor(Config.Doremi.EmbedColor);
-
-                                    //review the trade
-                                    if (newStep)
-                                    {
-                                        newStep = false;
-                                        msg = await ReplyAsync(embed: eb.Build());
-                                        response = await NextMessageAsync(timeout: timeoutDuration);
-                                    }
-                                    else
-                                    {
-                                        if (response.Content.ToString().ToLower() == "back")
-                                        {
-                                            stepProcess = 5;
-                                            newStep = true;
-                                        }
-                                        else if (response.Content.ToString().ToLower() != "accept" &&
-                                          response.Content.ToString().ToLower() != "confirm")
-                                        {
-                                            msg = await ReplyAsync(":x: Please type with the valid choice: **accept/confirm/back/exit**",
-                                                embed: eb.Build());
-                                            response = await NextMessageAsync(timeout: timeoutDuration);
-                                        }
-                                        else
-                                        {
-                                            await ReplyAsync(embed: new EmbedBuilder()
-                                                .WithTitle("✅ Trade Offer has been sent succesfully!")
-                                                .WithColor(Config.Doremi.EmbedColor)
-                                                .WithDescription($"Your trade offer has been sent to " +
-                                                $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}!\nThank you for using {TradingCardCore.Doremi.embedName}.")
-                                                .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
-                                                .WithThumbnailUrl(TradingCardCore.Doremi.emojiOk)
-                                                .Build());
-
-                                            await ReplyAsync($"You have a new card trade offer, {MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}.\n" +
-                                                $"Please use **{Config.Doremi.PrefixParent[0]}card trade process** to process your trade offer.");
-
-                                            //save to user
-                                            if (selectionOtherUserCardCategory.Contains("ojamajos"))
-                                                selectionOtherUserCardChoiceId = $"{selectionOtherUserCardPack} {selectionOtherUserCardChoiceId}";
-                                            if (selectionYourCardCategory.Contains("ojamajos"))
-                                                selectionYourCardChoiceId = $"{selectionYourCardPack} {selectionYourCardChoiceId}";
-
-                                            string[] parameterNames = new string[] { selectionOtherUserCardChoiceId, selectionYourCardChoiceId };
-                                            JArray jarrayObj = new JArray();
-                                            foreach (string parameterName in parameterNames)
-                                            {
-                                                jarrayObj.Add(parameterName);
-                                            }
-
-                                            string otherUserDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{selectionUserId}.json";
-                                            var JUserData = JObject.Parse(File.ReadAllText(otherUserDataDirectory));
-                                            ((JObject)JUserData["trading_queue"]).Add(clientId.ToString(), new JArray(jarrayObj));
-
-
-                                            //JArray item = (JArray)arrInventory[parent][spawnedCardCategory];
-                                            //item.Add(spawnedCardId);
-                                            File.WriteAllText(otherUserDataDirectory, JUserData.ToString());
-                                            isTrading = false;
-                                            Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = false;
-                                            return Ok();
-                                        }
-                                    }
-                                }
-
-                                //What card pack do you want to trade? select with number/the name
-
-                                //Please type the card id that you want to trade
-
-                                //Please type the 
-                                //
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            Console.WriteLine(e.ToString());
-                        }
-
-                    }
-
-                }
-
-            }
-            else
-            {
-                await ReplyAndDeleteAsync(null, embed: new EmbedBuilder()
-                .WithColor(Config.Doremi.EmbedColor)
-                .WithDescription($":x: I'm sorry, you are still running the trade command. Please finish it first.")
-                .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build(), timeout: TimeSpan.FromSeconds(10));
-            }
-
-            return Ok();
-
-            /*json format:
-             * "trading_queue": {
-                "01929183481": ["do","on"]
-            }
-             */
-        }
-
-        [Command("trade process", RunMode = RunMode.Async), Summary("Process the trade offer of ojamajos trading card.")]
-        public async Task<RuntimeResult> trading_card_queue_process()
-        {
-            await ReplyAndDeleteAsync(null, embed: new EmbedBuilder()
-                    .WithColor(Config.Doremi.EmbedColor)
-                    .WithDescription($":x: Sorry, trade command is not available for now.")
-                    .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build(), timeout: TimeSpan.FromSeconds(10));
-
-            return Ok();
-
-            var guildId = Context.Guild.Id;
-            var clientId = Context.User.Id;
-            string userFolderDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}";
-            string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
-
-            if (!Config.Doremi.isRunningInteractive.ContainsKey(Context.User.Id.ToString()))
-                Config.Doremi.isRunningInteractive.Add(Context.User.Id.ToString(), false);
-
-            if (!Config.Doremi.isRunningInteractive[Context.User.Id.ToString()])
-            {
-                if (!File.Exists(playerDataDirectory)) //not registered yet
-                {
-                    await ReplyAndDeleteAsync(null, embed: new EmbedBuilder()
-                    .WithColor(Config.Doremi.EmbedColor)
-                    .WithDescription($"I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
-                    .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build(), timeout: TimeSpan.FromSeconds(10));
-                    return Ok();
-                }
-
-                var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
-
-                var playerData = JObject.Parse(File.ReadAllText(playerDataDirectory));
-                int fileCount = Directory.GetFiles(userFolderDirectory).Length;
-
-                if (fileCount <= 1)
-                {
-                    await ReplyAndDeleteAsync(":x: Sorry, server need to have more than 1 user that register the trading card data.",
-                        timeout: TimeSpan.FromSeconds(10));
-                    return Ok();
-                }
-                else
-                {
-                    try
-                    {
-                        //start read all user id
-                        List<string> arrUserId = new List<string>();
-                        List<string> pageContent = new List<string>();
-                        List<string> pageContentUserList = new List<string>();
-
-                        string titleUserList = $"**Step 1 - Trade Process List Selection. Select with numbers.**\n";
-                        string tempValUserList = titleUserList;
-
-                        //list all users
-                        var userList = (JObject)playerData["trading_queue"];
-
-                        if (userList.Count <= 0)
-                        {
-                            await ReplyAsync(":x: There are no card trade that you can process.");
-                            return Ok();
-                        }
-
-                        IList<JToken> objUserList = userList;
-                        int currentIndex = 0;
-                        for (int i = 0; i < userList.Count; i++)
-                        {
-                            var key = (JProperty)objUserList[i];
-
-                            tempValUserList += $"**{i + 1}.** {MentionUtils.MentionUser(Convert.ToUInt64(key.Name))}\n";
-                            arrUserId.Add(key.Name);
-
-                            if (currentIndex < 14) currentIndex++;
-                            else
-                            {
-                                pageContentUserList.Add(tempValUserList);
-                                currentIndex = 0;
-                                tempValUserList = titleUserList;
-                            }
-
-                            if (i == userList.Count - 1) pageContentUserList.Add(tempValUserList);
-
-                        }
-
-                        //selection variables
-                        //other users
-                        string selectionUserId = ""; string selectionOtherUserCardChoiceId = ""; string selectionYourCardChoiceId = "";
-                        string selectionOtherUserCardPack = ""; string selectionOtherUserCardCategory = "";
-                        string selectionYourCardPack = ""; string selectionYourCardCategory = "";
-
-                        //DirectoryInfo d = new DirectoryInfo(userFolderDirectory);//Assuming Test is your Folder
-                        //FileInfo[] Files = d.GetFiles("*.json"); //Getting Text files
-
-                        IUserMessage msg; IUserMessage msg2;
-                        //user selection
-                        string titleUserSelection = $"**Step 1 - Select the trade process from a user with numbers**\n";
-                        string tempVal = titleUserSelection;
-
-                        Boolean isTrading = true;
-                        var timeoutDuration = TimeSpan.FromSeconds(60);
-                        string replyTimeout = ":stopwatch: I'm sorry, but you have reach your timeout. " +
-                            "Please use the `card trade` command again to retry the trade process.";
-                        int stepProcess = 1;//0/1:select the user,
-                                            //2:review process
-                        Boolean newStep = true;
-                        //select user
-                        msg = await ReplyAsync(embed: new EmbedBuilder()
-                            .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
-                            .WithDescription($"Welcome to {TradingCardCore.Doremi.embedName}. " +
-                            $"Here you can process your trade offer that sent by someone. " +
-                            $"You can type **cancel**/**exit** anytime to cancel the trade process.")
-                            .WithColor(Config.Doremi.EmbedColor)
-                            .Build());
-
-                        PaginatedAppearanceOptions pao = new PaginatedAppearanceOptions();
-                        pao.JumpDisplayOptions = JumpDisplayOptions.Never;
-                        pao.DisplayInformationIcon = false;
-
-                        var pager = new PaginatedMessage
-                        {
-                            Pages = pageContentUserList,
-                            Color = Config.Doremi.EmbedColor,
-                            Options = pao
-                        };
-
-                        msg2 = await PagedReplyAsync(pageContentUserList);
-                        Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = true;
-                        var response = await NextMessageAsync(timeout: timeoutDuration);
-                        newStep = false;
-
-                        while (isTrading)
-                        {
-                            try
-                            {
-                                var checkNull = response.Content.ToLower().ToString();
-                            }
-                            catch
-                            {
-                                await ReplyAndDeleteAsync(replyTimeout, timeout: TimeSpan.FromSeconds(10));
-                                isTrading = false;
-                                Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = false;
-                                return Ok();
-                            }
-
-                            if (response.Content.ToString().ToLower() == "cancel" ||
-                                response.Content.ToString().ToLower() == "exit")
-                            {
-                                try
-                                {
-                                    await Context.Channel.DeleteMessageAsync(response.Id);
-                                    await Context.Channel.DeleteMessageAsync(msg);
-                                }
-                                catch { }
-                                try
-                                {
-                                    await Context.Channel.DeleteMessageAsync(msg2);
-                                }
-                                catch { }
-
-                                await ReplyAsync(embed: new EmbedBuilder()
-                                    .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
-                                    .WithDescription($"You have cancel your trade process. Thank you for using the {TradingCardCore.Doremi.embedName}")
-                                    .WithColor(Config.Doremi.EmbedColor)
-                                    .Build());
-                                isTrading = false;
-                                Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = false;
-                                return Ok();
-                            }
-                            else if (stepProcess == 1)
-                            {
-                                try
-                                {
-                                    await Context.Channel.DeleteMessageAsync(response.Id);
-                                    await Context.Channel.DeleteMessageAsync(msg);
-                                }
-                                catch { }
-                                try
-                                {
-                                    await Context.Channel.DeleteMessageAsync(msg2);
-                                }
-                                catch { }
-
-                                //select user
-                                var isNumeric = int.TryParse(response.Content.ToString().ToLower(), out int n);
-                                if (newStep)
-                                {
-                                    newStep = false;
-                                    msg2 = await PagedReplyAsync(pageContentUserList);
-                                    response = await NextMessageAsync(timeout: timeoutDuration);
-                                }
-                                else
-                                {
-                                    if (!isNumeric)
-                                    {
-                                        stepProcess = 1;
-                                        selectionUserId = "";
-                                        await ReplyAndDeleteAsync(":x: Please re-type the proper number selection.",
-                                            timeout: TimeSpan.FromSeconds(10));
-                                        //await PagedReplyAsync(pageContentUserList);
-                                        response = await NextMessageAsync(timeout: timeoutDuration);
-                                    }
-                                    //array length:2[0,1], selected:2
-                                    else if (Convert.ToInt32(response.Content.ToLower().ToString()) <= 0 ||
-                                        Convert.ToInt32(response.Content.ToString().ToLower()) > arrUserId.Count)
-                                    {
-                                        stepProcess = 1;
-                                        selectionUserId = "";
-                                        await ReplyAndDeleteAsync(":x: That number choice is not on the list. Please re-type the proper number selection.",
-                                            timeout: TimeSpan.FromSeconds(10));
-                                        msg2 = await PagedReplyAsync(pageContentUserList);
-                                        response = await NextMessageAsync(timeout: timeoutDuration);
-                                    }
-                                    else
-                                    {
-                                        stepProcess = 2; newStep = true;
-                                        selectionUserId = arrUserId[Convert.ToInt32(response.Content.ToString()) - 1];
-                                        var selectedUserData = (JArray)userList[selectionUserId];
-                                        //will be send--
-                                        selectionYourCardChoiceId = selectedUserData[0].ToString();
-
-                                        if (selectionYourCardChoiceId.Contains(" "))
-                                        {//ojamajos category
-                                            //example: hazuki ojt...
-                                            string[] splittedYourChoice = selectionYourCardChoiceId.Split(" ");
-                                            selectionYourCardPack = splittedYourChoice[0];
-                                            selectionYourCardChoiceId = splittedYourChoice[1];
-                                        }
-                                        else
-                                            selectionYourCardPack = TradingCardCore.getCardParent(selectionYourCardChoiceId);
-
-                                        selectionYourCardCategory = TradingCardCore.getCardCategory(selectionYourCardChoiceId);
-
-                                        //will be received
-                                        selectionOtherUserCardChoiceId = selectedUserData[1].ToString();
-
-                                        if (selectionOtherUserCardChoiceId.Contains(" "))
-                                        {//ojamajos category
-                                            //example: hazuki ojt...
-                                            string[] splittedOtherChoice = selectionOtherUserCardChoiceId.Split(" ");
-                                            selectionOtherUserCardPack = splittedOtherChoice[0];
-                                            selectionOtherUserCardChoiceId = splittedOtherChoice[1];
-                                        }
-                                        else
-                                            selectionOtherUserCardPack = TradingCardCore.getCardParent(selectionOtherUserCardChoiceId);
-
-                                        selectionOtherUserCardCategory = TradingCardCore.getCardCategory(selectionOtherUserCardChoiceId);
-
-                                    }
-                                }
-                            }
-                            else if (stepProcess == 2)
-                            {
-                                try
-                                {
-                                    await Context.Channel.DeleteMessageAsync(response.Id);
-                                    await Context.Channel.DeleteMessageAsync(msg);
-                                }
-                                catch { }
-                                try
-                                {
-                                    await Context.Channel.DeleteMessageAsync(msg2);
-                                }
-                                catch { }
-
-                                //check if your card/other user card still exists on the inventory or not
-                                var JCheckUserData = JObject.Parse(File.ReadAllText(playerDataDirectory));
-                                string otherUserDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/" +
-                                    $"{selectionUserId}.json";
-                                var JCheckOtherUserData = JObject.Parse(File.ReadAllText(otherUserDataDirectory));
-
-                                JArray notRequiredArrayYours = JArray.Parse(JCheckUserData[selectionYourCardPack][selectionYourCardCategory].ToString());
-                                bool notExistsYours = notRequiredArrayYours.Any(t => t.Value<string>() == selectionYourCardChoiceId);//check yours have the cards in inventory
-                                JArray requiredArrayYours = JArray.Parse(JCheckUserData[selectionOtherUserCardPack][selectionOtherUserCardCategory].ToString());
-                                bool existsYours = requiredArrayYours.Any(t => t.Value<string>() == selectionOtherUserCardChoiceId);//check yours for duplicates
-
-                                JArray notRequiredArrayOtherUser = JArray.Parse(JCheckOtherUserData[selectionOtherUserCardPack][selectionOtherUserCardCategory].ToString());
-                                bool notExistsOtherUser = notRequiredArrayOtherUser.Any(t => t.Value<string>() == selectionOtherUserCardChoiceId);//check others have the cards in inventory
-                                JArray requiredArrayOthers = JArray.Parse(JCheckOtherUserData[selectionYourCardPack][selectionYourCardCategory].ToString());
-                                bool existsOthers = requiredArrayOthers.Any(t => t.Value<string>() == selectionYourCardChoiceId);//check others for duplicates
-
-                                if (!notExistsYours || !notExistsOtherUser)
-                                {//check if card still exists/not
-                                    await ReplyAsync(embed: new EmbedBuilder()
-                                    .WithTitle("🗑️ Trade Process Cancelled")
-                                    .WithColor(Config.Doremi.EmbedColor)
-                                    .WithDescription($"Your trade with " +
-                                    $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))} has been cancelled because one of you don't have the offered card anymore.\n" +
-                                    $"Please use the **{Config.Doremi.PrefixParent[0]}card trade process** again to process other card offer.")
-                                    .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
-                                    .Build());
-                                    isTrading = false;
-                                    //save the file
-                                    string yourUserDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
-                                    var JUserData = JObject.Parse(File.ReadAllText(yourUserDataDirectory));
-                                    ((JObject)JUserData["trading_queue"]).Remove(selectionUserId);
-                                    File.WriteAllText(yourUserDataDirectory, JUserData.ToString());
-                                    isTrading = false;
-                                    Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = false;
-                                    return Ok();
-                                }
-                                else if (existsYours || existsOthers)
-                                {//check for duplicates
-                                    await ReplyAsync(embed: new EmbedBuilder()
-                                    .WithTitle("🗑️ Trade Process Cancelled")
-                                    .WithColor(Config.Doremi.EmbedColor)
-                                    .WithDescription($"Your trade with " +
-                                    $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))} has been cancelled because one of you already have the same card offer that being sent.\n" +
-                                    $"Please use the **{Config.Doremi.PrefixParent[0]}card trade process** again to process another card offer.")
-                                    .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
-                                    .Build());
-                                    //save the file
-                                    string yourUserDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
-                                    var JUserData = JObject.Parse(File.ReadAllText(yourUserDataDirectory));
-                                    ((JObject)JUserData["trading_queue"]).Remove(selectionUserId);
-                                    File.WriteAllText(yourUserDataDirectory, JUserData.ToString());
-                                    isTrading = false;
-                                    Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = false;
-                                    return Ok();
-                                }
-
-                                EmbedBuilder eb = new EmbedBuilder()
-                                .WithTitle("Step 2 - Review Your Trade")
-                                .WithDescription($"You can see your trade information review below from {MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}.\n" +
-                                $"Type **confirm** or **accept** to confirm the trade.\n" +
-                                $"Type **reject** to reject the trade.\n" +
-                                $"Type **back** to select other card pack.\n" +
-                                $"Type **exit** or **cancel** to exit the card trade process.")
-                                .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
-                                //other user:
-                                .AddField($"You will receive:",
-                                $"-Card Pack: " +
-                                $"{GlobalFunctions.UppercaseFirst(selectionOtherUserCardPack)} {GlobalFunctions.UppercaseFirst(selectionOtherUserCardCategory)}\n" +
-                                $"-Card Name: " +
-                                $"**[{selectionOtherUserCardChoiceId} - " +
-                                $"{TradingCardCore.getCardProperty(selectionOtherUserCardPack, selectionOtherUserCardCategory, selectionOtherUserCardChoiceId, "name")}](" +
-                                $"{TradingCardCore.getCardProperty(selectionOtherUserCardPack, selectionOtherUserCardCategory, selectionOtherUserCardChoiceId, "url")})**")
-                                //yours
-                                .AddField($"You will send:",
-                                $"-Card Pack: " +
-                                $"{GlobalFunctions.UppercaseFirst(selectionYourCardPack)} {GlobalFunctions.UppercaseFirst(selectionYourCardCategory)}\n" +
-                                $"-Card Name: " +
-                                $"**[{selectionYourCardChoiceId} - " +
-                                $"{TradingCardCore.getCardProperty(selectionYourCardPack, selectionYourCardCategory, selectionYourCardChoiceId, "name")}](" +
-                                $"{TradingCardCore.getCardProperty(selectionYourCardPack, selectionYourCardCategory, selectionYourCardChoiceId, "url")})**")
-                                .WithColor(Config.Doremi.EmbedColor);
-
-                                //review the trade
-                                if (newStep)
-                                {
-                                    newStep = false;
-                                    msg = await ReplyAsync(embed: eb.Build());
-                                    response = await NextMessageAsync(timeout: timeoutDuration);
-                                }
-                                else
-                                {
-                                    if (response.Content.ToString().ToLower() == "back")
-                                    {
-                                        stepProcess = 1;
-                                        newStep = true;
-                                    }
-                                    else if (response.Content.ToString().ToLower() != "accept" &&
-                                      response.Content.ToString().ToLower() != "confirm" &&
-                                      response.Content.ToString().ToLower() != "reject")
-                                    {
-                                        msg = await ReplyAsync(":x: Please type with the valid choice: **accept/confirm/reject**.",
-                                            embed: eb.Build());
-                                        response = await NextMessageAsync(timeout: timeoutDuration);
-                                    }
-                                    else if (response.Content.ToString().ToLower() == "reject")
-                                    {
-                                        await ReplyAsync(embed: new EmbedBuilder()
-                                            .WithTitle(":no_entry_sign: Trade Process Rejected")
-                                            .WithColor(Config.Doremi.EmbedColor)
-                                            .WithDescription($"You have reject the card trade offer from " +
-                                            $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}.\nThank you for using {TradingCardCore.Doremi.embedName}.")
-                                            .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
-                                            .Build());
-
-                                        //save the file
-                                        string yourUserDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
-                                        var JUserData = JObject.Parse(File.ReadAllText(yourUserDataDirectory));
-                                        ((JObject)JUserData["trading_queue"]).Remove(selectionUserId);
-                                        File.WriteAllText(yourUserDataDirectory, JUserData.ToString());
-                                        isTrading = false;
-                                        Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = false;
-                                        return Ok();
-                                    }
-                                    else
-                                    {
-                                        await ReplyAsync(embed: new EmbedBuilder()
-                                            .WithTitle("✅ Trade Process Completed")
-                                            .WithColor(Config.Doremi.EmbedColor)
-                                            .WithDescription($"You have successfully accepted the trade offer from " +
-                                            $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}.\n" +
-                                            $"Thank you for using {TradingCardCore.Doremi.embedName}.")
-                                            .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
-                                            .WithThumbnailUrl(TradingCardCore.Doremi.emojiOk)
-                                            .Build());
-
-                                        //save to yours
-                                        string yourUserDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
-                                        var JYourData = JObject.Parse(File.ReadAllText(yourUserDataDirectory));
-                                        //remove from yours
-                                        JArray arrInventoryYoursRemove = JArray.Parse(JYourData[selectionYourCardPack][selectionYourCardCategory].ToString());
-                                        for (int i = 0; i < arrInventoryYoursRemove.Count; i++)
-                                        {
-                                            if (arrInventoryYoursRemove[i].ToString() == selectionYourCardChoiceId)
-                                                arrInventoryYoursRemove[i].Remove();
-                                        }
-                                        JYourData[selectionYourCardPack][selectionYourCardCategory] = arrInventoryYoursRemove;
-
-                                        //add to yours
-                                        JArray arrInventoryYoursAdd = JArray.Parse(JYourData[selectionOtherUserCardPack][selectionOtherUserCardCategory].ToString());
-                                        arrInventoryYoursAdd.Add(selectionOtherUserCardChoiceId);
-                                        JYourData[selectionOtherUserCardPack][selectionOtherUserCardCategory] = arrInventoryYoursAdd;
-                                        //remove trading_queue
-                                        ((JObject)JYourData["trading_queue"]).Remove(selectionUserId);
-                                        File.WriteAllText(yourUserDataDirectory, JYourData.ToString());
-                                        //==================================================================
-                                        //save to other users
-                                        var JOtherUserData = JObject.Parse(File.ReadAllText(otherUserDataDirectory));
-                                        ((JObject)JOtherUserData["trading_queue"]).Remove(selectionUserId);
-                                        //remove from others
-                                        JArray arrInventoryOthersRemove = JArray.Parse(JOtherUserData[selectionOtherUserCardPack][selectionOtherUserCardCategory].ToString());
-                                        for (int i = 0; i < arrInventoryOthersRemove.Count; i++)
-                                        {
-                                            if (arrInventoryOthersRemove[i].ToString() == selectionOtherUserCardChoiceId)
-                                                arrInventoryOthersRemove[i].Remove();
-                                        }
-                                        JOtherUserData[selectionOtherUserCardPack][selectionOtherUserCardCategory] = arrInventoryOthersRemove;
-
-                                        //add to others
-                                        JArray arrInventoryOthersAdd = JArray.Parse(JOtherUserData[selectionYourCardPack][selectionYourCardCategory].ToString());
-                                        arrInventoryOthersAdd.Add(selectionYourCardChoiceId);
-                                        JOtherUserData[selectionYourCardPack][selectionYourCardCategory] = arrInventoryOthersAdd;
-                                        File.WriteAllText(otherUserDataDirectory, JOtherUserData.ToString());
-
-                                        isTrading = false;
-                                        Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = false;
-                                        return Ok();
-
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        //Console.WriteLine(e.ToString());
-                    }
-                }
-
-            }
-            else
-            {
-                await ReplyAndDeleteAsync(null, embed: new EmbedBuilder()
-                .WithColor(Config.Doremi.EmbedColor)
-                .WithDescription($"I'm sorry, you're still running the card trade process. Please finish it first.")
-                .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build(), timeout: TimeSpan.FromSeconds(10));
-            }
-
-            return Ok();
-        }
-
-        [Command("trade fragment", RunMode = RunMode.Async), Summary("Trade fragment pieces with any card.")]
-        public async Task<RuntimeResult> trade_fragment(string cardId="")
-        {
-            return Ok();
-            var guildId = Context.Guild.Id;
-            var userId = Context.User.Id;
-
-            var userData = UserTradingCardDataCore.getUserData(userId);
-            var cardCategory = TradingCardCore.getCardCategory(cardId);
-            int userFragmentPoint = Convert.ToInt32(userData[DBM_User_Trading_Card_Data.Columns.fragment_point]);
-
-            if (cardId == "")
-            {
-                await ReplyAndDeleteAsync("Please enter the Card Id that you want to exchange. " +
-                $"You can see the list of the card that you want to exchange with **inventory command/" +
-                $"{Doremi.PrefixParent[0]}card inventory**.",
-                timeout: TimeSpan.FromSeconds(10));
-                return Ok();
-            } else if (TradingCardCore.checkUserHaveCard(userId, "doremi", cardId))
-            {
-                await ReplyAndDeleteAsync("Sorry, you already have that card.",
-                timeout: TimeSpan.FromSeconds(10));
-                return Ok();
-            } else if(userFragmentPoint <10 && cardCategory == "normal")
-            {
-                await ReplyAndDeleteAsync("Sorry, you need **10 fragment points** to trade normal card category.",
-                timeout: TimeSpan.FromSeconds(10));
-                return Ok();
-            }
-            else if (userFragmentPoint < 20 && cardCategory == "platinum")
-            {
-                await ReplyAndDeleteAsync("Sorry, you need **20 fragment points** to trade platinum card category.",
-                timeout: TimeSpan.FromSeconds(10));
-                return Ok();
-            }
-            else if (userFragmentPoint < 30 && cardCategory == "metal")
-            {
-                await ReplyAndDeleteAsync("Sorry, you need **20 fragment points** to trade metal card category.",
-                timeout: TimeSpan.FromSeconds(10));
-                return Ok();
-            }
-            else if (userFragmentPoint < 20 && cardCategory == "ojamajos")
-            {
-                await ReplyAndDeleteAsync("Sorry, you need **20 fragment points** to trade ojamajos card category.",
-                timeout: TimeSpan.FromSeconds(10));
-                return Ok();
-            }
-
-            int price = -10; //default price
-            switch (cardCategory)
-            {
-                case "platinum":
-                    price = -20; break;
-                case "metal":
-                    price = -30; break;
-                case "ojamajos":
-                    price = -20; break;
-            }
-            //if (spawnedCardCategory == "ojamajos")
-            //{
-            //    //ojamajo card category
-            //    string query = $"SELECT * " +
-            //    $" FROM {DBM_Trading_Card_Data_Ojamajos.tableName} " +
-            //    $" WHERE {DBM_Trading_Card_Data_Ojamajos.Columns.id_card}=@{DBM_Trading_Card_Data_Ojamajos.Columns.id_card}";
-            //    Dictionary<string, object> columnFilter = new Dictionary<string, object>();
-            //    columnFilter[DBM_Trading_Card_Data_Ojamajos.Columns.id_card] = spawnedCardId;
-            //    var selectedCard = db.selectAll(query, columnFilter);
-            //    foreach (DataRow rows in selectedCard.Rows)
-            //    {
-            //        name = rows[DBM_Trading_Card_Data.Columns.name].ToString();
-            //        imgUrl = rows[DBM_Trading_Card_Data.Columns.url].ToString();
-            //        rank = rows[DBM_Trading_Card_Data.Columns.attr_0].ToString();
-            //        star = rows[DBM_Trading_Card_Data.Columns.attr_1].ToString();
-            //        point = rows[DBM_Trading_Card_Data.Columns.url].ToString();
-            //    }
-            //}
-            //else
-            //{
-            //    string query = $"SELECT * " +
-            //    $" FROM {DBM_Trading_Card_Data.tableName} " +
-            //    $" WHERE {DBM_Trading_Card_Data.Columns.id_card}=@{DBM_Trading_Card_Data.Columns.id_card}";
-            //    Dictionary<string, object> columnFilter = new Dictionary<string, object>();
-            //    columnFilter[DBM_Trading_Card_Data.Columns.id_card] = spawnedCardId;
-            //    var selectedCard = db.selectAll(query, columnFilter);
-            //    foreach (DataRow rows in selectedCard.Rows)
-            //    {
-            //        name = rows[DBM_Trading_Card_Data.Columns.name].ToString();
-            //        imgUrl = rows[DBM_Trading_Card_Data.Columns.url].ToString();
-            //        rank = rows[DBM_Trading_Card_Data.Columns.attr_0].ToString();
-            //        star = rows[DBM_Trading_Card_Data.Columns.attr_1].ToString();
-            //        point = rows[DBM_Trading_Card_Data.Columns.url].ToString();
-            //    }
-            //}
-
-            UserTradingCardDataCore.updateFragmentPoints(userId, price);
-
-        }
-
+        //[Command("trade", RunMode = RunMode.Async), Summary("Open the trading card hub which lets you trade the card with each other.")]
+        //public async Task<RuntimeResult> trading_card_trade()
+        //{
+        //    await ReplyAndDeleteAsync(null, embed: new EmbedBuilder()
+        //            .WithColor(Config.Doremi.EmbedColor)
+        //            .WithDescription($":x: Sorry, trade command is under maintenance now.")
+        //            .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build(), timeout: TimeSpan.FromSeconds(10));
+
+        //    return Ok();
+
+        //    var guildId = Context.Guild.Id;
+        //    var clientId = Context.User.Id;
+
+        //    if (!Config.Doremi.isRunningInteractive.ContainsKey(Context.User.Id.ToString()))
+        //        Config.Doremi.isRunningInteractive.Add(Context.User.Id.ToString(), false);
+
+        //    if (!Config.Doremi.isRunningInteractive[Context.User.Id.ToString()])
+        //    {
+        //        string userFolderDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}";
+
+        //        string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+        //        var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
+
+        //        PaginatedAppearanceOptions pao = new PaginatedAppearanceOptions();
+        //        pao.JumpDisplayOptions = JumpDisplayOptions.Never;
+        //        pao.DisplayInformationIcon = false;
+
+        //        if (!File.Exists(playerDataDirectory)) //not registered yet
+        //        {
+        //            await Context.Message.DeleteAsync();
+        //            await ReplyAndDeleteAsync(null, embed: new EmbedBuilder()
+        //            .WithColor(Config.Doremi.EmbedColor)
+        //            .WithDescription($":x: I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
+        //            .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build(), timeout: TimeSpan.FromSeconds(10));
+
+        //            return Ok();
+        //        }
+        //        else
+        //        {
+        //            var playerData = JObject.Parse(File.ReadAllText(playerDataDirectory));
+        //            int fileCount = Directory.GetFiles(userFolderDirectory).Length;
+
+        //            if (fileCount <= 1)
+        //            {
+        //                await ReplyAndDeleteAsync("Sorry, server need to have more than 1 user that register the trading card data.", timeout: TimeSpan.FromSeconds(10));
+        //                return Ok();
+        //            }
+        //            else
+        //            {
+        //                try
+        //                {
+        //                    //start read all user id
+        //                    List<string> arrUserId = new List<string>();
+        //                    List<string> pageContent = new List<string>();
+        //                    List<string> pageContentUserList = new List<string>();
+        //                    //List<string> pageUserContent = new List<string>();
+        //                    //List<string> pageUserCardList = new List<string>();
+        //                    //List<string> pageUserOtherCardList = new List<string>();
+
+        //                    //selection variables
+        //                    //other users
+        //                    string selectionUserId = ""; string selectionOtherUserCardChoiceId = ""; string selectionOtherUserCardPack = "";
+        //                    string selectionOtherUserCardCategory = "";
+        //                    //your selection
+        //                    string selectionYourCardChoiceId = ""; string selectionYourCardPack = "";
+        //                    string selectionYourCardCategory = "";
+
+        //                    DirectoryInfo d = new DirectoryInfo(userFolderDirectory);//Assuming Test is your Folder
+        //                    FileInfo[] Files = d.GetFiles("*.json"); //Getting Text files
+
+        //                    //user selection
+        //                    string titleUserSelection = $"**Step 1 - Select the user with numbers**\n";
+        //                    string tempVal = titleUserSelection;
+        //                    int currentIndex = 0;
+
+        //                    int ctr = 0;
+        //                    foreach (FileInfo file in Files)
+        //                    {
+        //                        ulong otherUserId = Convert.ToUInt64(Path.GetFileNameWithoutExtension(file.Name));
+        //                        var iguilduser = Context.Guild.Users.FirstOrDefault(x => x.Id == otherUserId);
+
+        //                        //var available = iguilduser.Guild.GetUserAsync(otherUserId);
+        //                        if (otherUserId != clientId && iguilduser != null)
+        //                        {
+        //                            arrUserId.Add(otherUserId.ToString());
+        //                        }
+        //                    }
+
+        //                    for (int i = 0; i < arrUserId.Count; i++)
+        //                    {
+        //                        var iguilduser = Context.Guild.Users.FirstOrDefault(x => x.Id == Convert.ToUInt64(arrUserId[i]));
+        //                        tempVal += $"**{i + 1}. {MentionUtils.MentionUser(iguilduser.Id)}**\n";
+
+        //                        if (i == arrUserId.Count - 2) pageContentUserList.Add(tempVal);
+        //                        else
+        //                        {
+        //                            if (currentIndex < 14) currentIndex++;
+        //                            else
+        //                            {
+        //                                pageContentUserList.Add(tempVal);
+        //                                currentIndex = 0;
+        //                                tempVal = titleUserSelection;
+        //                            }
+        //                        }
+        //                    }
+
+        //                    var pagerUserList = new PaginatedMessage
+        //                    {
+        //                        Pages = pageContentUserList,
+        //                        Color = Config.Doremi.EmbedColor,
+        //                        Options = pao
+        //                    };
+        //                    //end user selection
+
+        //                    Boolean isTrading = true;
+        //                    var timeoutDuration = TimeSpan.FromSeconds(60);
+        //                    string replyTimeout = ":stopwatch: I'm sorry, but you have reach your timeout. " +
+        //                        $"Please use the `{Config.Doremi.PrefixParent[0]}card trade` command again to retry the trade process.";
+        //                    int stepProcess = 1;//0/1:select the user,
+        //                                        //2: select your card pack, 3: select card category, 4: select 
+        //                                        //5:review process
+        //                    Boolean newStep = true;
+        //                    IUserMessage msg; IUserMessage msg2;
+        //                    //select user
+        //                    msg = await ReplyAsync(embed: new EmbedBuilder()
+        //                        .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+        //                        .WithDescription($"Welcome to {TradingCardCore.Doremi.embedName}. " +
+        //                        $"Here you can trade your trading card with each other. " +
+        //                        $"You can type **cancel**/**exit** anytime on each steps to cancel the trade process.\n" +
+        //                        $"You can type **back** anytime on each steps to back into previous steps.\n" +
+        //                        $"Some of the trade rules that will be applied:\n" +
+        //                        $"-You **cannot** trade more than once to the same user at the same trade queue.\n" +
+        //                        $"-You **cannot** trade card that you or that user already had.")
+        //                        .WithColor(Config.Doremi.EmbedColor)
+        //                        .Build());
+        //                    Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = true;
+        //                    msg2 = await PagedReplyAsync(pagerUserList);
+        //                    var response = await NextMessageAsync(timeout: timeoutDuration);
+        //                    newStep = false;
+        //                    while (isTrading)
+        //                    {
+        //                        List<string> arrUserCardList = new List<string>();
+        //                        List<string> arrUserOtherCardList = new List<string>();
+
+        //                        try
+        //                        {
+        //                            var checkNull = response.Content.ToLower().ToString();
+        //                        }
+        //                        catch
+        //                        {
+        //                            try
+        //                            {
+        //                                await Context.Channel.DeleteMessageAsync(msg.Id);
+        //                                await Context.Channel.DeleteMessageAsync(msg2.Id);
+        //                            }
+        //                            catch { }
+
+        //                            await ReplyAndDeleteAsync(replyTimeout, timeout: TimeSpan.FromSeconds(15));
+        //                            isTrading = false;
+        //                            Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = false;
+        //                            return Ok();
+        //                        }
+
+        //                        //response = await NextMessageAsync(timeout: timeoutDuration);
+        //                        //string responseText = response.Content.ToLower().ToString();
+
+        //                        if (response.Content.ToString().ToLower() == "cancel" ||
+        //                            response.Content.ToString().ToLower() == "exit")
+        //                        {
+        //                            try
+        //                            {
+        //                                await Context.Channel.DeleteMessageAsync(response.Id);
+        //                                await Context.Channel.DeleteMessageAsync(msg.Id);
+        //                            }
+        //                            catch
+        //                            {
+
+        //                            }
+        //                            try
+        //                            {
+        //                                await Context.Channel.DeleteMessageAsync(msg2.Id);
+        //                            }
+        //                            catch
+        //                            {
+
+        //                            }
+        //                            await ReplyAsync(embed: new EmbedBuilder()
+        //                                .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+        //                                .WithDescription($"You have cancel your trade. Thank you for using the {TradingCardCore.Doremi.embedName}")
+        //                                .WithColor(Config.Doremi.EmbedColor)
+        //                                .Build());
+        //                            isTrading = false;
+        //                            Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = false;
+        //                            return Ok();
+        //                        }
+        //                        else if (stepProcess == 1)
+        //                        { //select user
+        //                            var isNumeric = int.TryParse(response.Content.ToString().ToLower(), out int n);
+        //                            if (newStep)
+        //                            {
+        //                                newStep = false;
+        //                                try
+        //                                {
+        //                                    await Context.Channel.DeleteMessageAsync(response.Id);
+        //                                    await Context.Channel.DeleteMessageAsync(msg.Id);
+        //                                }
+        //                                catch
+        //                                {
+
+        //                                }
+        //                                try
+        //                                {
+        //                                    await Context.Channel.DeleteMessageAsync(msg2.Id);
+        //                                }
+        //                                catch
+        //                                {
+
+        //                                }
+        //                                msg = await PagedReplyAsync(pagerUserList);
+        //                                response = await NextMessageAsync(timeout: timeoutDuration);
+        //                            }
+        //                            else
+        //                            {
+        //                                if (!isNumeric)
+        //                                {
+        //                                    try
+        //                                    {
+        //                                        await Context.Channel.DeleteMessageAsync(response.Id);
+        //                                        await Context.Channel.DeleteMessageAsync(msg.Id);
+        //                                    }
+        //                                    catch
+        //                                    {
+
+        //                                    }
+        //                                    try
+        //                                    {
+        //                                        await Context.Channel.DeleteMessageAsync(msg2.Id);
+        //                                    }
+        //                                    catch
+        //                                    {
+
+        //                                    }
+        //                                    stepProcess = 1;
+        //                                    selectionUserId = "";
+        //                                    await ReplyAndDeleteAsync(":x: Please re-type the proper number selection.", timeout: TimeSpan.FromSeconds(10));
+        //                                    msg = await PagedReplyAsync(pagerUserList);
+        //                                    response = await NextMessageAsync(timeout: timeoutDuration);
+        //                                }
+        //                                //array length:2[0,1], selected:2
+        //                                else if (Convert.ToInt32(response.Content.ToLower().ToString()) <= 0 ||
+        //                                Convert.ToInt32(response.Content.ToString().ToLower()) > arrUserId.Count)
+        //                                {
+        //                                    try
+        //                                    {
+        //                                        await Context.Channel.DeleteMessageAsync(response.Id);
+        //                                        await Context.Channel.DeleteMessageAsync(msg.Id);
+        //                                    }
+        //                                    catch
+        //                                    {
+
+        //                                    }
+        //                                    try
+        //                                    {
+        //                                        await Context.Channel.DeleteMessageAsync(msg2.Id);
+        //                                    }
+        //                                    catch
+        //                                    {
+
+        //                                    }
+
+        //                                    stepProcess = 1;
+        //                                    selectionUserId = "";
+        //                                    await ReplyAndDeleteAsync(":x: That number choice is not on the list. Please re-type the proper number selection.", timeout: TimeSpan.FromSeconds(10));
+        //                                    msg2 = await PagedReplyAsync(pagerUserList);
+        //                                    response = await NextMessageAsync(timeout: timeoutDuration);
+        //                                }
+        //                                else
+        //                                {
+        //                                    selectionUserId = arrUserId[Convert.ToInt32(response.Content.ToString().ToLower()) - 1];
+        //                                    var otherUserData = JObject.Parse(File.ReadAllText(
+        //                                    $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{selectionUserId}.json"
+        //                                    ));
+        //                                    if (((JObject)(otherUserData["trading_queue"])).ContainsKey(clientId.ToString()))
+        //                                    {
+        //                                        try
+        //                                        {
+        //                                            await Context.Channel.DeleteMessageAsync(response.Id);
+        //                                            await Context.Channel.DeleteMessageAsync(msg.Id);
+        //                                        }
+        //                                        catch
+        //                                        {
+
+        //                                        }
+        //                                        try
+        //                                        {
+        //                                            await Context.Channel.DeleteMessageAsync(msg2.Id);
+        //                                        }
+        //                                        catch
+        //                                        {
+
+        //                                        }
+
+        //                                        msg = await ReplyAsync(embed: new EmbedBuilder()
+        //                                            .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+        //                                            .WithDescription($":x: Sorry, you cannot trade more than once with " +
+        //                                            $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}.")
+        //                                            .WithThumbnailUrl(TradingCardCore.Doremi.emojiError)
+        //                                            .Build());
+        //                                        msg2 = await PagedReplyAsync(pagerUserList);
+        //                                        response = await NextMessageAsync(timeout: timeoutDuration);
+        //                                    }
+        //                                    else
+        //                                    {
+        //                                        stepProcess = 2; newStep = true;
+        //                                    }
+
+        //                                }
+        //                            }
+
+
+        //                        }
+        //                        else if (stepProcess == 2)
+        //                        { //card pack & category selection from other user
+        //                            var otherUserData = JObject.Parse(File.ReadAllText(
+        //                                $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{selectionUserId}.json"
+        //                                ));
+        //                            List<string> listCardPackCategory = TradingCardCore.tradeListAllowed((JObject)otherUserData);
+
+        //                            try
+        //                            {
+        //                                await Context.Channel.DeleteMessageAsync(response.Id);
+        //                                await Context.Channel.DeleteMessageAsync(msg.Id);
+        //                            }
+        //                            catch
+        //                            {
+
+        //                            }
+        //                            try
+        //                            {
+        //                                await Context.Channel.DeleteMessageAsync(msg2.Id);
+        //                            }
+        //                            catch
+        //                            {
+
+        //                            }
+
+        //                            if (listCardPackCategory.Count <= 0)
+        //                            {
+
+        //                                msg = await ReplyAsync(embed: new EmbedBuilder()
+        //                                    .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+        //                                    .WithColor(Config.Doremi.EmbedColor)
+        //                                    .WithDescription($":x: Sorry, there are no cards that can be selected from " +
+        //                                    $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}.\n" +
+        //                                    $"Please select other users.")
+        //                                    .Build());
+        //                                stepProcess = 1; newStep = true;
+        //                                response = await NextMessageAsync(timeout: timeoutDuration);
+        //                            }
+        //                            else
+        //                            {
+        //                                string textConcatDoremi = ""; string textConcatHazuki = ""; string textConcatAiko = "";
+        //                                string textConcatOnpu = ""; string textConcatMomoko = "";
+        //                                for (int i = 0; i < listCardPackCategory.Count; i++)
+        //                                {
+        //                                    if (listCardPackCategory[i].Contains("doremi"))
+        //                                        textConcatDoremi += $"{listCardPackCategory[i]}\n";
+        //                                    else if (listCardPackCategory[i].Contains("hazuki"))
+        //                                        textConcatHazuki += $"{listCardPackCategory[i]}\n";
+        //                                    else if (listCardPackCategory[i].Contains("aiko"))
+        //                                        textConcatAiko += $"{listCardPackCategory[i]}\n";
+        //                                    else if (listCardPackCategory[i].Contains("onpu"))
+        //                                        textConcatOnpu += $"{listCardPackCategory[i]}\n";
+        //                                    else if (listCardPackCategory[i].Contains("momoko"))
+        //                                        textConcatMomoko += $"{listCardPackCategory[i]}\n";
+        //                                }
+
+        //                                if (textConcatDoremi == "") textConcatDoremi = "No card trade for this pack.";
+        //                                if (textConcatHazuki == "") textConcatHazuki = "No card trade for this pack.";
+        //                                if (textConcatAiko == "") textConcatAiko = "No card trade for this pack.";
+        //                                if (textConcatOnpu == "") textConcatOnpu = "No card trade for this pack.";
+        //                                if (textConcatMomoko == "") textConcatMomoko = "No card trade for this pack.";
+
+        //                                if (newStep)
+        //                                {
+
+        //                                    newStep = false;
+        //                                    msg = await ReplyAsync(embed: new EmbedBuilder()
+        //                                    .WithTitle("Step 2 - Card Pack & Category Selection")
+        //                                    .WithDescription($"Type the **card pack & category** selection from " +
+        //                                    $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}. Example: **doremi normal**.\n" +
+        //                                    $"Type **back** to select other user.")
+        //                                    .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+        //                                    .WithColor(Config.Doremi.EmbedColor)
+        //                                    .AddField("Doremi Card Pack", textConcatDoremi, true)
+        //                                    .AddField("Hazuki Card Pack", textConcatHazuki, true)
+        //                                    .AddField("Aiko Card Pack", textConcatAiko, true)
+        //                                    .AddField("Onpu Card Pack", textConcatOnpu, true)
+        //                                    .AddField("Momoko Card Pack", textConcatMomoko, true)
+        //                                    .Build());
+        //                                    response = await NextMessageAsync(timeout: timeoutDuration);
+        //                                }
+        //                                else
+        //                                {
+        //                                    if (response.Content.ToString().ToLower() == "back")
+        //                                    {
+        //                                        stepProcess = 1;
+        //                                        newStep = true;
+        //                                    }
+        //                                    else if (!listCardPackCategory.Any(str => str.Contains(response.Content.ToString().ToLower())) ||
+        //                                        !response.Content.ToString().ToLower().Contains(" "))
+        //                                    {
+        //                                        msg = await ReplyAsync(":x: Please re-enter the proper card pack selection.",
+        //                                        embed: new EmbedBuilder()
+        //                                        .WithTitle("Step 2 - Card Pack & Category Selection")
+        //                                        .WithDescription($"Type the card pack & category selection from " +
+        //                                        $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}. Example: **doremi normal**.\n" +
+        //                                        $"Type **back** to select other user.")
+        //                                        .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+        //                                        .WithColor(Config.Doremi.EmbedColor)
+        //                                        .AddField("Doremi Card Pack", textConcatDoremi, true)
+        //                                        .AddField("Hazuki Card Pack", textConcatHazuki, true)
+        //                                        .AddField("Aiko Card Pack", textConcatAiko, true)
+        //                                        .AddField("Onpu Card Pack", textConcatOnpu, true)
+        //                                        .AddField("Momoko Card Pack", textConcatMomoko, true)
+        //                                        .Build());
+        //                                        response = await NextMessageAsync(timeout: timeoutDuration);
+        //                                    }
+        //                                    else
+        //                                    {
+        //                                        stepProcess = 3;
+        //                                        string[] splittedChoice = response.Content.ToString().ToLower().Split(" ");
+        //                                        selectionOtherUserCardPack = splittedChoice[0]; selectionOtherUserCardCategory = splittedChoice[1];
+        //                                        newStep = true;
+        //                                    }
+        //                                }
+        //                            }
+        //                        }
+        //                        else if (stepProcess == 3)
+        //                        {
+        //                            //select other user card id that you want to trade.
+        //                            //your card id data
+        //                            var yourData = JObject.Parse(File.ReadAllText(
+        //                                $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{Convert.ToUInt64(clientId)}.json"
+        //                                ));
+        //                            var jYourData = (JArray)(yourData[selectionOtherUserCardPack][selectionOtherUserCardCategory]);
+        //                            //other user card id data
+        //                            var otherUserData = JObject.Parse(File.ReadAllText(
+        //                                $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{selectionUserId}.json"
+        //                                ));
+        //                            var jOtherUserData = (JArray)(otherUserData[selectionOtherUserCardPack][selectionOtherUserCardCategory]);
+
+        //                            //available list
+        //                            var arrList = jOtherUserData;
+        //                            var arrYourList = jYourData; int founded = 0;
+        //                            //remove the card that you already have
+        //                            for (int i = 0; i < arrList.Count; i++)
+        //                            {
+        //                                founded = 0;
+        //                                for (int j = 0; j < arrYourList.Count; j++)
+        //                                {
+        //                                    if (arrList[i].ToString().ToLower() == arrYourList[j].ToString().ToLower())
+        //                                    {
+        //                                        founded = 1;
+        //                                        j = arrYourList.Count;
+        //                                    }
+        //                                }
+        //                                if (founded == 0)
+        //                                    arrUserOtherCardList.Add(arrList[i].ToString());
+        //                            }
+
+        //                            pageContent = TradingCardCore.printTradeCardListTemplate(selectionOtherUserCardPack, selectionOtherUserCardCategory,
+        //                                jObjTradingCardList, arrUserOtherCardList);
+        //                            var pagerCardList = new PaginatedMessage
+        //                            {
+        //                                Pages = pageContent,
+        //                                Color = Config.Doremi.EmbedColor,
+        //                                Options = pao
+        //                            };
+
+        //                            //end available list
+        //                            try
+        //                            {
+        //                                await Context.Channel.DeleteMessageAsync(response.Id);
+        //                                await Context.Channel.DeleteMessageAsync(msg.Id);
+        //                            }
+        //                            catch
+        //                            {
+
+        //                            }
+        //                            try
+        //                            {
+        //                                await Context.Channel.DeleteMessageAsync(msg2.Id);
+        //                            }
+        //                            catch
+        //                            {
+
+        //                            }
+
+        //                            if (newStep)
+        //                            {
+        //                                newStep = false;
+
+        //                                if (arrUserOtherCardList.Count >= 1)
+        //                                {
+        //                                    msg = await ReplyAsync(embed: new EmbedBuilder()
+        //                                    .WithTitle("Step 3 - Card Id Selection")
+        //                                    .WithDescription($"Type the **card id** choice from " +
+        //                                    $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}. Example: **do001**.\n" +
+        //                                    $"Type **back** to select other card pack.")
+        //                                    .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+        //                                    .WithColor(Config.Doremi.EmbedColor)
+        //                                    .Build());
+        //                                    msg2 = await PagedReplyAsync(pagerCardList);
+        //                                    response = await NextMessageAsync(timeout: timeoutDuration);
+        //                                }
+        //                                else
+        //                                {
+        //                                    msg = await ReplyAsync(embed: new EmbedBuilder()
+        //                                        .WithTitle($"Step 3 - {GlobalFunctions.UppercaseFirst(selectionOtherUserCardPack)} {GlobalFunctions.UppercaseFirst(selectionOtherUserCardCategory)} Card Id Selection")
+        //                                        .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+        //                                        .WithDescription($":x: Sorry, there are no **{GlobalFunctions.UppercaseFirst(selectionOtherUserCardPack)} {GlobalFunctions.UppercaseFirst(selectionOtherUserCardCategory)}** card that you can choose from " +
+        //                                        $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}.\n" +
+        //                                        "Type **back** to select other card pack.")
+        //                                        .WithColor(Config.Doremi.EmbedColor)
+        //                                        .Build());
+        //                                    response = await NextMessageAsync(timeout: timeoutDuration);
+        //                                }
+        //                            }
+        //                            else
+        //                            {
+        //                                if (response.Content.ToString().ToLower() == "back")
+        //                                {
+        //                                    stepProcess = 2;
+        //                                    newStep = true;
+        //                                }
+        //                                else if (arrUserOtherCardList.Count <= 0)
+        //                                {
+        //                                    msg = await ReplyAsync(embed: new EmbedBuilder()
+        //                                        .WithTitle("Step 3 - Card Id Selection")
+        //                                        .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+        //                                        .WithDescription($":x: Sorry, there are no **{GlobalFunctions.UppercaseFirst(selectionOtherUserCardPack)} {GlobalFunctions.UppercaseFirst(selectionOtherUserCardCategory)}** card that you can choose from " +
+        //                                        $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}.\n" +
+        //                                        "Type **back** to select other card pack.")
+        //                                        .WithColor(Config.Doremi.EmbedColor)
+        //                                        .Build());
+        //                                    response = await NextMessageAsync(timeout: timeoutDuration);
+        //                                }
+        //                                else if (!arrUserOtherCardList.Contains(response.Content.ToString(), StringComparer.Ordinal))
+        //                                {
+        //                                    await ReplyAndDeleteAsync(":x: Please re-enter the correct **card id.**", timeout: TimeSpan.FromSeconds(10));
+        //                                    msg2 = await PagedReplyAsync(pagerCardList);
+        //                                    response = await NextMessageAsync(timeout: timeoutDuration);
+        //                                }
+        //                                else
+        //                                {
+        //                                    stepProcess = 4; newStep = true;
+        //                                    selectionOtherUserCardChoiceId = response.Content.ToString();
+        //                                }
+        //                            }
+        //                        }
+        //                        else if (stepProcess == 4)
+        //                        {
+        //                            //card pack & category selection from yours
+        //                            var yourUserData = JObject.Parse(File.ReadAllText(
+        //                                $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId.ToString()}.json"
+        //                                ));
+        //                            List<string> listCardPackCategory = TradingCardCore.tradeListAllowed((JObject)yourUserData);
+
+        //                            try
+        //                            {
+        //                                await Context.Channel.DeleteMessageAsync(response.Id);
+        //                                await Context.Channel.DeleteMessageAsync(msg.Id);
+        //                            }
+        //                            catch
+        //                            {
+
+        //                            }
+        //                            try
+        //                            {
+        //                                await Context.Channel.DeleteMessageAsync(msg2.Id);
+        //                            }
+        //                            catch
+        //                            {
+
+        //                            }
+
+        //                            if (listCardPackCategory.Count <= 0)
+        //                            {
+        //                                msg = await ReplyAsync(embed: new EmbedBuilder()
+        //                                    .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+        //                                    .WithColor(Config.Doremi.EmbedColor)
+        //                                    .WithTitle($"Step 4 - Select Your Available Card Pack")
+        //                                    .WithDescription($"Sorry, there are no cards that you can trade. " +
+        //                                    $"Your card trading process has been canceled.")
+        //                                    .Build());
+        //                                isTrading = false;
+        //                                Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = false;
+        //                                return Ok();
+        //                            }
+        //                            else
+        //                            {
+        //                                string textConcatDoremi = ""; string textConcatHazuki = ""; string textConcatAiko = "";
+        //                                string textConcatOnpu = ""; string textConcatMomoko = "";
+        //                                for (int i = 0; i < listCardPackCategory.Count; i++)
+        //                                {
+        //                                    if (listCardPackCategory[i].Contains("doremi"))
+        //                                        textConcatDoremi += $"{listCardPackCategory[i]}\n";
+        //                                    else if (listCardPackCategory[i].Contains("hazuki"))
+        //                                        textConcatHazuki += $"{listCardPackCategory[i]}\n";
+        //                                    else if (listCardPackCategory[i].Contains("aiko"))
+        //                                        textConcatAiko += $"{listCardPackCategory[i]}\n";
+        //                                    else if (listCardPackCategory[i].Contains("onpu"))
+        //                                        textConcatOnpu += $"{listCardPackCategory[i]}\n";
+        //                                    else if (listCardPackCategory[i].Contains("momoko"))
+        //                                        textConcatMomoko += $"{listCardPackCategory[i]}\n";
+        //                                }
+
+        //                                if (textConcatDoremi == "") textConcatDoremi = "No card trade for this pack.";
+        //                                if (textConcatHazuki == "") textConcatHazuki = "No card trade for this pack.";
+        //                                if (textConcatAiko == "") textConcatAiko = "No card trade for this pack.";
+        //                                if (textConcatOnpu == "") textConcatOnpu = "No card trade for this pack.";
+        //                                if (textConcatMomoko == "") textConcatMomoko = "No card trade for this pack.";
+
+        //                                if (newStep)
+        //                                {
+        //                                    newStep = false;
+        //                                    msg = await ReplyAsync(embed: new EmbedBuilder()
+        //                                    .WithTitle("Step 4 - Select Your Available Card Pack")
+        //                                    .WithDescription($"Type the **card pack & category** selection from yours. Example: **doremi normal**.\n" +
+        //                                    $"Type **back** to re-select other card from {MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}.")
+        //                                    .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+        //                                    .WithColor(Config.Doremi.EmbedColor)
+        //                                    .AddField("Doremi Card Pack", textConcatDoremi, true)
+        //                                    .AddField("Hazuki Card Pack", textConcatHazuki, true)
+        //                                    .AddField("Aiko Card Pack", textConcatAiko, true)
+        //                                    .AddField("Onpu Card Pack", textConcatOnpu, true)
+        //                                    .AddField("Momoko Card Pack", textConcatMomoko, true)
+        //                                    .Build());
+        //                                    response = await NextMessageAsync(timeout: timeoutDuration);
+        //                                }
+        //                                else
+        //                                {
+        //                                    if (response.Content.ToString().ToLower() == "back")
+        //                                    {
+        //                                        stepProcess = 3;
+        //                                        newStep = true;
+        //                                    }
+        //                                    else if (!listCardPackCategory.Contains(response.Content.ToString().ToLower(), StringComparer.OrdinalIgnoreCase) ||
+        //                                      !response.Content.ToString().ToLower().Contains(" "))
+        //                                    {
+        //                                        msg = await ReplyAsync(":x: Please re-enter the proper card pack selection.",
+        //                                        embed: new EmbedBuilder()
+        //                                        .WithTitle("Step 4 - Select Your Available Card Pack")
+        //                                        .WithDescription($"Type the **card pack & category** selection from yours. Example: **doremi normal**.\n" +
+        //                                        $"Type **back** to re-select other card from {MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}.")
+        //                                        .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+        //                                        .WithColor(Config.Doremi.EmbedColor)
+        //                                        .AddField("Doremi Card Pack", textConcatDoremi, true)
+        //                                        .AddField("Hazuki Card Pack", textConcatHazuki, true)
+        //                                        .AddField("Aiko Card Pack", textConcatAiko, true)
+        //                                        .AddField("Onpu Card Pack", textConcatOnpu, true)
+        //                                        .AddField("Momoko Card Pack", textConcatMomoko, true)
+        //                                        .Build());
+        //                                        response = await NextMessageAsync(timeout: timeoutDuration);
+        //                                    }
+        //                                    else
+        //                                    {
+        //                                        stepProcess = 5;
+        //                                        string[] splittedChoice = response.Content.ToString().ToLower().Split(" ");
+        //                                        selectionYourCardPack = splittedChoice[0]; selectionYourCardCategory = splittedChoice[1];
+        //                                        newStep = true;
+        //                                    }
+        //                                }
+        //                            }
+
+        //                        }
+        //                        else if (stepProcess == 5)
+        //                        {
+        //                            //select other user card id that you want to trade.
+        //                            //your card id data
+        //                            var yourData = JObject.Parse(File.ReadAllText(
+        //                                $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{Convert.ToUInt64(clientId)}.json"
+        //                                ));
+        //                            var jYourData = (JArray)(yourData[selectionYourCardPack][selectionYourCardCategory]);
+        //                            //other user card id data
+        //                            var otherUserData = JObject.Parse(File.ReadAllText(
+        //                                $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{selectionUserId}.json"
+        //                                ));
+        //                            var jOtherUserData = (JArray)(otherUserData[selectionYourCardPack][selectionYourCardCategory]);
+
+        //                            //available list
+        //                            var arrList = jOtherUserData;
+        //                            var arrYourList = jYourData; int founded = 0;
+        //                            //remove the card that you already have
+        //                            for (int i = 0; i < arrYourList.Count; i++)
+        //                            {
+        //                                founded = 0;
+        //                                for (int j = 0; j < arrList.Count; j++)
+        //                                {
+        //                                    if (arrYourList[i].ToString().ToLower() == arrList[j].ToString().ToLower())
+        //                                    {
+        //                                        founded = 1;
+        //                                        j = arrList.Count;
+        //                                    }
+        //                                }
+        //                                if (founded == 0)
+        //                                    arrUserCardList.Add(arrYourList[i].ToString());
+        //                            }
+
+        //                            pageContent = TradingCardCore.printTradeCardListTemplate(selectionYourCardPack, selectionYourCardCategory,
+        //                                jObjTradingCardList, arrUserCardList);
+        //                            var pagerYourCardList = new PaginatedMessage
+        //                            {
+        //                                Pages = pageContent,
+        //                                Color = Config.Doremi.EmbedColor,
+        //                                Options = pao
+        //                            };
+
+        //                            //end available list
+
+        //                            try
+        //                            {
+        //                                await Context.Channel.DeleteMessageAsync(response.Id);
+        //                                await Context.Channel.DeleteMessageAsync(msg.Id);
+        //                            }
+        //                            catch
+        //                            {
+
+        //                            }
+        //                            try
+        //                            {
+        //                                await Context.Channel.DeleteMessageAsync(msg2.Id);
+        //                            }
+        //                            catch
+        //                            {
+
+        //                            }
+
+        //                            if (newStep)
+        //                            {
+        //                                newStep = false;
+        //                                if (arrUserCardList.Count <= 0)
+        //                                {
+        //                                    msg = await ReplyAsync(embed: new EmbedBuilder()
+        //                                    .WithTitle("Step 5 - Card Id Selection")
+        //                                    .WithDescription($":x: Sorry, there are no **{GlobalFunctions.UppercaseFirst(selectionYourCardPack)} {GlobalFunctions.UppercaseFirst(selectionYourCardCategory)}** card that you can choose.\n" +
+        //                                        "Type **back** to select other card pack.")
+        //                                    .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+        //                                    .WithColor(Config.Doremi.EmbedColor)
+        //                                    .Build());
+        //                                    response = await NextMessageAsync(timeout: timeoutDuration);
+        //                                }
+        //                                else
+        //                                {
+        //                                    msg = await ReplyAsync(embed: new EmbedBuilder()
+        //                                    .WithTitle($"Step 5 - {GlobalFunctions.UppercaseFirst(selectionYourCardPack)} {GlobalFunctions.UppercaseFirst(selectionYourCardCategory)} Card Id Selection")
+        //                                    .WithDescription($"Type the **card id** selection from yours. Example: **do001**.\n" +
+        //                                    $"Type **back** to select other card pack.")
+        //                                    .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+        //                                    .WithColor(Config.Doremi.EmbedColor)
+        //                                    .Build());
+        //                                    msg2 = await PagedReplyAsync(pagerYourCardList);
+        //                                    response = await NextMessageAsync(timeout: timeoutDuration);
+        //                                }
+
+        //                            }
+        //                            else
+        //                            {
+        //                                if (response.Content.ToString().ToLower() == "back")
+        //                                {
+        //                                    stepProcess = 4;
+        //                                    newStep = true;
+        //                                }
+        //                                else if (arrUserCardList.Count <= 0)
+        //                                {
+        //                                    msg = await ReplyAsync(embed: new EmbedBuilder()
+        //                                        .WithTitle("Step 5 - Card Id Selection")
+        //                                        .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+        //                                        .WithDescription($":x: Sorry, there are no **{GlobalFunctions.UppercaseFirst(selectionYourCardPack)} {GlobalFunctions.UppercaseFirst(selectionYourCardCategory)}** card that you can choose.\n" +
+        //                                        "Type **back** to select other card pack.")
+        //                                        .Build());
+        //                                    response = await NextMessageAsync(timeout: timeoutDuration);
+        //                                }
+        //                                else if (!arrUserCardList.Contains(response.Content.ToString(), StringComparer.Ordinal))
+        //                                {
+        //                                    await ReplyAndDeleteAsync(":x: Please re-enter the correct **card id.**", timeout: TimeSpan.FromSeconds(10));
+        //                                    msg2 = await PagedReplyAsync(pagerYourCardList);
+        //                                    response = await NextMessageAsync(timeout: timeoutDuration);
+        //                                }
+        //                                else
+        //                                {
+        //                                    stepProcess = 6; newStep = true;
+        //                                    selectionYourCardChoiceId = response.Content.ToString();
+        //                                }
+        //                            }
+        //                        }
+        //                        else if (stepProcess == 6)
+        //                        {
+        //                            try
+        //                            {
+        //                                await Context.Channel.DeleteMessageAsync(response.Id);
+        //                                await Context.Channel.DeleteMessageAsync(msg.Id);
+        //                            }
+        //                            catch
+        //                            {
+
+        //                            }
+        //                            try
+        //                            {
+        //                                await Context.Channel.DeleteMessageAsync(msg2.Id);
+        //                            }
+        //                            catch
+        //                            {
+
+        //                            }
+
+        //                            EmbedBuilder eb = new EmbedBuilder()
+        //                            .WithTitle("Step 6 - Review Your Trade")
+        //                            .WithDescription($"You will trade with {MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}. You can see your trade information review below.\n" +
+        //                            $"Type **confirm** or **accept** to confirm the trade.\n" +
+        //                            $"Type **back** to select other card pack.\n" +
+        //                            $"Type **cancel** to cancel your trading process.")
+        //                            .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+        //                            //other user:
+        //                            .AddField($"You will receive:",
+        //                            $"-Card Pack: " +
+        //                            $"{GlobalFunctions.UppercaseFirst(selectionOtherUserCardPack)} {GlobalFunctions.UppercaseFirst(selectionOtherUserCardCategory)}\n" +
+        //                            $"-Card Name: " +
+        //                            $"**[{selectionOtherUserCardChoiceId} - " +
+        //                            $"{TradingCardCore.getCardProperty(selectionOtherUserCardPack, selectionOtherUserCardCategory, selectionOtherUserCardChoiceId, "name")}](" +
+        //                            $"{TradingCardCore.getCardProperty(selectionOtherUserCardPack, selectionOtherUserCardCategory, selectionOtherUserCardChoiceId, "url")})**")
+        //                            //yours
+        //                            .AddField($"You will send:",
+        //                            $"-Card Pack: " +
+        //                            $"{GlobalFunctions.UppercaseFirst(selectionYourCardPack)} {GlobalFunctions.UppercaseFirst(selectionYourCardCategory)}\n" +
+        //                            $"-Card Name: " +
+        //                            $"**[{selectionYourCardChoiceId} - " +
+        //                            $"{TradingCardCore.getCardProperty(selectionYourCardPack, selectionYourCardCategory, selectionYourCardChoiceId, "name")}](" +
+        //                            $"{TradingCardCore.getCardProperty(selectionYourCardPack, selectionYourCardCategory, selectionYourCardChoiceId, "url")})**")
+        //                            .WithColor(Config.Doremi.EmbedColor);
+
+        //                            //review the trade
+        //                            if (newStep)
+        //                            {
+        //                                newStep = false;
+        //                                msg = await ReplyAsync(embed: eb.Build());
+        //                                response = await NextMessageAsync(timeout: timeoutDuration);
+        //                            }
+        //                            else
+        //                            {
+        //                                if (response.Content.ToString().ToLower() == "back")
+        //                                {
+        //                                    stepProcess = 5;
+        //                                    newStep = true;
+        //                                }
+        //                                else if (response.Content.ToString().ToLower() != "accept" &&
+        //                                  response.Content.ToString().ToLower() != "confirm")
+        //                                {
+        //                                    msg = await ReplyAsync(":x: Please type with the valid choice: **accept/confirm/back/exit**",
+        //                                        embed: eb.Build());
+        //                                    response = await NextMessageAsync(timeout: timeoutDuration);
+        //                                }
+        //                                else
+        //                                {
+        //                                    await ReplyAsync(embed: new EmbedBuilder()
+        //                                        .WithTitle("✅ Trade Offer has been sent succesfully!")
+        //                                        .WithColor(Config.Doremi.EmbedColor)
+        //                                        .WithDescription($"Your trade offer has been sent to " +
+        //                                        $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}!\nThank you for using {TradingCardCore.Doremi.embedName}.")
+        //                                        .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+        //                                        .WithThumbnailUrl(TradingCardCore.Doremi.emojiOk)
+        //                                        .Build());
+
+        //                                    await ReplyAsync($"You have a new card trade offer, {MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}.\n" +
+        //                                        $"Please use **{Config.Doremi.PrefixParent[0]}card trade process** to process your trade offer.");
+
+        //                                    //save to user
+        //                                    if (selectionOtherUserCardCategory.Contains("ojamajos"))
+        //                                        selectionOtherUserCardChoiceId = $"{selectionOtherUserCardPack} {selectionOtherUserCardChoiceId}";
+        //                                    if (selectionYourCardCategory.Contains("ojamajos"))
+        //                                        selectionYourCardChoiceId = $"{selectionYourCardPack} {selectionYourCardChoiceId}";
+
+        //                                    string[] parameterNames = new string[] { selectionOtherUserCardChoiceId, selectionYourCardChoiceId };
+        //                                    JArray jarrayObj = new JArray();
+        //                                    foreach (string parameterName in parameterNames)
+        //                                    {
+        //                                        jarrayObj.Add(parameterName);
+        //                                    }
+
+        //                                    string otherUserDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{selectionUserId}.json";
+        //                                    var JUserData = JObject.Parse(File.ReadAllText(otherUserDataDirectory));
+        //                                    ((JObject)JUserData["trading_queue"]).Add(clientId.ToString(), new JArray(jarrayObj));
+
+
+        //                                    //JArray item = (JArray)arrInventory[parent][spawnedCardCategory];
+        //                                    //item.Add(spawnedCardId);
+        //                                    File.WriteAllText(otherUserDataDirectory, JUserData.ToString());
+        //                                    isTrading = false;
+        //                                    Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = false;
+        //                                    return Ok();
+        //                                }
+        //                            }
+        //                        }
+
+        //                        //What card pack do you want to trade? select with number/the name
+
+        //                        //Please type the card id that you want to trade
+
+        //                        //Please type the 
+        //                        //
+        //                    }
+        //                }
+        //                catch (Exception e)
+        //                {
+        //                    Console.WriteLine(e.ToString());
+        //                }
+
+        //            }
+
+        //        }
+
+        //    }
+        //    else
+        //    {
+        //        await ReplyAndDeleteAsync(null, embed: new EmbedBuilder()
+        //        .WithColor(Config.Doremi.EmbedColor)
+        //        .WithDescription($":x: I'm sorry, you are still running the trade command. Please finish it first.")
+        //        .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build(), timeout: TimeSpan.FromSeconds(10));
+        //    }
+
+        //    return Ok();
+
+        //    /*json format:
+        //     * "trading_queue": {
+        //        "01929183481": ["do","on"]
+        //    }
+        //     */
+        //}
+
+        //[Command("trade process", RunMode = RunMode.Async), Summary("Process the trade offer of ojamajos trading card.")]
+        //public async Task<RuntimeResult> trading_card_queue_process()
+        //{
+        //    await ReplyAndDeleteAsync(null, embed: new EmbedBuilder()
+        //            .WithColor(Config.Doremi.EmbedColor)
+        //            .WithDescription($":x: Sorry, trade command is not available for now.")
+        //            .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build(), timeout: TimeSpan.FromSeconds(10));
+
+        //    return Ok();
+
+        //    var guildId = Context.Guild.Id;
+        //    var clientId = Context.User.Id;
+        //    string userFolderDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}";
+        //    string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+
+        //    if (!Config.Doremi.isRunningInteractive.ContainsKey(Context.User.Id.ToString()))
+        //        Config.Doremi.isRunningInteractive.Add(Context.User.Id.ToString(), false);
+
+        //    if (!Config.Doremi.isRunningInteractive[Context.User.Id.ToString()])
+        //    {
+        //        if (!File.Exists(playerDataDirectory)) //not registered yet
+        //        {
+        //            await ReplyAndDeleteAsync(null, embed: new EmbedBuilder()
+        //            .WithColor(Config.Doremi.EmbedColor)
+        //            .WithDescription($"I'm sorry, please register yourself first with **{Config.Doremi.PrefixParent[0]}card register** command.")
+        //            .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build(), timeout: TimeSpan.FromSeconds(10));
+        //            return Ok();
+        //        }
+
+        //        var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
+
+        //        var playerData = JObject.Parse(File.ReadAllText(playerDataDirectory));
+        //        int fileCount = Directory.GetFiles(userFolderDirectory).Length;
+
+        //        if (fileCount <= 1)
+        //        {
+        //            await ReplyAndDeleteAsync(":x: Sorry, server need to have more than 1 user that register the trading card data.",
+        //                timeout: TimeSpan.FromSeconds(10));
+        //            return Ok();
+        //        }
+        //        else
+        //        {
+        //            try
+        //            {
+        //                //start read all user id
+        //                List<string> arrUserId = new List<string>();
+        //                List<string> pageContent = new List<string>();
+        //                List<string> pageContentUserList = new List<string>();
+
+        //                string titleUserList = $"**Step 1 - Trade Process List Selection. Select with numbers.**\n";
+        //                string tempValUserList = titleUserList;
+
+        //                //list all users
+        //                var userList = (JObject)playerData["trading_queue"];
+
+        //                if (userList.Count <= 0)
+        //                {
+        //                    await ReplyAsync(":x: There are no card trade that you can process.");
+        //                    return Ok();
+        //                }
+
+        //                IList<JToken> objUserList = userList;
+        //                int currentIndex = 0;
+        //                for (int i = 0; i < userList.Count; i++)
+        //                {
+        //                    var key = (JProperty)objUserList[i];
+
+        //                    tempValUserList += $"**{i + 1}.** {MentionUtils.MentionUser(Convert.ToUInt64(key.Name))}\n";
+        //                    arrUserId.Add(key.Name);
+
+        //                    if (currentIndex < 14) currentIndex++;
+        //                    else
+        //                    {
+        //                        pageContentUserList.Add(tempValUserList);
+        //                        currentIndex = 0;
+        //                        tempValUserList = titleUserList;
+        //                    }
+
+        //                    if (i == userList.Count - 1) pageContentUserList.Add(tempValUserList);
+
+        //                }
+
+        //                //selection variables
+        //                //other users
+        //                string selectionUserId = ""; string selectionOtherUserCardChoiceId = ""; string selectionYourCardChoiceId = "";
+        //                string selectionOtherUserCardPack = ""; string selectionOtherUserCardCategory = "";
+        //                string selectionYourCardPack = ""; string selectionYourCardCategory = "";
+
+        //                //DirectoryInfo d = new DirectoryInfo(userFolderDirectory);//Assuming Test is your Folder
+        //                //FileInfo[] Files = d.GetFiles("*.json"); //Getting Text files
+
+        //                IUserMessage msg; IUserMessage msg2;
+        //                //user selection
+        //                string titleUserSelection = $"**Step 1 - Select the trade process from a user with numbers**\n";
+        //                string tempVal = titleUserSelection;
+
+        //                Boolean isTrading = true;
+        //                var timeoutDuration = TimeSpan.FromSeconds(60);
+        //                string replyTimeout = ":stopwatch: I'm sorry, but you have reach your timeout. " +
+        //                    "Please use the `card trade` command again to retry the trade process.";
+        //                int stepProcess = 1;//0/1:select the user,
+        //                                    //2:review process
+        //                Boolean newStep = true;
+        //                //select user
+        //                msg = await ReplyAsync(embed: new EmbedBuilder()
+        //                    .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+        //                    .WithDescription($"Welcome to {TradingCardCore.Doremi.embedName}. " +
+        //                    $"Here you can process your trade offer that sent by someone. " +
+        //                    $"You can type **cancel**/**exit** anytime to cancel the trade process.")
+        //                    .WithColor(Config.Doremi.EmbedColor)
+        //                    .Build());
+
+        //                PaginatedAppearanceOptions pao = new PaginatedAppearanceOptions();
+        //                pao.JumpDisplayOptions = JumpDisplayOptions.Never;
+        //                pao.DisplayInformationIcon = false;
+
+        //                var pager = new PaginatedMessage
+        //                {
+        //                    Pages = pageContentUserList,
+        //                    Color = Config.Doremi.EmbedColor,
+        //                    Options = pao
+        //                };
+
+        //                msg2 = await PagedReplyAsync(pageContentUserList);
+        //                Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = true;
+        //                var response = await NextMessageAsync(timeout: timeoutDuration);
+        //                newStep = false;
+
+        //                while (isTrading)
+        //                {
+        //                    try
+        //                    {
+        //                        var checkNull = response.Content.ToLower().ToString();
+        //                    }
+        //                    catch
+        //                    {
+        //                        await ReplyAndDeleteAsync(replyTimeout, timeout: TimeSpan.FromSeconds(10));
+        //                        isTrading = false;
+        //                        Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = false;
+        //                        return Ok();
+        //                    }
+
+        //                    if (response.Content.ToString().ToLower() == "cancel" ||
+        //                        response.Content.ToString().ToLower() == "exit")
+        //                    {
+        //                        try
+        //                        {
+        //                            await Context.Channel.DeleteMessageAsync(response.Id);
+        //                            await Context.Channel.DeleteMessageAsync(msg);
+        //                        }
+        //                        catch { }
+        //                        try
+        //                        {
+        //                            await Context.Channel.DeleteMessageAsync(msg2);
+        //                        }
+        //                        catch { }
+
+        //                        await ReplyAsync(embed: new EmbedBuilder()
+        //                            .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+        //                            .WithDescription($"You have cancel your trade process. Thank you for using the {TradingCardCore.Doremi.embedName}")
+        //                            .WithColor(Config.Doremi.EmbedColor)
+        //                            .Build());
+        //                        isTrading = false;
+        //                        Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = false;
+        //                        return Ok();
+        //                    }
+        //                    else if (stepProcess == 1)
+        //                    {
+        //                        try
+        //                        {
+        //                            await Context.Channel.DeleteMessageAsync(response.Id);
+        //                            await Context.Channel.DeleteMessageAsync(msg);
+        //                        }
+        //                        catch { }
+        //                        try
+        //                        {
+        //                            await Context.Channel.DeleteMessageAsync(msg2);
+        //                        }
+        //                        catch { }
+
+        //                        //select user
+        //                        var isNumeric = int.TryParse(response.Content.ToString().ToLower(), out int n);
+        //                        if (newStep)
+        //                        {
+        //                            newStep = false;
+        //                            msg2 = await PagedReplyAsync(pageContentUserList);
+        //                            response = await NextMessageAsync(timeout: timeoutDuration);
+        //                        }
+        //                        else
+        //                        {
+        //                            if (!isNumeric)
+        //                            {
+        //                                stepProcess = 1;
+        //                                selectionUserId = "";
+        //                                await ReplyAndDeleteAsync(":x: Please re-type the proper number selection.",
+        //                                    timeout: TimeSpan.FromSeconds(10));
+        //                                //await PagedReplyAsync(pageContentUserList);
+        //                                response = await NextMessageAsync(timeout: timeoutDuration);
+        //                            }
+        //                            //array length:2[0,1], selected:2
+        //                            else if (Convert.ToInt32(response.Content.ToLower().ToString()) <= 0 ||
+        //                                Convert.ToInt32(response.Content.ToString().ToLower()) > arrUserId.Count)
+        //                            {
+        //                                stepProcess = 1;
+        //                                selectionUserId = "";
+        //                                await ReplyAndDeleteAsync(":x: That number choice is not on the list. Please re-type the proper number selection.",
+        //                                    timeout: TimeSpan.FromSeconds(10));
+        //                                msg2 = await PagedReplyAsync(pageContentUserList);
+        //                                response = await NextMessageAsync(timeout: timeoutDuration);
+        //                            }
+        //                            else
+        //                            {
+        //                                stepProcess = 2; newStep = true;
+        //                                selectionUserId = arrUserId[Convert.ToInt32(response.Content.ToString()) - 1];
+        //                                var selectedUserData = (JArray)userList[selectionUserId];
+        //                                //will be send--
+        //                                selectionYourCardChoiceId = selectedUserData[0].ToString();
+
+        //                                if (selectionYourCardChoiceId.Contains(" "))
+        //                                {//ojamajos category
+        //                                    //example: hazuki ojt...
+        //                                    string[] splittedYourChoice = selectionYourCardChoiceId.Split(" ");
+        //                                    selectionYourCardPack = splittedYourChoice[0];
+        //                                    selectionYourCardChoiceId = splittedYourChoice[1];
+        //                                }
+        //                                else
+        //                                    selectionYourCardPack = TradingCardCore.getCardParent(selectionYourCardChoiceId);
+
+        //                                selectionYourCardCategory = TradingCardCore.getCardCategory(selectionYourCardChoiceId);
+
+        //                                //will be received
+        //                                selectionOtherUserCardChoiceId = selectedUserData[1].ToString();
+
+        //                                if (selectionOtherUserCardChoiceId.Contains(" "))
+        //                                {//ojamajos category
+        //                                    //example: hazuki ojt...
+        //                                    string[] splittedOtherChoice = selectionOtherUserCardChoiceId.Split(" ");
+        //                                    selectionOtherUserCardPack = splittedOtherChoice[0];
+        //                                    selectionOtherUserCardChoiceId = splittedOtherChoice[1];
+        //                                }
+        //                                else
+        //                                    selectionOtherUserCardPack = TradingCardCore.getCardParent(selectionOtherUserCardChoiceId);
+
+        //                                selectionOtherUserCardCategory = TradingCardCore.getCardCategory(selectionOtherUserCardChoiceId);
+
+        //                            }
+        //                        }
+        //                    }
+        //                    else if (stepProcess == 2)
+        //                    {
+        //                        try
+        //                        {
+        //                            await Context.Channel.DeleteMessageAsync(response.Id);
+        //                            await Context.Channel.DeleteMessageAsync(msg);
+        //                        }
+        //                        catch { }
+        //                        try
+        //                        {
+        //                            await Context.Channel.DeleteMessageAsync(msg2);
+        //                        }
+        //                        catch { }
+
+        //                        //check if your card/other user card still exists on the inventory or not
+        //                        var JCheckUserData = JObject.Parse(File.ReadAllText(playerDataDirectory));
+        //                        string otherUserDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/" +
+        //                            $"{selectionUserId}.json";
+        //                        var JCheckOtherUserData = JObject.Parse(File.ReadAllText(otherUserDataDirectory));
+
+        //                        JArray notRequiredArrayYours = JArray.Parse(JCheckUserData[selectionYourCardPack][selectionYourCardCategory].ToString());
+        //                        bool notExistsYours = notRequiredArrayYours.Any(t => t.Value<string>() == selectionYourCardChoiceId);//check yours have the cards in inventory
+        //                        JArray requiredArrayYours = JArray.Parse(JCheckUserData[selectionOtherUserCardPack][selectionOtherUserCardCategory].ToString());
+        //                        bool existsYours = requiredArrayYours.Any(t => t.Value<string>() == selectionOtherUserCardChoiceId);//check yours for duplicates
+
+        //                        JArray notRequiredArrayOtherUser = JArray.Parse(JCheckOtherUserData[selectionOtherUserCardPack][selectionOtherUserCardCategory].ToString());
+        //                        bool notExistsOtherUser = notRequiredArrayOtherUser.Any(t => t.Value<string>() == selectionOtherUserCardChoiceId);//check others have the cards in inventory
+        //                        JArray requiredArrayOthers = JArray.Parse(JCheckOtherUserData[selectionYourCardPack][selectionYourCardCategory].ToString());
+        //                        bool existsOthers = requiredArrayOthers.Any(t => t.Value<string>() == selectionYourCardChoiceId);//check others for duplicates
+
+        //                        if (!notExistsYours || !notExistsOtherUser)
+        //                        {//check if card still exists/not
+        //                            await ReplyAsync(embed: new EmbedBuilder()
+        //                            .WithTitle("🗑️ Trade Process Cancelled")
+        //                            .WithColor(Config.Doremi.EmbedColor)
+        //                            .WithDescription($"Your trade with " +
+        //                            $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))} has been cancelled because one of you don't have the offered card anymore.\n" +
+        //                            $"Please use the **{Config.Doremi.PrefixParent[0]}card trade process** again to process other card offer.")
+        //                            .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+        //                            .Build());
+        //                            isTrading = false;
+        //                            //save the file
+        //                            string yourUserDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+        //                            var JUserData = JObject.Parse(File.ReadAllText(yourUserDataDirectory));
+        //                            ((JObject)JUserData["trading_queue"]).Remove(selectionUserId);
+        //                            File.WriteAllText(yourUserDataDirectory, JUserData.ToString());
+        //                            isTrading = false;
+        //                            Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = false;
+        //                            return Ok();
+        //                        }
+        //                        else if (existsYours || existsOthers)
+        //                        {//check for duplicates
+        //                            await ReplyAsync(embed: new EmbedBuilder()
+        //                            .WithTitle("🗑️ Trade Process Cancelled")
+        //                            .WithColor(Config.Doremi.EmbedColor)
+        //                            .WithDescription($"Your trade with " +
+        //                            $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))} has been cancelled because one of you already have the same card offer that being sent.\n" +
+        //                            $"Please use the **{Config.Doremi.PrefixParent[0]}card trade process** again to process another card offer.")
+        //                            .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+        //                            .Build());
+        //                            //save the file
+        //                            string yourUserDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+        //                            var JUserData = JObject.Parse(File.ReadAllText(yourUserDataDirectory));
+        //                            ((JObject)JUserData["trading_queue"]).Remove(selectionUserId);
+        //                            File.WriteAllText(yourUserDataDirectory, JUserData.ToString());
+        //                            isTrading = false;
+        //                            Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = false;
+        //                            return Ok();
+        //                        }
+
+        //                        EmbedBuilder eb = new EmbedBuilder()
+        //                        .WithTitle("Step 2 - Review Your Trade")
+        //                        .WithDescription($"You can see your trade information review below from {MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}.\n" +
+        //                        $"Type **confirm** or **accept** to confirm the trade.\n" +
+        //                        $"Type **reject** to reject the trade.\n" +
+        //                        $"Type **back** to select other card pack.\n" +
+        //                        $"Type **exit** or **cancel** to exit the card trade process.")
+        //                        .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+        //                        //other user:
+        //                        .AddField($"You will receive:",
+        //                        $"-Card Pack: " +
+        //                        $"{GlobalFunctions.UppercaseFirst(selectionOtherUserCardPack)} {GlobalFunctions.UppercaseFirst(selectionOtherUserCardCategory)}\n" +
+        //                        $"-Card Name: " +
+        //                        $"**[{selectionOtherUserCardChoiceId} - " +
+        //                        $"{TradingCardCore.getCardProperty(selectionOtherUserCardPack, selectionOtherUserCardCategory, selectionOtherUserCardChoiceId, "name")}](" +
+        //                        $"{TradingCardCore.getCardProperty(selectionOtherUserCardPack, selectionOtherUserCardCategory, selectionOtherUserCardChoiceId, "url")})**")
+        //                        //yours
+        //                        .AddField($"You will send:",
+        //                        $"-Card Pack: " +
+        //                        $"{GlobalFunctions.UppercaseFirst(selectionYourCardPack)} {GlobalFunctions.UppercaseFirst(selectionYourCardCategory)}\n" +
+        //                        $"-Card Name: " +
+        //                        $"**[{selectionYourCardChoiceId} - " +
+        //                        $"{TradingCardCore.getCardProperty(selectionYourCardPack, selectionYourCardCategory, selectionYourCardChoiceId, "name")}](" +
+        //                        $"{TradingCardCore.getCardProperty(selectionYourCardPack, selectionYourCardCategory, selectionYourCardChoiceId, "url")})**")
+        //                        .WithColor(Config.Doremi.EmbedColor);
+
+        //                        //review the trade
+        //                        if (newStep)
+        //                        {
+        //                            newStep = false;
+        //                            msg = await ReplyAsync(embed: eb.Build());
+        //                            response = await NextMessageAsync(timeout: timeoutDuration);
+        //                        }
+        //                        else
+        //                        {
+        //                            if (response.Content.ToString().ToLower() == "back")
+        //                            {
+        //                                stepProcess = 1;
+        //                                newStep = true;
+        //                            }
+        //                            else if (response.Content.ToString().ToLower() != "accept" &&
+        //                              response.Content.ToString().ToLower() != "confirm" &&
+        //                              response.Content.ToString().ToLower() != "reject")
+        //                            {
+        //                                msg = await ReplyAsync(":x: Please type with the valid choice: **accept/confirm/reject**.",
+        //                                    embed: eb.Build());
+        //                                response = await NextMessageAsync(timeout: timeoutDuration);
+        //                            }
+        //                            else if (response.Content.ToString().ToLower() == "reject")
+        //                            {
+        //                                await ReplyAsync(embed: new EmbedBuilder()
+        //                                    .WithTitle(":no_entry_sign: Trade Process Rejected")
+        //                                    .WithColor(Config.Doremi.EmbedColor)
+        //                                    .WithDescription($"You have reject the card trade offer from " +
+        //                                    $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}.\nThank you for using {TradingCardCore.Doremi.embedName}.")
+        //                                    .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+        //                                    .Build());
+
+        //                                //save the file
+        //                                string yourUserDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+        //                                var JUserData = JObject.Parse(File.ReadAllText(yourUserDataDirectory));
+        //                                ((JObject)JUserData["trading_queue"]).Remove(selectionUserId);
+        //                                File.WriteAllText(yourUserDataDirectory, JUserData.ToString());
+        //                                isTrading = false;
+        //                                Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = false;
+        //                                return Ok();
+        //                            }
+        //                            else
+        //                            {
+        //                                await ReplyAsync(embed: new EmbedBuilder()
+        //                                    .WithTitle("✅ Trade Process Completed")
+        //                                    .WithColor(Config.Doremi.EmbedColor)
+        //                                    .WithDescription($"You have successfully accepted the trade offer from " +
+        //                                    $"{MentionUtils.MentionUser(Convert.ToUInt64(selectionUserId))}.\n" +
+        //                                    $"Thank you for using {TradingCardCore.Doremi.embedName}.")
+        //                                    .WithAuthor(TradingCardCore.Doremi.embedName, Config.Doremi.EmbedAvatarUrl)
+        //                                    .WithThumbnailUrl(TradingCardCore.Doremi.emojiOk)
+        //                                    .Build());
+
+        //                                //save to yours
+        //                                string yourUserDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+        //                                var JYourData = JObject.Parse(File.ReadAllText(yourUserDataDirectory));
+        //                                //remove from yours
+        //                                JArray arrInventoryYoursRemove = JArray.Parse(JYourData[selectionYourCardPack][selectionYourCardCategory].ToString());
+        //                                for (int i = 0; i < arrInventoryYoursRemove.Count; i++)
+        //                                {
+        //                                    if (arrInventoryYoursRemove[i].ToString() == selectionYourCardChoiceId)
+        //                                        arrInventoryYoursRemove[i].Remove();
+        //                                }
+        //                                JYourData[selectionYourCardPack][selectionYourCardCategory] = arrInventoryYoursRemove;
+
+        //                                //add to yours
+        //                                JArray arrInventoryYoursAdd = JArray.Parse(JYourData[selectionOtherUserCardPack][selectionOtherUserCardCategory].ToString());
+        //                                arrInventoryYoursAdd.Add(selectionOtherUserCardChoiceId);
+        //                                JYourData[selectionOtherUserCardPack][selectionOtherUserCardCategory] = arrInventoryYoursAdd;
+        //                                //remove trading_queue
+        //                                ((JObject)JYourData["trading_queue"]).Remove(selectionUserId);
+        //                                File.WriteAllText(yourUserDataDirectory, JYourData.ToString());
+        //                                //==================================================================
+        //                                //save to other users
+        //                                var JOtherUserData = JObject.Parse(File.ReadAllText(otherUserDataDirectory));
+        //                                ((JObject)JOtherUserData["trading_queue"]).Remove(selectionUserId);
+        //                                //remove from others
+        //                                JArray arrInventoryOthersRemove = JArray.Parse(JOtherUserData[selectionOtherUserCardPack][selectionOtherUserCardCategory].ToString());
+        //                                for (int i = 0; i < arrInventoryOthersRemove.Count; i++)
+        //                                {
+        //                                    if (arrInventoryOthersRemove[i].ToString() == selectionOtherUserCardChoiceId)
+        //                                        arrInventoryOthersRemove[i].Remove();
+        //                                }
+        //                                JOtherUserData[selectionOtherUserCardPack][selectionOtherUserCardCategory] = arrInventoryOthersRemove;
+
+        //                                //add to others
+        //                                JArray arrInventoryOthersAdd = JArray.Parse(JOtherUserData[selectionYourCardPack][selectionYourCardCategory].ToString());
+        //                                arrInventoryOthersAdd.Add(selectionYourCardChoiceId);
+        //                                JOtherUserData[selectionYourCardPack][selectionYourCardCategory] = arrInventoryOthersAdd;
+        //                                File.WriteAllText(otherUserDataDirectory, JOtherUserData.ToString());
+
+        //                                isTrading = false;
+        //                                Config.Doremi.isRunningInteractive[Context.User.Id.ToString()] = false;
+        //                                return Ok();
+
+        //                            }
+        //                        }
+        //                    }
+        //                }
+        //            }
+        //            catch (Exception e)
+        //            {
+        //                //Console.WriteLine(e.ToString());
+        //            }
+        //        }
+
+        //    }
+        //    else
+        //    {
+        //        await ReplyAndDeleteAsync(null, embed: new EmbedBuilder()
+        //        .WithColor(Config.Doremi.EmbedColor)
+        //        .WithDescription($"I'm sorry, you're still running the card trade process. Please finish it first.")
+        //        .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build(), timeout: TimeSpan.FromSeconds(10));
+        //    }
+
+        //    return Ok();
+        //}
+
+        //[Command("trade fragment", RunMode = RunMode.Async), Summary("Trade fragment pieces with any card.")]
+        //public async Task<RuntimeResult> trade_fragment(string cardId="")
+        //{
+        //    return Ok();
+        //    var guildId = Context.Guild.Id;
+        //    var userId = Context.User.Id;
+
+        //    var userData = UserTradingCardDataCore.getUserData(userId);
+        //    var cardCategory = TradingCardCore.getCardCategory(cardId);
+        //    int userFragmentPoint = Convert.ToInt32(userData[DBM_User_Trading_Card_Data.Columns.fragment_point]);
+
+        //    if (cardId == "")
+        //    {
+        //        await ReplyAndDeleteAsync("Please enter the Card Id that you want to exchange. " +
+        //        $"You can see the list of the card that you want to exchange with **inventory command/" +
+        //        $"{Doremi.PrefixParent[0]}card inventory**.",
+        //        timeout: TimeSpan.FromSeconds(10));
+        //        return Ok();
+        //    } else if (TradingCardCore.checkUserHaveCard(userId, "doremi", cardId))
+        //    {
+        //        await ReplyAndDeleteAsync("Sorry, you already have that card.",
+        //        timeout: TimeSpan.FromSeconds(10));
+        //        return Ok();
+        //    } else if(userFragmentPoint <10 && cardCategory == "normal")
+        //    {
+        //        await ReplyAndDeleteAsync("Sorry, you need **10 fragment points** to trade normal card category.",
+        //        timeout: TimeSpan.FromSeconds(10));
+        //        return Ok();
+        //    }
+        //    else if (userFragmentPoint < 20 && cardCategory == "platinum")
+        //    {
+        //        await ReplyAndDeleteAsync("Sorry, you need **20 fragment points** to trade platinum card category.",
+        //        timeout: TimeSpan.FromSeconds(10));
+        //        return Ok();
+        //    }
+        //    else if (userFragmentPoint < 30 && cardCategory == "metal")
+        //    {
+        //        await ReplyAndDeleteAsync("Sorry, you need **20 fragment points** to trade metal card category.",
+        //        timeout: TimeSpan.FromSeconds(10));
+        //        return Ok();
+        //    }
+        //    else if (userFragmentPoint < 20 && cardCategory == "ojamajos")
+        //    {
+        //        await ReplyAndDeleteAsync("Sorry, you need **20 fragment points** to trade ojamajos card category.",
+        //        timeout: TimeSpan.FromSeconds(10));
+        //        return Ok();
+        //    }
+
+        //    int price = -10; //default price
+        //    switch (cardCategory)
+        //    {
+        //        case "platinum":
+        //            price = -20; break;
+        //        case "metal":
+        //            price = -30; break;
+        //        case "ojamajos":
+        //            price = -20; break;
+        //    }
+        //    //if (spawnedCardCategory == "ojamajos")
+        //    //{
+        //    //    //ojamajo card category
+        //    //    string query = $"SELECT * " +
+        //    //    $" FROM {DBM_Trading_Card_Data_Ojamajos.tableName} " +
+        //    //    $" WHERE {DBM_Trading_Card_Data_Ojamajos.Columns.id_card}=@{DBM_Trading_Card_Data_Ojamajos.Columns.id_card}";
+        //    //    Dictionary<string, object> columnFilter = new Dictionary<string, object>();
+        //    //    columnFilter[DBM_Trading_Card_Data_Ojamajos.Columns.id_card] = spawnedCardId;
+        //    //    var selectedCard = db.selectAll(query, columnFilter);
+        //    //    foreach (DataRow rows in selectedCard.Rows)
+        //    //    {
+        //    //        name = rows[DBM_Trading_Card_Data.Columns.name].ToString();
+        //    //        imgUrl = rows[DBM_Trading_Card_Data.Columns.url].ToString();
+        //    //        rank = rows[DBM_Trading_Card_Data.Columns.attr_0].ToString();
+        //    //        star = rows[DBM_Trading_Card_Data.Columns.attr_1].ToString();
+        //    //        point = rows[DBM_Trading_Card_Data.Columns.url].ToString();
+        //    //    }
+        //    //}
+        //    //else
+        //    //{
+        //    //    string query = $"SELECT * " +
+        //    //    $" FROM {DBM_Trading_Card_Data.tableName} " +
+        //    //    $" WHERE {DBM_Trading_Card_Data.Columns.id_card}=@{DBM_Trading_Card_Data.Columns.id_card}";
+        //    //    Dictionary<string, object> columnFilter = new Dictionary<string, object>();
+        //    //    columnFilter[DBM_Trading_Card_Data.Columns.id_card] = spawnedCardId;
+        //    //    var selectedCard = db.selectAll(query, columnFilter);
+        //    //    foreach (DataRow rows in selectedCard.Rows)
+        //    //    {
+        //    //        name = rows[DBM_Trading_Card_Data.Columns.name].ToString();
+        //    //        imgUrl = rows[DBM_Trading_Card_Data.Columns.url].ToString();
+        //    //        rank = rows[DBM_Trading_Card_Data.Columns.attr_0].ToString();
+        //    //        star = rows[DBM_Trading_Card_Data.Columns.attr_1].ToString();
+        //    //        point = rows[DBM_Trading_Card_Data.Columns.url].ToString();
+        //    //    }
+        //    //}
+
+        //    UserTradingCardDataCore.updateFragmentPoints(userId, price);
+
+        //}
 
         [Command("shop exclusive", RunMode = RunMode.Async), Summary("Open Card Shop Exclusive Menu.")]
         public async Task<RuntimeResult> openRoyalShopMenu()
@@ -5995,7 +6928,7 @@ namespace OjamajoBot.Module
                     {
                         case 1:
                             priceConfirmation = 30;
-                            messageTemp = await ReplyAsync("Type **confirm** to proceed with the purchase. Type **back** to go back to previous menu.",
+                            messageTemp = await ReplyAsync("Type **confirm** to proceed with the purchase/**back** to go back to previous menu/**exit** to exit the shop menu.",
                             embed: new EmbedBuilder()
                             .WithColor(Config.Doremi.EmbedColor)
                             .WithAuthor("Doremi Card Shop", Config.Doremi.EmbedAvatarUrl)
@@ -6009,7 +6942,7 @@ namespace OjamajoBot.Module
                         case 2:
                             priceConfirmation = 15;
                             messageTemp = await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
-                                "Type **confirm** to proceed with the purchase. Type **back** to go back to previous menu.",
+                                "Type **confirm** to proceed with the purchase/**back** to go back to previous menu/**exit** to exit the shop menu.",
                             embed: new EmbedBuilder()
                             .WithColor(Config.Doremi.EmbedColor)
                             .WithAuthor("Doremi Card Shop", Config.Doremi.EmbedAvatarUrl)
@@ -6024,7 +6957,7 @@ namespace OjamajoBot.Module
                         case 3:
                             priceConfirmation = 15;
                             messageTemp = await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
-                                "Type **confirm** to proceed with the purchase. Type **back** to go back to previous menu.",
+                                "Type **confirm** to proceed with the purchase/**back** to go back to previous menu/**exit** to exit the shop menu.",
                             embed: new EmbedBuilder()
                             .WithColor(Config.Doremi.EmbedColor)
                             .WithAuthor("Doremi Card Shop", Config.Doremi.EmbedAvatarUrl)
@@ -6039,7 +6972,7 @@ namespace OjamajoBot.Module
                         case 4:
                             priceConfirmation = 15;
                             messageTemp = await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
-                                "Type **confirm** to proceed with the purchase. Type **back** to go back to previous menu.",
+                                "Type **confirm** to proceed with the purchase/**back** to go back to previous menu/**exit** to exit the shop menu.",
                             embed: new EmbedBuilder()
                             .WithColor(Config.Doremi.EmbedColor)
                             .WithAuthor("Doremi Card Shop", Config.Doremi.EmbedAvatarUrl)
@@ -6054,7 +6987,7 @@ namespace OjamajoBot.Module
                         case 5:
                             priceConfirmation = 20;
                             messageTemp = await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
-                                "Type **confirm** to proceed with the purchase. Type **back** to go back to previous menu.",
+                                "Type **confirm** to proceed with the purchase/**back** to go back to previous menu/**exit** to exit the shop menu.",
                             embed: new EmbedBuilder()
                             .WithColor(Config.Doremi.EmbedColor)
                             .WithAuthor("Doremi Card Shop", Config.Doremi.EmbedAvatarUrl)
@@ -6075,7 +7008,7 @@ namespace OjamajoBot.Module
                         case 6:
                             priceConfirmation = 35;
                             messageTemp = await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
-                                "Type **confirm** to proceed with the purchase. Type **back** to go back to previous menu.",
+                                "Type **confirm** to proceed with the purchase/**back** to go back to previous menu/**exit** to exit the shop menu.",
                             embed: new EmbedBuilder()
                             .WithColor(Config.Doremi.EmbedColor)
                             .WithAuthor("Doremi Card Shop", Config.Doremi.EmbedAvatarUrl)
@@ -6095,7 +7028,7 @@ namespace OjamajoBot.Module
                         case 7:
                             priceConfirmation = 55;
                             messageTemp = await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
-                                "Type **confirm** to proceed with the purchase. Type **back** to go back to previous menu.",
+                                "Type **confirm** to proceed with the purchase/**back** to go back to previous menu/**exit** to exit the shop menu.",
                             embed: new EmbedBuilder()
                             .WithColor(Config.Doremi.EmbedColor)
                             .WithAuthor("Doremi Card Shop", Config.Doremi.EmbedAvatarUrl)
@@ -6116,7 +7049,7 @@ namespace OjamajoBot.Module
                         case 8:
                             priceConfirmation = 60;
                             messageTemp = await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
-                                "Type **confirm** to proceed with the purchase. Type **back** to go back to previous menu.",
+                                "Type **confirm** to proceed with the purchase/**back** to go back to previous menu/**exit** to exit the shop menu.",
                             embed: new EmbedBuilder()
                             .WithColor(Config.Doremi.EmbedColor)
                             .WithAuthor("Doremi Card Shop", Config.Doremi.EmbedAvatarUrl)
@@ -6136,7 +7069,7 @@ namespace OjamajoBot.Module
                         case 9:
                             priceConfirmation = 60;
                             messageTemp = await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
-                                "Type **confirm** to proceed with the purchase. Type **back** to go back to previous menu.",
+                                "Type **confirm** to proceed with the purchase/**back** to go back to previous menu/**exit** to exit the shop menu.",
                             embed: new EmbedBuilder()
                             .WithColor(Config.Doremi.EmbedColor)
                             .WithAuthor("Doremi Card Shop", Config.Doremi.EmbedAvatarUrl)
@@ -6156,7 +7089,7 @@ namespace OjamajoBot.Module
                         case 10:
                             priceConfirmation = 65;
                             messageTemp = await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
-                                "Type **confirm** to proceed with the purchase. Type **back** to go back to previous menu.",
+                                "Type **confirm** to proceed with the purchase/**back** to go back to previous menu/**exit** to exit the shop menu.",
                             embed: new EmbedBuilder()
                             .WithColor(Config.Doremi.EmbedColor)
                             .WithAuthor("Doremi Card Shop", Config.Doremi.EmbedAvatarUrl)
@@ -6176,7 +7109,7 @@ namespace OjamajoBot.Module
                         case 11:
                             priceConfirmation = 85;
                             messageTemp = await ReplyAsync("**:exclamation: Please note that purchasing this card will replace all status boost!**\n" +
-                                "Type **confirm** to proceed with the purchase. Type **back** to go back to previous menu.",
+                                "Type **confirm** to proceed with the purchase/**back** to go back to previous menu/**exit** to exit the shop menu.",
                             embed: new EmbedBuilder()
                             .WithColor(Config.Doremi.EmbedColor)
                             .WithAuthor("Doremi Card Shop", Config.Doremi.EmbedAvatarUrl)
@@ -6856,7 +7789,6 @@ namespace OjamajoBot.Module
     [Name("memesdraw"), Group("memesdraw"), Summary("Memes Draw Category.")]
     public class DorememesModule : ModuleBase<SocketCommandContext>
     {
-
         [Command("template list", RunMode = RunMode.Async), Summary("Show all available dorememes generator template.")]
         public async Task showAllDorememesTemplate()
         {
@@ -7155,18 +8087,19 @@ namespace OjamajoBot.Module
             await ReplyAsync(embed: MinigameCore.printLeaderboard(Context, Config.Doremi.EmbedColor).Build());
         }
 
-        [Command("rockpaperscissor", RunMode = RunMode.Async), Alias("rps", "jankenpon"), Summary("Play the Rock Paper Scissor minigame with Doremi. 20 score points reward.")]
-        public async Task RockPaperScissor(string guess = "")
+        [Command("jankenpon", RunMode = RunMode.Async), Alias("rps","rockpaperscissors"), Summary("Play the Rock Paper Scissors minigame with Doremi. " +
+            "Reward: 20 minigame score points & 1 magic seeds.")]
+        public async Task RockPaperScissors(string guess = "")
         {
             if (guess == "")
             {
-                await ReplyAsync($":x: Please enter the valid parameter: **rock** or **paper** or **scissor**");
+                await ReplyAsync($":x: Please enter the valid parameter: **rock** or **paper** or **scissors**");
                 return;
             }
-            else if (guess.ToLower() != "rock" && guess.ToLower() != "paper" && guess.ToLower() != "scissor")
+            else if (guess.ToLower() != "rock" && guess.ToLower() != "paper" && guess.ToLower() != "scissors")
             {
                 await ReplyAsync($":x: Sorry **{Context.User.Username}**. " +
-                    $"Please enter the valid parameter: **rock** or **paper** or **scissor**");
+                    $"Please enter the valid parameter: **rock** or **paper** or **scissors**");
                 return;
             }
 
@@ -7180,7 +8113,7 @@ namespace OjamajoBot.Module
                 "Oh no, looks like I lose the game."};//bot lose
             string[] arrDrawReaction = { "Ehh, it's a draw!", "We got a draw this time." };//bot draw
 
-            Tuple<string, EmbedBuilder, Boolean> result = MinigameCore.rockPaperScissor.rpsResults(
+            Tuple<string, EmbedBuilder, Boolean> result = MinigameCore.rockPaperScissors.rpsResults(
                 Config.Doremi.EmbedColor, Config.Doremi.EmbedAvatarUrl, randomGuess, guess, "doremi", Context.User.Username,
                 arrWinReaction, arrLoseReaction, arrDrawReaction,
                 Context.Guild.Id, Context.User.Id);

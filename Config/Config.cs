@@ -39,11 +39,11 @@ namespace Config
 
         public static string sweethouseRecipeDataFileName = "sweethouse_recipe_data.json";
 
-        public static string version = "1.6";
-        public static string lastUpdate = "Nov 25,2020";
+        public static string version = "1.7";
+        public static string lastUpdate = "Dec 24,2020";
         public static JObject jObjWiki;
         public static string wikiParentUrl = "https://ojamajowitchling.fandom.com/wiki/";
-        public static int minGlobalTimeHour = 11;
+        public static int minGlobalTimeHour = 7;
         public static int maxGlobalTimeHour = 15;
 
         public Core()
@@ -218,16 +218,9 @@ namespace Config
                 //    }
 
                 //    //random hazuki:
-
-
                 //    //random aiko:
-
-
                 //    //random onpu:
-
-
                 //    //random momoko:
-
                 //}
                 //end
 
@@ -235,89 +228,89 @@ namespace Config
 
                 Boolean forceChange = false;
                 
-                if (Config.Doremi.Status.isBirthday())
-                {
-                    if(caller == BotClass.Doremi)
-                    {
-                        returnStatus[0] = myBirthdayActivity;
-                        returnStatus[1] = myBirthdayActivityReply;
-                        returnStatus[2] = myBirthdayActivityUserStatus;
-                    } else
-                    {
-                        returnStatus[0] = Config.Doremi.Status.birthdayActivity;
-                        returnStatus[1] = "We're celebrating Doremi birthday today.";
-                        returnStatus[2] = myBirthdayActivityUserStatus;
-                    }
-                    forceChange = true;
-                }
+                //if (Config.Doremi.Status.isBirthday())
+                //{
+                //    if(caller == BotClass.Doremi)
+                //    {
+                //        returnStatus[0] = myBirthdayActivity;
+                //        returnStatus[1] = myBirthdayActivityReply;
+                //        returnStatus[2] = myBirthdayActivityUserStatus;
+                //    } else
+                //    {
+                //        returnStatus[0] = Config.Doremi.Status.birthdayActivity;
+                //        returnStatus[1] = "We're celebrating Doremi birthday today.";
+                //        returnStatus[2] = myBirthdayActivityUserStatus;
+                //    }
+                //    forceChange = true;
+                //}
 
-                if (Config.Hazuki.Status.isBirthday())
-                {
-                    if (caller == BotClass.Hazuki)
-                    {
-                        returnStatus[0] = myBirthdayActivity;
-                        returnStatus[1] = myBirthdayActivityReply;
-                        returnStatus[2] = myBirthdayActivityUserStatus;
-                    }
-                    else
-                    {
-                        returnStatus[0] = Config.Hazuki.Status.birthdayActivity;
-                        returnStatus[1] = "We're celebrating Hazuki birthday today.";
-                        returnStatus[2] = myBirthdayActivityUserStatus;
-                    }
-                    forceChange = true;
-                }
+                //if (Config.Hazuki.Status.isBirthday())
+                //{
+                //    if (caller == BotClass.Hazuki)
+                //    {
+                //        returnStatus[0] = myBirthdayActivity;
+                //        returnStatus[1] = myBirthdayActivityReply;
+                //        returnStatus[2] = myBirthdayActivityUserStatus;
+                //    }
+                //    else
+                //    {
+                //        returnStatus[0] = Config.Hazuki.Status.birthdayActivity;
+                //        returnStatus[1] = "We're celebrating Hazuki birthday today.";
+                //        returnStatus[2] = myBirthdayActivityUserStatus;
+                //    }
+                //    forceChange = true;
+                //}
 
-                if (Config.Aiko.Status.isBirthday())
-                {
-                    if (caller == BotClass.Aiko)
-                    {
-                        returnStatus[0] = myBirthdayActivity;
-                        returnStatus[1] = myBirthdayActivityReply;
-                        returnStatus[2] = myBirthdayActivityUserStatus;
-                    }
-                    else
-                    {
-                        returnStatus[0] = Config.Aiko.Status.birthdayActivity;
-                        returnStatus[1] = "We're celebrating Aiko birthday today.";
-                        returnStatus[2] = myBirthdayActivityUserStatus;
-                    }
-                    forceChange = true;
-                }
+                //if (Config.Aiko.Status.isBirthday())
+                //{
+                //    if (caller == BotClass.Aiko)
+                //    {
+                //        returnStatus[0] = myBirthdayActivity;
+                //        returnStatus[1] = myBirthdayActivityReply;
+                //        returnStatus[2] = myBirthdayActivityUserStatus;
+                //    }
+                //    else
+                //    {
+                //        returnStatus[0] = Config.Aiko.Status.birthdayActivity;
+                //        returnStatus[1] = "We're celebrating Aiko birthday today.";
+                //        returnStatus[2] = myBirthdayActivityUserStatus;
+                //    }
+                //    forceChange = true;
+                //}
 
-                if (Config.Onpu.Status.isBirthday())
-                {
-                    if (caller == BotClass.Onpu)
-                    {
-                        returnStatus[0] = myBirthdayActivity;
-                        returnStatus[1] = myBirthdayActivityReply;
-                        returnStatus[2] = myBirthdayActivityUserStatus;
-                    }
-                    else
-                    {
-                        returnStatus[0] = Config.Onpu.Status.birthdayActivity;
-                        returnStatus[1] = "We're celebrating Onpu birthday today.";
-                        returnStatus[2] = myBirthdayActivityUserStatus;
-                    }
-                    forceChange = true;
-                }
+                //if (Config.Onpu.Status.isBirthday())
+                //{
+                //    if (caller == BotClass.Onpu)
+                //    {
+                //        returnStatus[0] = myBirthdayActivity;
+                //        returnStatus[1] = myBirthdayActivityReply;
+                //        returnStatus[2] = myBirthdayActivityUserStatus;
+                //    }
+                //    else
+                //    {
+                //        returnStatus[0] = Config.Onpu.Status.birthdayActivity;
+                //        returnStatus[1] = "We're celebrating Onpu birthday today.";
+                //        returnStatus[2] = myBirthdayActivityUserStatus;
+                //    }
+                //    forceChange = true;
+                //}
 
-                if (Config.Momoko.Status.isBirthday())
-                {
-                    if (caller == BotClass.Momoko)
-                    {
-                        returnStatus[0] = myBirthdayActivity;
-                        returnStatus[1] = myBirthdayActivityReply;
-                        returnStatus[2] = myBirthdayActivityUserStatus;
-                    }
-                    else
-                    {
-                        returnStatus[0] = Config.Momoko.Status.birthdayActivity;
-                        returnStatus[1] = "We're celebrating Momoko birthday today.";
-                        returnStatus[2] = myBirthdayActivityUserStatus;
-                    }
-                    forceChange = true;
-                }
+                //if (Config.Momoko.Status.isBirthday())
+                //{
+                //    if (caller == BotClass.Momoko)
+                //    {
+                //        returnStatus[0] = myBirthdayActivity;
+                //        returnStatus[1] = myBirthdayActivityReply;
+                //        returnStatus[2] = myBirthdayActivityUserStatus;
+                //    }
+                //    else
+                //    {
+                //        returnStatus[0] = Config.Momoko.Status.birthdayActivity;
+                //        returnStatus[1] = "We're celebrating Momoko birthday today.";
+                //        returnStatus[2] = myBirthdayActivityUserStatus;
+                //    }
+                //    forceChange = true;
+                //}
 
 
                 if (!forceChange)
@@ -327,10 +320,10 @@ namespace Config
                     {
                         returnStatus = statusSleeping;
                     }
-                    else if (isWeekday && hourNow >= 4 && hourNow <= 10)
-                    {
-                        returnStatus = statusSchool;
-                    }
+                    //else if (isWeekday && hourNow >= 4 && hourNow <= 10)
+                    //{
+                    //    returnStatus = statusSchool;
+                    //}
                     else if (isWeekday && hourNow >= 11 && hourNow <= 12)
                     {
                         returnStatus = statusGlobalMahoDou;
@@ -414,7 +407,7 @@ namespace Config
                 {"with Hana","I'm playing with Hana now.", UserStatus.Online},
                 {"at Home",$"I'm at my home right now. I hope my mom will make a steak for dinner {Emoji.steak}", UserStatus.Online},
                 {$"at witch's world {Emoji.broom}","I'm at the witch's world right now.", UserStatus.Online},
-                {"with homework \uD83D\uDCDA","I'm doing my homework right now", UserStatus.DoNotDisturb},
+                //{"with homework \uD83D\uDCDA","I'm doing my homework right now", UserStatus.DoNotDisturb},
                 {"with Dodo the fairy",$"I'm playing with fairy: Dodo right now.", UserStatus.Online},
                 {"with Tamaki",$"I'm playing with Tamaki right now.", UserStatus.Online},
                 {"with Ojamajo Trading Card",$"I'm playing Ojamajo Trading Card right now.", UserStatus.Online}
@@ -446,19 +439,6 @@ namespace Config
                 }
                 return isBirthday;
             }
-
-            public static Boolean isBirthday(ulong idGuild)
-            {
-                Boolean isBirthday = false;
-                if(DateTime.Now.ToString("dd") == Config.Doremi.birthdayDate.ToString("dd") &&
-                DateTime.Now.ToString("MM") == Config.Doremi.birthdayDate.ToString("MM") &&
-                Int32.Parse(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour &&
-                DateTime.Now.ToString("dd") != Config.Guild.getPropertyValue(idGuild, "birthday_announcement_date_last"))
-                {
-                    isBirthday = true;
-                }
-                return isBirthday;
-            }
         }
 
         public static string EmbedName = "Doremi Bot";
@@ -474,6 +454,7 @@ namespace Config
         public static double Randomeventinterval { get; set; }
         public static Color EmbedColor = Color.Orange;
         public static DateTime birthdayDate = DateTime.ParseExact("14/02/1991", "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None);
+        
         public static int birthdayCalculatedYear = Convert.ToInt32(DateTime.Now.ToString("yyyy")) - Convert.ToInt32(birthdayDate.ToString("yyyy"));
         public static string[] PrefixParent = { "ha!", "hazuki!", MentionUtils.MentionUser(Id) };
         public static JObject jObjRandomMoments;
@@ -487,7 +468,7 @@ namespace Config
                 {"with Masaru","I'm playing with my Masaru right now. We're usually playing music together on the afternoon \uD83D\uDE0A", UserStatus.Online},
                 {"at Home",$"I'm at my home right now. I have violin lesson to attend after this.", UserStatus.Online},
                 {$"at witch's world {Emoji.broom}","I'm at the witch's world right now.", UserStatus.Online},
-                {"with homework \uD83D\uDCDA","I'm doing my homework right now.", UserStatus.DoNotDisturb},
+                //{"with homework \uD83D\uDCDA","I'm doing my homework right now.", UserStatus.DoNotDisturb},
                 {"with Rere the fairy",$"I'm playing with my fairy: Rere right now.", UserStatus.Online},
                 {"with Hana","I'm playing with Hana now.", UserStatus.Online},
                 {"with Marina","I'm playing with Marina now. We're planning to plant some flower together.", UserStatus.Online},
@@ -556,7 +537,7 @@ namespace Config
                 {"harmonica","I'm playing with my harmonica instrument now. Wanna hear me to play some music?", UserStatus.Online},
                 {$"at witch's world {Emoji.broom}","I'm at the witch's world right now.", UserStatus.Online},
                 {"with sweet potatoes","Sweet potatoes is one of my favorite foods, I just love to eat it so much.", UserStatus.Online},
-                {"with homework \uD83D\uDCDA","I'm doing my homework right now.", UserStatus.DoNotDisturb},
+                //{"with homework \uD83D\uDCDA","I'm doing my homework right now.", UserStatus.DoNotDisturb},
                 {"with Mimi the fairy",$"I'm playing with my fairy: Mimi right now.", UserStatus.Online},
                 {"with Hana","I'm playing with Hana now.", UserStatus.Online},
                 {"with Ojamajo Trading Card",$"I'm playing Ojamajo Trading Card right now.", UserStatus.Online}
@@ -602,6 +583,7 @@ namespace Config
         public static double Randomeventinterval { get; set; }
         public static Color EmbedColor = Color.Purple;
         public static DateTime birthdayDate = DateTime.ParseExact("03/03/1991", "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None);
+        
         public static int birthdayCalculatedYear = Convert.ToInt32(DateTime.Now.ToString("yyyy")) - Convert.ToInt32(birthdayDate.ToString("yyyy"));
         public static string[] PrefixParent = { "on!", "onpu!", MentionUtils.MentionUser(Id) };
         public static JObject jObjRandomMoments;
@@ -616,7 +598,7 @@ namespace Config
                 {"at misora radio station","I'm currently broadcasting at radio station right now. Stay tune for more daily info.", UserStatus.DoNotDisturb},
                 {$"at witch's world {Emoji.broom}","I'm at the witch's world right now.", UserStatus.Online},
                 {"flute","I'm playing with my flute instrument now. Wanna hear me to play some music?", UserStatus.Online},
-                {"with homework \uD83D\uDCDA","I'm doing my homework right now.", UserStatus.DoNotDisturb},
+                //{"with homework \uD83D\uDCDA","I'm doing my homework right now.", UserStatus.DoNotDisturb},
                 {"with Roro the fairy",$"I'm playing with my fairy: Roro right now.", UserStatus.Online},
                 {"with Hana","I'm playing with Hana now.", UserStatus.Online},
                 {"with Ojamajo Trading Card",$"I'm playing Ojamajo Trading Card right now.", UserStatus.Online}
@@ -663,6 +645,8 @@ namespace Config
         public static double Randomeventinterval { get; set; }
         public static Color EmbedColor = new Color(234, 211, 57);
         public static DateTime birthdayDate = DateTime.ParseExact("06/05/1990", "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None);
+        //public static DateTime birthdayDate = DateTime.ParseExact("24/12/1990", "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None);
+
         public static int birthdayCalculatedYear = Convert.ToInt32(DateTime.Now.ToString("yyyy")) - Convert.ToInt32(birthdayDate.ToString("yyyy"));
 
         public static string[] PrefixParent = { "mo!", "momoko!", MentionUtils.MentionUser(Id) };
@@ -676,7 +660,7 @@ namespace Config
             public static object[,] arrRandomActivity = {
                 {$"at witch's world {Emoji.broom}","I'm at the witch's world right now.",UserStatus.Online},
                 {$"guitar {Emoji.guitar}","I'm playing with my guitar instrument now. Wanna hear me to play some music?",UserStatus.Online},
-                {"with homework \uD83D\uDCDA","I'm doing my homework right now.",UserStatus.DoNotDisturb},
+                //{"with homework \uD83D\uDCDA","I'm doing my homework right now.",UserStatus.DoNotDisturb},
                 {"with Nini",$"I'm playing with my fairy: Nini right now.",UserStatus.Idle},
                 {"with Hana","I'm playing with Hana now.", UserStatus.Online},
                 {"baseball \u26BE",$"I'm playing baseball right now.",UserStatus.Idle},

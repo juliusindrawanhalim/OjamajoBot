@@ -15,6 +15,8 @@ using OjamajoBot.Service;
 using System.Threading;
 using Discord.Addons.Interactive;
 using Victoria;
+using OjamajoBot.Database.Model;
+using OjamajoBot.Database;
 
 namespace OjamajoBot.Bot
 {
@@ -102,37 +104,58 @@ namespace OjamajoBot.Bot
         public async Task JoinedGuild(SocketGuild guild)
         {
             var systemChannel = client.GetChannel(guild.SystemChannel.Id) as SocketTextChannel; // Gets the channel to send the message in
-            await systemChannel.SendMessageAsync($"Pretty witchy {MentionUtils.MentionUser(Config.Onpu.Id)} chi~ has arrived to the {guild.Name}. Hello, this is Onpu, thank you for inviting me to the group. " +
-                $"As an idol, I will make all of you happy. You can ask me with `{Config.Onpu.PrefixParent[0]}help` for all commands list.",
-            embed: new EmbedBuilder()
+            await systemChannel.SendMessageAsync(embed: new EmbedBuilder()
             .WithColor(Config.Onpu.EmbedColor)
-            .WithImageUrl("https://i.imgur.com/mgTmDgF.png")
+            .WithTitle($"Pretty witchy Onpu chi!")
+            .WithDescription($"Hello everyone, Onpu Segawa is here. Thank you for inviting me to the {guild.Name}. " +
+            $"You can call me with `{Config.Onpu.PrefixParent[0]}` as my default prefix or ask me with `{Config.Onpu.PrefixParent[0]}help` for all command list that I have.")
+            .WithImageUrl("https://cdn.discordapp.com/attachments/706812100789403659/706819976409120788/dokkan.gif")
             .Build());
         }
 
         public async Task GuildAvailable(SocketGuild guild)
         {
-            //set Onpu birthday announcement timer
-            //if (Config.Guild.hasPropertyValues(guild.Id.ToString(), "id_birthday_announcement"))
-            //{
-            //    Config.Onpu._timerBirthdayAnnouncement[guild.Id.ToString()] = new Timer(async _ =>
-            //    {
-            //        //announce doremi birthday
-            //        if (Config.Doremi.Status.isBirthday(guild.Id))
-            //        {
-            //            await client
-            //            .GetGuild(guild.Id)
-            //            .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guild.Id, "id_birthday_announcement")))
-            //            .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday, {MentionUtils.MentionUser(Config.Doremi.Id)} chan. " +
-            //            $"She has turned into {Config.Doremi.birthdayCalculatedYear} on this year. Let's give some big steak and wonderful birthday wishes for her.");
-            //        }
+            ulong guildId = guild.Id;
+            var guildData = Config.Guild.getGuildData(guildId);
+            string guildBirthdayLastAnnouncement = "";
+            if (guildData[DBM_Guild.Columns.birthday_announcement_date_last].ToString() != "")
+                guildBirthdayLastAnnouncement = guildData[DBM_Guild.Columns.birthday_announcement_date_last].ToString();
+            else
+                guildBirthdayLastAnnouncement = "1";
 
-            //    },
-            //    null,
-            //    TimeSpan.FromSeconds(10), //time to wait before executing the timer for the first time
-            //    TimeSpan.FromHours(24) //time to wait before executing the timer again
-            //    );
-            //}
+            //set Onpu birthday announcement timer
+            if (guildData[DBM_Guild.Columns.id_channel_birthday_announcement].ToString() != "" &&
+            Convert.ToInt32(guildData[DBM_Guild.Columns.birthday_announcement_ojamajo]) == 1 &&
+            Convert.ToInt32(DateTime.Now.ToString("HH")) >= Config.Core.minGlobalTimeHour)
+            {
+                Config.Onpu._timerBirthdayAnnouncement[guild.Id.ToString()] = new Timer(async _ =>
+                {
+                    //announce doremi birthday
+                    if (guildBirthdayLastAnnouncement != DateTime.Now.ToString("dd") && 
+                        Config.Doremi.Status.isBirthday())
+                    {
+                        await client
+                        .GetGuild(guild.Id)
+                        .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement].ToString()))
+                        .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday, {MentionUtils.MentionUser(Config.Doremi.Id)} chan. " +
+                        $"She has turned into {Config.Doremi.birthdayCalculatedYear} on this year. Let's give some big steak and wonderful birthday wishes for her.");
+
+                        //update last birthday announcement date
+                        string query = @$"UPDATE {DBM_Guild.tableName} 
+                        SET {DBM_Guild.Columns.birthday_announcement_date_last}=@{DBM_Guild.Columns.birthday_announcement_date_last} 
+                        WHERE {DBM_Guild.Columns.id_guild}=@{DBM_Guild.Columns.id_guild}";
+                        Dictionary<string, object> columnsFilter = new Dictionary<string, object>();
+                        columnsFilter[DBM_Guild.Columns.birthday_announcement_date_last] = DateTime.Now.ToString("dd");
+                        columnsFilter[DBM_Guild.Columns.id_guild] = guildId.ToString();
+                        new DBC().update(query, columnsFilter);
+
+                    }
+                },
+                null,
+                TimeSpan.FromSeconds(10), //time to wait before executing the timer for the first time
+                TimeSpan.FromMinutes(40) //time to wait before executing the timer again
+                );
+            }
         }
 
         /// <summary>
@@ -171,7 +194,7 @@ namespace OjamajoBot.Bot
                         break;
                     case CommandError.UnknownCommand:
                         await message.Channel.SendMessageAsync(embed: new EmbedBuilder()
-                        .WithDescription("Onpu can't seems to understand your commands. " +
+                        .WithDescription("Sorry, Onpu can't find that command. " +
                         $"See `{Config.Onpu.PrefixParent[0]}help <commands or category>` for command help.")
                         .WithAuthor(Config.Onpu.EmbedNameError)
                         .WithColor(Config.Onpu.EmbedColor)

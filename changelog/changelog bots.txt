@@ -5,3 +5,37 @@ v1.6 (24-11-2020)
 -added autorole for time join
 -added autorole level system when reach certain level
 -onpu voice related command has been disabled temporarily
+
+v1.7 (21-12-2020)
+=====================================
+>update/changes made
+-hello message change into embed & has been updated
+-bot joined guild embed message has been updated
+-minigame: rockpaperscissors prefix has been updated & made changes to dialogue
+-minigame: rockpaperscissors has been changed into jankenpon as main command
+-invitation link:permission integer has been updated
+-avatar set embed color has been updated
+-star command has been disabled temporarily
+-welcome message can be turned on/off
+-wheezuki,spooky aiko image url has been updated
+-hug command has been updated & removed for onpu & momoko
+-dorememes has been temporarily removed
+-ojamajo birthday announcement can be turned on/off
+-new birthday alias: thismonth
+-mod welcome command has been grouped, new command: remove,header,color
+-avatar command can now add banner image
+-avatar embed 
+-active autorole can now be viewed
+-avatar profile is now shortcuted with general category
+-bug fix for birthday announcement
+-birthday thismonth has been added: to show all the people who's having birthday
+-birthday set & search command is now merged with avatar
+-birthday category has been removed & added as new mod birthday category
+-birthday can now be set with custom message
+-role command category has been disabled and changed with role react
+-custom command list can now be listed if no parameter is inputed
+-Model class name DBM_Custom_Command changed into DBM_Guild_Custom_Command
+-mod trading card interval spawn has been merged with spawn command 
+
+>removed command:
+-feedback,quotes,countdown,turn

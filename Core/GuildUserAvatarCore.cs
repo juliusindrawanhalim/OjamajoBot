@@ -48,6 +48,7 @@ namespace OjamajoBot.Core
                     ret[DBM_Guild_User_Avatar.Columns.chat_level] = row[DBM_Guild_User_Avatar.Columns.chat_level];
                     ret[DBM_Guild_User_Avatar.Columns.chat_exp] = row[DBM_Guild_User_Avatar.Columns.chat_exp];
                     ret[DBM_Guild_User_Avatar.Columns.info] = row[DBM_Guild_User_Avatar.Columns.info];
+                    ret[DBM_Guild_User_Avatar.Columns.image_url] = row[DBM_Guild_User_Avatar.Columns.image_url];
                     ret[DBM_Guild_User_Avatar.Columns.created_at] = row[DBM_Guild_User_Avatar.Columns.created_at];
                 }
             }
@@ -145,7 +146,7 @@ namespace OjamajoBot.Core
                             }
                         }
 
-                        eb.AddField("Next EXP:", $"{level + 2}*100", true);
+                        eb.AddField("Next EXP:", $"{(level + 2)*100}", true);
 
                         //level up notification
                         ulong channelNotificationId = Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_notification_chat_level_up]);
@@ -205,24 +206,54 @@ namespace OjamajoBot.Core
                 customColorB = Convert.ToInt32(splittedColor[2]);
             }
 
+            string nickname = "";
+            if (userAvatarData[DBM_Guild_User_Avatar.Columns.nickname].ToString() != "")
+                nickname = $" ({userAvatarData[DBM_Guild_User_Avatar.Columns.nickname].ToString()})";
+            
             EmbedBuilder eb = new EmbedBuilder()
-                .WithTitle($"{username}")
-                .WithThumbnailUrl(userAvatar);
+            .WithTitle($"{username}{nickname}")
+            .WithThumbnailUrl(userAvatar);
             if (customColorR != -1)
                 eb.WithColor(new Discord.Color(customColorR, customColorG, customColorB));
-             else
+            else
                 eb.WithColor(color);
             
-
+            //information
             if (userAvatarData[DBM_Guild_User_Avatar.Columns.info].ToString() != "")
                 eb.Description = $"{userAvatarData[DBM_Guild_User_Avatar.Columns.info].ToString()}";
             
+            eb.AddField("Level:", $"{userLevel}", true);
+            eb.AddField("Exp:", $"{userExp}/{nextExp}", true);
 
-            if (userAvatarData[DBM_Guild_User_Avatar.Columns.nickname].ToString() != "")
-                eb.AddField("Nickname:", userAvatarData[DBM_Guild_User_Avatar.Columns.nickname].ToString());
-            
-            eb.AddField("Level:",$"{userLevel}",true);
-            eb.AddField("Exp:",$"{userExp}/{nextExp}",true);
+            //search birthday if exists
+            string query = $"SELECT * " +
+                $" FROM {DBM_Guild_User_Birthday.tableName} " +
+                $" WHERE {DBM_Guild_User_Birthday.Columns.id_guild}=@{DBM_Guild_User_Birthday.Columns.id_guild} AND " +
+                $" {DBM_Guild_User_Birthday.Columns.id_user}=@{DBM_Guild_User_Birthday.Columns.id_user}";
+            Dictionary<string, object> columnsFilter = new Dictionary<string, object>();
+            columnsFilter[DBM_Guild_User_Birthday.Columns.id_guild] = guildId.ToString();
+            columnsFilter[DBM_Guild_User_Birthday.Columns.id_user] = userId.ToString();
+            var result = new DBC().selectAll(query, columnsFilter);
+            foreach (DataRow row in result.Rows)
+            {
+                if (row[DBM_Guild_User_Birthday.Columns.birthday_date].ToString()!="")
+                {
+                    var parsedBirthdayDate = DateTime.Parse(row[DBM_Guild_User_Birthday.Columns.birthday_date].ToString());
+                    string birthdayDate = parsedBirthdayDate.ToString("dd MMMM");//default
+
+                    if (Convert.ToBoolean(row[DBM_Guild_User_Birthday.Columns.show_year]))
+                    {
+                        birthdayDate = parsedBirthdayDate.ToString("dd-MMMM-yyyy");//default
+                    }
+
+                    eb.AddField("Birthday Date:",birthdayDate, true);
+                }
+            }
+
+            //image_url for banner
+            if (userAvatarData[DBM_Guild_User_Avatar.Columns.image_url].ToString() != "")
+                eb.WithImageUrl(userAvatarData[DBM_Guild_User_Avatar.Columns.image_url].ToString());
+
             eb.WithFooter(@$"Created at:{DateTime.Parse(userAvatarData[DBM_Guild_User_Avatar.Columns.created_at].ToString())
                 .ToString("MM/dd/yyyy")}");
 

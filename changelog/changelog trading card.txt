@@ -172,7 +172,22 @@ Doremi Trading Card - Update 1.30 - 22.11.20
 -new command: verify. This will let you get verified to get the card badge
 -new command: status complete. This will let you see your/other ojamajo trading card completion date
 
-Doremi Trading Card - Update 1.31 - 30.11.20
+Doremi Trading Card - Update 1.31 - 22.12.20
 ===============================================================
 -Bug fix for card capture
--New feature: fragment points. Capturing a duplicate card now rewards you with fragment points seeds. 
+-Bug fix for magic seeds related command
+-Card verify now let to get the very first completion date if you have completed it earlier
+-Card verify now let you get the card completion badge even if the role are not setup on the server
+-bug fix for substraction on magic & royal seeds
+-bug fix when mystery card & bad card spawn at same time: let the bad card effects to be triggered
+-bug fix for card capture when guess the wrong mystery card: will not add the exp
+-bug fix when capturing the ojamajos card
+-bug fix on leaderboard not showing up
+-badge role alias & command has been updated
+-card status has been updated
+
+Doremi Trading Card - Update 1.32 - 26.12.20
+===============================================================
+-Bug fix when user does not exists it can now insert to user trading card data automatically
+-Mystery card hint updated for spell set
+-Prevent from getting pop/hana card & only normal card reward is received when using the card pureleine command

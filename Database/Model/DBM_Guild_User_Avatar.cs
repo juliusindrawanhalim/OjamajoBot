@@ -17,6 +17,7 @@ namespace OjamajoBot.Database.Model
             public static readonly string chat_level = "chat_level";
             public static readonly string chat_exp = "chat_exp";
             public static readonly string info = "info";
+            public static readonly string image_url = "image_url";
             public static readonly string created_at = "created_at";
         }
     }

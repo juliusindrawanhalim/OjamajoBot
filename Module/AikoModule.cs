@@ -377,40 +377,35 @@ namespace OjamajoBot.Module
         public async Task aikoHello()
         {
             List<string> listRandomRespond = new List<string>() {
-                $"Yo {MentionUtils.MentionUser(Context.User.Id)}! ",
+                $"Heyyo {MentionUtils.MentionUser(Context.User.Id)}! ",
                 $"Hi {MentionUtils.MentionUser(Context.User.Id)}! ",
             };
 
             int rndIndex = new Random().Next(0, listRandomRespond.Count);
             string tempReply = listRandomRespond[rndIndex] + Config.Aiko.Status.currentActivityReply;
 
-            await ReplyAsync(tempReply);
+            await ReplyAsync(embed: new EmbedBuilder()
+                .WithDescription(tempReply)
+                .WithColor(Config.Aiko.EmbedColor)
+                .WithImageUrl("https://cdn.discordapp.com/attachments/706770454697738300/790613578028679179/300px-4701.png")
+                .Build());
         }
 
-        [Command("hugs"), Alias("hug"), Summary("I will give warm hug for you or <username>")]
-        public async Task HugUser(SocketGuildUser username = null)
+        [Command("hug"), Summary("Give a friendly hug for <username>")]
+        public async Task HugUser([Remainder] string username)
         {
-            if (username == null)
-            {
-                string message = $"*hugs back*. Why, thank you for the warm hugs there {MentionUtils.MentionUser(Context.User.Id)} :hugging:";
-                await Context.Channel.SendMessageAsync(message);
-            }
-            else
-            {
-                string message = $"Pameruku raruku rarirori poppun! Give a big warm hugs for {MentionUtils.MentionUser(username.Id)} :hugging:";
-                await Context.Channel.SendMessageAsync(message);
-            }
-        }
-
-        [Command("quotes"), Summary("I will mention random Aiko quotes")]
-        public async Task quotes()
-        {
-            string[] arrQuotes = {
-                "As a woman from Osaka, I can't lose!",
-                "Let's make some delicious takoyaki"
+            List<string> listRandomImage = new List<string>() {
+                "https://media.tenor.com/images/f51ff7041983283592e13e3e0c3b29b9/tenor.gif",
+                "https://cdn.discordapp.com/attachments/706770454697738300/790766792427569182/1507930583741.png",
             };
 
-            await ReplyAsync(arrQuotes[new Random().Next(0, arrQuotes.Length)]);
+            int rndIndex = new Random().Next(0, listRandomImage.Count);
+
+            await ReplyAsync(embed: new EmbedBuilder()
+                .WithDescription($"{MentionUtils.MentionUser(Context.User.Id)} has give a nice & friendly hug for {username}")
+                .WithColor(Config.Aiko.EmbedColor)
+                .WithImageUrl(listRandomImage[rndIndex])
+                .Build());
         }
 
         [Command("random"), Alias("moments"), Summary("Show any random Aiko moments. " +
@@ -532,17 +527,14 @@ namespace OjamajoBot.Module
                 };
 
                 string[,] arrRandom = {
-                    {"Odd Meat","https://media.discordapp.net/attachments/569409307100315651/653676655294021643/daikon_9.png"},
-                    {"Letter Three","https://media.discordapp.net/attachments/653690054912507914/658004378732724234/unknown.png"},
-                    {"вештица","https://media.discordapp.net/attachments/569409307100315651/654463722940792855/wowspoop.gif"},
-                    {"Letter Three","https://media.discordapp.net/attachments/653690054912507914/658004103854817290/Spooky_Aiko.png"},
-                    {"Letter Three","https://media.discordapp.net/attachments/643722270447239169/669150355526778880/unknown.png"},
-                    {"Letter Three","https://media.discordapp.net/attachments/643722270447239169/669150430940495872/unknown.png"},
-                    {"Odd Meat","https://media.discordapp.net/attachments/643722270447239169/669225508441161758/spooks_orig.png"},
-                    {"Nathan","https://media.discordapp.net/attachments/643722270447239169/669597882114113558/20200122_124002.jpg"},
-                    {"Letter Three","https://media.discordapp.net/attachments/643722270447239169/687814823014039795/unknown.png" },
-                    {"Odd Meat","https://media.discordapp.net/attachments/714542159671328818/736356960676347996/unknown.png"},
-                    {"Pastabowl","https://media.discordapp.net/attachments/714542159671328818/780005362740101160/unknown.png"}
+                    {"Odd Meat","https://media.discordapp.net/attachments/790590545465573406/790590709735489587/daikon_9.png"},
+                    {"Letter Three","https://media.discordapp.net/attachments/790590545465573406/790590775469408316/unknown.png"},
+                    {"Poob","https://media.discordapp.net/attachments/790590545465573406/790591051840618516/wowspoop.gif"},
+                    {"Letter Three","https://media.discordapp.net/attachments/790590545465573406/790591380653080576/Spooky_Aiko.png"},
+                    {"Letter Three","https://media.discordapp.net/attachments/790590545465573406/790591470281293854/unknown.png"},
+                    {"Odd Meat","https://media.discordapp.net/attachments/790590545465573406/790591698337792000/spooks_orig.png"},
+                    {"Letter Three","https://cdn.discordapp.com/attachments/790590545465573406/790592035991715891/unknown.png" },
+                    {"Odd Meat","https://cdn.discordapp.com/attachments/790590545465573406/790592148504051742/unknown.png"}
                 };
 
                 int randomedResult = new Random().Next(0, arrRandom.GetLength(0));
@@ -555,25 +547,22 @@ namespace OjamajoBot.Module
                     .Build());
 
                 string[,] arrRandomCameo = {
-                    {"Odd Meat","https://media.discordapp.net/attachments/643722270447239169/669581419701338132/002.png"},
-                    {"Letter Three","https://media.discordapp.net/attachments/643722270447239169/669598054776569856/SPOILER_unknown.png"},
-                    {"Letter Three","https://media.discordapp.net/attachments/643722270447239169/669603942090670080/Halloween_Hazuki.png"},
-                    {"Letter Three","https://media.discordapp.net/attachments/643722270447239169/669606154946740224/Chop_Harukaze.png"},
-                    {"Odd Meat","https://media.discordapp.net/attachments/643722270447239169/669618799762210846/unknown.png"},
-                    {"Odd Meat","https://media.discordapp.net/attachments/421584908130189312/622528776747876362/cursed_majo_rika-export.gif"},
-                    {"вештица","https://media.discordapp.net/attachments/643722270447239169/674417584325787676/creepyrika3.gif"},
-                    {"Odd Meat","https://media.discordapp.net/attachments/644383823286763544/683436748960694308/gronpu.png"},
-                    {"Odd Meat","https://media.discordapp.net/attachments/644383823286763544/683462806687055894/bluberraiko.png"},
-                    {"Odd Meat","https://media.discordapp.net/attachments/644383823286763544/680524562357944403/cursed_80cgt3.gif"},
-                    {"Nathan","https://media.discordapp.net/attachments/643722270447239169/679391488005767188/20200218_131725.jpg" },
-                    {"Letter Three","https://media.discordapp.net/attachments/643722270447239169/687159873682669722/unknown.png"},
-                    {"Letter Three","https://media.discordapp.net/attachments/644383823286763544/694792672023674910/SPOILER_unknown.png" },
-                    {"Letter Three","https://media.discordapp.net/attachments/653690054912507914/702682994632163349/SPOILER_unknown.png" },
-                    {"Letter Three","https://media.discordapp.net/attachments/644383823286763544/709622495891685416/SPOILER_unknown.png" },
-                    {"Letter Three","https://media.discordapp.net/attachments/662953139011452929/713637641957933066/nightmare_onpu.png" },
-                    {"SmegmaSnail","https://media.discordapp.net/attachments/668502683589672960/750287168785743942/Screenshot_20200901-035527_Samsung_Notes.jpg" },
-                    {"Shrums","https://media.discordapp.com/attachments/643722270447239169/769484792491278346/onpu_at_wawa.png" },
-                    {"Shrums","https://media.discordapp.com/attachments/643722270447239169/769484824279777310/momoko_krueger.png" }
+                    {"Odd Meat","https://cdn.discordapp.com/attachments/790590545465573406/790592389374803998/002.png"},
+                    {"Letter Three","https://cdn.discordapp.com/attachments/790590545465573406/790592461017186334/SPOILER_unknown.png"},
+                    {"Letter Three","https://cdn.discordapp.com/attachments/790590545465573406/790592554197450752/Halloween_Hazuki.png"},
+                    {"Letter Three","https://cdn.discordapp.com/attachments/790590545465573406/790592607537201152/Chop_Harukaze.png"},
+                    {"Odd Meat","https://cdn.discordapp.com/attachments/790590545465573406/790592708757422150/unknown.png"},
+                    {"Odd Meat","https://cdn.discordapp.com/attachments/790590545465573406/790592830468915213/cursed_majo_rika-export.gif"},
+                    {"Poob","https://cdn.discordapp.com/attachments/790590545465573406/790592949742338048/creepyrika3.gif"},
+                    {"Odd Meat","https://cdn.discordapp.com/attachments/790590545465573406/790593014846062632/gronpu.png"},
+                    {"Odd Meat","https://cdn.discordapp.com/attachments/790590545465573406/790593076540342283/bluberraiko.png"},
+                    {"Odd Meat","https://cdn.discordapp.com/attachments/790590545465573406/790593190703923220/cursed_80cgt3.gif"},
+                    {"Letter Three","https://cdn.discordapp.com/attachments/790590545465573406/790593350763806800/unknown.png"},
+                    {"Letter Three","https://cdn.discordapp.com/attachments/790590545465573406/790593404463349800/SPOILER_unknown.png" },
+                    {"Letter Three","https://cdn.discordapp.com/attachments/790590545465573406/790593515541364786/SPOILER_unknown.png" },
+                    {"Letter Three","https://cdn.discordapp.com/attachments/790590545465573406/790593588433387520/SPOILER_unknown.png" },
+                    {"Letter Three","https://cdn.discordapp.com/attachments/790590545465573406/790593746663374888/nightmare_onpu.png" },
+                    {"Shrums","https://cdn.discordapp.com/attachments/790590545465573406/790594025488646174/onpu_at_wawa.png" }
                 };
 
                 string[] arrRandomTextCameo = {
@@ -678,9 +667,9 @@ namespace OjamajoBot.Module
         {
             await ReplyAsync("Pameruku raruku rarirori poppun! Show my biography info!",
             embed: new EmbedBuilder()
-            .WithAuthor("Aiko Senoo")
-            .WithDescription("Aiko Senoo (妹尾あいこ, Senō Aiko) is one of the Main Characters and the third Ojamajo, officially joining the group with Hazuki Fujiwara after they spy on Doremi Harukaze in the Maho-do. " +
-            "Aiko is from Tengachaya Osaka, who transferred to Misora with her father due to his work.Aiko is known for her distinctive Kansai - dialect and often complains when others imitate it.She has the Osaka comedy routine down and is a very smart bargainer.")
+            .WithAuthor("Aiko Senoo",Config.Aiko.EmbedAvatarUrl)
+            .WithDescription("Aiko is from Tengachaya Osaka, who transferred to Misora with her father due to his work. Aiko is known for her distinctive Kansai-dialect and often complains when others imitate it. " +
+            "She has the Osaka comedy routine down and is a very smart bargainer.")
             .AddField("Full Name", "妹尾あいこ Senō Aiko", true)
             .AddField("Gender", "female", true)
             .AddField("Blood Type", "O", true)
@@ -689,8 +678,8 @@ namespace OjamajoBot.Module
             .AddField("Favorite Food", "Takoyaki, Sweet Potato", true)
             .AddField("Debut", "[The Transfer Student from Naniwa! Aiko Debuts](https://ojamajowitchling.fandom.com/wiki/The_Transfer_Student_from_Naniwa!_Aiko_Debuts)", true)
             .WithColor(Config.Aiko.EmbedColor)
-            .WithImageUrl("https://images-na.ssl-images-amazon.com/images/I/71gZQfA16AL._SY450_.jpg")
-            .WithFooter("Source: [Ojamajo Witchling Wiki](https://ojamajowitchling.fandom.com/wiki/Aiko_Senoo)")
+            .WithImageUrl("https://static.wikia.nocookie.net/ojamajowitchling/images/c/c2/O.D_LFMD%27_Aiko_Senoo.png")
+            .WithFooter("Source: [Ojamajo Doremi Wiki](https://ojamajowitchling.fandom.com/wiki/Aiko_Senoo)")
             .Build());
         }
 
@@ -700,28 +689,15 @@ namespace OjamajoBot.Module
             await ReplyAsync($"Your welcome, {MentionUtils.MentionUser(Context.User.Id)}. I'm glad that you're happy with it :smile:");
         }
 
-        [Command("turn"), Alias("transform"), Summary("Turn <username> into <wishes>")]
-        public async Task spells(IUser username, [Remainder] string wishes)
+        [Command("wish"), Summary("I will grant you a <wishes>")]
+        public async Task wish([Remainder] string wishes)
         {
-            //await Context.Message.DeleteAsync();
-            await ReplyAsync($"Pameruku raruku rarirori poppun! Turn {username.Mention} into {wishes}",
+            await ReplyAsync($"Pameruku raruku rarirori poppun! {wishes}",
             embed: new EmbedBuilder()
             .WithColor(Config.Aiko.EmbedColor)
             .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/4/46/Aiko-spell.gif")
             .Build());
         }
-
-        [Command("wish"), Summary("I will grant you a <wishes>")]
-        public async Task wish([Remainder] string wishes)
-        {
-            await ReplyAsync($"Pameruku raruku rarirori poppun! {wishes}");
-            await base.ReplyAsync(embed: new EmbedBuilder()
-            .WithColor(Config.Aiko.EmbedColor)
-            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/4/46/Aiko-spell.gif")
-            .Build());
-        }
-
-        //spooky aiko invader on the server
     }
 
     [Name("minigame"), Group("minigame"), Summary("This category contains all Hazuki minigame interactive commands.")]
@@ -739,18 +715,19 @@ namespace OjamajoBot.Module
             await ReplyAsync(embed: MinigameCore.printLeaderboard(Context, Config.Aiko.EmbedColor).Build());
         }
 
-        [Command("rockpaperscissor", RunMode = RunMode.Async), Alias("rps"), Summary("Play the Rock Paper Scissor minigame with Aiko. 20 score points reward.")]
-        public async Task RockPaperScissor(string guess = "")
+        [Command("jankenpon", RunMode = RunMode.Async), Alias("rps", "rockpaperscissors"), Summary("Play the Rock Paper Scissors minigame with Aiko. " +
+            "Reward: 20 minigame score points & 1 magic seeds.")]
+        public async Task RockPaperScissors(string guess = "")
         {
             if (guess == "")
             {
-                await ReplyAsync($"Please enter the valid parameter: **rock** or **paper** or **scissor**");
+                await ReplyAsync($"Please enter the valid parameter: **rock** or **paper** or **scissors**");
                 return;
             }
-            else if (guess.ToLower() != "rock" && guess.ToLower() != "paper" && guess.ToLower() != "scissor")
+            else if (guess.ToLower() != "rock" && guess.ToLower() != "paper" && guess.ToLower() != "scissors")
             {
                 await ReplyAsync($"Sorry **{Context.User.Username}**. " +
-                    $"Please enter the valid parameter: **rock** or **paper** or **scissor**");
+                    $"Please enter the valid parameter: **rock** or **paper** or **scissors**");
                 return;
             }
 
@@ -758,10 +735,10 @@ namespace OjamajoBot.Module
             int randomGuess = new Random().Next(0, 3);//generate random
 
             string[] arrWinReaction = { $"Better luck next time, {Context.User.Username}.","I win the game this round!" };//bot win
-            string[] arrLoseReaction = { "I'm losing the game." };//bot lose
-            string[] arrDrawReaction = { "Well, it's a draw." };//bot draw
+            string[] arrLoseReaction = { "I loss from the game.","Oh no, I lost..." };//bot lose
+            string[] arrDrawReaction = { "*sigh* It's a draw!" };//bot draw
 
-            Tuple<string, EmbedBuilder, Boolean> result = MinigameCore.rockPaperScissor.rpsResults(Config.Aiko.EmbedColor, Config.Aiko.EmbedAvatarUrl, randomGuess, guess, "aiko", Context.User.Username,
+            Tuple<string, EmbedBuilder, Boolean> result = MinigameCore.rockPaperScissors.rpsResults(Config.Aiko.EmbedColor, Config.Aiko.EmbedAvatarUrl, randomGuess, guess, "aiko", Context.User.Username,
                 arrWinReaction, arrLoseReaction, arrDrawReaction,
                 Context.Guild.Id, Context.User.Id);
 
@@ -852,8 +829,8 @@ namespace OjamajoBot.Module
                 string userCardZone = userTradingCardData[DBM_User_Trading_Card_Data.Columns.card_zone].ToString();
                 if (!userCardZone.Contains("aiko"))
                 {
-                    await ReplyAndDeleteAsync(":x: Sorry, you are not on the correct card zone. " +
-                        $"Please assign yourself on the correct card zone with **{Config.Aiko.PrefixParent[0]}card zone set <category>** command.", timeout: TimeSpan.FromSeconds(20));
+                    await ReplyAsync(":x: Sorry, you are not on the correct card zone. " +
+                        $"Please assign yourself on the correct card zone with **{Config.Aiko.PrefixParent[0]}card zone set <category>** command.");
                     return Ok();
                 }
             }
@@ -867,7 +844,7 @@ namespace OjamajoBot.Module
 
             if (cardCaptureReturn.Item1 == "")
             {
-                await ReplyAndDeleteAsync(null, embed: cardCaptureReturn.Item2.Build(), timeout: TimeSpan.FromSeconds(15));
+                await ReplyAsync(null, embed: cardCaptureReturn.Item2.Build());
             }
             else
                 await ReplyAsync(cardCaptureReturn.Item1,
@@ -890,16 +867,16 @@ namespace OjamajoBot.Module
                     await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
                         Context.Guild.Roles.First(x => x.Name == TradingCardCore.Doremi.roleCompletionist)
                     );
+                }
 
-                    await Bot.Doremi.client
+                await Bot.Doremi.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
                     .SendFileAsync(TradingCardCore.Doremi.imgCompleteAllCard, null, embed: TradingCardCore
-                    .userCompleteTheirList(Context,Config.Doremi.EmbedColor,Config.Doremi.EmbedAvatarUrl,"doremi",
+                    .userCompleteTheirList(Context, Config.Doremi.EmbedColor, Config.Doremi.EmbedAvatarUrl, "doremi",
                     TradingCardCore.Doremi.imgCompleteAllCard, TradingCardCore.Doremi.roleCompletionist)
                     .Build());
 
-                }
             }
 
             //check if player have captured all hazuki card/not
@@ -910,15 +887,16 @@ namespace OjamajoBot.Module
                     await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
                         Context.Guild.Roles.First(x => x.Name == TradingCardCore.Hazuki.roleCompletionist)
                         );
+                }
 
-                    await Bot.Hazuki.client
+                await Bot.Hazuki.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
                     .SendFileAsync(TradingCardCore.Hazuki.imgCompleteAllCard, null, embed: TradingCardCore
                     .userCompleteTheirList(Context, Config.Hazuki.EmbedColor, Config.Hazuki.EmbedAvatarUrl, "hazuki",
                     TradingCardCore.Hazuki.imgCompleteAllCard, TradingCardCore.Hazuki.roleCompletionist)
                     .Build());
-                }
+
             }
 
             //check if player have captured all aiko card/not
@@ -929,15 +907,16 @@ namespace OjamajoBot.Module
                     await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
                         Context.Guild.Roles.First(x => x.Name == TradingCardCore.Aiko.roleCompletionist)
                         );
+                }
 
-                    await Bot.Aiko.client
+                await Bot.Aiko.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
                     .SendFileAsync(TradingCardCore.Aiko.imgCompleteAllCard, null, embed: TradingCardCore
                     .userCompleteTheirList(Context, Config.Aiko.EmbedColor, Config.Aiko.EmbedAvatarUrl, "aiko",
                     TradingCardCore.Aiko.imgCompleteAllCard, TradingCardCore.Aiko.roleCompletionist)
                     .Build());
-                }
+
             }
 
             //check if player have captured all onpu card/not
@@ -948,15 +927,16 @@ namespace OjamajoBot.Module
                     await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
                         Context.Guild.Roles.First(x => x.Name == TradingCardCore.Onpu.roleCompletionist)
                         );
+                }
 
-                    await Bot.Onpu.client
+                await Bot.Onpu.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
                     .SendFileAsync(TradingCardCore.Aiko.imgCompleteAllCard, null, embed: TradingCardCore
                     .userCompleteTheirList(Context, Config.Onpu.EmbedColor, Config.Onpu.EmbedAvatarUrl, "onpu",
                     TradingCardCore.Onpu.imgCompleteAllCard, TradingCardCore.Onpu.roleCompletionist)
                     .Build());
-                }
+
             }
 
             //check if player have captured all momoko card/not
@@ -967,15 +947,16 @@ namespace OjamajoBot.Module
                     await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
                         Context.Guild.Roles.First(x => x.Name == TradingCardCore.Momoko.roleCompletionist)
                         );
+                }
 
-                    await Bot.Momoko.client
+                await Bot.Momoko.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
                     .SendFileAsync(TradingCardCore.Aiko.imgCompleteAllCard, null, embed: TradingCardCore
                     .userCompleteTheirList(Context, Config.Momoko.EmbedColor, Config.Momoko.EmbedAvatarUrl, "momoko",
                     TradingCardCore.Momoko.imgCompleteAllCard, TradingCardCore.Momoko.roleCompletionist)
                     .Build());
-                }
+
             }
 
             //check if player have captured all other special card/not
@@ -986,8 +967,9 @@ namespace OjamajoBot.Module
                     await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
                         Context.Guild.Roles.First(x => x.Name == TradingCardCore.roleCompletionistSpecial)
                         );
+                }
 
-                    await Bot.Aiko.client
+                await Bot.Aiko.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
                     .SendFileAsync(TradingCardCore.Aiko.imgCompleteAllCard, null, embed: TradingCardCore
@@ -995,7 +977,6 @@ namespace OjamajoBot.Module
                     TradingCardCore.imgCompleteAllCardSpecial, TradingCardCore.roleCompletionistSpecial)
                     .Build());
 
-                }
             }
 
             return Ok();
@@ -1265,20 +1246,34 @@ namespace OjamajoBot.Module
 
             if (UserTradingCardDataCore.checkCardCompletion(userId, cardPack))
             {
-                if (Context.Guild.Roles.Where(x => x.Name == TradingCardCore.Aiko.roleCompletionist).ToList().Count >= 1)
+                try
                 {
-                    await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
-                        Context.Guild.Roles.First(x => x.Name == TradingCardCore.Aiko.roleCompletionist)
-                    );
+                    if (Context.Guild.Roles.Where(x => x.Name == TradingCardCore.Aiko.roleCompletionist).ToList().Count >= 1)
+                    {
+                        await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
+                            Context.Guild.Roles.First(x => x.Name == TradingCardCore.Aiko.roleCompletionist)
+                        );
+                    }
+                } catch(Exception e) { }
+                
+                EmbedBuilder embedReturn = TradingCardCore
+                    .userCompleteTheirList(Context, Config.Aiko.EmbedColor, Config.Aiko.EmbedAvatarUrl, cardPack,
+                    TradingCardCore.Aiko.imgCompleteAllCard, TradingCardCore.Aiko.roleCompletionist);
 
+                if (embedReturn != null)
+                {
                     await Bot.Aiko.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
-                    .SendFileAsync(TradingCardCore.Aiko.imgCompleteAllCard, null, embed: TradingCardCore
-                    .userCompleteTheirList(Context, Config.Aiko.EmbedColor, Config.Aiko.EmbedAvatarUrl, cardPack,
-                    TradingCardCore.Aiko.imgCompleteAllCard, TradingCardCore.Aiko.roleCompletionist)
+                    .SendFileAsync(TradingCardCore.Aiko.imgCompleteAllCard, null, embed: embedReturn
                     .Build());
+                } else
+                {
+                    await ReplyAsync(":white_check_mark: Your **aiko** card completion status has been verified");
                 }
+
+                
+
             }
         }
 

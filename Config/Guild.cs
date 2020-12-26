@@ -58,9 +58,12 @@ namespace Config
                     ret[DBM_Guild.Columns.id_channel_notification_user_welcome] = row[DBM_Guild.Columns.id_channel_notification_user_welcome];
                     ret[DBM_Guild.Columns.id_channel_user_leaving_log] = row[DBM_Guild.Columns.id_channel_user_leaving_log];
                     ret[DBM_Guild.Columns.id_autorole_user_join] = row[DBM_Guild.Columns.id_autorole_user_join];
+                    ret[DBM_Guild.Columns.welcome_title] = row[DBM_Guild.Columns.welcome_title];
                     ret[DBM_Guild.Columns.welcome_message] = row[DBM_Guild.Columns.welcome_message];
                     ret[DBM_Guild.Columns.welcome_image] = row[DBM_Guild.Columns.welcome_image];
+                    ret[DBM_Guild.Columns.welcome_color] = row[DBM_Guild.Columns.welcome_color];
                     ret[DBM_Guild.Columns.birthday_announcement_date_last] = row[DBM_Guild.Columns.birthday_announcement_date_last];
+                    ret[DBM_Guild.Columns.birthday_announcement_ojamajo] = row[DBM_Guild.Columns.birthday_announcement_ojamajo];
                     ret[DBM_Guild.Columns.role_id_doremi] = row[DBM_Guild.Columns.role_id_doremi];
                     ret[DBM_Guild.Columns.role_id_hazuki] = row[DBM_Guild.Columns.role_id_hazuki];
                     ret[DBM_Guild.Columns.role_id_aiko] = row[DBM_Guild.Columns.role_id_aiko];

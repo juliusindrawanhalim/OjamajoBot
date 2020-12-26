@@ -51,6 +51,7 @@ namespace OjamajoBot
                     ret[DBM_Trading_Card_Guild.Columns.spawn_is_zone] = row[DBM_Trading_Card_Guild.Columns.spawn_is_zone];
                     ret[DBM_Trading_Card_Guild.Columns.spawn_badcard_question] = row[DBM_Trading_Card_Guild.Columns.spawn_badcard_question];
                     ret[DBM_Trading_Card_Guild.Columns.spawn_badcard_answer] = row[DBM_Trading_Card_Guild.Columns.spawn_badcard_answer];
+                    ret[DBM_Trading_Card_Guild.Columns.spawn_badcard_type] = row[DBM_Trading_Card_Guild.Columns.spawn_badcard_type];
                     ret[DBM_Trading_Card_Guild.Columns.spawn_time] = row[DBM_Trading_Card_Guild.Columns.spawn_time];
                 }
 

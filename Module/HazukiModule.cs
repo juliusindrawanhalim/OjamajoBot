@@ -311,7 +311,7 @@ namespace OjamajoBot.Module
 
         }
 
-        [Command("dabzuki"), Alias("dab"), Summary("I will give you some dab <:Dabzuki:658926367286755331>")]
+        [Command("dabzuki"), Alias("dab"), Summary("Do the dab with me")]
         public async Task dabzuki()
         {
             string[] arrRandom ={
@@ -330,7 +330,7 @@ namespace OjamajoBot.Module
             await ReplyAsync(arrRandom[new Random().Next(0, arrRandom.GetLength(0))],
                     embed: new EmbedBuilder()
                     .WithColor(Config.Hazuki.EmbedColor)
-                    .WithImageUrl("https://cdn.discordapp.com/attachments/663232256676069386/663603236099457035/Dabzuki.png")
+                    .WithImageUrl("https://cdn.discordapp.com/attachments/706770454697738300/790615761152507994/Dabzuki.png")
                     .Build());
 
         }
@@ -390,22 +390,27 @@ namespace OjamajoBot.Module
             int rndIndex = new Random().Next(0, listRandomRespond.Count);
             string tempReply = listRandomRespond[rndIndex] + Config.Hazuki.Status.currentActivityReply;
 
-            await ReplyAsync(tempReply);
+            await ReplyAsync(embed: new EmbedBuilder()
+                .WithDescription(tempReply)
+                .WithColor(Config.Hazuki.EmbedColor)
+                .WithImageUrl("https://cdn.discordapp.com/attachments/706770454697738300/790613685885468692/d6581ed77ec875f739b61f13b5d597c48968ab08_00.png")
+                .Build());
         }
 
-        [Command("hugs"), Alias("hug"), Summary("I will give warm hug for you or <username>")]
-        public async Task HugUser(SocketGuildUser username = null)
+        [Command("hug"), Summary("Give a hug for <username>")]
+        public async Task HugUser([Remainder]string username)
         {
-            if (username == null)
-            {
-                string message = $"*hugs back*. Thank you for the warm hugs {MentionUtils.MentionUser(Context.User.Id)} :hugging:";
-                await Context.Channel.SendMessageAsync(message);
-            }
-            else
-            {
-                string message = $"Let's give a warm hugs for {MentionUtils.MentionUser(username.Id)} :hugging:";
-                await Context.Channel.SendMessageAsync(message);
-            }
+            List<string> listRandomImage = new List<string>() {
+                "https://media.tenor.com/images/f51ff7041983283592e13e3e0c3b29b9/tenor.gif"
+            };
+
+            int rndIndex = new Random().Next(0, listRandomImage.Count);
+
+            await ReplyAsync(embed: new EmbedBuilder()
+                .WithDescription($"{MentionUtils.MentionUser(Context.User.Id)} has give a nice & friendly hug for {username}")
+                .WithColor(Config.Hazuki.EmbedColor)
+                .WithImageUrl(listRandomImage[rndIndex])
+                .Build());
         }
 
         [Command("random"), Alias("moments"), Summary("Show any random Hazuki moments. " +
@@ -469,8 +474,8 @@ namespace OjamajoBot.Module
             await ReplyAsync("Paipai Ponpoi Puwapuwa Puu! Show my biography info!",
             embed: new EmbedBuilder()
             .WithAuthor("Hazuki Fujiwara", Config.Hazuki.EmbedAvatarUrl)
-            .WithDescription("Hazuki Fujiwara (藤原はづき, Fujiwara Hazuki) is one of the main characters and deuteragonist in Ojamajo Doremi. " +
-            "She has been Doremi Harukaze's friend since childhood and became an Apprentice Witch sometime after Doremi, along with Aiko Senoo in order to help keep the secret.")
+            .WithDescription("Hazuki Fujiwara (藤原はづき, Fujiwara Hazuki) is one of the main characters in Ojamajo Doremi. " +
+            "She has been Doremi Harukaze's friend since childhood and became an apprentice witch after Doremi, along with Aiko Senoo in order to help keep the secret.")
             .AddField("Full Name", "藤原 はづき Fujiwara Hazuki", true)
             .AddField("Gender", "female", true)
             .AddField("Blood Type", "A", true)
@@ -479,8 +484,8 @@ namespace OjamajoBot.Module
             .AddField("Favorite Food", "Chiffon Cake", true)
             .AddField("Debut", "[I'm Doremi! Becoming a Witch Apprentice!](https://ojamajowitchling.fandom.com/wiki/I%27m_Doremi!_Becoming_a_Witch_Apprentice!)", true)
             .WithColor(Config.Hazuki.EmbedColor)
-            .WithImageUrl("https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcSUFnwRpXhP__njQve5yVKjzr3AhhZSuYpi26lylHbHP64-cK5I")
-            .WithFooter("Source: [Ojamajo Witchling Wiki](https://ojamajowitchling.fandom.com/wiki/Hazuki_Fujiwara)")
+            .WithImageUrl("https://static.wikia.nocookie.net/ojamajowitchling/images/4/47/O.D_LFMD%27_Hazuki_Fujiwara.png")
+            .WithFooter("Source: [Ojamajo Doremi Wiki](https://ojamajowitchling.fandom.com/wiki/Hazuki_Fujiwara)")
             .Build());
         }
 
@@ -488,17 +493,6 @@ namespace OjamajoBot.Module
         public async Task thankYou([Remainder] string query = "")
         {
             await ReplyAsync($"Your welcome, {MentionUtils.MentionUser(Context.User.Id)}. I'm glad that you're happy with it :smile:");
-        }
-
-        [Command("turn"), Alias("transform"), Summary("Transform <username> into <wishes>")]
-        public async Task spells(IUser username, [Remainder] string wishes)
-        {
-            //await Context.Message.DeleteAsync();
-            await ReplyAsync($"Paipai Ponpoi Puwapuwa Puu! Turn {username.Mention} into {wishes}",
-            embed: new EmbedBuilder()
-            .WithColor(Config.Hazuki.EmbedColor)
-            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/b/bc/Hazu-spell.gif")
-            .Build());
         }
 
         [Command("wheezuki"), Alias("laughzuki"), Summary("\uD83C\uDF2C I will give you some random woosh jokes \uD83E\uDD76 \n" +
@@ -522,8 +516,8 @@ namespace OjamajoBot.Module
                     .WithAuthor("SOS Trio", "https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcTWj56dpMHiFcKv0Gz_cBQPZTZRNZoaUskA_OuamYo8pTy4CaoJ")
                     .WithColor(Config.Hazuki.EmbedColor)
                     .WithDescription($"{setup}\n{punchline}")
-                    .WithImageUrl("https://cdn.discordapp.com/attachments/662953139011452929/701404624044818512/unknown.png")
-                    .WithFooter("Contributed by: Letter Three")
+                    .WithImageUrl("https://cdn.discordapp.com/attachments/706770454697738300/790606330217496626/unknown.png")
+                    .WithFooter("Art by: Letter Three")
                     .Build());
 
                 }
@@ -761,18 +755,19 @@ namespace OjamajoBot.Module
             await ReplyAsync(embed: MinigameCore.printLeaderboard(Context, Config.Hazuki.EmbedColor).Build());
         }
 
-        [Command("rockpaperscissor", RunMode = RunMode.Async), Alias("rps"), Summary("Play the Rock Paper Scissor minigame with Hazuki. 20 score points reward.")]
-        public async Task RockPaperScissor(string guess = "")
+        [Command("jankenpon", RunMode = RunMode.Async), Alias("rps", "rockpaperscissors"), Summary("Play the Rock Paper Scissors minigame with Hazuki. " +
+            "Reward: 20 minigame score points & 1 magic seeds.")]
+        public async Task RockPaperScissors(string guess = "")
         {
             if (guess == "")
             {
-                await ReplyAsync($"Please enter the valid parameter: **rock** or **paper** or **scissor**");
+                await ReplyAsync($"Please enter the valid parameter: **rock** or **paper** or **scissors**");
                 return;
             }
-            else if (guess.ToLower() != "rock" && guess.ToLower() != "paper" && guess.ToLower() != "scissor")
+            else if (guess.ToLower() != "rock" && guess.ToLower() != "paper" && guess.ToLower() != "scissors")
             {
                 await ReplyAsync($"Sorry **{Context.User.Username}**. " +
-                    $"Please enter the valid parameter: **rock** or **paper** or **scissor**");
+                    $"Please enter the valid parameter: **rock** or **paper** or **scissors**");
                 return;
             }
 
@@ -780,10 +775,10 @@ namespace OjamajoBot.Module
             int randomGuess = new Random().Next(0, 3);//generate random
 
             string[] arrWinReaction = { $"I'm sorry {Context.User.Username}, but I win the game this time." };//bot win
-            string[] arrLoseReaction = { "Oh no, looks like I lose the game." };//bot lose
+            string[] arrLoseReaction = { "Oh no, I loss from the game." };//bot lose
             string[] arrDrawReaction = { "We both landed a draw." };//bot draw
 
-            Tuple<string, EmbedBuilder,Boolean> result = MinigameCore.rockPaperScissor.rpsResults(Config.Hazuki.EmbedColor, Config.Hazuki.EmbedAvatarUrl, randomGuess, guess, "hazuki", Context.User.Username,
+            Tuple<string, EmbedBuilder,Boolean> result = MinigameCore.rockPaperScissors.rpsResults(Config.Hazuki.EmbedColor, Config.Hazuki.EmbedAvatarUrl, randomGuess, guess, "hazuki", Context.User.Username,
                 arrWinReaction, arrLoseReaction, arrDrawReaction,
                 Context.Guild.Id, Context.User.Id);
 
@@ -809,9 +804,8 @@ namespace OjamajoBot.Module
                 string userCardZone = userTradingCardData[DBM_User_Trading_Card_Data.Columns.card_zone].ToString();
                 if (!userCardZone.Contains("hazuki"))
                 {
-                    await ReplyAndDeleteAsync(":x: Sorry, you are not on the correct card zone. " +
-                        $"Please assign yourself on the correct card zone with **{Config.Hazuki.PrefixParent[0]}card zone set <category>** command.",
-                        timeout: TimeSpan.FromSeconds(20));
+                    await ReplyAsync(":x: Sorry, you are not on the correct card zone. " +
+                        $"Please assign yourself on the correct card zone with **{Config.Hazuki.PrefixParent[0]}card zone set <category>** command.");
                     return Ok();
                 }
             }
@@ -825,7 +819,7 @@ namespace OjamajoBot.Module
 
             if (cardCaptureReturn.Item1 == "")
             {
-                await ReplyAndDeleteAsync(null, embed: cardCaptureReturn.Item2.Build(), timeout: TimeSpan.FromSeconds(15));
+                await ReplyAsync(null, embed: cardCaptureReturn.Item2.Build());
             }
             else
                 await ReplyAsync(cardCaptureReturn.Item1,
@@ -848,16 +842,16 @@ namespace OjamajoBot.Module
                     await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
                         Context.Guild.Roles.First(x => x.Name == TradingCardCore.Doremi.roleCompletionist)
                     );
-
-                    await Bot.Doremi.client
-                    .GetGuild(Context.Guild.Id)
-                    .GetTextChannel(Context.Channel.Id)
-                    .SendFileAsync(TradingCardCore.Doremi.imgCompleteAllCard, null, embed: TradingCardCore
-                    .userCompleteTheirList(Context, Config.Doremi.EmbedColor, Config.Doremi.EmbedAvatarUrl, "doremi",
-                    TradingCardCore.Doremi.imgCompleteAllCard, TradingCardCore.Doremi.roleCompletionist)
-                    .Build());
-
                 }
+
+                await Bot.Doremi.client
+                .GetGuild(Context.Guild.Id)
+                .GetTextChannel(Context.Channel.Id)
+                .SendFileAsync(TradingCardCore.Doremi.imgCompleteAllCard, null, embed: TradingCardCore
+                .userCompleteTheirList(Context, Config.Doremi.EmbedColor, Config.Doremi.EmbedAvatarUrl, "doremi",
+                TradingCardCore.Doremi.imgCompleteAllCard, TradingCardCore.Doremi.roleCompletionist)
+                .Build());
+
             }
 
             //check if player have captured all hazuki card/not
@@ -868,15 +862,16 @@ namespace OjamajoBot.Module
                     await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
                         Context.Guild.Roles.First(x => x.Name == TradingCardCore.Hazuki.roleCompletionist)
                         );
+                }
 
-                    await Bot.Hazuki.client
+                await Bot.Hazuki.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
                     .SendFileAsync(TradingCardCore.Hazuki.imgCompleteAllCard, null, embed: TradingCardCore
                     .userCompleteTheirList(Context, Config.Hazuki.EmbedColor, Config.Hazuki.EmbedAvatarUrl, "hazuki",
                     TradingCardCore.Hazuki.imgCompleteAllCard, TradingCardCore.Hazuki.roleCompletionist)
                     .Build());
-                }
+
             }
 
             //check if player have captured all aiko card/not
@@ -887,15 +882,16 @@ namespace OjamajoBot.Module
                     await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
                         Context.Guild.Roles.First(x => x.Name == TradingCardCore.Aiko.roleCompletionist)
                         );
+                }
 
-                    await Bot.Aiko.client
+                await Bot.Aiko.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
                     .SendFileAsync(TradingCardCore.Aiko.imgCompleteAllCard, null, embed: TradingCardCore
                     .userCompleteTheirList(Context, Config.Aiko.EmbedColor, Config.Aiko.EmbedAvatarUrl, "aiko",
                     TradingCardCore.Aiko.imgCompleteAllCard, TradingCardCore.Aiko.roleCompletionist)
                     .Build());
-                }
+
             }
 
             //check if player have captured all onpu card/not
@@ -906,15 +902,16 @@ namespace OjamajoBot.Module
                     await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
                         Context.Guild.Roles.First(x => x.Name == TradingCardCore.Onpu.roleCompletionist)
                         );
+                }
 
-                    await Bot.Onpu.client
+                await Bot.Onpu.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
                     .SendFileAsync(TradingCardCore.Aiko.imgCompleteAllCard, null, embed: TradingCardCore
                     .userCompleteTheirList(Context, Config.Onpu.EmbedColor, Config.Onpu.EmbedAvatarUrl, "onpu",
                     TradingCardCore.Onpu.imgCompleteAllCard, TradingCardCore.Onpu.roleCompletionist)
                     .Build());
-                }
+
             }
 
             //check if player have captured all momoko card/not
@@ -925,15 +922,16 @@ namespace OjamajoBot.Module
                     await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
                         Context.Guild.Roles.First(x => x.Name == TradingCardCore.Momoko.roleCompletionist)
                         );
+                }
 
-                    await Bot.Momoko.client
+                await Bot.Momoko.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
                     .SendFileAsync(TradingCardCore.Aiko.imgCompleteAllCard, null, embed: TradingCardCore
                     .userCompleteTheirList(Context, Config.Momoko.EmbedColor, Config.Momoko.EmbedAvatarUrl, "momoko",
                     TradingCardCore.Momoko.imgCompleteAllCard, TradingCardCore.Momoko.roleCompletionist)
                     .Build());
-                }
+
             }
 
             //check if player have captured all other special card/not
@@ -944,15 +942,16 @@ namespace OjamajoBot.Module
                     await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
                         Context.Guild.Roles.First(x => x.Name == TradingCardCore.roleCompletionistSpecial)
                         );
-
-                    await Bot.Hazuki.client
-                    .GetGuild(Context.Guild.Id)
-                    .GetTextChannel(Context.Channel.Id)
-                    .SendFileAsync(TradingCardCore.Hazuki.imgCompleteAllCard, null, embed: TradingCardCore
-                    .userCompleteTheirList(Context, Config.Hazuki.EmbedColor, Config.Hazuki.EmbedAvatarUrl, "other",
-                    TradingCardCore.imgCompleteAllCardSpecial, TradingCardCore.roleCompletionistSpecial)
-                    .Build());
                 }
+
+                await Bot.Hazuki.client
+                .GetGuild(Context.Guild.Id)
+                .GetTextChannel(Context.Channel.Id)
+                .SendFileAsync(TradingCardCore.Hazuki.imgCompleteAllCard, null, embed: TradingCardCore
+                .userCompleteTheirList(Context, Config.Hazuki.EmbedColor, Config.Hazuki.EmbedAvatarUrl, "other",
+                TradingCardCore.imgCompleteAllCardSpecial, TradingCardCore.roleCompletionistSpecial)
+                .Build());
+
             }
 
             return Ok();
@@ -1269,20 +1268,35 @@ namespace OjamajoBot.Module
 
             if (UserTradingCardDataCore.checkCardCompletion(userId, cardPack))
             {
-                if (Context.Guild.Roles.Where(x => x.Name == TradingCardCore.Hazuki.roleCompletionist).ToList().Count >= 1)
+                try
                 {
-                    await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
-                        Context.Guild.Roles.First(x => x.Name == TradingCardCore.Hazuki.roleCompletionist)
-                    );
+                    if (Context.Guild.Roles.Where(x => x.Name == TradingCardCore.Hazuki.roleCompletionist).ToList().Count >= 1)
+                    {
+                        await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
+                            Context.Guild.Roles.First(x => x.Name == TradingCardCore.Hazuki.roleCompletionist)
+                        );
+                    }
+                } catch(Exception e) { }
+                
 
+                EmbedBuilder embedReturn = TradingCardCore
+                .userCompleteTheirList(Context, Config.Hazuki.EmbedColor, Config.Hazuki.EmbedAvatarUrl, cardPack,
+                TradingCardCore.Hazuki.imgCompleteAllCard, TradingCardCore.Hazuki.roleCompletionist);
+
+                if (embedReturn != null)
+                {
                     await Bot.Doremi.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
-                    .SendFileAsync(TradingCardCore.Hazuki.imgCompleteAllCard, null, embed: TradingCardCore
-                    .userCompleteTheirList(Context, Config.Hazuki.EmbedColor, Config.Hazuki.EmbedAvatarUrl, cardPack,
-                    TradingCardCore.Hazuki.imgCompleteAllCard, TradingCardCore.Hazuki.roleCompletionist)
+                    .SendFileAsync(TradingCardCore.Hazuki.imgCompleteAllCard, null, embed: embedReturn
                     .Build());
+                } else
+                {
+                    await ReplyAsync(":white_check_mark: Your **hazuki** card completion status has been verified");
                 }
+
+                
+
             }
         }
 

@@ -31,7 +31,7 @@ namespace OjamajoBot
 
     public class TradingCardCore
     {
-        public static string version = "1.30";
+        public static string version = "1.32";
         public static string propertyId = "trading_card_spawn_id";
         public static string propertyCategory = "trading_card_spawn_category";
         public static string propertyToken = "trading_card_spawn_token";
@@ -62,34 +62,23 @@ namespace OjamajoBot
             //1.30
             return new EmbedBuilder()
             .WithColor(Config.Doremi.EmbedColor)
-            .WithTitle($"Ojamajo Trading Card - Update {version} - 25.11.20")
-            .WithDescription("Major data migration & changes " +
-            "for most all trading card & garden related command are being made for this version. " +
-            "As a bonus compensation, all user will receive free 100 magic seeds. " +
-            $"Please report if you notice any of the related command that is not working properly.")
+            .WithTitle($"Ojamajo Trading Card - Update {version} - 26.12.20")
             .AddField("**Updates**:",
-            $"-**register** command has been removed, user can now immediately capture card\n" +
-            $"-**spawn,save,delete** command has been removed\n" +
-            $"-**trade** command has been removed and will be change upon upcoming updates\n" +
-            $"-**card guide** has been updated\n" +
-            $"-Purchasing the **card boost** now doesn't reset the boost that you have from the listed boost effect\n" +
-            $"-Using the **card boost** command now doesn't reset all card boost for that pack\n" +
-            $"-The amount of **magic seeds & royal seeds** that can be store now have limited cap.\n" +
-            $"-Magic seeds are limited up to 3000 and royal seeds are limited up to 10.\n" +
-            $"-**leaderboard** command has been updated and can be called with each ojamajo bot for each pack")
-            .AddField("**New command**:",
-            "-**status complete <username>**: show the completion date status. You can put the <username> parameter with other user.\n"+
-            "-**card verify**: let you verify the card completion status.");
+            $"-Bug fix preventing user from card capturing when user data does not exists yet\n" +
+            $"-Mystery card hint updated for spell set\n" +
+            $"-Prevent from getting pop/hana card Prevent from getting pop/hana card & only normal card reward is received when using the card pureleine command" +
+            $" when using the card pureleine command\n");
         }
 
         public static int getUserRank(int exp)
         {
             //0 = 1
-            //100 = 2
-            //200 = 3
-            //300 = 4
+            //>=100 = 2
+            //>=200 = 3
+            //>=300 = 4
+            //>=400 = 5
             int rank = 1;
-            if (exp >= 100) rank = (int)Math.Ceiling(Convert.ToDouble(exp) / 100);
+            if (exp >= 100) rank = (int)Math.Ceiling(Convert.ToDouble(exp+1) / 100);
 
             if (exp == 100) rank = 2;
             if (rank >= 5) rank = 5;
@@ -124,7 +113,6 @@ namespace OjamajoBot
                 columns[DBM_User_Trading_Card_Inventory_Ojamajos.Columns.id_user] = userId.ToString();
                 columns[DBM_User_Trading_Card_Inventory_Ojamajos.Columns.id_card] = cardId;
             }
-            Console.WriteLine($"ID CARD:{cardId}");
 
             var results = db.selectAll(query,columns);
             if (results.Rows.Count >= 1)
@@ -141,7 +129,6 @@ namespace OjamajoBot
             columns[DBM_User_Trading_Card_Data.Columns.id_user] = userId.ToString();
             db.insert(DBM_User_Trading_Card_Data.tableName, columns);
         }
-
 
         public static PaginatedMessage printInventory(SocketCommandContext context, Color color, string pack, string category,
             int maxAmount, SocketGuildUser otherUser = null)
@@ -291,36 +278,62 @@ namespace OjamajoBot
 
             int boostOtherSpecial = Convert.ToInt32(userData[DBM_User_Trading_Card_Data.Columns.boost_other_special]) * 10;
 
-            string doremiBoost = $"Normal: {boostDoremiNormal}%\n" +
-                $"Platinum: {boostDoremiPlatinum}%\n" +
-                $"Metal: {boostDoremiMetal}%\n" +
-                $"Ojamajos: {boostDoremiOjamajos}%".Replace(" 0%","-");
+            string boostNormal = ""; string boostPlatinum = ""; string boostMetal = ""; string boostOjamajos = "";
+            if (boostDoremiNormal <= 0) boostNormal = "-"; else boostNormal = $"{boostDoremiNormal}%";
+            if (boostDoremiPlatinum <= 0) boostPlatinum = "-"; else boostPlatinum = $"{boostDoremiPlatinum}%";
+            if (boostDoremiMetal <= 0) boostMetal = "-"; else boostMetal = $"{boostDoremiMetal}%";
+            if (boostDoremiOjamajos <= 0) boostOjamajos = "-"; else boostOjamajos = $"{boostDoremiOjamajos}%";
+            string doremiBoost = $"Normal: {boostNormal}\n" +
+                $"Platinum: {boostPlatinum}\n" +
+                $"Metal: {boostMetal}\n" +
+                $"Ojamajos: {boostOjamajos}";
 
-            string hazukiBoost = $"Normal: {boostHazukiNormal}%\n" +
-                $"Platinum: {boostHazukiPlatinum}%\n" +
-                $"Metal: {boostHazukiMetal}%\n" +
-                $"Ojamajos: {boostHazukiOjamajos}%".Replace(" 0%", "-");
+            if (boostHazukiNormal <= 0) boostNormal = "-"; else boostNormal = $"{boostHazukiNormal}%";
+            if (boostHazukiPlatinum <= 0) boostPlatinum = "-"; else boostPlatinum = $"{boostHazukiPlatinum}%";
+            if (boostHazukiMetal <= 0) boostMetal = "-"; else boostMetal = $"{boostHazukiMetal}%";
+            if (boostHazukiOjamajos <= 0) boostOjamajos = "-"; else boostOjamajos = $"{boostHazukiOjamajos}%";
+            string hazukiBoost = $"Normal: {boostNormal}\n" +
+                $"Platinum: {boostPlatinum}\n" +
+                $"Metal: {boostMetal}\n" +
+                $"Ojamajos: {boostOjamajos}";
 
-            string aikoBoost = $"Normal: {boostAikoNormal}%\n" +
-                $"Platinum: {boostAikoPlatinum}%\n" +
-                $"Metal: {boostAikoMetal}%\n" +
-                $"Ojamajos: {boostAikoOjamajos}%".Replace(" 0%", "-");
+            if (boostAikoNormal <= 0) boostNormal = "-"; else boostNormal = $"{boostAikoNormal}%";
+            if (boostAikoPlatinum <= 0) boostPlatinum = "-"; else boostPlatinum = $"{boostAikoPlatinum}%";
+            if (boostAikoMetal <= 0) boostMetal = "-"; else boostMetal = $"{boostAikoMetal}%";
+            if (boostAikoOjamajos <= 0) boostOjamajos = "-"; else boostOjamajos = $"{boostAikoOjamajos}%";
+            string aikoBoost = $"Normal: {boostNormal}\n" +
+                $"Platinum: {boostPlatinum}\n" +
+                $"Metal: {boostMetal}\n" +
+                $"Ojamajos: {boostOjamajos}";
 
-            string onpuBoost = $"Normal: {boostOnpuNormal}%\n" +
-                $"Platinum: {boostOnpuPlatinum}%\n" +
-                $"Metal: {boostOnpuMetal}%\n" +
-                $"Ojamajos: {boostOnpuOjamajos}%".Replace(" 0%", "-");
+            if (boostOnpuNormal <= 0) boostNormal = "-"; else boostNormal = $"{boostOnpuNormal}%";
+            if (boostOnpuPlatinum <= 0) boostPlatinum = "-"; else boostPlatinum = $"{boostOnpuPlatinum}%";
+            if (boostOnpuMetal <= 0) boostMetal = "-"; else boostMetal = $"{boostOnpuMetal}%";
+            if (boostOnpuOjamajos <= 0) boostOjamajos = "-"; else boostOjamajos = $"{boostOnpuOjamajos}%";
+            string onpuBoost = $"Normal: {boostNormal}\n" +
+                $"Platinum: {boostPlatinum}\n" +
+                $"Metal: {boostMetal}\n" +
+                $"Ojamajos: {boostOjamajos}";
 
-            string momokoBoost = $"Normal: {boostMomokoNormal}%\n" +
-                $"Platinum: {boostMomokoPlatinum}%\n" +
-                $"Metal: {boostMomokoMetal}%\n" +
-                $"Ojamajos: {boostMomokoOjamajos}%".Replace(" 0%", "-");
+            if (boostMomokoNormal <= 0) boostNormal = "-"; else boostNormal = $"{boostMomokoNormal}%";
+            if (boostMomokoPlatinum <= 0) boostPlatinum = "-"; else boostPlatinum = $"{boostMomokoPlatinum}%";
+            if (boostMomokoMetal <= 0) boostMetal = "-"; else boostMetal = $"{boostMomokoMetal}%";
+            if (boostMomokoOjamajos <= 0) boostOjamajos = "-"; else boostOjamajos = $"{boostMomokoOjamajos}%";
+            string momokoBoost = $"Normal: {boostNormal}\n" +
+                $"Platinum: {boostPlatinum}\n" +
+                $"Metal: {boostMetal}\n" +
+                $"Ojamajos: {boostOjamajos}";
 
-            string otherBoost = $"**Special: {boostOtherSpecial * 10}%**".Replace(" 0%", "-");
-
+            string otherBoost = $"Special: ";
+            if (boostOtherSpecial <= 0)
+                otherBoost += "-";
+            else
+                otherBoost += $"{boostOtherSpecial}%";
+            
             return new EmbedBuilder()
                 .WithColor(color)
                 .WithTitle($":arrow_double_up: **{username} Card Status Boost**")
+                .WithDescription("Note: You need to activate with <bot>!card catch boost to use the card boost.")
                 .AddField("Doremi Boost", doremiBoost, true)
                 .AddField("Hazuki Boost", hazukiBoost, true)
                 .AddField("Aiko Boost", aikoBoost, true)
@@ -427,13 +440,6 @@ namespace OjamajoBot
                         $"Capture it first to see this card.")
                         .WithThumbnailUrl(emojiError);
 
-                    //if (dtUserHave.Rows.Count <= 0)
-                    //{
-                        
-                    //} else
-                    //{
-                        
-                    //}
                 }
             }
         }
@@ -452,15 +458,16 @@ namespace OjamajoBot
                 $" WHERE {DBM_Trading_Card_Leaderboard.Columns.id_guild}=@{DBM_Trading_Card_Leaderboard.Columns.id_guild} AND " +
                 $" {DBM_Trading_Card_Leaderboard.Columns.card_pack}=@{DBM_Trading_Card_Leaderboard.Columns.card_pack} " +
                 $" ORDER BY {DBM_Trading_Card_Leaderboard.Columns.complete_date} asc " +
-                $" LIMIT 5";
+                $" LIMIT 10";
             
             columnFilter[DBM_Trading_Card_Leaderboard.Columns.id_guild] = guildId.ToString();
             columnFilter[DBM_Trading_Card_Leaderboard.Columns.card_pack] = cardPack;
             var result = db.selectAll(query, columnFilter);
 
+
             string contentText = ""; string otherText = ""; string popText = ""; string hanaText = "";
 
-            var ctr = 1;
+            int ctr = 1;
             foreach (DataRow rows in result.Rows)
             {
                 ulong userId = Convert.ToUInt64(rows[DBM_Trading_Card_Leaderboard.Columns.id_user].ToString());
@@ -487,6 +494,7 @@ namespace OjamajoBot
                 otherText += $"{ctr}. {MentionUtils.MentionUser(userId)} : {completionDate}\n";
                 ctr++;
             }
+
 
             //pop
             columnFilter = new Dictionary<string, object>();
@@ -523,9 +531,10 @@ namespace OjamajoBot
             }
 
             if (contentText == "") contentText = $"No one has complete **{cardPack}** card pack yet.";
-            if (otherText == "") contentText = $"No one has complete **Other** card pack yet.";
-            if (popText == "") contentText = $"No one has complete **Pop** card pack yet.";
-            if (hanaText == "") contentText = $"No one has complete **Hana** card pack yet.";
+            if (otherText == "") otherText = $"No one has complete **Other** card pack yet.";
+            if (popText == "") popText = $"No one has complete **Pop** card pack yet.";
+            if (hanaText == "") hanaText = $"No one has complete **Hana** card pack yet.";
+
 
             return new EmbedBuilder()
                 .WithTitle($"\uD83C\uDFC6 Top 5 Trading Card Leaderboard")
@@ -562,11 +571,29 @@ namespace OjamajoBot
             if (resultLeaderBoardExist.Rows.Count<=0 &&
                 UserTradingCardDataCore.checkCardCompletion(userId, cardPack))
             {
+                //check the very first completion date of that user
+                string firstCompletionDate = "";
+                query = @$"SELECT min({DBM_Trading_Card_Leaderboard.Columns.complete_date}) as {DBM_Trading_Card_Leaderboard.Columns.complete_date} 
+                FROM {DBM_Trading_Card_Leaderboard.tableName} 
+                WHERE {DBM_Trading_Card_Leaderboard.Columns.id_user}=@{DBM_Trading_Card_Leaderboard.Columns.id_user} AND 
+                {DBM_Trading_Card_Leaderboard.Columns.card_pack}=@{DBM_Trading_Card_Leaderboard.Columns.card_pack}";
+                columnFilter = new Dictionary<string, object>();
+                columnFilter[DBM_Trading_Card_Leaderboard.Columns.id_user] = userId;
+                columnFilter[DBM_Trading_Card_Leaderboard.Columns.card_pack] = cardPack;
+                var resultFirstLeaderBoard = db.selectAll(query, columnFilter);
+                foreach(DataRow row in resultFirstLeaderBoard.Rows)
+                    firstCompletionDate = row[DBM_Trading_Card_Leaderboard.Columns.complete_date].ToString();
+                
                 //return congratulate embed
                 Dictionary<string, object> columnInsert = new Dictionary<string, object>();
                 columnInsert[DBM_Trading_Card_Leaderboard.Columns.id_guild] = guildId;
                 columnInsert[DBM_Trading_Card_Leaderboard.Columns.id_user] = userId;
                 columnInsert[DBM_Trading_Card_Leaderboard.Columns.card_pack] = cardPack;
+                if (firstCompletionDate != "")
+                {
+                    columnInsert[DBM_Trading_Card_Leaderboard.Columns.complete_date] = DateTime.Parse(firstCompletionDate);
+                    completedAt = DateTime.Parse(firstCompletionDate).ToString("MM/dd/yyyy");
+                }
 
                 db.insert(DBM_Trading_Card_Leaderboard.tableName, columnInsert);
 
@@ -651,7 +678,7 @@ namespace OjamajoBot
             //get status
             DBC db = new DBC();
 
-            //only for readd purpose
+            //only for read purpose
             UserTradingCardDataCore.getUserData(userId);
 
             string query = @$"select (select count(distinct(inv.id_card))
@@ -779,6 +806,10 @@ namespace OjamajoBot
             int otherSpecial = 0;
             int popNormal = 0; int hanaNormal = 0; int hanaPlatinum = 0; int hanaMetal = 0;
 
+            string doremiIcon = ""; string hazukiIcon = ""; string aikoIcon = "";
+            string onpuIcon = ""; string momokoIcon = ""; string otherIcon = "";
+            string popIcon = ""; string hanaIcon = "";
+
             Dictionary<string, object> userData = UserTradingCardDataCore.getUserData(userId);
             if (userData.Count >= 1)
             {
@@ -833,21 +864,22 @@ namespace OjamajoBot
                 $"**Ojamajos: {doremiOjamajos}/{Doremi.maxOjamajos}**";
             int totalSuccessPack = doremiNormal + doremiPlatinum + doremiMetal + doremiOjamajos;
             int totalMax = Doremi.maxNormal+ Doremi.maxPlatinum + Doremi.maxMetal + Doremi.maxOjamajos;
-                double calculated = (double)totalSuccessPack / totalMax * 100;
+            double calculated = (double)totalSuccessPack / totalMax * 100;
             if (Math.Round(calculated) >= 100)
-            {
-                //:white_check_mark:
-            }
+                doremiIcon += ":white_check_mark:";
+            
             string doremiPercentage = $"({Math.Round(calculated)}%)";
 
             string hazukiText = $"**Normal: {hazukiNormal}/{Hazuki.maxNormal}**\n" +
                 $"**Platinum: {hazukiPlatinum}/{Hazuki.maxPlatinum}**\n" +
                 $"**Metal: {hazukiMetal}/{Hazuki.maxMetal}**\n" +
                 $"**Ojamajos: {hazukiOjamajos}/{Hazuki.maxOjamajos}**";
-                totalSuccessPack = hazukiNormal + hazukiPlatinum + hazukiMetal + hazukiOjamajos;
-                totalMax = Hazuki.maxNormal + Hazuki.maxPlatinum + Hazuki.maxMetal + Hazuki.maxOjamajos;
-                calculated = (double)totalSuccessPack / totalMax * 100;
-                string hazukiPercentage = $"({Math.Round(calculated)}%)";
+            totalSuccessPack = hazukiNormal + hazukiPlatinum + hazukiMetal + hazukiOjamajos;
+            totalMax = Hazuki.maxNormal + Hazuki.maxPlatinum + Hazuki.maxMetal + Hazuki.maxOjamajos;
+            calculated = (double)totalSuccessPack / totalMax * 100;
+            if (Math.Round(calculated) >= 100)
+                hazukiIcon += ":white_check_mark:";
+            string hazukiPercentage = $"({Math.Round(calculated)}%)";
 
             string aikoText = $"**Normal: {aikoNormal}/{Aiko.maxNormal}**\n" +
                 $"**Platinum: {aikoPlatinum}/{Aiko.maxPlatinum}**\n" +
@@ -856,6 +888,8 @@ namespace OjamajoBot
             totalSuccessPack = aikoNormal + aikoPlatinum + aikoMetal + aikoOjamajos;
             totalMax = Aiko.maxNormal + Aiko.maxPlatinum + Aiko.maxMetal + Aiko.maxOjamajos;
             calculated = (double)totalSuccessPack / totalMax * 100;
+            if (Math.Round(calculated) >= 100)
+                aikoIcon += ":white_check_mark:";
             string aikoPercentage = $"({Math.Round(calculated)}%)";
 
             string onpuText = $"**Normal: {onpuNormal}/{Onpu.maxNormal}**\n" +
@@ -865,6 +899,8 @@ namespace OjamajoBot
             totalSuccessPack = onpuNormal + onpuPlatinum + onpuMetal + onpuOjamajos;
             totalMax = Onpu.maxNormal + Onpu.maxPlatinum + Onpu.maxMetal + Onpu.maxOjamajos;
             calculated = (double)totalSuccessPack / totalMax * 100;
+            if (Math.Round(calculated) >= 100)
+                onpuIcon += ":white_check_mark:";
             string onpuPercentage = $"({Math.Round(calculated)}%)";
 
             string momokoText = $"**Normal: {momokoNormal}/{Momoko.maxNormal}**\n" +
@@ -874,12 +910,16 @@ namespace OjamajoBot
             totalSuccessPack = momokoNormal + momokoPlatinum + momokoMetal + momokoOjamajos;
             totalMax = Momoko.maxNormal + Momoko.maxPlatinum + Momoko.maxMetal + Momoko.maxOjamajos;
             calculated = (double)totalSuccessPack / totalMax * 100;
+            if (Math.Round(calculated) >= 100)
+                momokoIcon += ":white_check_mark:";
             string momokoPercentage = $"({Math.Round(calculated)}%)";
 
             string popText = $"**Normal: {popNormal}/{Pop.maxNormal}**";
             totalSuccessPack = popNormal;
             totalMax = Pop.maxNormal;
             calculated = (double)totalSuccessPack / totalMax * 100;
+            if (Math.Round(calculated) >= 100)
+                popIcon += ":white_check_mark:";
             string popPercentage = $"({Math.Round(calculated)}%)";
 
             string hanaText = $"**Normal: {hanaNormal}/{Hana.maxNormal}**\n" +
@@ -888,27 +928,31 @@ namespace OjamajoBot
             totalSuccessPack = hanaNormal + hanaPlatinum + hanaMetal;
             totalMax = Hana.maxNormal + Hana.maxPlatinum + Hana.maxMetal;
             calculated = (double)totalSuccessPack / totalMax * 100;
+            if (Math.Round(calculated) >= 100)
+                hanaIcon += ":white_check_mark:";
             string hanaPercentage = $"({Math.Round(calculated)}%)";
 
             string otherText = $"**Special: {otherSpecial}/{maxSpecial}**";
             totalSuccessPack = otherSpecial;
             totalMax = maxSpecial;
             calculated = (double)totalSuccessPack / totalMax * 100;
+            if (Math.Round(calculated) >= 100)
+                otherIcon += ":white_check_mark:";
             string otherPercentage = $"({Math.Round(calculated)}%)";
 
             return new EmbedBuilder()
-                .WithTitle($"📇 {username} Card Status | Rank: {getUserRank(Convert.ToInt32(catchAttempt))}")
+                .WithAuthor(username, thumbnailUrl)
+                .WithTitle($"📇 Card Status | Rank: {getUserRank(Convert.ToInt32(catchAttempt))} | EXP: {catchAttempt}")
                 .WithColor(color)
-                .WithThumbnailUrl(thumbnailUrl)
-                .AddField("Collected / EXP", $"**{totalSuccess} / {catchAttempt}**", false)
-                .AddField($"Doremi Pack {doremiPercentage}", doremiText, true)
-                .AddField($"Hazuki Pack {hazukiPercentage}", hazukiText, true)
-                .AddField($"Aiko Pack {aikoPercentage}", aikoText, true)
-                .AddField($"Onpu Pack {onpuPercentage}", onpuText, true)
-                .AddField($"Momoko Pack {momokoPercentage}", momokoText, true)
-                .AddField($"Other Pack {otherPercentage}", otherText, true)
-                .AddField($"Hana Pack {hanaPercentage}", hanaText, true)
-                .AddField($"Pop Pack {popPercentage}", popText, true);
+                .AddField("Total:", $"**{totalSuccess}**", false)
+                .AddField($"{doremiIcon} Doremi Pack {doremiPercentage}", doremiText, true)
+                .AddField($"{hazukiIcon} Hazuki Pack {hazukiPercentage}", hazukiText, true)
+                .AddField($"{aikoIcon} Aiko Pack {aikoPercentage}", aikoText, true)
+                .AddField($"{onpuIcon} Onpu Pack {onpuPercentage}", onpuText, true)
+                .AddField($"{momokoIcon} Momoko Pack {momokoPercentage}", momokoText, true)
+                .AddField($"{otherIcon} Other Pack {otherPercentage}", otherText, true)
+                .AddField($"{hanaIcon} Hana Pack {hanaPercentage}", hanaText, true)
+                .AddField($"{popIcon} Pop Pack {popPercentage}", popText, true);
         }
 
         public static EmbedBuilder printStatusComplete(SocketCommandContext context, Color color, SocketGuildUser otherUser = null)
@@ -990,9 +1034,9 @@ namespace OjamajoBot
             }
 
             return new EmbedBuilder()
-                .WithTitle($"📇 {username} Card Completion Date Status")
+                .WithAuthor(context.User.Username,context.User.GetAvatarUrl())
+                .WithTitle($"Card Badge")
                 .WithColor(color)
-                .WithThumbnailUrl(thumbnailUrl)
                 .AddField($"{doremiIcon} Doremi Pack", doremiText, true)
                 .AddField($"{hazukiIcon} Hazuki Pack", hazukiText, true)
                 .AddField($"{aikoIcon} Aiko Pack", aikoText, true)
@@ -1087,8 +1131,6 @@ namespace OjamajoBot
                     string badCardType = TradingCardCore.BadCards.getType(
                     Convert.ToInt32(rows[DBM_Trading_Card_Guild.Columns.spawn_badcard_type]));
 
-                    Console.WriteLine(Convert.ToInt32(rows[DBM_Trading_Card_Guild.Columns.spawn_badcard_type]));
-
                     string question = rows[DBM_Trading_Card_Guild.Columns.spawn_badcard_question].ToString();
                     string correctAnswer = rows[DBM_Trading_Card_Guild.Columns.spawn_badcard_answer].ToString();
 
@@ -1181,10 +1223,17 @@ namespace OjamajoBot
                             //chosenId = "do004"; chosenCategory = "normal"; parent = "doremi"; //for debug only
                             //string chosenName = jObjTradingCardList[parent][chosenCategory][chosenId]["name"].ToString();
                             query = $"SELECT * " +
-                                $" FROM {DBM_Trading_Card_Data.tableName}  " +
+                                $" FROM {DBM_Trading_Card_Data.tableName} " +
+                                $" WHERE {DBM_Trading_Card_Data.Columns.pack}<>@{DBM_Trading_Card_Data.Columns.pack}1 AND " +
+                                $" {DBM_Trading_Card_Data.Columns.pack}<>@{DBM_Trading_Card_Data.Columns.pack}2 AND " +
+                                $" {DBM_Trading_Card_Data.Columns.category}=@{DBM_Trading_Card_Data.Columns.category} " +
                                 $" ORDER BY rand() " +
                                 $" LIMIT 1 ";
-                            var resultRandomCard = new DBC().selectAll(query);
+                            Dictionary<string, object> columnsFilter = new Dictionary<string, object>();
+                            columnsFilter[$"{DBM_Trading_Card_Data.Columns.pack}1"] = "pop";
+                            columnsFilter[$"{DBM_Trading_Card_Data.Columns.pack}2"] = "hana";
+                            columnsFilter[$"{DBM_Trading_Card_Data.Columns.category}"] = "normal";
+                            var resultRandomCard = new DBC().selectAll(query, columnsFilter);
                             string chosenId = ""; string chosenName = ""; string chosenUrl = "";
                             foreach (DataRow rowsRandomCard in resultRandomCard.Rows)
                             {
@@ -1256,34 +1305,36 @@ namespace OjamajoBot
             returnCompleted.Add("onpu", false); returnCompleted.Add("momoko", false); returnCompleted.Add("special", false);
 
             string spawnedCardId = ""; string spawnedCardPack = ""; string spawnedCardCategory = "";
-            int spawnedIsMystery = 0; string spawnedBadCardType = "";
-            int spawnedIsBadCard = 0; int spawnedIsZone = 0; string spawnedToken = "";
+            bool spawnedIsMystery = false; string spawnedBadCardType = "";
+            bool spawnedIsBadCard = false; bool spawnedIsZone = false; string spawnedToken = "";
+            string returnLevelUp = "";
 
             //spawned card information
             string name = ""; string imgUrl = ""; string rank = ""; string star = ""; string point = "";
 
             //get guild spawned card information
             var guildSpawnData = TradingCardGuildCore.getGuildData(guildId);
+            spawnedCardId = guildSpawnData[DBM_Trading_Card_Guild.Columns.spawn_id].ToString();
+            spawnedIsZone = Convert.ToBoolean(guildSpawnData[DBM_Trading_Card_Guild.Columns.spawn_is_zone].ToString());
+            spawnedIsMystery = Convert.ToBoolean(guildSpawnData[DBM_Trading_Card_Guild.Columns.spawn_is_mystery].ToString());
+            spawnedIsBadCard = Convert.ToBoolean(guildSpawnData[DBM_Trading_Card_Guild.Columns.spawn_is_badcard].ToString());
+
 
             //get spawn info
-            if (Convert.ToBoolean(guildSpawnData[DBM_Trading_Card_Guild.Columns.spawn_is_zone]) || 
-                (guildSpawnData[DBM_Trading_Card_Guild.Columns.spawn_id].ToString()!=""&&
-                !Convert.ToBoolean(guildSpawnData[DBM_Trading_Card_Guild.Columns.spawn_is_zone])))
+            if (spawnedIsZone || 
+                (spawnedCardId != ""&&
+                !spawnedIsZone))
             {
-                spawnedCardId = guildSpawnData[DBM_Trading_Card_Guild.Columns.spawn_id].ToString();
                 spawnedCardPack = guildSpawnData[DBM_Trading_Card_Guild.Columns.spawn_parent].ToString();
                 spawnedCardCategory = guildSpawnData[DBM_Trading_Card_Guild.Columns.spawn_category].ToString();
 
-                spawnedIsMystery = Convert.ToInt32(guildSpawnData[DBM_Trading_Card_Guild.Columns.spawn_is_mystery]);
-                spawnedIsBadCard = Convert.ToInt32(guildSpawnData[DBM_Trading_Card_Guild.Columns.spawn_is_badcard]);
-                if (spawnedIsBadCard == 1)
+                if (spawnedIsBadCard)
                     spawnedBadCardType = BadCards.getType(Convert.ToInt32(guildSpawnData[DBM_Trading_Card_Guild.Columns.spawn_badcard_type]));
-                    
-                spawnedIsZone = Convert.ToInt32(guildSpawnData[DBM_Trading_Card_Guild.Columns.spawn_is_zone]);
+
                 spawnedToken = guildSpawnData[DBM_Trading_Card_Guild.Columns.spawn_token].ToString();
             } 
             else 
-            {
+            { 
                 returnEmbedBuilder = new EmbedBuilder()
                 .WithColor(color)
                 .WithDescription(":x: Sorry, either this card has been captured by someone or not spawned anymore. " +
@@ -1298,7 +1349,7 @@ namespace OjamajoBot
                 //check if spawned token is same like guild
                 returnEmbedBuilder = new EmbedBuilder()
                 .WithColor(color)
-                .WithDescription($":x: Sorry, please wait for the next card spawn.")
+                .WithDescription($":x: Sorry, please wait until the next card spawn.")
                 .WithThumbnailUrl(emojiError);
                 return Tuple.Create("", returnEmbedBuilder, "", returnCompleted);
             }
@@ -1306,7 +1357,7 @@ namespace OjamajoBot
             //end get guild spawned card information
 
             //get card information
-            if (spawnedIsZone == 1)
+            if (spawnedIsZone)
             {
                 if (!userData[DBM_User_Trading_Card_Data.Columns.card_zone].ToString().Contains("ojamajos"))
                 {//default card zone
@@ -1403,6 +1454,8 @@ namespace OjamajoBot
             }
             //get card information end
 
+            
+
             //get card boost information
             int boostNormal = 0; int boostPlatinum = 0; int boostMetal = 0;
             int boostOjamajos = 0; int boostSpecial = 0;
@@ -1450,10 +1503,91 @@ namespace OjamajoBot
                     useBoost = true;
             }
 
-            if (spawnedIsMystery == 1 && parent != spawnedCardPack)
+            if (spawnedIsBadCard)
             {
-                //update token
-                UserTradingCardDataCore.addCatchAttempt(clientId, spawnedToken);
+                //bad card trigger
+                emojiError = BadCards.imgBadCardActivated;
+
+                switch (spawnedBadCardType)
+                {
+                    case "seeds":
+                        int randomLost = new Random().Next(10, 21);
+                        replyText = $":skull: Oh no, **{spawnedBadCardType}** bad card effect has activated! " +
+                            $"**{username}** just lost {randomLost} magic seeds!";
+
+                        UserDataCore.updateMagicSeeds(Convert.ToUInt64(clientId), -randomLost);
+                        break;
+                    case "curse":
+                        string parentLost = parent;
+                        if (parent != "doremi" && parent != "hazuki" && parent != "aiko" && parent != "onpu" && parent != "momoko")
+                            parentLost = "doremi";
+
+                        //get the random lost card information from user
+                        string query = @$"select * 
+                                            from {DBM_User_Trading_Card_Inventory.tableName} inv, {DBM_Trading_Card_Data.tableName} tc 
+                                            where inv.{DBM_User_Trading_Card_Inventory.Columns.id_user}=@{DBM_User_Trading_Card_Inventory.Columns.id_user} and                                       inv.{DBM_User_Trading_Card_Inventory.Columns.id_card} = tc.{DBM_User_Trading_Card_Inventory.Columns.id_card} and 
+                                            tc.{DBM_Trading_Card_Data.Columns.pack}=@{DBM_Trading_Card_Data.Columns.pack} and 
+                                            tc.{DBM_Trading_Card_Data.Columns.category}=@{DBM_Trading_Card_Data.Columns.category} 
+                                            order by rand() 
+                                            limit 1";
+                        columns = new Dictionary<string, object>();
+                        columns[DBM_User_Trading_Card_Inventory.Columns.id_user] = clientId.ToString();
+                        columns[DBM_Trading_Card_Data.Columns.pack] = parentLost;
+                        columns[DBM_Trading_Card_Data.Columns.category] = "normal";
+                        var resultLost = new DBC().selectAll(query, columns);
+
+                        if (resultLost.Rows.Count >= 1)
+                        {
+                            string stolenCardId = ""; string stolenName = "";
+                            foreach (DataRow rows in resultLost.Rows)
+                                stolenCardId = rows[DBM_User_Trading_Card_Inventory.Columns.id_card].ToString();
+
+                            //delete
+                            query = $"DELETE FROM {DBM_User_Trading_Card_Inventory.tableName} " +
+                                $" WHERE {DBM_User_Trading_Card_Inventory.Columns.id_card}=@{DBM_User_Trading_Card_Inventory.Columns.id_card} AND " +
+                                $" {DBM_User_Trading_Card_Inventory.Columns.id_user}=@{DBM_User_Trading_Card_Inventory.Columns.id_user} ";
+                            columns = new Dictionary<string, object>();
+                            columns[DBM_User_Trading_Card_Inventory.Columns.id_card] = stolenCardId;
+                            columns[DBM_User_Trading_Card_Inventory.Columns.id_user] = clientId.ToString();
+                            new DBC().delete(query, columns);
+
+                            replyText = $":skull: Oh no, **{spawnedBadCardType}** bad card effect has activated! " +
+                                $"**{username}** just lost **{parentLost} normal** card: **{stolenCardId} - {stolenName}**!";
+                        }
+                        else
+                        {
+                            replyText = $":skull: Oh no, **{spawnedBadCardType}** bad card effect has activated! But **{username}** don't have any card to lose...";
+                        }
+                        break;
+                    case "failure":
+                        replyText = $":skull: Oh no, **{spawnedBadCardType}** bad card effect has activated! " +
+                            $"**{username}** just lost a chance to catch a card on this spawn turn!";
+
+                        //update
+                        query = $"UPDATE {DBM_User_Trading_Card_Data.tableName} " +
+                            $" SET {DBM_User_Trading_Card_Data.Columns.catch_token}=@{DBM_User_Trading_Card_Data.Columns.catch_token} " +
+                            $" WHERE {DBM_User_Trading_Card_Data.Columns.id_user}=@{DBM_User_Trading_Card_Data.Columns.id_user} ";
+                        columns = new Dictionary<string, object>();
+                        columns[DBM_User_Trading_Card_Data.Columns.catch_token] = spawnedToken;
+                        columns[DBM_User_Trading_Card_Data.Columns.id_user] = clientId;
+                        new DBC().update(query, columns);
+                        break;
+                }
+
+                //bad card ends
+            } else if (spawnedIsMystery && parent != spawnedCardPack)
+            {
+                //update catch token
+                string query = $"UPDATE {DBM_User_Trading_Card_Data.tableName} " +
+                $" SET {DBM_User_Trading_Card_Data.Columns.catch_token}=@{DBM_User_Trading_Card_Data.Columns.catch_token} ";
+                query += $" WHERE {DBM_User_Trading_Card_Data.Columns.id_user}=@{DBM_User_Trading_Card_Data.Columns.id_user}";
+
+                DBC dbUpdate = new DBC();
+                columns = new Dictionary<string, object>();
+                columns[DBM_User_Data.Columns.id_user] = clientId.ToString();
+                columns[DBM_User_Trading_Card_Data.Columns.catch_token] = spawnedToken;
+                dbUpdate.update(query, columns);
+
                 replyText = ":x: Sorry, you guessed the wrong mystery card.";
 
                 //returnEmbedBuilder = new EmbedBuilder()
@@ -1462,11 +1596,29 @@ namespace OjamajoBot
                 //.WithThumbnailUrl(emojiError);
                 //return Tuple.Create("", returnEmbedBuilder, "", returnCompleted);
             }
-            else if (spawnedIsZone==1||
+            else if (spawnedIsZone||
             (spawnedCardId != "" && spawnedCardCategory != ""))
             {
-                if (spawnedIsZone == 1 || 
-                    parent == spawnedCardPack)//check if the caller bot pack is same like the guild spawn
+                bool okOjamajoRelated = false;
+
+                //check related if ojamajos
+                string queryRelated = $"SELECT * " +
+                $" FROM {DBM_User_Trading_Card_Inventory_Ojamajos.tableName} " +
+                $" WHERE {DBM_User_Trading_Card_Inventory_Ojamajos.Columns.id_card}=@{DBM_User_Trading_Card_Inventory_Ojamajos.Columns.id_card} AND " +
+                $" {DBM_User_Trading_Card_Inventory_Ojamajos.Columns.pack} like @{DBM_User_Trading_Card_Inventory_Ojamajos.Columns.pack} " +
+                $" LIMIT 1";
+                columns = new Dictionary<string, object>();
+                columns[DBM_User_Trading_Card_Inventory_Ojamajos.Columns.id_card] = spawnedCardId;
+                columns[DBM_User_Trading_Card_Inventory_Ojamajos.Columns.pack] = $"%{parent}%";
+                var relatedOjamajoCheck = new DBC().selectAll(queryRelated, columns);
+                if (relatedOjamajoCheck.Rows.Count >= 1)
+                    okOjamajoRelated = true;
+                
+                //end check related if ojamajos
+
+                if (spawnedIsZone || 
+                    parent == spawnedCardPack||
+                    okOjamajoRelated)//check if the caller bot pack is same like the guild spawn
                 {
                     int catchState = 0;
 
@@ -1480,12 +1632,10 @@ namespace OjamajoBot
                         //check if user have the card/not
                         if (checkUserHaveCard(clientId,parent,spawnedCardId))
                         {//card already exist on inventory
-                            if (spawnedIsMystery != 1)
-                                replyText = $":x: Sorry, I can't capture **{spawnedCardId} - {name}** because you already have it. " +
-                                    $"";
+                            if (!spawnedIsMystery)
+                                replyText = $":x: Sorry, I can't capture **{spawnedCardId} - {name}** because you already have it. ";
                             else
-                                replyText = $":x: You guessed the mystery card correctly but I can't capture **{spawnedCardId} - {name}** because you aleady have it. " +
-                                    $"";
+                                replyText = $":x: You guessed the mystery card correctly but I can't capture **{spawnedCardId} - {name}** because you aleady have it. ";
                             //UserDataCore.updateMagicSeeds(clientId, 1);
                             //UserTradingCardDataCore.updateFragmentPoints(clientId, 1);
                             UserTradingCardDataCore.addCatchAttempt(clientId, spawnedToken);
@@ -1501,42 +1651,42 @@ namespace OjamajoBot
                             {
                                 if (!useBoost)
                                 {
-                                    if ((catchRate < TradingCardCore.captureRateNormal && spawnedIsMystery != 1) ||
-                                        (catchRate < TradingCardCore.captureRateNormal + 1 && spawnedIsMystery != 1)) catchState = 1;
+                                    if ((catchRate < TradingCardCore.captureRateNormal && !spawnedIsMystery) ||
+                                        (catchRate < TradingCardCore.captureRateNormal + 1 && spawnedIsMystery)) catchState = 1;
                                 }
                                 else
                                 {
                                     boostRate = $"{boostNormal * 10}%";
-                                    if ((catchRate < boostNormal && spawnedIsMystery != 1) ||
-                                        (catchRate < boostNormal + 1 && spawnedIsMystery == 1)) catchState = 1;
+                                    if ((catchRate < boostNormal && !spawnedIsMystery) ||
+                                        (catchRate < boostNormal + 1 && spawnedIsMystery)) catchState = 1;
                                 }
                             }
                             else if (spawnedCardCategory.ToLower() == "platinum")
                             {
                                 if (!useBoost)
                                 {
-                                    if ((catchRate < TradingCardCore.captureRatePlatinum && spawnedIsMystery != 1) ||
-                                        (catchRate < TradingCardCore.captureRatePlatinum + 1 && spawnedIsMystery == 1)) catchState = 1;
+                                    if ((catchRate < TradingCardCore.captureRatePlatinum && !spawnedIsMystery) ||
+                                        (catchRate < TradingCardCore.captureRatePlatinum + 1 && spawnedIsMystery)) catchState = 1;
                                 }
                                 else
                                 {
                                     boostRate = $"{boostPlatinum * 10}%";
-                                    if ((catchRate < boostPlatinum && spawnedIsMystery != 1) ||
-                                        (catchRate < boostPlatinum + 1 && spawnedIsMystery == 1)) catchState = 1;
+                                    if ((catchRate < boostPlatinum && !spawnedIsMystery) ||
+                                        (catchRate < boostPlatinum + 1 && spawnedIsMystery)) catchState = 1;
                                 }
                             }
                             else if (spawnedCardCategory.ToLower() == "metal")
                             {
                                 if (!useBoost)
                                 {
-                                    if ((catchRate < TradingCardCore.captureRateMetal && spawnedIsMystery != 1) ||
-                                        (catchRate < TradingCardCore.captureRateMetal + 2 && spawnedIsMystery == 1)) catchState = 1;
+                                    if ((catchRate < TradingCardCore.captureRateMetal && !spawnedIsMystery) ||
+                                        (catchRate < TradingCardCore.captureRateMetal + 2 && spawnedIsMystery)) catchState = 1;
                                 }
                                 else
                                 {
                                     boostRate = $"{boostMetal * 10}%";
-                                    if ((catchRate < boostMetal && spawnedIsMystery != 1) ||
-                                        (catchRate < boostMetal + 2 && spawnedIsMystery == 1)) catchState = 1;
+                                    if ((catchRate < boostMetal && !spawnedIsMystery) ||
+                                        (catchRate < boostMetal + 2 && spawnedIsMystery)) catchState = 1;
                                 }
                             }
                             else if (spawnedCardCategory.ToLower() == "ojamajos")
@@ -1556,86 +1706,9 @@ namespace OjamajoBot
                                 if (useBoost) boostRate = $"{boostSpecial * 10}%";
                             }
 
-                            if (spawnedIsBadCard == 1)
+                            
+                            if (catchState == 1)
                             {
-                                //bad card trigger
-                                emojiError = BadCards.imgBadCardActivated;
-
-                                switch (spawnedBadCardType)
-                                {
-                                    case "seeds":
-                                        int randomLost = new Random().Next(1, 11);
-                                        replyText = $":skull: Oh no, **{spawnedBadCardType}** bad card effect has activated! " +
-                                            $"**{username}** just lost {randomLost} magic seeds!";
-
-                                        UserDataCore.updateMagicSeeds(Convert.ToUInt64(clientId), -randomLost);
-                                        break;
-                                    case "curse":
-                                        string parentLost = parent;
-                                        if (parent != "doremi" && parent != "hazuki" && parent != "aiko" && parent != "onpu" && parent != "momoko")
-                                            parentLost = "doremi";
-
-                                        //get the random lost card information from user
-                                        string query = @$"select * 
-                                            from {DBM_User_Trading_Card_Inventory.tableName} inv, {DBM_Trading_Card_Data.tableName} tc 
-                                            where inv.{DBM_User_Trading_Card_Inventory.Columns.id_user}=@{DBM_User_Trading_Card_Inventory.Columns.id_user} and                                       inv.{DBM_User_Trading_Card_Inventory.Columns.id_card} = tc.{DBM_User_Trading_Card_Inventory.Columns.id_card} and 
-                                            tc.{DBM_Trading_Card_Data.Columns.pack}=@{DBM_Trading_Card_Data.Columns.pack} and 
-                                            tc.{DBM_Trading_Card_Data.Columns.category}=@{DBM_Trading_Card_Data.Columns.category} 
-                                            order by rand() 
-                                            limit 1";
-                                        columns = new Dictionary<string, object>();
-                                        columns[DBM_User_Trading_Card_Inventory.Columns.id_user] = clientId.ToString();
-                                        columns[DBM_Trading_Card_Data.Columns.pack] = parentLost;
-                                        columns[DBM_Trading_Card_Data.Columns.category] = "normal";
-                                        var resultLost = new DBC().selectAll(query, columns);
-
-                                        if (resultLost.Rows.Count >= 1)
-                                        {
-                                            string stolenCardId = ""; string stolenName = "";
-
-                                            foreach (DataRow rows in resultLost.Rows)
-                                            {
-                                                stolenCardId = rows[DBM_User_Trading_Card_Inventory.Columns.id_card].ToString();
-                                            }
-
-                                            //delete
-                                            query = $"DELETE FROM {DBM_User_Trading_Card_Inventory.tableName} " +
-                                                $" WHERE {DBM_User_Trading_Card_Inventory.Columns.id_card}=@{DBM_User_Trading_Card_Inventory.Columns.id_card} AND " +
-                                                $" {DBM_User_Trading_Card_Inventory.Columns.id_user}=@{DBM_User_Trading_Card_Inventory.Columns.id_user} ";
-                                            columns = new Dictionary<string, object>();
-                                            columns[DBM_User_Trading_Card_Inventory.Columns.id_card] = stolenCardId;
-                                            columns[DBM_User_Trading_Card_Inventory.Columns.id_user] = clientId.ToString();
-                                            new DBC().delete(query, columns);
-
-                                            replyText = $":skull: Oh no, **{spawnedBadCardType}** bad card effect has activated! " +
-                                                $"**{username}** just lost **{parentLost} normal** card: **{stolenCardId} - {stolenName}**!";
-                                        }
-                                        else
-                                        {
-                                            replyText = $":skull: Oh no, **{spawnedBadCardType}** bad card effect has activated! But **{username}** don't have any card to lose...";
-                                        }
-                                        break;
-                                    case "failure":
-                                        replyText = $":skull: Oh no, **{spawnedBadCardType}** bad card effect has activated! " +
-                                            $"**{username}** just lost a chance to catch a card on this spawn turn!";
-
-                                        //update
-                                        query = $"UPDATE {DBM_User_Trading_Card_Data.tableName} " +
-                                            $" SET {DBM_User_Trading_Card_Data.Columns.catch_token}=@{DBM_User_Trading_Card_Data.Columns.catch_token} " +
-                                            $" WHERE {DBM_User_Trading_Card_Data.Columns.id_user}=@{DBM_User_Trading_Card_Data.Columns.id_user} ";
-                                        columns = new Dictionary<string, object>();
-                                        columns[DBM_User_Trading_Card_Data.Columns.catch_token] = spawnedToken;
-                                        columns[DBM_User_Trading_Card_Data.Columns.id_user] = clientId;
-                                        new DBC().update(query, columns);
-                                        break;
-                                }
-
-                                //bad card ends
-                            }
-                            else if (catchState == 1)
-                            {
-                                columns = new Dictionary<string, object>();
-                                columns["boost"] = 0;
                                 //card not exist yet
                                 if (useBoost)
                                 {//reset boost
@@ -1659,6 +1732,10 @@ namespace OjamajoBot
                                             //arrInventory["boost"][parent][spawnedCardCategory] = "0";
                                             break;
                                     }
+                                    columns = new Dictionary<string, object>();
+                                    columns["boost"] = 0;
+                                    columns[DBM_User_Trading_Card_Data.Columns.id_user] = clientId.ToString();
+
                                     new DBC().update(query, columns);
                                 }
 
@@ -1669,8 +1746,8 @@ namespace OjamajoBot
                                 {   //card type is ojamajos
                                     //check related card pack
                                     string query = $"SELECT * " +
-                                        $" FROM {DBM_User_Trading_Card_Inventory_Ojamajos.tableName} " +
-                                        $" WHERE {DBM_User_Trading_Card_Inventory_Ojamajos.Columns.id_card}=@{DBM_User_Trading_Card_Inventory_Ojamajos.Columns.id_card}";
+                                        $" FROM {DBM_Trading_Card_Data_Ojamajos.tableName} " +
+                                        $" WHERE {DBM_Trading_Card_Data_Ojamajos.Columns.id_card}=@{DBM_Trading_Card_Data_Ojamajos.Columns.id_card}";
                                     columns = new Dictionary<string, object>();
                                     columns[DBM_User_Trading_Card_Inventory_Ojamajos.Columns.id_card] = spawnedCardId;
                                     var relatedResult = new DBC().selectAll(query, columns);
@@ -1680,7 +1757,18 @@ namespace OjamajoBot
                                         string[] related = rows["pack"].ToString().Split(",");
                                         for(int i = 0;i<related.Length;i++)
                                         {
-                                            try
+                                            //check card that is not haved yet:
+                                            query = $"SELECT * " +
+                                            $" FROM {DBM_User_Trading_Card_Inventory_Ojamajos.tableName} " +
+                                            $" WHERE {DBM_User_Trading_Card_Inventory_Ojamajos.Columns.id_user}=@{DBM_User_Trading_Card_Inventory_Ojamajos.Columns.id_user} AND " +
+                                            $" {DBM_User_Trading_Card_Inventory_Ojamajos.Columns.id_card}=@{DBM_User_Trading_Card_Inventory_Ojamajos.Columns.id_card} AND " +
+                                            $" {DBM_User_Trading_Card_Inventory_Ojamajos.Columns.pack}=@{DBM_User_Trading_Card_Inventory_Ojamajos.Columns.pack} ";
+                                            columns = new Dictionary<string, object>();
+                                            columns[DBM_User_Trading_Card_Inventory_Ojamajos.Columns.id_user] = clientId;
+                                            columns[DBM_User_Trading_Card_Inventory_Ojamajos.Columns.id_card] = spawnedCardId;
+                                            columns[DBM_User_Trading_Card_Inventory_Ojamajos.Columns.pack] = related[i];
+                                            var checkOjamajosExists = new DBC().selectAll(query,columns);
+                                            if (checkOjamajosExists.Rows.Count <= 0)
                                             {
                                                 columns = new Dictionary<string, object>();
                                                 columns[DBM_User_Trading_Card_Inventory_Ojamajos.Columns.id_user] = clientId;
@@ -1688,7 +1776,6 @@ namespace OjamajoBot
                                                 columns[DBM_User_Trading_Card_Inventory_Ojamajos.Columns.id_card] = spawnedCardId;
                                                 db.insert(DBM_User_Trading_Card_Inventory_Ojamajos.tableName, columns);
                                             }
-                                            catch { }
                                         }
                                     }
                                 } else
@@ -1700,19 +1787,17 @@ namespace OjamajoBot
                                 }
 
                                 //level up notification
-                                string returnLevelUp = "";
-                                if ((int)userData["catch_attempt"] == 100 || (int)userData["catch_attempt"] == 200 ||
-                                    (int)userData["catch_attempt"] == 300 || (int)userData["catch_attempt"] == 400 ||
-                                    (int)userData["catch_attempt"] == 500)
+                                if ((int)userData["catch_attempt"] == 100 - 1 || (int)userData["catch_attempt"] == 200 - 1 ||
+                                    (int)userData["catch_attempt"] == 300 - 1 || (int)userData["catch_attempt"] == 400 - 1)
                                 {
-                                    returnLevelUp = $":up: Congratulations! **{username}** is now rank {getUserRank((int)userData["catch_attempt"])}!";
+                                    returnLevelUp = $":up: Congratulations! **{username}** is now rank {getUserRank((int)userData["catch_attempt"])+1}!";
                                 }
 
                                 string[] arrRandomFirstSentence = {
                                     "Congratulations,","Nice Catch!","Nice one!","Yatta!"
                                 };
 
-                                if (spawnedIsMystery == 1)
+                                if (spawnedIsMystery)
                                     replyText += $":white_check_mark: {arrRandomFirstSentence[new Random().Next(0, arrRandomFirstSentence.Length)]} " +
                                     $"**{username}** have successfully revealed & captured **{spawnedCardCategory}** mystery card: **{name}**";
                                 else
@@ -1720,7 +1805,7 @@ namespace OjamajoBot
                                     replyText += $":white_check_mark: {arrRandomFirstSentence[new Random().Next(0, arrRandomFirstSentence.Length)]} " +
                                     $"**{username}** have successfully captured **{spawnedCardCategory}** card: **{name}**";
 
-                                    if (spawnedIsZone == 1)
+                                    if (spawnedIsZone)
                                     {
                                         replyText += " from the zone card.";
                                     }
@@ -1728,7 +1813,7 @@ namespace OjamajoBot
 
                                 //get latest total data
                                 int currentTotal = 0;
-                                if (parent == "ojamajos")
+                                if (spawnedCardCategory == "ojamajos")
                                 {
                                     //get max current
                                     string query = @$"select count(distinct(inv.{DBM_User_Trading_Card_Inventory_Ojamajos.Columns.id_card})) as total 
@@ -1746,9 +1831,9 @@ namespace OjamajoBot
                                     }
 
                                     //get max total
-                                    query = @$"select count(distinct(inv.{DBM_Trading_Card_Data_Ojamajos.Columns.id_card})) as total 
+                                    query = @$"select count(distinct(tc.{DBM_Trading_Card_Data_Ojamajos.Columns.id_card})) as total 
                                             from {DBM_Trading_Card_Data_Ojamajos.tableName} tc 
-                                            tc.{DBM_Trading_Card_Data_Ojamajos.Columns.pack} like @{DBM_Trading_Card_Data_Ojamajos.Columns.pack}";
+                                            where tc.{DBM_Trading_Card_Data_Ojamajos.Columns.pack} like @{DBM_Trading_Card_Data_Ojamajos.Columns.pack}";
                                     columns = new Dictionary<string, object>();
                                     columns[DBM_Trading_Card_Data_Ojamajos.Columns.pack] = $"%{parent}%";
                                     result = new DBC().selectAll(query, columns);
@@ -1818,7 +1903,7 @@ namespace OjamajoBot
                                 //    returnCompleted["other"] = true;
 
                                 //erase spawned instance if not zone card
-                                if (spawnedIsZone == 0)
+                                if (!spawnedIsZone)
                                     TradingCardCore.resetSpawnInstance(guildId);
 
                                 UserTradingCardDataCore.addCatchAttempt(clientId, spawnedToken);
@@ -1829,10 +1914,15 @@ namespace OjamajoBot
                                 //fail to catch & update catch attempt & token
                                 UserTradingCardDataCore.addCatchAttempt(clientId, spawnedToken);
 
+                                returnLevelUp = "";
+                                if ((int)userData["catch_attempt"] == 100 - 1 || (int)userData["catch_attempt"] == 200 - 1 ||
+                                    (int)userData["catch_attempt"] == 300 - 1 || (int)userData["catch_attempt"] == 400 - 1)
+                                {
+                                    returnLevelUp = $":up: Congratulations! **{username}** is now rank {getUserRank((int)userData["catch_attempt"]+1)}!";
+                                }
+
                                 if (useBoost)
                                 {   //reset boost
-                                    columns = new Dictionary<string, object>();
-                                    columns["boost"] = 0;
                                     string query = "";
                                     replyText = $":arrow_double_up: **{GlobalFunctions.UppercaseFirst(parent)} {GlobalFunctions.UppercaseFirst(spawnedCardCategory)}** " +
                                         $"Card Capture Boost has been used!\n";
@@ -1841,22 +1931,24 @@ namespace OjamajoBot
                                         query = $"UPDATE {DBM_User_Trading_Card_Data.tableName} " +
                                             $" SET {DBM_User_Trading_Card_Data.Columns.boost_other_special}=@boost " +
                                             $" WHERE {DBM_User_Trading_Card_Data.Columns.id_user}=@{DBM_User_Trading_Card_Data.Columns.id_user} ";
-                                    }   
+                                    }
                                     else
                                     {
                                         query = $"UPDATE {DBM_User_Trading_Card_Data.tableName} " +
                                             $" SET boost_{spawnedCardPack.ToLower()}_{spawnedCardCategory.ToLower()}=@boost " +
                                             $" WHERE {DBM_User_Trading_Card_Data.Columns.id_user}=@{DBM_User_Trading_Card_Data.Columns.id_user} ";
                                     }
-
+                                    columns = new Dictionary<string, object>();
+                                    columns["boost"] = 0;
+                                    columns[DBM_User_Trading_Card_Data.Columns.id_user] = clientId.ToString();
                                     new DBC().update(query, columns);
                                 }
 
-                                if (spawnedIsMystery == 1)
+                                if (spawnedIsMystery)
                                     replyText += $":x: Card revealed correctly! " +
                                         $"But sorry, {username} **fail** to catch the mystery card. Better luck next time.";
                                 else
-                                    replyText += $":x: Sorry {username}, **fail** to catch the card. Better luck next time.";
+                                    replyText += $":x: Sorry, {username} **fail** to catch the card. Better luck next time.";
                             }
                         }
                         
@@ -1879,7 +1971,7 @@ namespace OjamajoBot
             .WithColor(color)
             .WithDescription(replyText)
             .WithThumbnailUrl(emojiError);
-            return Tuple.Create("", returnEmbedBuilder, "", returnCompleted);
+            return Tuple.Create("", returnEmbedBuilder, returnLevelUp, returnCompleted);
 
         }
 
@@ -2164,7 +2256,7 @@ namespace OjamajoBot
                 $"The available zone category are: **normal/platinum/metal/ojamajos**.");
             }
 
-            var userData = UserDataCore.getUserData(userId);
+            var userData = UserTradingCardDataCore.getUserData(userId);
 
             int selectedPrice = 40;//normal/default
             switch (category)
@@ -2259,13 +2351,13 @@ namespace OjamajoBot
                 .WithAuthor("Zone Card")
                 .WithColor(Discord.Color.DarkerGrey)
                 .WithDescription($":exclamation: A **Zone** card has appeared! " +
-                "Capture it with **<bot> card capture** based from your assigned zone.")
+                "Capture it with **<bot>!card capture** based from your assigned zone.")
                 .WithImageUrl("https://cdn.discordapp.com/attachments/709293222387777626/722780058904821760/mystery.gif")
                 .WithFooter($"Capture Rate: ???%");
 
                 await Bot.Doremi.client
                 .GetGuild(guildId)
-                .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guildId, "trading_card_spawn")))
+                .GetTextChannel(Convert.ToUInt64(guildTradingCardData[DBM_Trading_Card_Guild.Columns.id_channel_spawn].ToString()))
                 .SendMessageAsync(mentionedCardCatcherRoles,
                 embed: embed.Build());
 
@@ -2434,17 +2526,17 @@ namespace OjamajoBot
             dbUpdate.update(query, columns);
 
             //reset default & assign all
-            Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyId, chosenId);
-            Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyCategory, chosenCategory);
-            Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyToken, GlobalFunctions.RandomString(8));
-            Config.Guild.setPropertyValue(guildId, TradingCardCore.CardEvent.propertyToken, GlobalFunctions.RandomString(8));//for event only
-            Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyMystery, "0");
-            Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCard, "");
-            Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardEquation, "");
-            Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardNumber1, "");
-            Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardNumber2, "");
-            Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyTokenTime, tokenTime);
-            Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyIsZone, "0");
+            //Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyId, chosenId);
+            //Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyCategory, chosenCategory);
+            //Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyToken, GlobalFunctions.RandomString(8));
+            //Config.Guild.setPropertyValue(guildId, TradingCardCore.CardEvent.propertyToken, GlobalFunctions.RandomString(8));//for event only
+            //Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyMystery, "0");
+            //Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCard, "");
+            //Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardEquation, "");
+            //Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardNumber1, "");
+            //Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardNumber2, "");
+            //Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyTokenTime, tokenTime);
+            //Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyIsZone, "0");
 
             //bad card trigger
             if (randomBadCard <= 1)
@@ -2452,7 +2544,6 @@ namespace OjamajoBot
                 int randomBadCardType = new Random().Next(0, 3);
                 badCardIcon = TradingCardCore.BadCards.embedFooterUrl;
 
-                Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCard, $"{randomBadCardType}");
                 int randomEquation = new Random().Next(0, 2);
                 int randomNumber1 = new Random().Next(50, 201);
                 int randomNumber2 = new Random().Next(50, 201);
@@ -2466,18 +2557,16 @@ namespace OjamajoBot
 
                 string question = ""; string answer = "";
 
-                Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardNumber1, randomNumber1.ToString());
-                Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardNumber2, randomNumber2.ToString());
+                //Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardNumber1, randomNumber1.ToString());
+                //Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardNumber2, randomNumber2.ToString());
 
                 if (randomEquation == 0)
                 {
-                    Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardEquation, "+");
                     question = $"{randomNumber1}+{randomNumber2}";
                     answer = (randomNumber1 + randomNumber2).ToString();
                 }
                 else
                 {
-                    Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardEquation, "-");
                     question = $"{randomNumber1}-{randomNumber2}";
                     answer = (randomNumber1 - randomNumber2).ToString();
                 }
@@ -2529,7 +2618,7 @@ namespace OjamajoBot
 
                 await client
                 .GetGuild(guildId)
-                .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guildId, "trading_card_spawn")))
+                .GetTextChannel(Convert.ToUInt64(guildTradingCardData[DBM_Trading_Card_Guild.Columns.id_channel_spawn].ToString()))
                 .SendMessageAsync($":exclamation:{mentionedCardCatcherRoles} A **{chosenCategory}** {parent} card has appeared! " +
                 $"Capture it with **<bot>!card capture** or **<bot>!card capture boost**",
                 embed: embed.Build());
@@ -2545,10 +2634,10 @@ namespace OjamajoBot
                 .WithThumbnailUrl(badCardIcon)
                 .WithFooter($"ID: ???{footerBadCard} | Catch Rate: {catchRate}");
 
-                Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyMystery, "1");
+                //Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyMystery, "1");
                 await client
                 .GetGuild(guildId)
-                .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guildId, "trading_card_spawn")))
+                .GetTextChannel(Convert.ToUInt64(guildTradingCardData[DBM_Trading_Card_Guild.Columns.id_channel_spawn].ToString()))
                 .SendMessageAsync($":question: {mentionedCardCatcherRoles} A ||**mystery**|| card has appeared! Can you guess whose card is this belongs to?\n" +
                 $"Reveal & capture it with **<bot>!card capture** or **<bot>!card capture boost**",
                 embed: embed.Build());
@@ -2566,430 +2655,430 @@ namespace OjamajoBot
             }
         }
 
-        public static Tuple<string, EmbedBuilder> generateCardSpawnIndividual(ulong guildId, ulong clientId)
-        {
-            int randomParent = new Random().Next(0, 6);
-            int randomCategory = new Random().Next(11);
-            int randomMystery = new Random().Next(0, 2);
-            int randomBadCard = new Random().Next(0, 12);
-            int randomizedSeedsAmount = new Random().Next(10,30);
+        //public static Tuple<string, EmbedBuilder> generateCardSpawnIndividual(ulong guildId, ulong clientId)
+        //{
+        //    int randomParent = new Random().Next(0, 6);
+        //    int randomCategory = new Random().Next(11);
+        //    int randomMystery = new Random().Next(0, 2);
+        //    int randomBadCard = new Random().Next(0, 12);
+        //    int randomizedSeedsAmount = new Random().Next(10,30);
 
-            var tokenTime = $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}";
-            var lastCapturedTime = Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyTokenTime);
-            var minCaptureTime = Convert.ToInt32(Config.Guild.getPropertyValue(guildId, "trading_card_spawn_interval"));
+        //    var tokenTime = $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}";
+        //    var lastCapturedTime = Config.Guild.getPropertyValue(guildId, TradingCardCore.propertyTokenTime);
+        //    var minCaptureTime = Convert.ToInt32(Config.Guild.getPropertyValue(guildId, "trading_card_spawn_interval"));
 
-            var CardCatcherRoles = Config.Guild.getPropertyValue(guildId, "id_card_catcher");
-            string mentionedCardCatcherRoles = "";
-            if (CardCatcherRoles != "")
-            {
-                mentionedCardCatcherRoles = MentionUtils.MentionRole(Convert.ToUInt64(CardCatcherRoles));
-            }
+        //    var CardCatcherRoles = Config.Guild.getPropertyValue(guildId, "id_card_catcher");
+        //    string mentionedCardCatcherRoles = "";
+        //    if (CardCatcherRoles != "")
+        //    {
+        //        mentionedCardCatcherRoles = MentionUtils.MentionRole(Convert.ToUInt64(CardCatcherRoles));
+        //    }
 
-            if (lastCapturedTime != "")
-            {
-                TimeSpan diff = DateTime.Now - DateTime.Parse(lastCapturedTime);
-                var minutes = Math.Round(diff.TotalMinutes);
-                //10:22 - 10:20
-                if (minutes < minCaptureTime)
-                {
-                    var finalTotal = minCaptureTime - minutes;
-                    string finalSpawnText = $"{finalTotal} more minute(s)";
-                    if (finalTotal<=0)
-                    {
-                        finalSpawnText = "less than 1 minute(s)";
-                    }
+        //    if (lastCapturedTime != "")
+        //    {
+        //        TimeSpan diff = DateTime.Now - DateTime.Parse(lastCapturedTime);
+        //        var minutes = Math.Round(diff.TotalMinutes);
+        //        //10:22 - 10:20
+        //        if (minutes < minCaptureTime)
+        //        {
+        //            var finalTotal = minCaptureTime - minutes;
+        //            string finalSpawnText = $"{finalTotal} more minute(s)";
+        //            if (finalTotal<=0)
+        //            {
+        //                finalSpawnText = "less than 1 minute(s)";
+        //            }
 
-                    return new Tuple<string, EmbedBuilder>($":x: Sorry, the card spawner command available " +
-                    $"approximately at **{finalSpawnText}.**", null);
+        //            return new Tuple<string, EmbedBuilder>($":x: Sorry, the card spawner command available " +
+        //            $"approximately at **{finalSpawnText}.**", null);
 
-                }
+        //        }
 
-            }
+        //    }
 
-            int randomZone = new Random().Next(0, 20);
-            if (randomZone <= 8)
-            {
-                //reset default & assign all
-                Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyId, "");
-                Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyCategory, "");
-                Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyToken, GlobalFunctions.RandomString(8));
-                Config.Guild.setPropertyValue(guildId, TradingCardCore.CardEvent.propertyToken, GlobalFunctions.RandomString(8));//for event only
-                Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyMystery, "0");
-                Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCard, "");
-                Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardEquation, "");
-                Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardNumber1, "");
-                Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardNumber2, "");
-                Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyTokenTime, tokenTime);
-                Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyIsZone, "1");
+        //    int randomZone = new Random().Next(0, 20);
+        //    if (randomZone <= 8)
+        //    {
+        //        //reset default & assign all
+        //        //Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyId, "");
+        //        //Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyCategory, "");
+        //        //Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyToken, GlobalFunctions.RandomString(8));
+        //        //Config.Guild.setPropertyValue(guildId, TradingCardCore.CardEvent.propertyToken, GlobalFunctions.RandomString(8));//for event only
+        //        //Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyMystery, "0");
+        //        //Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCard, "");
+        //        //Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardEquation, "");
+        //        //Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardNumber1, "");
+        //        //Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardNumber2, "");
+        //        //Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyTokenTime, tokenTime);
+        //        //Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyIsZone, "1");
 
-                var embed = new EmbedBuilder()
-                .WithAuthor("Zone Card")
-                .WithColor(Discord.Color.DarkerGrey)
-                .WithDescription($":exclamation: A **zone** card has appeared! " +
-                "Capture it with **<bot> card capture** or **<bot> card capture boost** based from your assigned zone.")
-                .WithImageUrl("https://cdn.discordapp.com/attachments/709293222387777626/722780058904821760/mystery.gif")
-                .WithFooter($"Capture Rate: ???%");
+        //        var embed = new EmbedBuilder()
+        //        .WithAuthor("Zone Card")
+        //        .WithColor(Discord.Color.DarkerGrey)
+        //        .WithDescription($":exclamation: A **zone** card has appeared! " +
+        //        "Capture it with **<bot> card capture** or **<bot> card capture boost** based from your assigned zone.")
+        //        .WithImageUrl("https://cdn.discordapp.com/attachments/709293222387777626/722780058904821760/mystery.gif")
+        //        .WithFooter($"Capture Rate: ???%");
 
-                return new Tuple<string, EmbedBuilder>($":exclamation:{MentionUtils.MentionUser(clientId)} received {randomizedSeedsAmount} magic seeds for spawning the card.\n" +
-                    $"{mentionedCardCatcherRoles}",
-                embed);
-            }
+        //        return new Tuple<string, EmbedBuilder>($":exclamation:{MentionUtils.MentionUser(clientId)} received {randomizedSeedsAmount} magic seeds for spawning the card.\n" +
+        //            $"{mentionedCardCatcherRoles}",
+        //        embed);
+        //    }
 
-            string chosenCategory = ""; string catchRate = ""; string badCardIcon = null;
-            Boolean isMystery = false; if (randomMystery <= 0) isMystery = true;
+        //    string chosenCategory = ""; string catchRate = ""; string badCardIcon = null;
+        //    Boolean isMystery = false; if (randomMystery <= 0) isMystery = true;
 
-            if (randomCategory <= TradingCardCore.spawnRateOjamajos)//0-1
-            {//ojamajos
-                chosenCategory = "ojamajos"; catchRate = (TradingCardCore.captureRateOjamajos * 10).ToString() + "%";
-            }
-            else if (randomCategory <= TradingCardCore.spawnRateMetal)//0-2
-            {//metal
+        //    if (randomCategory <= TradingCardCore.spawnRateOjamajos)//0-1
+        //    {//ojamajos
+        //        chosenCategory = "ojamajos"; catchRate = (TradingCardCore.captureRateOjamajos * 10).ToString() + "%";
+        //    }
+        //    else if (randomCategory <= TradingCardCore.spawnRateMetal)//0-2
+        //    {//metal
 
-                chosenCategory = "metal";
-                if (isMystery)
-                    catchRate = ((TradingCardCore.captureRateMetal + 2) * 10).ToString() + "%";
-                else
-                    catchRate = (TradingCardCore.captureRateMetal * 10).ToString() + "%";
-            }
-            else if (randomCategory <= TradingCardCore.spawnRatePlatinum)//0-5
-            {//platinum
-                chosenCategory = "platinum";
-                if (isMystery)
-                    catchRate = ((TradingCardCore.captureRatePlatinum + 1) * 10).ToString() + "%";
-                else
-                    catchRate = (TradingCardCore.captureRatePlatinum * 10).ToString() + "%";
-            }
-            else if (randomCategory <= TradingCardCore.spawnRateNormal)//0-10
-            {//normal
-                chosenCategory = "normal";
-                if (isMystery)
-                    catchRate = ((TradingCardCore.captureRateNormal + 1) * 10).ToString() + "%";
-                else
-                    catchRate = (TradingCardCore.captureRateNormal * 10).ToString() + "%";
-            }
+        //        chosenCategory = "metal";
+        //        if (isMystery)
+        //            catchRate = ((TradingCardCore.captureRateMetal + 2) * 10).ToString() + "%";
+        //        else
+        //            catchRate = (TradingCardCore.captureRateMetal * 10).ToString() + "%";
+        //    }
+        //    else if (randomCategory <= TradingCardCore.spawnRatePlatinum)//0-5
+        //    {//platinum
+        //        chosenCategory = "platinum";
+        //        if (isMystery)
+        //            catchRate = ((TradingCardCore.captureRatePlatinum + 1) * 10).ToString() + "%";
+        //        else
+        //            catchRate = (TradingCardCore.captureRatePlatinum * 10).ToString() + "%";
+        //    }
+        //    else if (randomCategory <= TradingCardCore.spawnRateNormal)//0-10
+        //    {//normal
+        //        chosenCategory = "normal";
+        //        if (isMystery)
+        //            catchRate = ((TradingCardCore.captureRateNormal + 1) * 10).ToString() + "%";
+        //        else
+        //            catchRate = (TradingCardCore.captureRateNormal * 10).ToString() + "%";
+        //    }
 
-            string parent = "doremi"; DiscordSocketClient client = Bot.Doremi.client;
-            string descriptionMystery = "";
-            Discord.Color color = Config.Doremi.EmbedColor;
-            string embedAvatarUrl = "";
-            //randomParent = 0; //don't forget to erase this, for testing purpose
-            //chosenCategory = "ojamajos";//for testing purpose
-            if (randomParent == 0)
-            {
-                embedAvatarUrl = Config.Doremi.EmbedAvatarUrl;
-                descriptionMystery = TradingCardCore.Doremi.arrMysteryDescription[new Random().Next(TradingCardCore.Doremi.arrMysteryDescription.Length)];
-            }
-            else if (randomParent == 1)
-            {
-                if (!isMystery) client = Bot.Hazuki.client;
-                parent = "hazuki";
-                color = Config.Hazuki.EmbedColor; embedAvatarUrl = Config.Hazuki.EmbedAvatarUrl;
-                descriptionMystery = TradingCardCore.Hazuki.arrMysteryDescription[new Random().Next(TradingCardCore.Hazuki.arrMysteryDescription.Length)];
-            }
-            else if (randomParent == 2)
-            {
-                if (!isMystery) client = Bot.Aiko.client;
-                parent = "aiko";
-                color = Config.Aiko.EmbedColor; embedAvatarUrl = Config.Aiko.EmbedAvatarUrl;
-                descriptionMystery = TradingCardCore.Aiko.arrMysteryDescription[new Random().Next(TradingCardCore.Aiko.arrMysteryDescription.Length)];
-            }
-            else if (randomParent == 3)
-            {
-                if (!isMystery) client = Bot.Onpu.client;
-                parent = "onpu";
-                color = Config.Onpu.EmbedColor; embedAvatarUrl = Config.Onpu.EmbedAvatarUrl;
-                descriptionMystery = TradingCardCore.Onpu.arrMysteryDescription[new Random().Next(TradingCardCore.Onpu.arrMysteryDescription.Length)];
-            }
-            else if (randomParent == 4)
-            {
-                if (!isMystery) client = Bot.Momoko.client;
-                parent = "momoko";
-                color = Config.Momoko.EmbedColor; embedAvatarUrl = Config.Momoko.EmbedAvatarUrl;
-                descriptionMystery = TradingCardCore.Momoko.arrMysteryDescription[new Random().Next(TradingCardCore.Momoko.arrMysteryDescription.Length)];
-            }
-            else if (randomParent >= 5)
-            {
-                chosenCategory = "special"; parent = "other";
-                color = Config.Doremi.EmbedColor; embedAvatarUrl = Config.Doremi.EmbedAvatarUrl;
-                catchRate = (TradingCardCore.captureRateSpecial * 10).ToString() + "%";
-            }
+        //    string parent = "doremi"; DiscordSocketClient client = Bot.Doremi.client;
+        //    string descriptionMystery = "";
+        //    Discord.Color color = Config.Doremi.EmbedColor;
+        //    string embedAvatarUrl = "";
+        //    //randomParent = 0; //don't forget to erase this, for testing purpose
+        //    //chosenCategory = "ojamajos";//for testing purpose
+        //    if (randomParent == 0)
+        //    {
+        //        embedAvatarUrl = Config.Doremi.EmbedAvatarUrl;
+        //        descriptionMystery = TradingCardCore.Doremi.arrMysteryDescription[new Random().Next(TradingCardCore.Doremi.arrMysteryDescription.Length)];
+        //    }
+        //    else if (randomParent == 1)
+        //    {
+        //        if (!isMystery) client = Bot.Hazuki.client;
+        //        parent = "hazuki";
+        //        color = Config.Hazuki.EmbedColor; embedAvatarUrl = Config.Hazuki.EmbedAvatarUrl;
+        //        descriptionMystery = TradingCardCore.Hazuki.arrMysteryDescription[new Random().Next(TradingCardCore.Hazuki.arrMysteryDescription.Length)];
+        //    }
+        //    else if (randomParent == 2)
+        //    {
+        //        if (!isMystery) client = Bot.Aiko.client;
+        //        parent = "aiko";
+        //        color = Config.Aiko.EmbedColor; embedAvatarUrl = Config.Aiko.EmbedAvatarUrl;
+        //        descriptionMystery = TradingCardCore.Aiko.arrMysteryDescription[new Random().Next(TradingCardCore.Aiko.arrMysteryDescription.Length)];
+        //    }
+        //    else if (randomParent == 3)
+        //    {
+        //        if (!isMystery) client = Bot.Onpu.client;
+        //        parent = "onpu";
+        //        color = Config.Onpu.EmbedColor; embedAvatarUrl = Config.Onpu.EmbedAvatarUrl;
+        //        descriptionMystery = TradingCardCore.Onpu.arrMysteryDescription[new Random().Next(TradingCardCore.Onpu.arrMysteryDescription.Length)];
+        //    }
+        //    else if (randomParent == 4)
+        //    {
+        //        if (!isMystery) client = Bot.Momoko.client;
+        //        parent = "momoko";
+        //        color = Config.Momoko.EmbedColor; embedAvatarUrl = Config.Momoko.EmbedAvatarUrl;
+        //        descriptionMystery = TradingCardCore.Momoko.arrMysteryDescription[new Random().Next(TradingCardCore.Momoko.arrMysteryDescription.Length)];
+        //    }
+        //    else if (randomParent >= 5)
+        //    {
+        //        chosenCategory = "special"; parent = "other";
+        //        color = Config.Doremi.EmbedColor; embedAvatarUrl = Config.Doremi.EmbedAvatarUrl;
+        //        catchRate = (TradingCardCore.captureRateSpecial * 10).ToString() + "%";
+        //    }
 
 
-            string author = $"{GlobalFunctions.UppercaseFirst(parent)} {GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
-            if (chosenCategory == "ojamajos")
-                author = $"{GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
-            else if (chosenCategory == "special")
-                author = $"Other {GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
+        //    string author = $"{GlobalFunctions.UppercaseFirst(parent)} {GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
+        //    if (chosenCategory == "ojamajos")
+        //        author = $"{GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
+        //    else if (chosenCategory == "special")
+        //        author = $"Other {GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
 
-            string footerBadCard = "";
-            //start read json
-            JObject jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
+        //    string footerBadCard = "";
+        //    //start read json
+        //    JObject jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
 
-            //using (var stream = File.Open($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json", FileMode.Open, FileAccess.Write, FileShare.ReadWrite))
-            //{
-            //    using var sr = new StreamReader(stream);
-            //    jObjTradingCardList = JObject.Parse(sr.ReadToEnd());
-            //}
+        //    //using (var stream = File.Open($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json", FileMode.Open, FileAccess.Write, FileShare.ReadWrite))
+        //    //{
+        //    //    using var sr = new StreamReader(stream);
+        //    //    jObjTradingCardList = JObject.Parse(sr.ReadToEnd());
+        //    //}
 
-            var key = JObject.Parse(jObjTradingCardList[parent][chosenCategory].ToString()).Properties().ToList();
-            int randIndex = 0;
-            int timedLoop = Convert.ToInt32(DateTime.Now.ToString("dd"));
-            for (int i = 0; i <= timedLoop; i++)
-            {
-                randIndex = new Random().Next(0, key.Count);
-            }
+        //    var key = JObject.Parse(jObjTradingCardList[parent][chosenCategory].ToString()).Properties().ToList();
+        //    int randIndex = 0;
+        //    int timedLoop = Convert.ToInt32(DateTime.Now.ToString("dd"));
+        //    for (int i = 0; i <= timedLoop; i++)
+        //    {
+        //        randIndex = new Random().Next(0, key.Count);
+        //    }
 
-            //chosen data:
-            string chosenId = key[randIndex].Name;
-            string chosenName = jObjTradingCardList[parent][chosenCategory][key[randIndex].Name]["name"].ToString();
-            string chosenUrl = jObjTradingCardList[parent][chosenCategory][key[randIndex].Name]["url"].ToString();
+        //    //chosen data:
+        //    string chosenId = key[randIndex].Name;
+        //    string chosenName = jObjTradingCardList[parent][chosenCategory][key[randIndex].Name]["name"].ToString();
+        //    string chosenUrl = jObjTradingCardList[parent][chosenCategory][key[randIndex].Name]["url"].ToString();
 
-            //reset default & assign all
-            Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyId, chosenId);
-            Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyCategory, chosenCategory);
-            Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyToken, GlobalFunctions.RandomString(8));
-            Config.Guild.setPropertyValue(guildId, TradingCardCore.CardEvent.propertyToken, GlobalFunctions.RandomString(8));//for event only
-            Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyMystery, "0");
-            Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCard, "");
-            Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardEquation, "");
-            Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardNumber1, "");
-            Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardNumber2, "");
-            Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyTokenTime, tokenTime);
-            Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyIsZone, "0");
+        //    //reset default & assign all
+        //    Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyId, chosenId);
+        //    Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyCategory, chosenCategory);
+        //    Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyToken, GlobalFunctions.RandomString(8));
+        //    Config.Guild.setPropertyValue(guildId, TradingCardCore.CardEvent.propertyToken, GlobalFunctions.RandomString(8));//for event only
+        //    Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyMystery, "0");
+        //    Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCard, "");
+        //    Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardEquation, "");
+        //    Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardNumber1, "");
+        //    Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardNumber2, "");
+        //    Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyTokenTime, tokenTime);
+        //    Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyIsZone, "0");
 
-            //bad card trigger
-            if (randomBadCard <= 1)
-            {
-                int randomBadCardType = new Random().Next(0, 3);
-                badCardIcon = TradingCardCore.BadCards.embedFooterUrl;
-                Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCard, $"{randomBadCardType}");
-                int randomEquation = new Random().Next(0, 2);
-                int randomNumber1 = new Random().Next(50, 201);
-                int randomNumber2 = new Random().Next(50, 201);
+        //    //bad card trigger
+        //    if (randomBadCard <= 1)
+        //    {
+        //        int randomBadCardType = new Random().Next(0, 3);
+        //        badCardIcon = TradingCardCore.BadCards.embedFooterUrl;
+        //        Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCard, $"{randomBadCardType}");
+        //        int randomEquation = new Random().Next(0, 2);
+        //        int randomNumber1 = new Random().Next(50, 201);
+        //        int randomNumber2 = new Random().Next(50, 201);
 
-                if (randomNumber1 < randomNumber2)
-                {
-                    int tempNumbers = randomNumber1;
-                    randomNumber1 = randomNumber2;
-                    randomNumber2 = tempNumbers;
-                }
+        //        if (randomNumber1 < randomNumber2)
+        //        {
+        //            int tempNumbers = randomNumber1;
+        //            randomNumber1 = randomNumber2;
+        //            randomNumber2 = tempNumbers;
+        //        }
 
-                if (randomEquation == 0)
-                    Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardEquation, "+");
-                else
-                    Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardEquation, "-");
+        //        if (randomEquation == 0)
+        //            Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardEquation, "+");
+        //        else
+        //            Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardEquation, "-");
 
-                Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardNumber1, randomNumber1.ToString());
-                Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardNumber2, randomNumber2.ToString());
-                footerBadCard += $"-{TradingCardCore.BadCards.getType(randomBadCardType)}";
-            }
+        //        Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardNumber1, randomNumber1.ToString());
+        //        Config.Guild.setPropertyValue(guildId, TradingCardCore.BadCards.propertyBadCardNumber2, randomNumber2.ToString());
+        //        footerBadCard += $"-{TradingCardCore.BadCards.getType(randomBadCardType)}";
+        //    }
 
-            //process magic seeds bonus for user
-            string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
-            JObject arrInventory = JObject.Parse(File.ReadAllText(playerDataDirectory));
-            arrInventory["magic_seeds"] = Convert.ToInt32(arrInventory["magic_seeds"]) + randomizedSeedsAmount;
-            File.WriteAllText(playerDataDirectory, arrInventory.ToString());
+        //    //process magic seeds bonus for user
+        //    string playerDataDirectory = $"{Config.Core.headConfigGuildFolder}{guildId}/{Config.Core.headTradingCardConfigFolder}/{clientId}.json";
+        //    JObject arrInventory = JObject.Parse(File.ReadAllText(playerDataDirectory));
+        //    arrInventory["magic_seeds"] = Convert.ToInt32(arrInventory["magic_seeds"]) + randomizedSeedsAmount;
+        //    File.WriteAllText(playerDataDirectory, arrInventory.ToString());
 
-            if (!isMystery || chosenCategory == "ojamajos" || chosenCategory == "special")
-            {//not mystery
-                EmbedBuilder embed;
-                if (chosenCategory == "ojamajos" || chosenCategory == "special")
-                    embed = new EmbedBuilder()
-                    .WithAuthor(author)
-                    .WithColor(Discord.Color.Gold)
-                    .WithTitle($"{chosenName}")
-                    .WithFooter($"ID: {chosenId}{footerBadCard} | Catch Rate: {catchRate}")
-                    .WithThumbnailUrl(badCardIcon)
-                    .WithImageUrl(chosenUrl);
-                else
-                    embed = new EmbedBuilder()
-                    .WithAuthor(author, embedAvatarUrl)
-                    .WithColor(color)
-                    .WithTitle($"{chosenName}")
-                    .WithFooter($"ID: {chosenId}{footerBadCard} | Catch Rate: {catchRate}")
-                    .WithThumbnailUrl(badCardIcon)
-                    .WithImageUrl(chosenUrl);
+        //    if (!isMystery || chosenCategory == "ojamajos" || chosenCategory == "special")
+        //    {//not mystery
+        //        EmbedBuilder embed;
+        //        if (chosenCategory == "ojamajos" || chosenCategory == "special")
+        //            embed = new EmbedBuilder()
+        //            .WithAuthor(author)
+        //            .WithColor(Discord.Color.Gold)
+        //            .WithTitle($"{chosenName}")
+        //            .WithFooter($"ID: {chosenId}{footerBadCard} | Catch Rate: {catchRate}")
+        //            .WithThumbnailUrl(badCardIcon)
+        //            .WithImageUrl(chosenUrl);
+        //        else
+        //            embed = new EmbedBuilder()
+        //            .WithAuthor(author, embedAvatarUrl)
+        //            .WithColor(color)
+        //            .WithTitle($"{chosenName}")
+        //            .WithFooter($"ID: {chosenId}{footerBadCard} | Catch Rate: {catchRate}")
+        //            .WithThumbnailUrl(badCardIcon)
+        //            .WithImageUrl(chosenUrl);
 
-                if (chosenCategory == "ojamajos") parent = "";
+        //        if (chosenCategory == "ojamajos") parent = "";
 
-                return new Tuple<string, EmbedBuilder>($":exclamation:{MentionUtils.MentionUser(clientId)} received {randomizedSeedsAmount} magic seeds for spawning the card.\n" +
-                    $"{mentionedCardCatcherRoles}" +
-                    $"A **{chosenCategory}** {parent} card has appeared! " +
-                $"Capture it with **<bot>!card capture** or **<bot>!card capture boost**",
-                embed);
-            }
-            else
-            {//mystery card
-                var embed = new EmbedBuilder()
-                .WithAuthor("Mystery Card")
-                .WithColor(Discord.Color.DarkerGrey)
-                .WithTitle($"🔍 Revealed Hint:")
-                .WithDescription(descriptionMystery)
-                //.WithImageUrl("https://cdn.discordapp.com/attachments/709293222387777626/710869697972797440/mystery.jpg")
-                .WithImageUrl("https://cdn.discordapp.com/attachments/709293222387777626/722780058904821760/mystery.gif")
-                .WithThumbnailUrl(badCardIcon)
-                .WithFooter($"ID: ???{footerBadCard} | Catch Rate: {catchRate}");
+        //        return new Tuple<string, EmbedBuilder>($":exclamation:{MentionUtils.MentionUser(clientId)} received {randomizedSeedsAmount} magic seeds for spawning the card.\n" +
+        //            $"{mentionedCardCatcherRoles}" +
+        //            $"A **{chosenCategory}** {parent} card has appeared! " +
+        //        $"Capture it with **<bot>!card capture** or **<bot>!card capture boost**",
+        //        embed);
+        //    }
+        //    else
+        //    {//mystery card
+        //        var embed = new EmbedBuilder()
+        //        .WithAuthor("Mystery Card")
+        //        .WithColor(Discord.Color.DarkerGrey)
+        //        .WithTitle($"🔍 Revealed Hint:")
+        //        .WithDescription(descriptionMystery)
+        //        //.WithImageUrl("https://cdn.discordapp.com/attachments/709293222387777626/710869697972797440/mystery.jpg")
+        //        .WithImageUrl("https://cdn.discordapp.com/attachments/709293222387777626/722780058904821760/mystery.gif")
+        //        .WithThumbnailUrl(badCardIcon)
+        //        .WithFooter($"ID: ???{footerBadCard} | Catch Rate: {catchRate}");
 
-                Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyMystery, "1");
+        //        Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyMystery, "1");
                 
-                return new Tuple<string, EmbedBuilder>($":question:{MentionUtils.MentionUser(clientId)} received {randomizedSeedsAmount} magic seeds for spawning the card.\n" +
-                    $"{mentionedCardCatcherRoles}" +
-                $"A ||**mystery**|| card has appeared! Can you guess whose card is this belongs to?\n" +
-                $"Reveal & capture it with **<bot>!card capture** or **<bot>!card capture boost**",
-                embed);
-            }
-        }
+        //        return new Tuple<string, EmbedBuilder>($":question:{MentionUtils.MentionUser(clientId)} received {randomizedSeedsAmount} magic seeds for spawning the card.\n" +
+        //            $"{mentionedCardCatcherRoles}" +
+        //        $"A ||**mystery**|| card has appeared! Can you guess whose card is this belongs to?\n" +
+        //        $"Reveal & capture it with **<bot>!card capture** or **<bot>!card capture boost**",
+        //        embed);
+        //    }
+        //}
 
-        public static async Task printCardSpawned(ulong guildId)
-        {
-            string chosenId = Config.Guild.getPropertyValue(guildId, propertyId);
-            string chosenCategory = getCardCategory(Config.Guild.getPropertyValue(guildId, propertyCategory)); 
-            string catchRate = ""; string footerIconUrl = null;
-            Boolean isMystery = false;
-            if(Config.Guild.getPropertyValue(guildId,propertyMystery) == "1") isMystery = true;
+        //public static async Task printCardSpawned(ulong guildId)
+        //{
+        //    string chosenId = Config.Guild.getPropertyValue(guildId, propertyId);
+        //    string chosenCategory = getCardCategory(Config.Guild.getPropertyValue(guildId, propertyCategory)); 
+        //    string catchRate = ""; string footerIconUrl = null;
+        //    Boolean isMystery = false;
+        //    if(Config.Guild.getPropertyValue(guildId,propertyMystery) == "1") isMystery = true;
 
-            if (chosenCategory == "ojamajos")//0-1
-            {//ojamajos
-                catchRate = (TradingCardCore.captureRateOjamajos * 10).ToString() + "%";
-            }
-            else if (chosenCategory == "metal")//0-2
-            {//metal
-                if (isMystery)
-                    catchRate = ((TradingCardCore.captureRateMetal + 2) * 10).ToString() + "%";
-                else
-                    catchRate = (TradingCardCore.captureRateMetal * 10).ToString() + "%";
-            }
-            else if (chosenCategory == "platinum")//0-5
-            {//platinum
-                if (isMystery)
-                    catchRate = ((TradingCardCore.captureRatePlatinum + 1) * 10).ToString() + "%";
-                else
-                    catchRate = (TradingCardCore.captureRatePlatinum * 10).ToString() + "%";
-            }
-            else if (chosenCategory == "normal")//0-10
-            {//normal
-                if (isMystery)
-                    catchRate = ((TradingCardCore.captureRateNormal + 1) * 10).ToString() + "%";
-                else
-                    catchRate = (TradingCardCore.captureRateNormal * 10).ToString() + "%";
-            }
+        //    if (chosenCategory == "ojamajos")//0-1
+        //    {//ojamajos
+        //        catchRate = (TradingCardCore.captureRateOjamajos * 10).ToString() + "%";
+        //    }
+        //    else if (chosenCategory == "metal")//0-2
+        //    {//metal
+        //        if (isMystery)
+        //            catchRate = ((TradingCardCore.captureRateMetal + 2) * 10).ToString() + "%";
+        //        else
+        //            catchRate = (TradingCardCore.captureRateMetal * 10).ToString() + "%";
+        //    }
+        //    else if (chosenCategory == "platinum")//0-5
+        //    {//platinum
+        //        if (isMystery)
+        //            catchRate = ((TradingCardCore.captureRatePlatinum + 1) * 10).ToString() + "%";
+        //        else
+        //            catchRate = (TradingCardCore.captureRatePlatinum * 10).ToString() + "%";
+        //    }
+        //    else if (chosenCategory == "normal")//0-10
+        //    {//normal
+        //        if (isMystery)
+        //            catchRate = ((TradingCardCore.captureRateNormal + 1) * 10).ToString() + "%";
+        //        else
+        //            catchRate = (TradingCardCore.captureRateNormal * 10).ToString() + "%";
+        //    }
 
-            string parent = getCardParent(Config.Guild.getPropertyValue(guildId, propertyId)); 
-            DiscordSocketClient client = Bot.Doremi.client;
-            string descriptionMystery = "";
-            Discord.Color color = Config.Doremi.EmbedColor;
-            string author = $"{GlobalFunctions.UppercaseFirst(parent)} {GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
-            string embedAvatarUrl = "";
-            if (parent == "doremi")
-            {
-                embedAvatarUrl = Config.Doremi.EmbedAvatarUrl;
-                descriptionMystery = TradingCardCore.Doremi.arrMysteryDescription[new Random().Next(TradingCardCore.Doremi.arrMysteryDescription.Length)];
-            }
-            else if (parent == "hazuki")
-            {
-                if (!isMystery) client = Bot.Hazuki.client;
-                color = Config.Hazuki.EmbedColor; embedAvatarUrl = Config.Hazuki.EmbedAvatarUrl;
-                descriptionMystery = TradingCardCore.Hazuki.arrMysteryDescription[new Random().Next(TradingCardCore.Hazuki.arrMysteryDescription.Length)];
-            }
-            else if (parent == "aiko")
-            {
-                if (!isMystery) client = Bot.Aiko.client;
-                color = Config.Aiko.EmbedColor; embedAvatarUrl = Config.Aiko.EmbedAvatarUrl;
-                descriptionMystery = TradingCardCore.Aiko.arrMysteryDescription[new Random().Next(TradingCardCore.Aiko.arrMysteryDescription.Length)];
-            }
-            else if (parent == "onpu")
-            {
-                if (!isMystery) client = Bot.Onpu.client;
-                color = Config.Onpu.EmbedColor; embedAvatarUrl = Config.Onpu.EmbedAvatarUrl;
-                descriptionMystery = TradingCardCore.Onpu.arrMysteryDescription[new Random().Next(TradingCardCore.Onpu.arrMysteryDescription.Length)];
-            }
-            else if (parent == "momoko")
-            {
-                if (!isMystery) client = Bot.Momoko.client;
-                color = Config.Momoko.EmbedColor; embedAvatarUrl = Config.Momoko.EmbedAvatarUrl;
-                descriptionMystery = TradingCardCore.Momoko.arrMysteryDescription[new Random().Next(TradingCardCore.Momoko.arrMysteryDescription.Length)];
-            }
-            else if (parent == "other")
-            {
-                chosenCategory = "special"; parent = "other";
-                color = Config.Doremi.EmbedColor; embedAvatarUrl = Config.Doremi.EmbedAvatarUrl;
-                catchRate = (TradingCardCore.captureRateSpecial * 10).ToString() + "%";
-            }
+        //    string parent = getCardParent(Config.Guild.getPropertyValue(guildId, propertyId)); 
+        //    DiscordSocketClient client = Bot.Doremi.client;
+        //    string descriptionMystery = "";
+        //    Discord.Color color = Config.Doremi.EmbedColor;
+        //    string author = $"{GlobalFunctions.UppercaseFirst(parent)} {GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
+        //    string embedAvatarUrl = "";
+        //    if (parent == "doremi")
+        //    {
+        //        embedAvatarUrl = Config.Doremi.EmbedAvatarUrl;
+        //        descriptionMystery = TradingCardCore.Doremi.arrMysteryDescription[new Random().Next(TradingCardCore.Doremi.arrMysteryDescription.Length)];
+        //    }
+        //    else if (parent == "hazuki")
+        //    {
+        //        if (!isMystery) client = Bot.Hazuki.client;
+        //        color = Config.Hazuki.EmbedColor; embedAvatarUrl = Config.Hazuki.EmbedAvatarUrl;
+        //        descriptionMystery = TradingCardCore.Hazuki.arrMysteryDescription[new Random().Next(TradingCardCore.Hazuki.arrMysteryDescription.Length)];
+        //    }
+        //    else if (parent == "aiko")
+        //    {
+        //        if (!isMystery) client = Bot.Aiko.client;
+        //        color = Config.Aiko.EmbedColor; embedAvatarUrl = Config.Aiko.EmbedAvatarUrl;
+        //        descriptionMystery = TradingCardCore.Aiko.arrMysteryDescription[new Random().Next(TradingCardCore.Aiko.arrMysteryDescription.Length)];
+        //    }
+        //    else if (parent == "onpu")
+        //    {
+        //        if (!isMystery) client = Bot.Onpu.client;
+        //        color = Config.Onpu.EmbedColor; embedAvatarUrl = Config.Onpu.EmbedAvatarUrl;
+        //        descriptionMystery = TradingCardCore.Onpu.arrMysteryDescription[new Random().Next(TradingCardCore.Onpu.arrMysteryDescription.Length)];
+        //    }
+        //    else if (parent == "momoko")
+        //    {
+        //        if (!isMystery) client = Bot.Momoko.client;
+        //        color = Config.Momoko.EmbedColor; embedAvatarUrl = Config.Momoko.EmbedAvatarUrl;
+        //        descriptionMystery = TradingCardCore.Momoko.arrMysteryDescription[new Random().Next(TradingCardCore.Momoko.arrMysteryDescription.Length)];
+        //    }
+        //    else if (parent == "other")
+        //    {
+        //        chosenCategory = "special"; parent = "other";
+        //        color = Config.Doremi.EmbedColor; embedAvatarUrl = Config.Doremi.EmbedAvatarUrl;
+        //        catchRate = (TradingCardCore.captureRateSpecial * 10).ToString() + "%";
+        //    }
 
-            if (chosenCategory == "ojamajos")
-                author = $"{GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
-            else if (chosenCategory == "special")            
-                author = $"Other {GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
+        //    if (chosenCategory == "ojamajos")
+        //        author = $"{GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
+        //    else if (chosenCategory == "special")            
+        //        author = $"Other {GlobalFunctions.UppercaseFirst(chosenCategory)} Card";
 
-            string footerBadCard = "-";
-            //start read json
-            var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
+        //    string footerBadCard = "-";
+        //    //start read json
+        //    var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
 
-            //chosen data:
-            string chosenName = ""; string chosenUrl = "";
-            try
-            {
-                chosenName = jObjTradingCardList[parent][chosenCategory][chosenId]["name"].ToString();
-                chosenUrl = jObjTradingCardList[parent][chosenCategory][chosenId]["url"].ToString();
-            } catch(Exception e)
-            {
-                Console.WriteLine(e.ToString());
-            }
+        //    //chosen data:
+        //    string chosenName = ""; string chosenUrl = "";
+        //    try
+        //    {
+        //        chosenName = jObjTradingCardList[parent][chosenCategory][chosenId]["name"].ToString();
+        //        chosenUrl = jObjTradingCardList[parent][chosenCategory][chosenId]["url"].ToString();
+        //    } catch(Exception e)
+        //    {
+        //        Console.WriteLine(e.ToString());
+        //    }
               
-            int badCard = Convert.ToInt32(Config.Guild.getPropertyValue(guildId, BadCards.propertyBadCard));
+        //    int badCard = Convert.ToInt32(Config.Guild.getPropertyValue(guildId, BadCards.propertyBadCard));
 
-            if (badCard <= 2)
-            {
-                footerIconUrl = BadCards.embedFooterUrl;
-                footerBadCard += $"{BadCards.getType(badCard)}";
-            }
+        //    if (badCard <= 2)
+        //    {
+        //        footerIconUrl = BadCards.embedFooterUrl;
+        //        footerBadCard += $"{BadCards.getType(badCard)}";
+        //    }
 
-            if (!isMystery || chosenCategory == "ojamajos" || chosenCategory == "special")
-            {//not mystery
-                EmbedBuilder embed;
-                if (chosenCategory == "ojamajos" || chosenCategory == "special")
-                    embed = new EmbedBuilder()
-                    .WithAuthor(author)
-                    .WithColor(Discord.Color.Gold)
-                    .WithTitle($"{chosenName}")
-                    .WithFooter($"ID: {chosenId}{footerBadCard} | Catch Rate: {catchRate}", footerIconUrl)
-                    .WithImageUrl(chosenUrl);
-                else
-                    embed = new EmbedBuilder()
-                    .WithAuthor(author, embedAvatarUrl)
-                    .WithColor(color)
-                    .WithTitle($"{chosenName}")
-                    .WithFooter($"ID: {chosenId}{footerBadCard} | Catch Rate: {catchRate}", footerIconUrl)
-                    .WithImageUrl(chosenUrl);
+        //    if (!isMystery || chosenCategory == "ojamajos" || chosenCategory == "special")
+        //    {//not mystery
+        //        EmbedBuilder embed;
+        //        if (chosenCategory == "ojamajos" || chosenCategory == "special")
+        //            embed = new EmbedBuilder()
+        //            .WithAuthor(author)
+        //            .WithColor(Discord.Color.Gold)
+        //            .WithTitle($"{chosenName}")
+        //            .WithFooter($"ID: {chosenId}{footerBadCard} | Catch Rate: {catchRate}", footerIconUrl)
+        //            .WithImageUrl(chosenUrl);
+        //        else
+        //            embed = new EmbedBuilder()
+        //            .WithAuthor(author, embedAvatarUrl)
+        //            .WithColor(color)
+        //            .WithTitle($"{chosenName}")
+        //            .WithFooter($"ID: {chosenId}{footerBadCard} | Catch Rate: {catchRate}", footerIconUrl)
+        //            .WithImageUrl(chosenUrl);
 
-                if (chosenCategory == "ojamajos") parent = "";
+        //        if (chosenCategory == "ojamajos") parent = "";
 
-                await client
-                .GetGuild(guildId)
-                .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guildId, "trading_card_spawn")))
-                .SendMessageAsync($":exclamation:A **{chosenCategory}** {parent} card has appeared! " +
-                $"Capture it with **<bot>!card capture** or **<bot>!card capture boost**",
-                embed: embed.Build());
-            }
-            else
-            {//mystery card
-                var embed = new EmbedBuilder()
-                .WithAuthor("Mystery Card")
-                .WithColor(Discord.Color.DarkerGrey)
-                .WithTitle($"🔍 Revealed Hint:")
-                .WithDescription(descriptionMystery)
-                .WithImageUrl("https://cdn.discordapp.com/attachments/709293222387777626/710869697972797440/mystery.jpg")
-                .WithFooter($"ID: ???{footerBadCard} | Catch Rate: {catchRate}", footerIconUrl);
+        //        await client
+        //        .GetGuild(guildId)
+        //        .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guildId, "trading_card_spawn")))
+        //        .SendMessageAsync($":exclamation:A **{chosenCategory}** {parent} card has appeared! " +
+        //        $"Capture it with **<bot>!card capture** or **<bot>!card capture boost**",
+        //        embed: embed.Build());
+        //    }
+        //    else
+        //    {//mystery card
+        //        var embed = new EmbedBuilder()
+        //        .WithAuthor("Mystery Card")
+        //        .WithColor(Discord.Color.DarkerGrey)
+        //        .WithTitle($"🔍 Revealed Hint:")
+        //        .WithDescription(descriptionMystery)
+        //        .WithImageUrl("https://cdn.discordapp.com/attachments/709293222387777626/710869697972797440/mystery.jpg")
+        //        .WithFooter($"ID: ???{footerBadCard} | Catch Rate: {catchRate}", footerIconUrl);
 
-                Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyMystery, "1");
-                await client
-                .GetGuild(guildId)
-                .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guildId, "trading_card_spawn")))
-                .SendMessageAsync($":question:A **mystery** card has appeared! Can you guess whose card is this belongs to?\n" +
-                $"Reveal & capture it with **<bot>!card capture** or **<bot>!card capture boost**",
-                embed: embed.Build());
-            }
-        }
+        //        //Config.Guild.setPropertyValue(guildId, TradingCardCore.propertyMystery, "1");
+        //        await client
+        //        .GetGuild(guildId)
+        //        .GetTextChannel(Convert.ToUInt64(Config.Guild.getPropertyValue(guildId, "trading_card_spawn")))
+        //        .SendMessageAsync($":question:A **mystery** card has appeared! Can you guess whose card is this belongs to?\n" +
+        //        $"Reveal & capture it with **<bot>!card capture** or **<bot>!card capture boost**",
+        //        embed: embed.Build());
+        //    }
+        //}
 
         //json format:
         // "trading_queue": {
@@ -3043,12 +3132,12 @@ namespace OjamajoBot
                 ":birthday: February, May, March and November are not my birthday",
                 ":birthday: My birthday date was on 30",
                 
-                ":sparkles: **Paipai Poppun Famifami Pon!** are not my spell",
-                ":sparkles: **Faa Puwapuwa Pon Rarirori!** are not my spell",
-                ":sparkles: **Puu Raruku Purun Perutan!** are not my spell",
-                ":sparkles: **Puu Poppun Faa Pon!** are not my spell",
-                ":sparkles: **Petton Puu Pameruku Faa!** are not my spell",
-                ":sparkles: **Famifami Rarirori Paipai Petton!** are not my spell",
+                ":sparkles: **Paipai Poppun Famifami Pon!** are not in my spell.",
+                ":sparkles: **Faa Puwapuwa Pon Rarirori!** are not in my spell.",
+                ":sparkles: **Puu Raruku Purun Perutan!** are not in my spell.",
+                ":sparkles: **Puu Poppun Faa Pon!** are not in my spell.",
+                ":sparkles: **Petton Puu Pameruku Faa!** are not in my spell.",
+                ":sparkles: **Famifami Rarirori Paipai Petton!** are not in my spell.",
                 //new:
                 ":girl: Translate these numbers into words: 4-15-18-5-13-9",//doremi
                 ":girl: Translate these numbers into words and rearrange the result: 5-18-15-4-9-13",//doremi
@@ -3112,10 +3201,10 @@ namespace OjamajoBot
                 ":woman_fairy: Translate these numbers into words and rearrange the result: 5-5-18-18",//rere
                 ":birthday: May, July, March and November are not my birthday month",
                 ":birthday: My birthday is the same day of the month as Aiko but I was born a few months earlier",
-                ":sparkles: **Raruku Famifami Pirika Pon!** are not my spell",
-                ":sparkles: **Pararira Faa Rarirori Poporina!** are not my spell",
-                ":sparkles: **Poppun Pirika Faa Perutan!** are not my spell",
-                ":sparkles: **Rarirori Peperuto Perutan Purun!** are not my spell",
+                ":sparkles: **Raruku Famifami Pirika Pon!** are not in my spell.",
+                ":sparkles: **Pararira Faa Rarirori Poporina!** are not in my spell.",
+                ":sparkles: **Poppun Pirika Faa Perutan!** are not in my spell.",
+                ":sparkles: **Rarirori Peperuto Perutan Purun!** are not in my spell.",
                 ":girl: Translate these numbers into words: 8-1-26-21-11-9",//hazuki
                 ":girl: Translate these numbers into words and rearrange the result: 26-9-8-21-1-11",//hazuki
                 ":girl: Translate these numbers into words and rearrange the result: 11-21-8-1-26-9",//hazuki
@@ -3177,12 +3266,12 @@ namespace OjamajoBot
                 ":drop_of_blood: My blood type is O",
                 ":fork_and_knife: One of my favorite food ends with **i**",
                 ":fork_and_knife: One of my favorite food start with **t**",
-                ":sparkles: **Famifami Pon Ponpoi Pirika!** are not my spell",
-                ":sparkles: **Peperuto Puwapuwa Purun Perutan!** are not my spell",
-                ":sparkles: **Ponpoi Purun Pirilala Petton!** are not my spell",
-                ":sparkles: **Famifami Pararira Puwapuwa Poporina!** are not my spell",
-                ":sparkles: **Pururun Paipai Perutan Pirika!** are not my spell",
-                ":sparkles: **Puu Pon Faa Peperuto!** are not my spell",
+                ":sparkles: **Famifami Pon Ponpoi Pirika!** are not in my spell.",
+                ":sparkles: **Peperuto Puwapuwa Purun Perutan!** are not in my spell.",
+                ":sparkles: **Ponpoi Purun Pirilala Petton!** are not in my spell.",
+                ":sparkles: **Famifami Pararira Puwapuwa Poporina!** are not in my spell.",
+                ":sparkles: **Pururun Paipai Perutan Pirika!** are not in my spell.",
+                ":sparkles: **Puu Pon Faa Peperuto!** are not in my spell.",
                 ":girl: Translate these numbers into words: 1-9-11-15",//aiko
                 ":girl: Translate these numbers into words and rearrange the result: 15-11-9-1",//aiko
                 ":girl: Translate these numbers into words and rearrange the result: 11-15-1-9",//aiko
@@ -3233,12 +3322,12 @@ namespace OjamajoBot
                 ":woman_fairy: Translate these numbers into words: 18-18-15-15",//roro
                 ":birthday: July, February, November and May are not my birthday",
                 ":birthday: My birthday date was on 3",
-                ":sparkles: **Rarirori Pirika Ponpoi Pon!** are not my spell",
-                ":sparkles: **Puwapuwa Peperuto Raruku Perutan!** are not my spell",
-                ":sparkles: **Ponpoi Raruku Petton Pirilala!** are not my spell",
-                ":sparkles: **Poporina Puwapuwa Rarirori Pararira!** are not my spell",
-                ":sparkles: **Peperuto Pon Poppun Puu!** are not my spell",
-                ":sparkles: **Paipai Pirika Pameruku Perutan!** are not my spell",
+                ":sparkles: **Rarirori Pirika Ponpoi Pon!** are not in my spell.",
+                ":sparkles: **Puwapuwa Peperuto Raruku Perutan!** are not in my spell.",
+                ":sparkles: **Ponpoi Raruku Petton Pirilala!** are not in my spell.",
+                ":sparkles: **Poporina Puwapuwa Rarirori Pararira!** are not in my spell.",
+                ":sparkles: **Peperuto Pon Poppun Puu!** are not in my spell.",
+                ":sparkles: **Paipai Pirika Pameruku Perutan!** are not in my spell.",
                 ":girl: Translate these numbers into words: 15-14-16-21", //onpu
                 ":girl: Translate these numbers into words and rearrange the result: 16-21-15-14", //onpu
                 ":girl: Translate these numbers into words and rearrange the result: 21-15-14-16", //onpu
@@ -3293,12 +3382,12 @@ namespace OjamajoBot
                 ":drop_of_blood: My blood type is AB",
                 ":birthday: July, February, November and March are not my birthday",
                 ":birthday: My birthday date was on 6",
-                ":sparkles: **Ponpoi Pirika Faa Rarirori!** are not my spell",
-                ":sparkles: **Raruku Puwapuwa Peperuto Pururun!** are not my spell",
-                ":sparkles: **Purun Ponpoi Pirilala Raruku!** are not my spell",
-                ":sparkles: **Rarirori Poporina Famifami Puwapuwa!** are not my spell",
-                ":sparkles: **Faa Poppun Puu Peperuto!** are not my spell",
-                ":sparkles: **Pururun Pameruku Pirika Paipai!** are not my spell",
+                ":sparkles: **Ponpoi Pirika Faa Rarirori!** are not in my spell.",
+                ":sparkles: **Raruku Puwapuwa Peperuto Pururun!** are not in my spell.",
+                ":sparkles: **Purun Ponpoi Pirilala Raruku!** are not in my spell.",
+                ":sparkles: **Rarirori Poporina Famifami Puwapuwa!** are not in my spell.",
+                ":sparkles: **Faa Poppun Puu Peperuto!** are not in my spell.",
+                ":sparkles: **Pururun Pameruku Pirika Paipai!** are not in my spell.",
 
                 ":girl: Translate these numbers into words: 13-15-13-15-11-15",//momoko
                 ":girl: Translate these numbers into words and rearrange the result: 15-15-13-13-11-15",//momoko

@@ -17,3 +17,14 @@ flour 2
 
 Ingredients:
 flour,sugar,eggs,butter,oil,baking soda,baking powder
+
+=========================
+ingredient basic
+=========================
+there are currently 2 type of ingredient: normal and rare.
+
+==========================
+finding the ingredient
+==========================
+each majo can be assigned to find specific ingredient. -Normal ingredient can be found with the majo who is available to find that ingredient.
+-Rare ingredient are hidden and can only be gathered with specific time to be founded.

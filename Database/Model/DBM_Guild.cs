@@ -17,8 +17,11 @@ namespace OjamajoBot.Database.Model
             public static readonly string id_channel_user_leaving_log = "id_channel_user_leaving_log";
             public static readonly string id_autorole_user_join = "id_autorole_user_join";
             public static readonly string birthday_announcement_date_last = "birthday_announcement_date_last";
+            public static readonly string birthday_announcement_ojamajo = "birthday_announcement_ojamajo";
+            public static readonly string welcome_title = "welcome_title";
             public static readonly string welcome_message = "welcome_message";
             public static readonly string welcome_image = "welcome_image";
+            public static readonly string welcome_color = "welcome_color";
             public static readonly string role_id_doremi = "role_id_doremi";
             public static readonly string role_id_hazuki = "role_id_hazuki";
             public static readonly string role_id_aiko = "role_id_aiko";

@@ -364,22 +364,11 @@ namespace OjamajoBot.Module
             int rndIndex = new Random().Next(0, listRandomRespond.Count);
             string tempReply = listRandomRespond[rndIndex] + Config.Onpu.Status.currentActivityReply;
 
-            await ReplyAsync(tempReply);
-        }
-
-        [Command("hugs"), Alias("hug"), Summary("I will give warm hug for you or <username>")]
-        public async Task HugUser(SocketGuildUser username = null)
-        {
-            if (username == null)
-            {
-                string message = $"*hugs back*. Thank you for the friendly hugs, {MentionUtils.MentionUser(Context.User.Id)} :hugging:";
-                await Context.Channel.SendMessageAsync(message);
-            }
-            else
-            {
-                string message = $"Let's give a warm hugs for {MentionUtils.MentionUser(username.Id)} :hugging:";
-                await Context.Channel.SendMessageAsync(message);
-            }
+            await ReplyAsync(embed: new EmbedBuilder()
+                .WithDescription(tempReply)
+                .WithColor(Config.Onpu.EmbedColor)
+                .WithImageUrl("https://cdn.discordapp.com/attachments/706770454697738300/790614464110133268/tumblr_mcegbvVycq1rjey9zo1_500.png")
+                .Build());
         }
 
         [Command("random"), Alias("moments"), Summary("Show any random Onpu moments. " +
@@ -429,20 +418,14 @@ namespace OjamajoBot.Module
             .Build());
         }
 
-        //[Command("sing"), Summary("I will sing a random song")]
-        //public async Task sing()
-        //{
-            
-        //}
-
         [Command("sign"), Summary("I will sign and give you my autograph card signatures.")]
         public async Task sign()
         {
             string[] arrRandom = {
                 $"**The idol {MentionUtils.MentionUser(Config.Onpu.Id)} has give you a big smiles and her autograph**",
-                "\uD83D\uDE09 This is my autograph sign. I hope you're happy with it~",
-                "Oh, you want my autograph signatures? Here you go \uD83D\uDE09",
-                "\uD83D\uDE09 Here you go, I hope you're happy with it~",
+                "This is my autograph sign. I hope you're happy with it~",
+                "Oh, you want my autograph signatures? Here you go ",
+                "Here you go, I hope you're happy with it~",
                 $"**You have been given the autograph signatures by the idol {MentionUtils.MentionUser(Config.Onpu.Id)}**"
             };
 
@@ -487,11 +470,11 @@ namespace OjamajoBot.Module
         [Command("stats"), Alias("bio"), Summary("I will show you my biography info")]
         public async Task showStats()
         {
-            await ReplyAsync($"Pururun purun famifami faa! Give {MentionUtils.MentionUser(Context.User.Id)} my biography info!",
+            await ReplyAsync($"Pururun purun famifami faa! Show my biography info!",
             embed: new EmbedBuilder()
             .WithAuthor("Onpu Segawa", Config.Onpu.EmbedAvatarUrl)
-            .WithDescription("Onpu Segawa (瀬川おんぷ, Segawa Onpu) is one of the Main Characters and the fifth Ojamajo, initially starting off as an antagonistic Apprentice beneath Majoruka. She began attending Misora Elementary School and quickly befriended Doremi, Hazuki, and Aiko with the intention of revealing her true goals to them.\n" +
-            "At the start of Sharp, Onpu officially joined the group as a tritagonist after revealing that she became a real friend of theirs after losing their Apprentice status.She joined them under Majorika when they were given the job of watching Hana.")
+            .WithDescription("Onpu Segawa (瀬川おんぷ, Segawa Onpu) is one of the main characters and the fifth Ojamajo, initially starting off as an antagonistic apprentice beneath Majoruka. " +
+            "She began attending Misora Elementary School and quickly befriended Doremi, Hazuki, and Aiko with the intention of revealing her true goals to them.")
             .AddField("Full Name", "瀬川 おんぷ Segawa Onpu", true)
             .AddField("Gender", "female", true)
             .AddField("Blood Type", "B", true)
@@ -500,8 +483,8 @@ namespace OjamajoBot.Module
             .AddField("Favorite Food", "Waffles, Crepes, Fat-free Candies", true)
             .AddField("Debut", "[The Transfer student is a Witch Apprentice?!](https://ojamajowitchling.fandom.com/wiki/The_Transfer_student_is_a_Witch_Apprentice%3F!)", true)
             .WithColor(Config.Onpu.EmbedColor)
-            .WithImageUrl("https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcRSfjMF-ijylKYP4f7-Lvdf9Vx_HDrmCWc1DGkoSVWu-CPrHfJl")
-            .WithFooter("Source: [Ojamajo Witchling Wiki](https://ojamajowitchling.fandom.com/wiki/Onpu_Segawa)")
+            .WithImageUrl("https://static.wikia.nocookie.net/ojamajowitchling/images/0/06/O.D_LFMD%27_Onpu_Segawa.png")
+            .WithFooter("Source: [Ojamajo Doremi Wiki](https://ojamajowitchling.fandom.com/wiki/Onpu_Segawa)")
             .Build());
         }
 
@@ -509,16 +492,6 @@ namespace OjamajoBot.Module
         public async Task thankYou([Remainder] string messages = null)
         {
             await ReplyAsync($"Your welcome, {MentionUtils.MentionUser(Context.User.Id)}. I'm glad that you're happy with it :smile:");
-        }
-
-        [Command("turn"), Alias("transform"), Summary("Transform <username> into <wishes>")]
-        public async Task spells(IUser username, [Remainder] string wishes)
-        {
-            await ReplyAsync($"Pururun purun famifami faa! Turn {username.Mention} into {wishes}",
-            embed: new EmbedBuilder()
-            .WithColor(Config.Onpu.EmbedColor)
-            .WithImageUrl("https://vignette.wikia.nocookie.net/ojamajowitchling/images/8/86/Onpu-spell.gif")
-            .Build());
         }
 
         [Command("wish"), Summary("I will grant you a <wishes>")]
@@ -550,18 +523,19 @@ namespace OjamajoBot.Module
             await ReplyAsync(embed: MinigameCore.printLeaderboard(Context, Config.Onpu.EmbedColor).Build());
         }
 
-        [Command("rockpaperscissor", RunMode = RunMode.Async), Alias("rps"), Summary("Play the Rock Paper Scissor minigame with Hazuki. 20 score points reward.")]
-        public async Task RockPaperScissor(string guess = "")
+        [Command("jankenpon", RunMode = RunMode.Async), Alias("rps", "rockpaperscissor"), Summary("Play the Rock Paper Scissors minigame with Onpu. " +
+            "Reward: 20 minigame score points & 1 magic seeds.")]
+        public async Task RockPaperScissors(string guess = "")
         {
             if (guess == "")
             {
-                await ReplyAsync($"Please enter the valid parameter: **rock** or **paper** or **scissor**");
+                await ReplyAsync($"Please enter the valid parameter: **rock** or **paper** or **scissors**");
                 return;
             }
-            else if (guess.ToLower() != "rock" && guess.ToLower() != "paper" && guess.ToLower() != "scissor")
+            else if (guess.ToLower() != "rock" && guess.ToLower() != "paper" && guess.ToLower() != "scissors")
             {
                 await ReplyAsync($"Sorry **{Context.User.Username}**. " +
-                    $"Please enter the valid parameter: **rock** or **paper** or **scissor**");
+                    $"Please enter the valid parameter: **rock** or **paper** or **scissors**");
                 return;
             }
 
@@ -569,10 +543,10 @@ namespace OjamajoBot.Module
             int randomGuess = new Random().Next(0, 3);//generate random
 
             string[] arrWinReaction = { $"Better luck next time, {Context.User.Username}.", "I win the game this round!" };//bot win
-            string[] arrLoseReaction = { "I lose from the game." };//bot lose
-            string[] arrDrawReaction = { "Well, it's a draw." };//bot draw
+            string[] arrLoseReaction = { "I loss from the game." };//bot lose
+            string[] arrDrawReaction = { "Teehee, it's a draw." };//bot draw
 
-            Tuple<string, EmbedBuilder, Boolean> result = MinigameCore.rockPaperScissor.rpsResults(Config.Onpu.EmbedColor, Config.Onpu.EmbedAvatarUrl, randomGuess, guess, "onpu", Context.User.Username,
+            Tuple<string, EmbedBuilder, Boolean> result = MinigameCore.rockPaperScissors.rpsResults(Config.Onpu.EmbedColor, Config.Onpu.EmbedAvatarUrl, randomGuess, guess, "onpu", Context.User.Username,
                 arrWinReaction, arrLoseReaction, arrDrawReaction,
                 Context.Guild.Id, Context.User.Id);
 
@@ -598,8 +572,8 @@ namespace OjamajoBot.Module
                 string userCardZone = userTradingCardData[DBM_User_Trading_Card_Data.Columns.card_zone].ToString();
                 if (!userCardZone.Contains("onpu"))
                 {
-                    await ReplyAndDeleteAsync(":x: Sorry, you are not on the correct card zone. " +
-                        $"Please assign yourself on the correct card zone with **{Config.Onpu.PrefixParent[0]}card zone set <category>** command.", timeout: TimeSpan.FromSeconds(20));
+                    await ReplyAsync(":x: Sorry, you are not on the correct card zone. " +
+                        $"Please assign yourself on the correct card zone with **{Config.Onpu.PrefixParent[0]}card zone set <category>** command.");
                     return Ok();
                 }
             }
@@ -613,7 +587,7 @@ namespace OjamajoBot.Module
 
             if (cardCaptureReturn.Item1 == "")
             {
-                await ReplyAndDeleteAsync(null, embed: cardCaptureReturn.Item2.Build(), timeout: TimeSpan.FromSeconds(15));
+                await ReplyAsync(null, embed: cardCaptureReturn.Item2.Build());
             }
             else
                 await ReplyAsync(cardCaptureReturn.Item1,
@@ -636,8 +610,9 @@ namespace OjamajoBot.Module
                     await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
                         Context.Guild.Roles.First(x => x.Name == TradingCardCore.Doremi.roleCompletionist)
                     );
+                }
 
-                    await Bot.Doremi.client
+                await Bot.Doremi.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
                     .SendFileAsync(TradingCardCore.Doremi.imgCompleteAllCard, null, embed: TradingCardCore
@@ -645,7 +620,6 @@ namespace OjamajoBot.Module
                     TradingCardCore.Doremi.imgCompleteAllCard, TradingCardCore.Doremi.roleCompletionist)
                     .Build());
 
-                }
             }
 
             //check if player have captured all hazuki card/not
@@ -656,15 +630,16 @@ namespace OjamajoBot.Module
                     await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
                         Context.Guild.Roles.First(x => x.Name == TradingCardCore.Hazuki.roleCompletionist)
                         );
+                }
 
-                    await Bot.Hazuki.client
+                await Bot.Hazuki.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
                     .SendFileAsync(TradingCardCore.Hazuki.imgCompleteAllCard, null, embed: TradingCardCore
                     .userCompleteTheirList(Context, Config.Hazuki.EmbedColor, Config.Hazuki.EmbedAvatarUrl, "hazuki",
                     TradingCardCore.Hazuki.imgCompleteAllCard, TradingCardCore.Hazuki.roleCompletionist)
                     .Build());
-                }
+
             }
 
             //check if player have captured all aiko card/not
@@ -675,15 +650,16 @@ namespace OjamajoBot.Module
                     await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
                         Context.Guild.Roles.First(x => x.Name == TradingCardCore.Aiko.roleCompletionist)
                         );
+                }
 
-                    await Bot.Aiko.client
+                await Bot.Aiko.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
                     .SendFileAsync(TradingCardCore.Aiko.imgCompleteAllCard, null, embed: TradingCardCore
                     .userCompleteTheirList(Context, Config.Aiko.EmbedColor, Config.Aiko.EmbedAvatarUrl, "aiko",
                     TradingCardCore.Aiko.imgCompleteAllCard, TradingCardCore.Aiko.roleCompletionist)
                     .Build());
-                }
+
             }
 
             //check if player have captured all onpu card/not
@@ -694,15 +670,16 @@ namespace OjamajoBot.Module
                     await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
                         Context.Guild.Roles.First(x => x.Name == TradingCardCore.Onpu.roleCompletionist)
                         );
+                }
 
-                    await Bot.Onpu.client
+                await Bot.Onpu.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
                     .SendFileAsync(TradingCardCore.Aiko.imgCompleteAllCard, null, embed: TradingCardCore
                     .userCompleteTheirList(Context, Config.Onpu.EmbedColor, Config.Onpu.EmbedAvatarUrl, "onpu",
                     TradingCardCore.Onpu.imgCompleteAllCard, TradingCardCore.Onpu.roleCompletionist)
                     .Build());
-                }
+
             }
 
             //check if player have captured all momoko card/not
@@ -713,15 +690,16 @@ namespace OjamajoBot.Module
                     await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
                         Context.Guild.Roles.First(x => x.Name == TradingCardCore.Momoko.roleCompletionist)
                         );
+                }
 
-                    await Bot.Momoko.client
+                await Bot.Momoko.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
                     .SendFileAsync(TradingCardCore.Aiko.imgCompleteAllCard, null, embed: TradingCardCore
                     .userCompleteTheirList(Context, Config.Momoko.EmbedColor, Config.Momoko.EmbedAvatarUrl, "momoko",
                     TradingCardCore.Momoko.imgCompleteAllCard, TradingCardCore.Momoko.roleCompletionist)
                     .Build());
-                }
+
             }
 
             //check if player have captured all other special card/not
@@ -732,15 +710,16 @@ namespace OjamajoBot.Module
                     await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
                         Context.Guild.Roles.First(x => x.Name == TradingCardCore.roleCompletionistSpecial)
                         );
+                }
 
-                    await Bot.Onpu.client
+                await Bot.Onpu.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
                     .SendFileAsync(TradingCardCore.Onpu.imgCompleteAllCard, null, embed: TradingCardCore
                     .userCompleteTheirList(Context, Config.Onpu.EmbedColor, Config.Onpu.EmbedAvatarUrl, "other",
                     TradingCardCore.imgCompleteAllCardSpecial, TradingCardCore.roleCompletionistSpecial)
                     .Build());
-                }
+
             }
 
             return Ok();
@@ -1010,20 +989,32 @@ namespace OjamajoBot.Module
 
             if (UserTradingCardDataCore.checkCardCompletion(userId, cardPack))
             {
-                if (Context.Guild.Roles.Where(x => x.Name == TradingCardCore.Onpu.roleCompletionist).ToList().Count >= 1)
+                try
                 {
-                    await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
-                        Context.Guild.Roles.First(x => x.Name == TradingCardCore.Onpu.roleCompletionist)
-                    );
+                    if (Context.Guild.Roles.Where(x => x.Name == TradingCardCore.Onpu.roleCompletionist).ToList().Count >= 1)
+                    {
+                        await Context.Guild.GetUser(Context.User.Id).AddRoleAsync(
+                            Context.Guild.Roles.First(x => x.Name == TradingCardCore.Onpu.roleCompletionist)
+                        );
+                    }
+                } catch(Exception e) { }
+                
+                EmbedBuilder embedReturn = TradingCardCore
+                .userCompleteTheirList(Context, Config.Onpu.EmbedColor, Config.Onpu.EmbedAvatarUrl, cardPack,
+                TradingCardCore.Onpu.imgCompleteAllCard, TradingCardCore.Onpu.roleCompletionist);
 
+                if (embedReturn != null)
+                {
                     await Bot.Onpu.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
-                    .SendFileAsync(TradingCardCore.Onpu.imgCompleteAllCard, null, embed: TradingCardCore
-                    .userCompleteTheirList(Context, Config.Onpu.EmbedColor, Config.Onpu.EmbedAvatarUrl, cardPack,
-                    TradingCardCore.Onpu.imgCompleteAllCard, TradingCardCore.Onpu.roleCompletionist)
+                    .SendFileAsync(TradingCardCore.Onpu.imgCompleteAllCard, null, embed: embedReturn
                     .Build());
+                } else
+                {
+                    await ReplyAsync(":white_check_mark: Your **onpu** card completion status has been verified");
                 }
+
             }
         }
 

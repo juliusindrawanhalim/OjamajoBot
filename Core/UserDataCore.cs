@@ -101,16 +101,19 @@ namespace OjamajoBot
 
             //update magic seeds
             query = $"UPDATE {DBM_User_Data.tableName} ";
-            if (amount >= 1) //add
+            if (amount >= 0) //add
                 query += $" SET {DBM_User_Data.Columns.magic_seeds} = CASE " +
                     $" WHEN {DBM_User_Data.Columns.magic_seeds}+{amount}>={maximumCap} THEN {maximumCap} " +
                     $" ELSE {DBM_User_Data.Columns.magic_seeds}+{amount} " +
                     $" END ";
-            else //negative/substract
+            else
+            {
+                //negative/substract
                 query += $" SET {DBM_User_Data.Columns.magic_seeds} = CASE " +
-                    $" WHEN {DBM_User_Data.Columns.magic_seeds}>={amount} THEN  {DBM_User_Data.Columns.magic_seeds}-{amount} " +
+                    $" WHEN {DBM_User_Data.Columns.magic_seeds}{amount}>=0 THEN  {DBM_User_Data.Columns.magic_seeds}{amount} " +
                     $" ELSE 0 " +
                     $" END ";
+            }
             query+=$" WHERE {DBM_User_Data.Columns.id_user}=@{DBM_User_Data.Columns.id_user}";
 
             DBC dbUpdate = new DBC();
@@ -137,14 +140,14 @@ namespace OjamajoBot
 
             //update royal seeds
             query = $"UPDATE {DBM_User_Data.tableName} ";
-            if (amount >= 1) //add
+            if (amount >= 0) //add
                 query += $" SET {DBM_User_Data.Columns.royal_seeds} = CASE " +
                     $" WHEN {DBM_User_Data.Columns.royal_seeds}+{amount}>={maximumCap} THEN {maximumCap} " +
                     $" ELSE {DBM_User_Data.Columns.royal_seeds}+{amount} " +
                     $" END ";
             else //negative/substract
                 query += $" SET {DBM_User_Data.Columns.royal_seeds} = CASE " +
-                    $" WHEN {DBM_User_Data.Columns.royal_seeds}>={amount} THEN  {DBM_User_Data.Columns.royal_seeds}-{amount} " +
+                    $" WHEN {DBM_User_Data.Columns.royal_seeds}{amount}>=0 THEN  {DBM_User_Data.Columns.royal_seeds}{amount} " +
                     $" ELSE 0 " +
                     $" END ";
             query += $" WHERE {DBM_User_Data.Columns.id_user}=@{DBM_User_Data.Columns.id_user}";
