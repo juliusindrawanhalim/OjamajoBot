@@ -17,6 +17,9 @@ namespace OjamajoBot.Database.Model
             public static readonly string catch_attempt = "catch_attempt";
             public static readonly string catch_token = "catch_token";
             public static readonly string card_zone = "card_zone";
+            public static readonly string fragment_point = "fragment_point";
+            public static readonly string last_second_chance_time = "last_second_chance_time";
+
             public static readonly string boost_doremi_normal = "boost_doremi_normal";
             public static readonly string boost_doremi_platinum = "boost_doremi_platinum";
             public static readonly string boost_doremi_metal = "boost_doremi_metal";
@@ -43,7 +46,7 @@ namespace OjamajoBot.Database.Model
             public static readonly string boost_momoko_ojamajos = "boost_momoko_ojamajos";
 
             public static readonly string boost_other_special = "boost_other_special";
-            public static readonly string fragment_point = "fragment_point";
+            
             public static readonly string created_at = "created_at";
         }
 

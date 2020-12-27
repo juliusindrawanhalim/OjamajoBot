@@ -186,8 +186,17 @@ Doremi Trading Card - Update 1.31 - 22.12.20
 -badge role alias & command has been updated
 -card status has been updated
 
-Doremi Trading Card - Update 1.32 - 26.12.20
+Doremi Trading Card - Update 1.32 - 27.12.20
 ===============================================================
 -Bug fix when user does not exists it can now insert to user trading card data automatically
+-Bug fix: card zone cannot be set
 -Mystery card hint updated for spell set
 -Prevent from getting pop/hana card & only normal card reward is received when using the card pureleine command
+-Bug fix where pureleine command is not working when ojamajos card is spawned
+-New command & feature: tradeboard to trade the card with other user.
+-Capturing a duplicate card now will give some random 1-3 magic seeds rewards.
+-Using a pureleine command from bad card that has spawn now will give some random 2-5 magic  rewards if the card that'll be received are duplicates.
+
+
+to do:
+-Second chance item card now have cooldown limit within 1 hours.

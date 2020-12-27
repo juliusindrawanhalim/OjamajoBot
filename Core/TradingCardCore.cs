@@ -20,13 +20,12 @@ namespace OjamajoBot
 {
     public enum PACK
     {
-        DOREMI,
-        HAZUKI,
-        AIKO,
-        ONPU,
-        MOMOKO,
-        POP,
-        HANA
+        DOREMI, HAZUKI, AIKO, ONPU, MOMOKO, POP, HANA
+    }
+
+    public enum CATEGORY
+    {
+        NORMAL,PLATINUM,METAL,OJAMAJOS,SPECIAL
     }
 
     public class TradingCardCore
@@ -62,12 +61,26 @@ namespace OjamajoBot
             //1.30
             return new EmbedBuilder()
             .WithColor(Config.Doremi.EmbedColor)
-            .WithTitle($"Ojamajo Trading Card - Update {version} - 26.12.20")
-            .AddField("**Updates**:",
-            $"-Bug fix preventing user from card capturing when user data does not exists yet\n" +
-            $"-Mystery card hint updated for spell set\n" +
-            $"-Prevent from getting pop/hana card Prevent from getting pop/hana card & only normal card reward is received when using the card pureleine command" +
-            $" when using the card pureleine command\n");
+            .WithTitle($"Ojamajo Trading Card - Update {version} - 27.12.20")
+            .AddField("**Bug Fixes & Updates**:",
+            $"-Capturing a duplicate card now will give some random 1-3 magic seeds rewards.\n" +
+            $"-Using a pureleine command from bad card that has spawn now will give some random " +
+            $"2-5 magic rewards if the card that'll be received are duplicates.\n" +
+            $"-Prevent from receiving pop/hana card when using the card pureleine command\n" +
+            $"-Bug fix: where card zone cannot be set\n")
+            .AddField("New Command & Feature: Tradeboard",
+            "This command available available only to doremi bot within **card tradeboard** group and " +
+            "can be used to trade the card with other user within the maximum time of 7 days since the last listing time. " +
+            "Note that **hana**/**pop**/**ojamajos** card category cannot be putted up as listing & cannot be traded.\n")
+            .AddField("Tradeboard Related Command:",
+            $"-**{Config.Doremi.PrefixParent[0]}card tradeboard post <id card that you search> <id card that you'll offer/send>**: " +
+            "Post/update your trade listing offer into the tradeboard.\n" +
+            $"-**{Config.Doremi.PrefixParent[0]}card tradeboard search <id card that search>**: " +
+            $"Search the top 10 available card id offer on the tradeboard.\n" +
+            $"-**{Config.Doremi.PrefixParent[0]}card tradeboard trade <trade id>**:" +
+            $"Proceed to trade with the listing from the trade id. " +
+            $"Please do note: that this process cannot be reverted once you have trade the card with that user.\n" +
+            $"-**{Config.Doremi.PrefixParent[0]}card tradeboard remove**: Remove your trade listing from the tradeboard.");
         }
 
         public static int getUserRank(int exp)
@@ -1118,155 +1131,158 @@ namespace OjamajoBot
             columnFilter[DBM_Trading_Card_Guild.Columns.id_guild] = guildId.ToString();
             columnFilter[DBM_Trading_Card_Guild.Columns.spawn_is_badcard] = 1;
 
-            string query = @$"select * 
-                            from {DBM_Trading_Card_Guild.tableName} guild, {DBM_Trading_Card_Data.tableName} tc  
-                            where guild.{DBM_Trading_Card_Guild.Columns.id_guild}=@{DBM_Trading_Card_Guild.Columns.id_guild} and 
-                            guild.{DBM_Trading_Card_Guild.Columns.spawn_is_badcard} =@{DBM_Trading_Card_Guild.Columns.spawn_is_badcard} and 
-                            guild.{DBM_Trading_Card_Guild.Columns.spawn_id}=tc.{DBM_Trading_Card_Data.Columns.id_card}";
-            var resultTradingCardGroup = new DBC().selectAll(query,columnFilter);
-            if (resultTradingCardGroup.Rows.Count > 0)
+            var cardGuildSpawnData = TradingCardGuildCore.getGuildData(guildId);
+            //string query = @$"select * 
+            //        from {DBM_Trading_Card_Guild.tableName} guild, {DBM_Trading_Card_Data.tableName} tc  
+            //        where guild.{DBM_Trading_Card_Guild.Columns.id_guild}=@{DBM_Trading_Card_Guild.Columns.id_guild} and 
+            //        guild.{DBM_Trading_Card_Guild.Columns.spawn_is_badcard}=@{DBM_Trading_Card_Guild.Columns.spawn_is_badcard} and 
+            //        guild.{DBM_Trading_Card_Guild.Columns.spawn_id}=tc.{DBM_Trading_Card_Data.Columns.id_card}";
+            //var resultTradingCardGroup = new DBC().selectAll(query,columnFilter);
+
+            string query = "";
+
+            if (Convert.ToBoolean(cardGuildSpawnData[DBM_Trading_Card_Guild.Columns.spawn_is_badcard]))
             {
-                foreach (DataRow rows in resultTradingCardGroup.Rows)
+                string badCardType = TradingCardCore.BadCards.getType(
+                Convert.ToInt32(cardGuildSpawnData[DBM_Trading_Card_Guild.Columns.spawn_badcard_type]));
+
+                string question = cardGuildSpawnData[DBM_Trading_Card_Guild.Columns.spawn_badcard_question].ToString();
+                string correctAnswer = cardGuildSpawnData[DBM_Trading_Card_Guild.Columns.spawn_badcard_answer].ToString();
+
+                if (userData[DBM_User_Trading_Card_Data.Columns.catch_token].ToString() ==
+                    cardGuildSpawnData[DBM_Trading_Card_Guild.Columns.spawn_token].ToString() )
                 {
-                    string badCardType = TradingCardCore.BadCards.getType(
-                    Convert.ToInt32(rows[DBM_Trading_Card_Guild.Columns.spawn_badcard_type]));
+                    embed = new EmbedBuilder()
+                    .WithAuthor(TradingCardCore.BadCards.embedPureleineName, TradingCardCore.BadCards.embedPureleineAvatar)
+                    .WithColor(TradingCardCore.BadCards.embedPureleineColor)
+                    .WithTitle("No No No!")
+                    .WithDescription($"Sorry, you cannot use the pureleine command again. Please wait until the next card spawn.")
+                    .WithThumbnailUrl(TradingCardCore.BadCards.imgAnswerWrong);
+                }
+                else if (answer == "")
+                {
+                    embed = new EmbedBuilder()
+                    .WithAuthor(TradingCardCore.BadCards.embedPureleineName, TradingCardCore.BadCards.embedPureleineAvatar)
+                    .WithColor(TradingCardCore.BadCards.embedPureleineColor)
+                    .WithTitle("Bad card detected!")
+                    .WithDescription($"I'm detecting a great amount of bad card energy! You need to remove it with **<bot>!card pureleine <answer>** commands from the question below:")
+                    .WithThumbnailUrl(TradingCardCore.BadCards.imgPureleineFound)
+                    .AddField("Question:", $"{question} = ?");
+                }
+                else if (answer != correctAnswer)
+                {
+                    embed = new EmbedBuilder()
+                    .WithAuthor(TradingCardCore.BadCards.embedPureleineName, TradingCardCore.BadCards.embedPureleineAvatar)
+                    .WithColor(TradingCardCore.BadCards.embedPureleineColor)
+                    .WithTitle("Wrong answer!")
+                    .WithDescription($":x: That answer is wrong! **{context.User.Username}** has lost a chance to capture a card this turn...")
+                    .WithThumbnailUrl(TradingCardCore.BadCards.imgAnswerWrong);
 
-                    string question = rows[DBM_Trading_Card_Guild.Columns.spawn_badcard_question].ToString();
-                    string correctAnswer = rows[DBM_Trading_Card_Guild.Columns.spawn_badcard_answer].ToString();
+                    query = $"UPDATE {DBM_User_Trading_Card_Data.tableName} " +
+                        $" SET {DBM_User_Trading_Card_Data.Columns.catch_token}=@{DBM_User_Trading_Card_Data.Columns.catch_token} " +
+                        $" WHERE {DBM_User_Trading_Card_Data.Columns.id_user}=@{DBM_User_Trading_Card_Data.Columns.id_user} ";
+                    columnFilter = new Dictionary<string, object>();
+                    columnFilter[DBM_User_Trading_Card_Data.Columns.catch_token] = cardGuildSpawnData[DBM_Trading_Card_Guild.Columns.spawn_token];
+                    columnFilter[DBM_User_Trading_Card_Data.Columns.id_user] = userId.ToString();
+                    new DBC().update(query, columnFilter);
+                } else
+                {
+                    embed = new EmbedBuilder()
+                    .WithAuthor(TradingCardCore.BadCards.embedPureleineName, TradingCardCore.BadCards.embedPureleineAvatar)
+                    .WithColor(TradingCardCore.BadCards.embedPureleineColor)
+                    .WithTitle("Bad card effects has been removed!")
+                    .WithDescription($":white_check_mark: You may now safely capture the spawned card again.\n")
+                    .WithFooter($"Removed by: {context.User.Username}")
+                    .WithThumbnailUrl(TradingCardCore.BadCards.imgAnswerCorrect);
 
-                    if (userData[DBM_User_Trading_Card_Data.Columns.catch_token].ToString() == 
-                        rows[DBM_Trading_Card_Guild.Columns.spawn_token].ToString() )
+                    //reset bad card
+                    query = $"UPDATE {DBM_Trading_Card_Guild.tableName} " +
+                        $" SET {DBM_Trading_Card_Guild.Columns.spawn_badcard_question}=@{DBM_Trading_Card_Guild.Columns.spawn_badcard_question}, " +
+                        $" {DBM_Trading_Card_Guild.Columns.spawn_badcard_answer}=@{DBM_Trading_Card_Guild.Columns.spawn_badcard_answer}, " +
+                        $" {DBM_Trading_Card_Guild.Columns.spawn_is_badcard}=@{DBM_Trading_Card_Guild.Columns.spawn_is_badcard} " +
+                        $" WHERE {DBM_Trading_Card_Guild.Columns.id_guild}=@{DBM_Trading_Card_Guild.Columns.id_guild} ";
+                    columnFilter = new Dictionary<string, object>();
+                    columnFilter[DBM_Trading_Card_Guild.Columns.spawn_badcard_question] = "";
+                    columnFilter[DBM_Trading_Card_Guild.Columns.spawn_badcard_answer] = "";
+                    columnFilter[DBM_Trading_Card_Guild.Columns.spawn_is_badcard] = 0;
+                    columnFilter[DBM_Trading_Card_Guild.Columns.id_guild] = context.Guild.Id;
+                    new DBC().update(query, columnFilter);
+
+                    if (badCardType == "curse" || badCardType == "failure")
                     {
-                        embed = new EmbedBuilder()
-                        .WithAuthor(TradingCardCore.BadCards.embedPureleineName, TradingCardCore.BadCards.embedPureleineAvatar)
-                        .WithColor(TradingCardCore.BadCards.embedPureleineColor)
-                        .WithTitle("No No No!")
-                        .WithDescription($"Sorry, you cannot use the pureleine command again. Please wait until the next card spawn.")
-                        .WithThumbnailUrl(TradingCardCore.BadCards.imgAnswerWrong);
-                    }
-                    else if (answer == "")
-                    {
-                        embed = new EmbedBuilder()
-                        .WithAuthor(TradingCardCore.BadCards.embedPureleineName, TradingCardCore.BadCards.embedPureleineAvatar)
-                        .WithColor(TradingCardCore.BadCards.embedPureleineColor)
-                        .WithTitle("Bad card detected!")
-                        .WithDescription($"I'm detecting a great amount of bad card energy! You need to remove it with **<bot>!card pureleine <answer>** commands from the question below:")
-                        .WithThumbnailUrl(TradingCardCore.BadCards.imgPureleineFound)
-                        .AddField("Question:", $"{question} = ?");
-                    }
-                    else if (answer != correctAnswer)
-                    {
-                        embed = new EmbedBuilder()
-                        .WithAuthor(TradingCardCore.BadCards.embedPureleineName, TradingCardCore.BadCards.embedPureleineAvatar)
-                        .WithColor(TradingCardCore.BadCards.embedPureleineColor)
-                        .WithTitle("Wrong answer!")
-                        .WithDescription($":x: That answer is wrong! **{context.User.Username}** also lost a chance to capture card for this turn...")
-                        .WithThumbnailUrl(TradingCardCore.BadCards.imgAnswerWrong);
+                        //generate random card
+                        int randomParent = new Random().Next(0, 6);
+                        int randomCategory = new Random().Next(100);
+                        string chosenCategory = "normal";
 
-                        query = $"UPDATE {DBM_User_Trading_Card_Data.tableName} " +
-                            $" SET {DBM_User_Trading_Card_Data.Columns.catch_token}=@{DBM_User_Trading_Card_Data.Columns.catch_token} " +
-                            $" WHERE {DBM_User_Trading_Card_Data.Columns.id_user}=@{DBM_User_Trading_Card_Data.Columns.id_user} ";
-                        columnFilter = new Dictionary<string, object>();
-                        columnFilter[DBM_User_Trading_Card_Data.Columns.catch_token] = rows[DBM_Trading_Card_Guild.Columns.spawn_token];
-                        columnFilter[DBM_User_Trading_Card_Data.Columns.id_user] = userId.ToString();
-                        new DBC().update(query, columnFilter);
-                    } else
-                    {
-                        embed = new EmbedBuilder()
-                        .WithAuthor(TradingCardCore.BadCards.embedPureleineName, TradingCardCore.BadCards.embedPureleineAvatar)
-                        .WithColor(TradingCardCore.BadCards.embedPureleineColor)
-                        .WithTitle("Bad cards effect has been removed!")
-                        .WithDescription($":white_check_mark: You may now safely capture the spawned card again.\n")
-                        .WithFooter($"Removed by: {context.User.Username}")
-                        .WithThumbnailUrl(TradingCardCore.BadCards.imgAnswerCorrect);
+                        if (randomCategory <= 5)//0-1 //platinum
+                            chosenCategory = "platinum";
 
-                        //reset bad card
-                        query = $"UPDATE {DBM_Trading_Card_Guild.tableName} " +
-                            $" SET {DBM_Trading_Card_Guild.Columns.spawn_badcard_question}=@{DBM_Trading_Card_Guild.Columns.spawn_badcard_question}, " +
-                            $" {DBM_Trading_Card_Guild.Columns.spawn_badcard_answer}=@{DBM_Trading_Card_Guild.Columns.spawn_badcard_answer}, " +
-                            $" {DBM_Trading_Card_Guild.Columns.spawn_is_badcard}=@{DBM_Trading_Card_Guild.Columns.spawn_is_badcard} " +
-                            $" WHERE {DBM_Trading_Card_Guild.Columns.id_guild}=@{DBM_Trading_Card_Guild.Columns.id_guild} ";
-                        columnFilter = new Dictionary<string, object>();
-                        columnFilter[DBM_Trading_Card_Guild.Columns.spawn_badcard_question] = "";
-                        columnFilter[DBM_Trading_Card_Guild.Columns.spawn_badcard_answer] = "";
-                        columnFilter[DBM_Trading_Card_Guild.Columns.spawn_is_badcard] = 0;
-                        columnFilter[DBM_Trading_Card_Guild.Columns.id_guild] = context.Guild.Id;
-                        new DBC().update(query, columnFilter);
+                        string parent = "doremi";
+                        if (randomParent == 1)
+                            parent = "hazuki";
+                        else if (randomParent == 2)
+                            parent = "aiko";
+                        else if (randomParent == 3)
+                            parent = "onpu";
+                        else if (randomParent == 4)
+                            parent = "momoko";
 
-                        if (badCardType == "curse" || badCardType == "failure")
+                        //start read json
+                        //var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
+                        //var key = JObject.Parse(jObjTradingCardList[parent][chosenCategory].ToString()).Properties().ToList();
+                        //int randIndex = new Random().Next(0, key.Count);
+                        //string chosenId = key[randIndex].Name;
+
+                        //chosen data:
+                        //chosenId = "do004"; chosenCategory = "normal"; parent = "doremi"; //for debug only
+                        //string chosenName = jObjTradingCardList[parent][chosenCategory][chosenId]["name"].ToString();
+                        query = $"SELECT * " +
+                            $" FROM {DBM_Trading_Card_Data.tableName} " +
+                            $" WHERE {DBM_Trading_Card_Data.Columns.pack}<>@{DBM_Trading_Card_Data.Columns.pack}1 AND " +
+                            $" {DBM_Trading_Card_Data.Columns.pack}<>@{DBM_Trading_Card_Data.Columns.pack}2 AND " +
+                            $" {DBM_Trading_Card_Data.Columns.category}=@{DBM_Trading_Card_Data.Columns.category} " +
+                            $" ORDER BY rand() " +
+                            $" LIMIT 1 ";
+                        Dictionary<string, object> columnsFilter = new Dictionary<string, object>();
+                        columnsFilter[$"{DBM_Trading_Card_Data.Columns.pack}1"] = "pop";
+                        columnsFilter[$"{DBM_Trading_Card_Data.Columns.pack}2"] = "hana";
+                        columnsFilter[$"{DBM_Trading_Card_Data.Columns.category}"] = "normal";
+                        var resultRandomCard = new DBC().selectAll(query, columnsFilter);
+                        string chosenId = ""; string chosenName = ""; string chosenUrl = "";
+                        foreach (DataRow rowsRandomCard in resultRandomCard.Rows)
                         {
-                            //generate random card
-                            int randomParent = new Random().Next(0, 6);
-                            int randomCategory = new Random().Next(100);
-                            string chosenCategory = "normal";
-
-                            if (randomCategory <= 5)//0-1 //platinum
-                                chosenCategory = "platinum";
-
-                            string parent = "doremi";
-                            if (randomParent == 1)
-                                parent = "hazuki";
-                            else if (randomParent == 2)
-                                parent = "aiko";
-                            else if (randomParent == 3)
-                                parent = "onpu";
-                            else if (randomParent == 4)
-                                parent = "momoko";
-
-                            //start read json
-                            //var jObjTradingCardList = JObject.Parse(File.ReadAllText($"{Config.Core.headConfigFolder}{Config.Core.headTradingCardConfigFolder}/trading_card_list.json"));
-                            //var key = JObject.Parse(jObjTradingCardList[parent][chosenCategory].ToString()).Properties().ToList();
-                            //int randIndex = new Random().Next(0, key.Count);
-                            //string chosenId = key[randIndex].Name;
-
-                            //chosen data:
-                            //chosenId = "do004"; chosenCategory = "normal"; parent = "doremi"; //for debug only
-                            //string chosenName = jObjTradingCardList[parent][chosenCategory][chosenId]["name"].ToString();
-                            query = $"SELECT * " +
-                                $" FROM {DBM_Trading_Card_Data.tableName} " +
-                                $" WHERE {DBM_Trading_Card_Data.Columns.pack}<>@{DBM_Trading_Card_Data.Columns.pack}1 AND " +
-                                $" {DBM_Trading_Card_Data.Columns.pack}<>@{DBM_Trading_Card_Data.Columns.pack}2 AND " +
-                                $" {DBM_Trading_Card_Data.Columns.category}=@{DBM_Trading_Card_Data.Columns.category} " +
-                                $" ORDER BY rand() " +
-                                $" LIMIT 1 ";
-                            Dictionary<string, object> columnsFilter = new Dictionary<string, object>();
-                            columnsFilter[$"{DBM_Trading_Card_Data.Columns.pack}1"] = "pop";
-                            columnsFilter[$"{DBM_Trading_Card_Data.Columns.pack}2"] = "hana";
-                            columnsFilter[$"{DBM_Trading_Card_Data.Columns.category}"] = "normal";
-                            var resultRandomCard = new DBC().selectAll(query, columnsFilter);
-                            string chosenId = ""; string chosenName = ""; string chosenUrl = "";
-                            foreach (DataRow rowsRandomCard in resultRandomCard.Rows)
-                            {
-                                chosenId = rowsRandomCard[DBM_Trading_Card_Data.Columns.id_card].ToString();
-                                chosenName = rowsRandomCard[DBM_Trading_Card_Data.Columns.name].ToString();
-                                chosenUrl = rowsRandomCard[DBM_Trading_Card_Data.Columns.url].ToString();
-                            }
-
-                            if (checkUserHaveCard(context.User.Id, parent, chosenId))
-                            {
-                                embed.Description += $"Sorry, I can't give **{context.User.Username}** a bonus card: **{chosenId} - {chosenName}** because you have it already...";
-                            } else
-                            {
-                                embed.Description += $"**{context.User.Username}** have been rewarded with a bonus card!";
-                                embed.AddField($"{chosenCategory} {parent} Bonus Card Reward:", $"**{chosenId} - {chosenName}**");
-                                embed.WithImageUrl(chosenUrl);
-                                //add bonus card & update catch attempt
-                                columnFilter = new Dictionary<string, object>();
-                                columnFilter[DBM_User_Trading_Card_Inventory.Columns.id_user] = userId.ToString();
-                                columnFilter[DBM_User_Trading_Card_Inventory.Columns.id_card] = chosenId;
-
-                                new DBC().insert(DBM_User_Trading_Card_Inventory.tableName, columnFilter);
-                                UserTradingCardDataCore.addCatchAttempt(context.User.Id);
-                            }
+                            chosenId = rowsRandomCard[DBM_Trading_Card_Data.Columns.id_card].ToString();
+                            chosenName = rowsRandomCard[DBM_Trading_Card_Data.Columns.name].ToString();
+                            chosenUrl = rowsRandomCard[DBM_Trading_Card_Data.Columns.url].ToString();
                         }
-                        else if (badCardType == "seeds")
+
+                        if (checkUserHaveCard(context.User.Id, parent, chosenId))
                         {
-                            int randomedMagicSeeds = new Random().Next(10, 25);
-                            embed.Description += $"**{context.User.Username}** have been rewarded with {randomedMagicSeeds} magic seeds!";
-                            embed.WithImageUrl(GardenCore.imgMagicSeeds);
+                            int randomedMagicSeeds = new Random().Next(2, 6);
+                            embed.Description += $"Sorry, I can't give **{context.User.Username}** a bonus card: **{chosenId} - {chosenName}** because you have it already. " +
+                                $"As a bonus you've received {randomedMagicSeeds} magic seeds.";
                             UserDataCore.updateMagicSeeds(context.User.Id, randomedMagicSeeds);
-                        }
+                        } else
+                        {
+                            embed.Description += $"**{context.User.Username}** have been rewarded with a bonus card!";
+                            embed.AddField($"{chosenCategory} {parent} Bonus Card Reward:", $"**{chosenId} - {chosenName}**");
+                            embed.WithImageUrl(chosenUrl);
+                            //add bonus card & update catch attempt
+                            columnFilter = new Dictionary<string, object>();
+                            columnFilter[DBM_User_Trading_Card_Inventory.Columns.id_user] = userId.ToString();
+                            columnFilter[DBM_User_Trading_Card_Inventory.Columns.id_card] = chosenId;
 
+                            new DBC().insert(DBM_User_Trading_Card_Inventory.tableName, columnFilter);
+                            UserTradingCardDataCore.addCatchAttempt(context.User.Id);
+                        }
+                    }
+                    else if (badCardType == "seeds")
+                    {
+                        int randomedMagicSeeds = new Random().Next(10, 25);
+                        embed.Description += $"**{context.User.Username}** have been rewarded with {randomedMagicSeeds} magic seeds!";
+                        embed.WithImageUrl(GardenCore.imgMagicSeeds);
+                        UserDataCore.updateMagicSeeds(context.User.Id, randomedMagicSeeds);
                     }
 
                 }
@@ -1454,8 +1470,6 @@ namespace OjamajoBot
             }
             //get card information end
 
-            
-
             //get card boost information
             int boostNormal = 0; int boostPlatinum = 0; int boostMetal = 0;
             int boostOjamajos = 0; int boostSpecial = 0;
@@ -1588,7 +1602,8 @@ namespace OjamajoBot
                 columns[DBM_User_Trading_Card_Data.Columns.catch_token] = spawnedToken;
                 dbUpdate.update(query, columns);
 
-                replyText = ":x: Sorry, you guessed the wrong mystery card.";
+                replyText = ":x: Sorry, you guessed the wrong mystery card. " +
+                    "You'll have to wait until the next card spawn.";
 
                 //returnEmbedBuilder = new EmbedBuilder()
                 //.WithColor(color)
@@ -1632,11 +1647,16 @@ namespace OjamajoBot
                         //check if user have the card/not
                         if (checkUserHaveCard(clientId,parent,spawnedCardId))
                         {//card already exist on inventory
+                            int randomMagicSeedsReward = new Random().Next(1, 4);
                             if (!spawnedIsMystery)
                                 replyText = $":x: Sorry, I can't capture **{spawnedCardId} - {name}** because you already have it. ";
                             else
-                                replyText = $":x: You guessed the mystery card correctly but I can't capture **{spawnedCardId} - {name}** because you aleady have it. ";
-                            //UserDataCore.updateMagicSeeds(clientId, 1);
+                                replyText = $":x: You guessed the mystery card correctly " +
+                                    $"but I can't capture **{spawnedCardId} - {name}** because you aleady have it. ";
+
+                            replyText += $"As a bonus you've been rewarded with **{randomMagicSeedsReward}** magic seeds.";
+
+                            UserDataCore.updateMagicSeeds(clientId, randomMagicSeedsReward);
                             //UserTradingCardDataCore.updateFragmentPoints(clientId, 1);
                             UserTradingCardDataCore.addCatchAttempt(clientId, spawnedToken);
                         }
@@ -2171,37 +2191,80 @@ namespace OjamajoBot
             return arrList[property].ToString();
         }
 
+        public static Dictionary<string,object> getCardData(string cardId)
+        {
+            string query;
+            
+            DataTable dt = new DataTable();
+            Dictionary<string, object> ret = new Dictionary<string, object>();
+            Dictionary<string, object> colSelect = new Dictionary<string, object>();
+
+            if (getCardCategory(cardId) == "ojamajos")
+            {
+                query = $"SELECT * " +
+                $" FROM {DBM_Trading_Card_Data_Ojamajos.tableName} " +
+                $" WHERE {DBM_Trading_Card_Data_Ojamajos.Columns.id_card}=@{DBM_Trading_Card_Data_Ojamajos.Columns.id_card}";
+
+                colSelect = new Dictionary<string, object>();
+                colSelect[DBM_Trading_Card_Data_Ojamajos.Columns.id_card] = cardId;
+            } else {
+                query = $"SELECT * " +
+                $" FROM {DBM_Trading_Card_Data.tableName} " +
+                $" WHERE {DBM_Trading_Card_Data.Columns.id_card}=@{DBM_Trading_Card_Data.Columns.id_card}";
+
+                colSelect = new Dictionary<string, object>();
+                colSelect[DBM_Trading_Card_Data.Columns.id_card] = cardId;
+            }
+
+            try
+            {
+                DBC db = new DBC();
+                dt = db.selectAll(query, colSelect);
+
+                //create if not exists
+                if (dt.Rows.Count <= 0)
+                    return null;
+
+                foreach (DataRow row in dt.Rows)
+                {
+                    ret[DBM_Trading_Card_Data.Columns.id_card] = row[DBM_Trading_Card_Data.Columns.id_card];
+                    ret[DBM_Trading_Card_Data.Columns.pack] = row[DBM_Trading_Card_Data.Columns.pack];
+                    ret[DBM_Trading_Card_Data.Columns.name] = row[DBM_Trading_Card_Data.Columns.name];
+                    ret[DBM_Trading_Card_Data.Columns.url] = row[DBM_Trading_Card_Data.Columns.url];
+                    ret[DBM_Trading_Card_Data.Columns.attr_0] = row[DBM_Trading_Card_Data.Columns.attr_0];
+                    ret[DBM_Trading_Card_Data.Columns.attr_1] = row[DBM_Trading_Card_Data.Columns.attr_1];
+                    ret[DBM_Trading_Card_Data.Columns.attr_2] = row[DBM_Trading_Card_Data.Columns.attr_2];
+
+                    if (getCardCategory(cardId) == "ojamajos")
+                        ret[DBM_Trading_Card_Data.Columns.category] = "ojamajos";
+                    else
+                        ret[DBM_Trading_Card_Data.Columns.category] = row[DBM_Trading_Card_Data.Columns.category];
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
+
+            return ret;
+        }
+
         public static string getCardCategory(string cardId)
         {
             string category;
-            if (cardId.ToLower().Contains("dop"))
+            if (cardId.ToLower().Contains("dop")|| cardId.ToLower().Contains("hap")||
+                cardId.ToLower().Contains("aip")|| cardId.ToLower().Contains("onp")||
+                cardId.ToLower().Contains("mop")|| cardId.ToLower().Contains("hanp")
+                )
                 category = "platinum";
-            else if (cardId.ToLower().Contains("dom"))
-                category = "metal";
-            else if (cardId.ToLower().Contains("hap"))
-                category = "platinum";
-            else if (cardId.ToLower().Contains("ham"))
-                category = "metal";
-            else if (cardId.ToLower().Contains("aip"))
-                category = "platinum";
-            else if (cardId.ToLower().Contains("aim"))
-                category = "metal";
-            else if (cardId.ToLower().Contains("onp"))
-                category = "platinum";
-            else if (cardId.ToLower().Contains("onm"))
-                category = "metal";
-            else if (cardId.ToLower().Contains("mop"))
-                category = "platinum";
-            else if (cardId.ToLower().Contains("mom"))
+            else if (cardId.ToLower().Contains("dom")|| cardId.ToLower().Contains("ham")||
+                cardId.ToLower().Contains("aim")|| cardId.ToLower().Contains("onm")||
+                cardId.ToLower().Contains("mom")|| cardId.ToLower().Contains("hanm"))
                 category = "metal";
             else if (cardId.ToLower().Contains("oj"))
                 category = "ojamajos";
             else if (cardId.ToLower().Contains("ot"))
                 category = "special";
-            else if (cardId.ToLower().Contains("hanp"))
-                category = "platinum";
-            else if (cardId.ToLower().Contains("hanm"))
-                category = "metal";
             else
                 category = "normal";
             return category;
@@ -2256,7 +2319,8 @@ namespace OjamajoBot
                 $"The available zone category are: **normal/platinum/metal/ojamajos**.");
             }
 
-            var userData = UserTradingCardDataCore.getUserData(userId);
+            var userData = UserDataCore.getUserData(userId);
+            var userTradingCardData = UserDataCore.getUserData(userId);
 
             int selectedPrice = 40;//normal/default
             switch (category)
@@ -2279,21 +2343,21 @@ namespace OjamajoBot
                 .WithDescription($":x: Sorry, you don't have: **{selectedPrice}** magic seeds to change your zone into **{cardPack} {category}**.");
             } else
             {
-                DBC db = new DBC();
                 string queryUpdate = @$"UPDATE {DBM_User_Trading_Card_Data.tableName}
                                         SET {DBM_User_Trading_Card_Data.Columns.card_zone}=@{DBM_User_Trading_Card_Data.Columns.card_zone}
                                         WHERE {DBM_User_Trading_Card_Data.Columns.id_user}=@{DBM_User_Trading_Card_Data.Columns.id_user}";
                 Dictionary<string, object> columnFilter = new Dictionary<string, object>();
                 columnFilter[DBM_User_Trading_Card_Data.Columns.card_zone] = $"{cardPack} {category}";
                 columnFilter[DBM_User_Trading_Card_Data.Columns.id_user] = userId.ToString();
-                db.update(queryUpdate,columnFilter);
+                new DBC().update(queryUpdate,columnFilter);
 
                 //update seeds data
                 UserDataCore.updateMagicSeeds(userId,-selectedPrice);
 
                 return new EmbedBuilder()
                 .WithColor(color)
-                .WithDescription($":white_check_mark: {MentionUtils.MentionUser(userId)} is now assigned at **{cardPack} {category}** zone and" +
+                .WithDescription($":white_check_mark: " +
+                $"{MentionUtils.MentionUser(userId)} is now assigned at **{cardPack} {category}** zone and" +
                 $" use {selectedPrice} magic seeds.");
             }
         }

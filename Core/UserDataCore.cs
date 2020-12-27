@@ -110,7 +110,7 @@ namespace OjamajoBot
             {
                 //negative/substract
                 query += $" SET {DBM_User_Data.Columns.magic_seeds} = CASE " +
-                    $" WHEN {DBM_User_Data.Columns.magic_seeds}{amount}>=0 THEN  {DBM_User_Data.Columns.magic_seeds}{amount} " +
+                    $" WHEN {DBM_User_Data.Columns.magic_seeds}{amount}>=0 THEN {DBM_User_Data.Columns.magic_seeds}{amount} " +
                     $" ELSE 0 " +
                     $" END ";
             }

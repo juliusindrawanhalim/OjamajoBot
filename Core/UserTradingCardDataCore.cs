@@ -43,6 +43,7 @@ namespace OjamajoBot
                     ret[DBM_User_Trading_Card_Data.Columns.catch_attempt] = row[DBM_User_Trading_Card_Data.Columns.catch_attempt];
                     ret[DBM_User_Trading_Card_Data.Columns.catch_token] = row[DBM_User_Trading_Card_Data.Columns.catch_token];
                     ret[DBM_User_Trading_Card_Data.Columns.card_zone] = row[DBM_User_Trading_Card_Data.Columns.card_zone];
+                    ret[DBM_User_Trading_Card_Data.Columns.last_second_chance_time] = row[DBM_User_Trading_Card_Data.Columns.last_second_chance_time];
                     ret[DBM_User_Trading_Card_Data.Columns.boost_doremi_normal] = row[DBM_User_Trading_Card_Data.Columns.boost_doremi_normal];
                     ret[DBM_User_Trading_Card_Data.Columns.boost_doremi_platinum] = row[DBM_User_Trading_Card_Data.Columns.boost_doremi_platinum];
                     ret[DBM_User_Trading_Card_Data.Columns.boost_doremi_metal] = row[DBM_User_Trading_Card_Data.Columns.boost_doremi_metal];
