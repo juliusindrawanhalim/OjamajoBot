@@ -1746,7 +1746,7 @@ namespace OjamajoBot
                                             break;
                                         default:
                                             query = $"UPDATE {DBM_User_Trading_Card_Data.tableName} " +
-                                            $" SET boost_{spawnedCardPack.ToLower()}_{spawnedCardCategory.ToLower()}=@boost " +
+                                            $" SET boost_{parent.ToLower()}_{spawnedCardCategory.ToLower()}=@boost " +
                                             $" WHERE {DBM_User_Trading_Card_Data.Columns.id_user}=@{DBM_User_Trading_Card_Data.Columns.id_user} ";
 
                                             //arrInventory["boost"][parent][spawnedCardCategory] = "0";
@@ -1945,7 +1945,7 @@ namespace OjamajoBot
                                 {   //reset boost
                                     string query = "";
                                     replyText = $":arrow_double_up: **{GlobalFunctions.UppercaseFirst(parent)} {GlobalFunctions.UppercaseFirst(spawnedCardCategory)}** " +
-                                        $"Card Capture Boost has been used!\n";
+                                        $"Card Capture Boost has been used and boosted into **{boostRate}**!\n";
                                     if (spawnedCardCategory.ToLower() == "special")
                                     {
                                         query = $"UPDATE {DBM_User_Trading_Card_Data.tableName} " +
@@ -1955,7 +1955,7 @@ namespace OjamajoBot
                                     else
                                     {
                                         query = $"UPDATE {DBM_User_Trading_Card_Data.tableName} " +
-                                            $" SET boost_{spawnedCardPack.ToLower()}_{spawnedCardCategory.ToLower()}=@boost " +
+                                            $" SET boost_{parent.ToLower()}_{spawnedCardCategory.ToLower()}=@boost " +
                                             $" WHERE {DBM_User_Trading_Card_Data.Columns.id_user}=@{DBM_User_Trading_Card_Data.Columns.id_user} ";
                                     }
                                     columns = new Dictionary<string, object>();

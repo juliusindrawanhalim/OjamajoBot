@@ -983,7 +983,7 @@ namespace OjamajoBot.Module
 
         }
 
-        [Command("pureleine", RunMode = RunMode.Async), Alias("pureline"), Summary("Detect the bad card with the help from oyajide & pureleine computer. " +
+        [Command("pureleine", RunMode = RunMode.Async), Alias("oyajide"), Summary("Detect the bad card with the help from oyajide & pureleine computer. " +
             "Insert the answer as parameter to remove the bad cards if it's existed. Example: ha!card pureleine 10")]
         public async Task trading_card_pureleine(string answer = "")
         {
