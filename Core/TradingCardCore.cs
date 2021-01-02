@@ -2377,6 +2377,8 @@ namespace OjamajoBot
             string mentionedCardCatcherRoles = "";
             if (guildTradingCardData[DBM_Trading_Card_Guild.Columns.id_card_catcher].ToString()!="")
             {
+                //mentionedCardCatcherRoles = 
+                //    $" <@&{guildTradingCardData[DBM_Trading_Card_Guild.Columns.id_card_catcher].ToString()}> ";
                 mentionedCardCatcherRoles = MentionUtils.MentionRole(Convert.ToUInt64(
                     guildTradingCardData[DBM_Trading_Card_Guild.Columns.id_card_catcher].ToString()));
             }

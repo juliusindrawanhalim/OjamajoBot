@@ -52,10 +52,7 @@ namespace OjamajoBot.Bot
 
         //timer to rotates activity
         private Timer _timerStatus, _rotatesWeather;
-
-        //private readonly List<string> listRandomListening = new List<string>() {
-        //    "Otome wa Kyuu ni Tomarenai", "Kitto Chanto Onnanoko", "Ice Cream Child", "'Su' no Tsuku Koibito", "Merry-Go-Round"
-        //};
+        public static Stopwatch stopwatchWeather = new Stopwatch();
 
         //bot console: https://discordapp.com/developers/applications/655668640502251530/information
         //https://docs.stillu.cc/guides/getting_started/terminology.html
@@ -106,7 +103,6 @@ namespace OjamajoBot.Bot
                 {
                     selectedWeatherIndex = 0;
                     //GardenCore.weather = new string[]{ $"☀️", "sunny","A perfect time to water the plant~","5"};
-
                 }
                 else if (randomWeather <= 40)
                 {
@@ -128,6 +124,11 @@ namespace OjamajoBot.Bot
                 {
                     GardenCore.weather[i] = GardenCore.arrRandomWeather[selectedWeatherIndex, i];
                 }
+
+                stopwatchWeather.Start();
+
+                if (stopwatchWeather.IsRunning)
+                    stopwatchWeather.Restart();
 
                 //GardenCore.weather[1] = GardenCore.arrRandomWeather[selectedWeatherIndex,1];
                 //GardenCore.weather[2] = GardenCore.arrRandomWeather[selectedWeatherIndex,2];

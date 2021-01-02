@@ -801,14 +801,9 @@ namespace OjamajoBot.Module
             await ReplyAsync(embed: new EmbedBuilder()
             .WithColor(Config.Doremi.EmbedColor)
             .WithTitle($"Ojamajo Bot v{Config.Core.version}")
-            .AddField("**Introducing: Avatar Profile**:",
-            "This is a new feature where you can see your user avatar profile. " +
-            "Level can be increased up to 200. " +
-            "Everytime you post something on the server you'll have a chance to get 1 exp. " +
-            "Available command:\n" +
-            $"**{Config.Doremi.PrefixParent[0]}avatar profile <optional username>**: see your/other avatar\n" +
-            $"**{Config.Doremi.PrefixParent[0]}avatar set info <some info>**: set your avatar info\n" +
-            $"**{Config.Doremi.PrefixParent[0]}avatar set nickname <nickname>**: set your avatar nickname")
+            .AddField("**Update & changes list**:",
+            "-**garden weather** command now can show the timer until the next weather changes & " +
+            "reminder if the plant is not watered yet.\n")
             .Build());
         }
 
@@ -862,7 +857,7 @@ namespace OjamajoBot.Module
                     await ReplyAsync(embed: new EmbedBuilder()
                     .WithColor(Config.Doremi.EmbedColor)
                     .WithDescription($":seedling: {MentionUtils.MentionUser(clientId)} " +
-                    $"have watered the plant and received **{randomedReceive}** magic seed(s) & **{randomedGrowth}%** " +
+                    $"have watered the plant and received **{randomedReceive}** magic seeds & **{randomedGrowth}%** " +
                     $"plant growth progress from {GardenCore.weather[0]}**{GardenCore.weather[1]}** weather effect. " +
                     $"Thank you for watering the plant.")
                     .AddField("Current plant growth progress:", $"{userGardenData[DBM_User_Garden_Data.Columns.plant_growth]}%")
@@ -940,13 +935,28 @@ namespace OjamajoBot.Module
         [Command("weather", RunMode = RunMode.Async), Summary("See the weather forecast for today.")]
         public async Task showCurrentWeather()
         {
+            var userId = Context.User.Id;
+            Dictionary<string, object> userGardenData = GardenCore.getUserGardenData(userId);
+
+            string reminder = "";
+            if (DateTime.Parse(userGardenData[DBM_User_Garden_Data.Columns.last_water_time].ToString()).ToString("dd")
+                != DateTime.Now.ToString("dd"))
+                reminder = "Friendly reminder: the plant is not watered yet today.";
+
             //{$"☀️", "sunny","It's a sunny day!","5"}
+
+            var totMinutes = Bot.Doremi.stopwatchWeather.Elapsed.TotalMinutes; /*.Elapsed.TotalMinutes*/;
+            var spawnInterval = 120;
+            var nextSpawn = Convert.ToInt32(spawnInterval) - Convert.ToInt32(totMinutes);
+            string finalSpawn = nextSpawn.ToString();
+            if (nextSpawn <= 0) finalSpawn = "less than 1";
+
             await ReplyAsync(embed: new EmbedBuilder()
             .WithColor(Config.Doremi.EmbedColor)
             .WithTitle($"{GardenCore.weather[0]} It's {GardenCore.weather[1]} now.")
             .WithDescription(GardenCore.weather[2])
             .AddField("Plant growth rate:", $"{GardenCore.weather[3]}-{GardenCore.weather[4]}%")
-            .WithFooter("The weather will change every 2 hours.")
+            .WithFooter($"Next weather will change at {finalSpawn} more minute(s). {reminder}")
             .Build());
         }
 
@@ -963,7 +973,7 @@ namespace OjamajoBot.Module
 
             await ReplyAsync(embed: new EmbedBuilder()
             .WithColor(Config.Doremi.EmbedColor)
-            .WithAuthor($"Context.User.Username,Context.User.GetAvatarUrl()' Garden Progress")
+            .WithAuthor($"{Context.User.Username}' Garden Progress", Context.User.GetAvatarUrl())
             .WithDescription($"{MentionUtils.MentionUser(userId)} plant growth progress currently at: " +
             $"**{userGardenData[DBM_User_Garden_Data.Columns.plant_growth]}%**")
             .WithFooter(reminder)
