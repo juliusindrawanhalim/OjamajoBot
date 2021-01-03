@@ -30,7 +30,7 @@ namespace OjamajoBot
 
     public class TradingCardCore
     {
-        public static string version = "1.32";
+        public static string version = "1.34";
         public static string propertyId = "trading_card_spawn_id";
         public static string propertyCategory = "trading_card_spawn_category";
         public static string propertyToken = "trading_card_spawn_token";
@@ -58,29 +58,22 @@ namespace OjamajoBot
 
         public static EmbedBuilder printUpdatesNote()
         {
-            //1.30
+            //1.33
             return new EmbedBuilder()
             .WithColor(Config.Doremi.EmbedColor)
-            .WithTitle($"Ojamajo Trading Card - Update {version} - 27.12.20")
-            .AddField("**Bug Fixes & Updates**:",
-            $"-Capturing a duplicate card now will give some random 1-3 magic seeds rewards.\n" +
-            $"-Using a pureleine command from bad card that has spawn now will give some random " +
-            $"2-5 magic rewards if the card that'll be received are duplicates.\n" +
-            $"-Prevent from receiving pop/hana card when using the card pureleine command\n" +
-            $"-Bug fix: where card zone cannot be set\n")
-            .AddField("New Command & Feature: Tradeboard",
-            "This command available available only to doremi bot within **card tradeboard** group and " +
-            "can be used to trade the card with other user within the maximum time of 7 days since the last listing time. " +
-            "Note that **hana**/**pop**/**ojamajos** card category cannot be putted up as listing & cannot be traded.\n")
-            .AddField("Tradeboard Related Command:",
-            $"-**{Config.Doremi.PrefixParent[0]}card tradeboard post <id card that you search> <id card that you'll offer/send>**: " +
-            "Post/update your trade listing offer into the tradeboard.\n" +
-            $"-**{Config.Doremi.PrefixParent[0]}card tradeboard search <id card that search>**: " +
-            $"Search the top 10 available card id offer on the tradeboard.\n" +
-            $"-**{Config.Doremi.PrefixParent[0]}card tradeboard trade <trade id>**:" +
-            $"Proceed to trade with the listing from the trade id. " +
-            $"Please do note: that this process cannot be reverted once you have trade the card with that user.\n" +
-            $"-**{Config.Doremi.PrefixParent[0]}card tradeboard remove**: Remove your trade listing from the tradeboard.");
+            .WithTitle($"Ojamajo Trading Card - Update {version} - 03.01.21")
+            .AddField("**Updates & Changes**:",
+            $"-Capturing a card with boost command now will not shows the error message and will do the normal capture " +
+            $" if you don't have any booster that can be used.\n" +
+            $"-Bug fix: lost card name is now displayed when **curse bad card** is activated.")
+            .AddField($"New Command & Feature: marketboard",
+            "This command only available to doremi bot within **card marketboard** group command and can be used to purchase/sell the card from other user with magic seeds. " +
+            "Note that hana/pop/ojamajos card category cannot be putted up as listing & not buyable/sellable.")
+            .AddField("Marketboard Related Command:",
+            "-**do!card marketboard sell <id card that you want to sell> <price in magic seeds>**: Post/update your trade listing offer into the marketboard.\n" +
+            "-**do!card marketboard search <id card that search>**: Search the top 10 available card id that can be purchased on the marketboard.\n" +
+            "-**do!card marketboard buy <market id>**:Proceed to purchase with the listing from the market id with magic seeds. Please note that this command is one time use without another confirmation!\n" +
+            "-**do!card marketboard remove**: Remove your market listing from the marketboard.");
         }
 
         public static int getUserRank(int exp)
@@ -1507,11 +1500,11 @@ namespace OjamajoBot
                     (spawnedCardCategory == "ojamajos" && boostOjamajos <= 0)||
                     (spawnedCardCategory == "special" && boostSpecial <= 0))
                 {
-                    returnEmbedBuilder = new EmbedBuilder()
-                    .WithColor(color)
-                    .WithDescription($":x: Sorry, you have no **{parent} {spawnedCardCategory}** card capture boost that you can use.")
-                    .WithThumbnailUrl(emojiError);
-                    return Tuple.Create("", returnEmbedBuilder, "", returnCompleted);
+                    //returnEmbedBuilder = new EmbedBuilder()
+                    //.WithColor(color)
+                    //.WithDescription($":x: Sorry, you have no **{parent} {spawnedCardCategory}** card capture boost that you can use.")
+                    //.WithThumbnailUrl(emojiError);
+                    //return Tuple.Create("", returnEmbedBuilder, "", returnCompleted);
                 }
                 else
                     useBoost = true;
@@ -1538,12 +1531,12 @@ namespace OjamajoBot
 
                         //get the random lost card information from user
                         string query = @$"select * 
-                                            from {DBM_User_Trading_Card_Inventory.tableName} inv, {DBM_Trading_Card_Data.tableName} tc 
-                                            where inv.{DBM_User_Trading_Card_Inventory.Columns.id_user}=@{DBM_User_Trading_Card_Inventory.Columns.id_user} and                                       inv.{DBM_User_Trading_Card_Inventory.Columns.id_card} = tc.{DBM_User_Trading_Card_Inventory.Columns.id_card} and 
-                                            tc.{DBM_Trading_Card_Data.Columns.pack}=@{DBM_Trading_Card_Data.Columns.pack} and 
-                                            tc.{DBM_Trading_Card_Data.Columns.category}=@{DBM_Trading_Card_Data.Columns.category} 
-                                            order by rand() 
-                                            limit 1";
+                        from {DBM_User_Trading_Card_Inventory.tableName} inv, {DBM_Trading_Card_Data.tableName} tc 
+                        where inv.{DBM_User_Trading_Card_Inventory.Columns.id_user}=@{DBM_User_Trading_Card_Inventory.Columns.id_user} and                                       inv.{DBM_User_Trading_Card_Inventory.Columns.id_card} = tc.{DBM_User_Trading_Card_Inventory.Columns.id_card} and 
+                        tc.{DBM_Trading_Card_Data.Columns.pack}=@{DBM_Trading_Card_Data.Columns.pack} and 
+                        tc.{DBM_Trading_Card_Data.Columns.category}=@{DBM_Trading_Card_Data.Columns.category} 
+                        order by rand() 
+                        limit 1";
                         columns = new Dictionary<string, object>();
                         columns[DBM_User_Trading_Card_Inventory.Columns.id_user] = clientId.ToString();
                         columns[DBM_Trading_Card_Data.Columns.pack] = parentLost;
@@ -1554,7 +1547,19 @@ namespace OjamajoBot
                         {
                             string stolenCardId = ""; string stolenName = "";
                             foreach (DataRow rows in resultLost.Rows)
+                            {
                                 stolenCardId = rows[DBM_User_Trading_Card_Inventory.Columns.id_card].ToString();
+
+                                //get card data
+                                query = $"SELECT * " +
+                                    $" FROM {DBM_Trading_Card_Data.tableName} " +
+                                    $" WHERE {DBM_Trading_Card_Data.Columns.id_card}=@{DBM_Trading_Card_Data.Columns.id_card} ";
+                                columns = new Dictionary<string, object>();
+                                columns[DBM_Trading_Card_Data.Columns.id_card] = stolenCardId;
+                                var cardDataLost = new DBC().selectAll(query, columns);
+                                foreach(DataRow rowsLost in cardDataLost.Rows)
+                                    stolenName = rowsLost[DBM_Trading_Card_Data.Columns.name].ToString();
+                            }
 
                             //delete
                             query = $"DELETE FROM {DBM_User_Trading_Card_Inventory.tableName} " +

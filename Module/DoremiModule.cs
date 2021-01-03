@@ -4943,8 +4943,8 @@ namespace OjamajoBot.Module
         }
 
         [Name("card tradeboard"), Group("tradeboard"), Summary("These commands related with trading card board " +
-            "for browse & trading the card.")]
-        public class DoremiModeratorChannels : ModuleBase<SocketCommandContext>
+            "to browse & trading the card.")]
+        public class DoremiTradeboard : ModuleBase<SocketCommandContext>
         {
             [Command("post", RunMode = RunMode.Async),
                 Summary("Post/update your trading card listing that you're looking for to be available on the tradeboard search command within 7 days. " +
@@ -5058,7 +5058,7 @@ namespace OjamajoBot.Module
             }
 
             [Command("search", RunMode = RunMode.Async), Alias("browse"),
-                Summary("Browse the top 10 listed card that are exchangable on tradeboard within 7 days from the last listing time.")]
+                Summary("Browse the top 10 listed card that are exchangable on tradeboard within 7 days since the last listing time.")]
             public async Task trading_card_tradeboard_browse(string id_card_search = "")
             {
                 if (id_card_search == "")
@@ -5107,7 +5107,7 @@ namespace OjamajoBot.Module
                 if (results.Rows.Count <= 0)
                 {
                     await ReplyAsync(
-                        $"There are no card listing available for: " +
+                        $"There are no available card listing for: " +
                         $"**{displayNameSearch}** on the tradeboard.");
                     return;
                 }
@@ -5343,6 +5343,356 @@ namespace OjamajoBot.Module
                 colFilter[DBM_Trading_Card_Tradeboard.Columns.id_user] = userId.ToString();
                 new DBC().update(query, colFilter);
                 await ReplyAsync("Your trade listing on tradeboard has been removed.");
+            }
+
+        }
+
+        [Name("card marketboard"), Group("marketboard"), Summary("These commands related with marketboard to sell & buy the trading card.")]
+        public class DoremiMarketboard : ModuleBase<SocketCommandContext>
+        {
+            [Command("post", RunMode = RunMode.Async),
+                Summary("Post/update your trading card listing that you're looking for to be available on the marketboard search command within 7 days. " +
+                "You can only post 1 listing at a time and will be replaced if the old listing already exists. \n" +
+                "Parameter `id_card_sell` is the card id that you will sell. " +
+                "Parameter `price_magic_seeds` is the magic seeds price of the card. ")]
+            public async Task trading_card_marketboard_post(string id_card_sell, int price_magic_seeds)
+            {
+                if (price_magic_seeds <= 0)
+                {
+                    await ReplyAsync($"Listing price of the magic seeds needs to be more than 1");
+                    return;
+                }
+
+                var guildId = Context.Guild.Id;
+                var userId = Context.User.Id;
+                if (TradingCardCore.getCardParent(id_card_sell) == "hana" ||
+                    TradingCardCore.getCardParent(id_card_sell) == "pop")
+                {
+                    await ReplyAsync("Sorry, that card pack is limited and not sellable.");
+                    return;
+                }
+                else if (TradingCardCore.getCardCategory(id_card_sell) == "ojamajos")
+                {
+                    await ReplyAsync("Sorry, **ojamajos** card are not sellable.");
+                    return;
+                }
+
+                string query = "";
+                //check if card data have exists on DB
+                var cardData = TradingCardCore.getCardData(id_card_sell);
+                if (cardData == null)
+                {
+                    //check if card data looking exists on DB
+                    await ReplyAsync($"Sorry, I cannot find the card ID: **{id_card_sell}** that will be sell.");
+                    return;
+                }
+
+                //check if user have the card/not for id_card_sell
+                if (!TradingCardCore.checkUserHaveCard(userId,
+                 TradingCardCore.getCardParent(id_card_sell), id_card_sell))
+                {
+                    //check if user already have the card/not for id_card_sell
+                    await ReplyAsync($"Sorry, you don't have the card ID: " +
+                        $"**{id_card_sell} - {cardData[DBM_Trading_Card_Data.Columns.name]}** yet.");
+                    return;
+                }
+
+                query = $"SELECT * " +
+                    $" FROM {DBM_Trading_Card_Marketboard.tableName} " +
+                    $" WHERE {DBM_Trading_Card_Marketboard.Columns.id_guild}=@{DBM_Trading_Card_Marketboard.Columns.id_guild} AND " +
+                    $"{DBM_Trading_Card_Marketboard.Columns.id_user}=@{DBM_Trading_Card_Marketboard.Columns.id_user} ";
+                Dictionary<string, object> colFilter = new Dictionary<string, object>();
+                colFilter[DBM_Trading_Card_Marketboard.Columns.id_guild] = guildId.ToString();
+                colFilter[DBM_Trading_Card_Marketboard.Columns.id_user] = userId.ToString();
+                colFilter[DBM_Trading_Card_Marketboard.Columns.id_card] = id_card_sell.ToString();
+                colFilter[DBM_Trading_Card_Marketboard.Columns.price] = Convert.ToInt32(price_magic_seeds);
+                var resultExists = new DBC().selectAll(query, colFilter);
+                if (resultExists.Rows.Count <= 0)
+                {
+                    //insert to trading card hub if it's not existed yet
+                    new DBC().insert(DBM_Trading_Card_Marketboard.tableName, colFilter);
+                }
+                else
+                {
+                    //update if it exists
+                    query = $"UPDATE {DBM_Trading_Card_Marketboard.tableName} " +
+                        $" SET {DBM_Trading_Card_Marketboard.Columns.id_card}=@{DBM_Trading_Card_Marketboard.Columns.id_card}, " +
+                        $" {DBM_Trading_Card_Marketboard.Columns.price}=@{DBM_Trading_Card_Marketboard.Columns.price}, " +
+                        $" {DBM_Trading_Card_Marketboard.Columns.last_update}=@{DBM_Trading_Card_Marketboard.Columns.last_update} " +
+                        $" WHERE {DBM_Trading_Card_Marketboard.Columns.id_guild}=@{DBM_Trading_Card_Marketboard.Columns.id_guild} AND " +
+                        $" {DBM_Trading_Card_Marketboard.Columns.id_user}=@{DBM_Trading_Card_Marketboard.Columns.id_user}";
+                    colFilter[DBM_Trading_Card_Marketboard.Columns.last_update] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                    new DBC().update(query, colFilter);
+                }
+
+                //get the card id:
+                query = $"SELECT *,({DBM_Trading_Card_Marketboard.Columns.last_update}+INTERVAL 7 DAY) as expire_date " +
+                    $" FROM {DBM_Trading_Card_Marketboard.tableName} " +
+                    $" WHERE {DBM_Trading_Card_Marketboard.Columns.id_guild}=@{DBM_Trading_Card_Marketboard.Columns.id_guild} AND " +
+                    $" {DBM_Trading_Card_Marketboard.Columns.id_user}=@{DBM_Trading_Card_Marketboard.Columns.id_user} " +
+                    $" ORDER BY {DBM_Trading_Card_Marketboard.Columns.last_update} desc ";
+                colFilter = new Dictionary<string, object>();
+                colFilter[DBM_Trading_Card_Marketboard.Columns.id_guild] = guildId.ToString();
+                colFilter[DBM_Trading_Card_Marketboard.Columns.id_user] = userId.ToString();
+                var results = new DBC().selectAll(query, colFilter);
+                foreach (DataRow row in results.Rows)
+                {
+                    EmbedBuilder eb = new EmbedBuilder()
+                    .WithColor(Config.Doremi.EmbedColor)
+                    .WithDescription($"{MentionUtils.MentionUser(userId)} has post/update the trading card listing on market board.")
+                    .AddField($"Will sell **{TradingCardCore.getCardParent(cardData[DBM_Trading_Card_Data.Columns.id_card].ToString())} {cardData[DBM_Trading_Card_Data.Columns.category]} Card**: ",
+                    $"{cardData[DBM_Trading_Card_Data.Columns.id_card]} - {cardData[DBM_Trading_Card_Data.Columns.name]}", true)
+                    .AddField($"Price: ", $"{price_magic_seeds} magic seeds", true)
+                    .WithFooter($"Market ID: {row[DBM_Trading_Card_Tradeboard.Columns.id].ToString()} | " +
+                    $"Valid Until: {row["expire_date"]}");
+                    await ReplyAsync(embed: eb.Build());
+                }
+            }
+
+            [Command("search", RunMode = RunMode.Async), Alias("browse"),
+                Summary("Browse the top 10 listed card that can be purchased on market board within 7 days since the last listing time.")]
+            public async Task trading_card_tradeboard_browse(string id_card_search = "")
+            {
+                if (id_card_search == "")
+                {
+                    await ReplyAsync("Please enter the `id_card_search` as the id card parameter that you want to search.");
+                    return;
+                }
+
+                var guildId = Context.Guild.Id;
+                var userId = Context.User.Id;
+
+                //prohibit if card type is ojamajos
+                if (TradingCardCore.getCardCategory(id_card_search) == "ojamajos")
+                {
+                    await ReplyAsync("Sorry, **ojamajos** card type cannot be purchased.");
+                    return;
+                }
+
+                //check if card data looking exists on DB
+                var cardDataSearch = TradingCardCore.getCardData(id_card_search);
+                if (cardDataSearch == null)
+                {
+                    await ReplyAsync($"Sorry, I cannot find Card ID: **{id_card_search}**");
+                    return;
+                }
+
+                string query = $"SELECT * " +
+                    $" FROM {DBM_Trading_Card_Marketboard.tableName} " +
+                    $" WHERE {DBM_Trading_Card_Marketboard.Columns.id_guild}=@{DBM_Trading_Card_Marketboard.Columns.id_guild} AND " +
+                    $" {DBM_Trading_Card_Marketboard.Columns.id_user}<>@{DBM_Trading_Card_Marketboard.Columns.id_user} AND " +
+                    $" {DBM_Trading_Card_Marketboard.Columns.id_card} IS NOT NULL AND " +
+                    $" {DBM_Trading_Card_Marketboard.Columns.last_update}+INTERVAL 7 DAY>=CURDATE() " +
+                    $" ORDER BY {DBM_Trading_Card_Marketboard.Columns.last_update} desc, " +
+                    $" {DBM_Trading_Card_Marketboard.Columns.price} asc " +
+                    $" LIMIT 10";
+                Dictionary<string, object> colSelect = new Dictionary<string, object>();
+                colSelect[DBM_Trading_Card_Marketboard.Columns.id_guild] = guildId.ToString();
+                colSelect[DBM_Trading_Card_Marketboard.Columns.id_user] = userId.ToString();
+                colSelect[DBM_Trading_Card_Marketboard.Columns.id_card] = id_card_search.ToString();
+                var results = new DBC().selectAll(query, colSelect);
+
+                //get the card data looking for
+                string displayNameSearch = $"{cardDataSearch[DBM_Trading_Card_Data.Columns.id_card].ToString()} -" +
+                        $" {cardDataSearch[DBM_Trading_Card_Data.Columns.name].ToString()}";
+
+                if (results.Rows.Count <= 0)
+                {
+                    await ReplyAsync(
+                        $"There are no available card listing for: " +
+                        $"**{displayNameSearch}** on the marketboard.");
+                    return;
+                }
+
+                //check if user already have the card id or not
+                if (TradingCardCore.checkUserHaveCard(userId,
+                    TradingCardCore.getCardCategory(id_card_search),
+                    id_card_search))
+                {
+                    await ReplyAsync($"Sorry, you already have the card id: **{displayNameSearch}**");
+                    return;
+                }
+
+                string contentId = ""; string content = ""; string contentUser = "";
+                EmbedBuilder eb = new EmbedBuilder()
+                    .WithColor(Config.Doremi.EmbedColor)
+                    .WithAuthor("Market Board")
+                    .WithTitle($"Found **{results.Rows.Count}** market listing for **{displayNameSearch}**:")
+                    .WithDescription($"Here are the list of the card that you can buy." +
+                    $"You can proceed to buy with " +
+                    $"**{Config.Doremi.PrefixParent[0]}card marketboard purchase <market ID>**. " +
+                    $"**WARNING:** The **purchase** command is one time command! Make sure to double check the price before you're going to purchase it!");
+
+                //results.rows from table: DBM_Trading_Card_Marketboard
+                foreach (DataRow row in results.Rows)
+                {
+                    //check if user exists/not
+                    SocketUser masterUser =
+                    Context.Guild.Users.FirstOrDefault(x => x.Id ==
+                    Convert.ToUInt64(row[DBM_Trading_Card_Marketboard.Columns.id_user].ToString()));
+                    if (masterUser != null)
+                    {
+                        var cardDataOtherUserWant = TradingCardCore.getCardData(
+                        row[DBM_Trading_Card_Marketboard.Columns.id_card].ToString());
+
+                        //display name
+                        string displayName = $"{row[DBM_Trading_Card_Marketboard.Columns.price].ToString()}";
+                        contentId += $"{row[DBM_Trading_Card_Tradeboard.Columns.id].ToString()}\n";
+                        content += $"{displayName}\n";
+                        contentUser += $"{MentionUtils.MentionUser(Convert.ToUInt64(row[DBM_Trading_Card_Tradeboard.Columns.id_user]))}\n";
+                    }
+                }
+
+                //double check if user not exists on guild
+                if (contentId == "")
+                {
+                    await ReplyAsync(
+                        $"There are no card listing available for: " +
+                        $"**{displayNameSearch}** on the marketboard.");
+                    return;
+                }
+
+                await ReplyAsync(embed: eb
+                    .AddField("Market ID", contentId, true)
+                    .AddField("Magic seeds price:", content, true)
+                    .AddField("User:", contentUser, true)
+                    .Build());
+            }
+
+            [Command("buy", RunMode = RunMode.Async),
+                Summary("Buy/purchase the available listed offer with from trade id: `<market_id>` parameter. " +
+                "You can see the available `<market_id>` that is listed with **card marketboard search** command. " +
+                "Please note that this command is one time use!")]
+            public async Task trading_card_marketboard_purchase(string market_id)
+            {
+                var guildId = Context.Guild.Id;
+                var userId = Context.User.Id;
+
+                //check if trade_id exists on db or not
+                string query = $"SELECT * " +
+                    $" FROM {DBM_Trading_Card_Marketboard.tableName} " +
+                    $" WHERE {DBM_Trading_Card_Marketboard.Columns.id}=@{DBM_Trading_Card_Marketboard.Columns.id} AND " +
+                    $" {DBM_Trading_Card_Marketboard.Columns.id_guild}=@{DBM_Trading_Card_Marketboard.Columns.id_guild} AND " +
+                    $" {DBM_Trading_Card_Marketboard.Columns.id_user}<>@{DBM_Trading_Card_Marketboard.Columns.id_user} AND " +
+                    $" {DBM_Trading_Card_Marketboard.Columns.id_card} IS NOT NULL AND " +
+                    $" {DBM_Trading_Card_Marketboard.Columns.price}>0 AND " + 
+                    $" {DBM_Trading_Card_Marketboard.Columns.last_update}+INTERVAL 7 DAY>=CURDATE()";
+                Dictionary<string, object> colFilter = new Dictionary<string, object>();
+                colFilter[DBM_Trading_Card_Tradeboard.Columns.id] = Convert.ToInt32(market_id);
+                colFilter[DBM_Trading_Card_Tradeboard.Columns.id_guild] = guildId.ToString();
+                colFilter[DBM_Trading_Card_Tradeboard.Columns.id_user] = userId.ToString();
+
+                var results = new DBC().selectAll(query, colFilter);
+                if (results.Rows.Count <= 0)
+                {
+                    await ReplyAsync($"Sorry, I cannot find market ID: **{market_id}**/the market listing has expire. " +
+                        $"You can use the **{Config.Doremi.PrefixParent[0]}card marketboard search** command to see the available market ID.");
+                    return;
+                }
+
+                //table: DBM_Trading_Card_Marketboard
+                foreach (DataRow row in results.Rows)
+                {
+                    //the id user of the seller
+                    ulong sellerId = Convert.ToUInt64(row[DBM_Trading_Card_Marketboard.Columns.id_user]);
+
+                    EmbedBuilder eb = new EmbedBuilder()
+                        .WithColor(Config.Doremi.EmbedColor);
+
+                    //id_card_have = will be received
+                    //get the card data that will be received
+                    var displayCardDataReceive = TradingCardCore.getCardData(
+                        row[DBM_Trading_Card_Marketboard.Columns.id_card].ToString());
+
+                    //get the card data that will be sent
+                    var displayCardPrice = Convert.ToInt32(row[DBM_Trading_Card_Marketboard.Columns.price].ToString());
+                    var userMagicSeeds = Convert.ToInt32(
+                        UserDataCore.getUserData(userId)[DBM_User_Data.Columns.magic_seeds]);
+                    if(userMagicSeeds < displayCardPrice)
+                    {
+                        await ReplyAsync(embed: eb
+                        .WithDescription(
+                            $"Sorry, you don't have {displayCardPrice} magic seeds to purchase " +
+                            $"**{displayCardDataReceive[DBM_Trading_Card_Data.Columns.pack].ToString()} {displayCardDataReceive[DBM_Trading_Card_Data.Columns.category].ToString()}** card: " +
+                            $"**{displayCardDataReceive[DBM_Trading_Card_Data.Columns.id_card].ToString()} - {displayCardDataReceive[DBM_Trading_Card_Data.Columns.name].ToString()}**.")
+                        .Build());
+                        return;
+                    }
+
+                    //check if user already have from id_card columns to prevent duplicates
+                    if (TradingCardCore.checkUserHaveCard(userId,
+                        TradingCardCore.getCardParent(row[DBM_Trading_Card_Marketboard.Columns.id_card].ToString()),
+                        row[DBM_Trading_Card_Marketboard.Columns.id_card].ToString()))
+                    {
+                        await ReplyAsync(embed: eb
+                            .WithDescription($"Sorry, you already have **{displayCardDataReceive[DBM_Trading_Card_Data.Columns.pack].ToString()} {displayCardDataReceive[DBM_Trading_Card_Data.Columns.category].ToString()}** card: " +
+                            $"**{displayCardDataReceive[DBM_Trading_Card_Data.Columns.id_card].ToString()} - {displayCardDataReceive[DBM_Trading_Card_Data.Columns.name].ToString()}**.")
+                            .Build());
+                        return;
+                    }
+
+                    //prepare & update listing expire
+                    query = $"UPDATE {DBM_Trading_Card_Marketboard.tableName} " +
+                        $" SET {DBM_Trading_Card_Marketboard.Columns.id_card}=@{DBM_Trading_Card_Marketboard.Columns.id_card}, " +
+                        $" {DBM_Trading_Card_Marketboard.Columns.id_card}=@{DBM_Trading_Card_Marketboard.Columns.id_card} " +
+                        $" WHERE {DBM_Trading_Card_Marketboard.Columns.id}=@{DBM_Trading_Card_Marketboard.Columns.id}";
+                    colFilter = new Dictionary<string, object>();
+                    colFilter[DBM_Trading_Card_Marketboard.Columns.id_card] = "";
+                    colFilter[DBM_Trading_Card_Marketboard.Columns.price] = 0;
+                    colFilter[DBM_Trading_Card_Marketboard.Columns.id] = Convert.ToInt32(market_id);
+                    //success, erase from marketboard
+                    new DBC().update(query, colFilter);
+
+                    //insert buyer inventory data
+                    colFilter = new Dictionary<string, object>();
+                    colFilter[DBM_User_Trading_Card_Inventory.Columns.id_user] = userId.ToString();
+                    colFilter[DBM_User_Trading_Card_Inventory.Columns.id_card] = displayCardDataReceive[DBM_Trading_Card_Data.Columns.id_card].ToString();
+                    new DBC().insert(DBM_User_Trading_Card_Inventory.tableName, colFilter);
+
+                    //update & remove seller inventory data
+                    query = $"DELETE FROM {DBM_User_Trading_Card_Inventory.tableName} " +
+                        $" WHERE {DBM_User_Trading_Card_Inventory.Columns.id_user}=@{DBM_User_Trading_Card_Inventory.Columns.id_user} AND " +
+                        $" {DBM_User_Trading_Card_Inventory.Columns.id_card}=@{DBM_User_Trading_Card_Inventory.Columns.id_card} ";
+                    colFilter = new Dictionary<string, object>();
+                    colFilter[DBM_User_Trading_Card_Inventory.Columns.id_user] = sellerId.ToString();
+                    colFilter[DBM_User_Trading_Card_Inventory.Columns.id_card] = displayCardDataReceive[DBM_Trading_Card_Data.Columns.id_card].ToString();
+                    new DBC().delete(query, colFilter);
+
+                    //update buyer magic seeds
+                    UserDataCore.updateMagicSeeds(userId, -Convert.ToInt32(displayCardPrice));
+
+                    //update seller magic seeds
+                    UserDataCore.updateMagicSeeds(sellerId, Convert.ToInt32(displayCardPrice));
+
+                    await ReplyAsync(embed: eb
+                    .WithAuthor("Card purchased!")
+                    .WithDescription($"{MentionUtils.MentionUser(userId)} have successfully purchase the card from {MentionUtils.MentionUser(sellerId)}.")
+                    .AddField("Received card:", $"{displayCardDataReceive[DBM_Trading_Card_Data.Columns.id_card].ToString()} - {displayCardDataReceive[DBM_Trading_Card_Data.Columns.name].ToString()}")
+                    .AddField("Purchased with:", $"{displayCardPrice} magic seeds")
+                    .WithThumbnailUrl(TradingCardCore.Doremi.emojiOk)
+                    .Build());
+                    return;
+                }
+
+            }
+
+            [Command("remove", RunMode = RunMode.Async), Summary("Remove your trade card listing from marketboard.")]
+            public async Task trading_card_marketboard_remove()
+            {
+                var guildId = Context.Guild.Id;
+                var userId = Context.User.Id;
+                string query = $"UPDATE {DBM_Trading_Card_Marketboard.tableName} " +
+                        $" SET {DBM_Trading_Card_Marketboard.Columns.id_card}=@{DBM_Trading_Card_Marketboard.Columns.id_card}, " +
+                        $" {DBM_Trading_Card_Marketboard.Columns.price}=@{DBM_Trading_Card_Marketboard.Columns.price} " +
+                        $" WHERE {DBM_Trading_Card_Marketboard.Columns.id_guild}=@{DBM_Trading_Card_Marketboard.Columns.id_guild} AND " +
+                        $" {DBM_Trading_Card_Marketboard.Columns.id_user}=@{DBM_Trading_Card_Marketboard.Columns.id_user} ";
+                Dictionary<string, object> colFilter = new Dictionary<string, object>();
+                colFilter[DBM_Trading_Card_Marketboard.Columns.id_card] = "";
+                colFilter[DBM_Trading_Card_Marketboard.Columns.price] = 0;
+                colFilter[DBM_Trading_Card_Marketboard.Columns.id_guild] = guildId.ToString();
+                colFilter[DBM_Trading_Card_Marketboard.Columns.id_user] = userId.ToString();
+                new DBC().update(query, colFilter);
+                await ReplyAsync("Your market listing on marketboard has been removed.");
             }
 
         }
