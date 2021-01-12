@@ -39,8 +39,8 @@ namespace Config
 
         public static string sweethouseRecipeDataFileName = "sweethouse_recipe_data.json";
 
-        public static string version = "1.8";
-        public static string lastUpdate = "Jan 3,2021";
+        public static string version = "1.9";
+        public static string lastUpdate = "Jan 7,2021";
         public static JObject jObjWiki;
         public static string wikiParentUrl = "https://ojamajowitchling.fandom.com/wiki/";
         public static int minGlobalTimeHour = 7;

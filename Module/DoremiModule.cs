@@ -794,16 +794,16 @@ namespace OjamajoBot.Module
             .Build());
         }
 
-        [Command("updates"), Summary("See what's new on Doremi & her other related bot")]
+        [Command("updates"), Alias("update"), Summary("See what's new on Doremi & her other related bot")]
         public async Task showLatestUpdate()
         {
             await Context.Message.DeleteAsync();
             await ReplyAsync(embed: new EmbedBuilder()
             .WithColor(Config.Doremi.EmbedColor)
             .WithTitle($"Ojamajo Bot v{Config.Core.version}")
-            .AddField("**Update & changes list**:",
-            "-**garden weather** command now can show the timer until the next weather changes & " +
-            "reminder if the plant is not watered yet.\n")
+            .AddField("**Update & change list**:",
+            "-new command: **do!exchange seeds**. This command let you exchange 250 magic seeds with 1 royal seeds. \n" +
+            "-Updates for some command reply message.")
             .Build());
         }
 
@@ -857,8 +857,8 @@ namespace OjamajoBot.Module
                     await ReplyAsync(embed: new EmbedBuilder()
                     .WithColor(Config.Doremi.EmbedColor)
                     .WithDescription($":seedling: {MentionUtils.MentionUser(clientId)} " +
-                    $"have watered the plant and received **{randomedReceive}** magic seeds & **{randomedGrowth}%** " +
-                    $"plant growth progress from {GardenCore.weather[0]}**{GardenCore.weather[1]}** weather effect. " +
+                    $"has watered the plant and received **{randomedReceive}** magic seeds. The plant grew **{randomedGrowth}%** " +
+                    $" from {GardenCore.weather[0]}**{GardenCore.weather[1]}** weather effect. " +
                     $"Thank you for watering the plant.")
                     .AddField("Current plant growth progress:", $"{userGardenData[DBM_User_Garden_Data.Columns.plant_growth]}%")
                     .WithThumbnailUrl(GardenCore.imgMagicSeeds)
@@ -882,6 +882,32 @@ namespace OjamajoBot.Module
 
         }
 
+        [Command("exchange seeds"), Summary("Exchange 250 magic seeds with 1 royal seeds.")]
+        public async Task convertMagicSeedsIntoRoyalSeeds()
+        {
+            var clientId = Context.User.Id;
+            var userAvatar = Context.User.GetAvatarUrl();
+
+            Dictionary<string, object> userData = UserDataCore.getUserData(clientId);
+
+            if (Convert.ToInt32(userData[DBM_User_Data.Columns.royal_seeds].ToString()) >= 10)
+                await ReplyAsync("Sorry, you cannot carry another royal seeds.");
+            else if (Convert.ToInt32(userData[DBM_User_Data.Columns.magic_seeds].ToString())<250)
+                await ReplyAsync("Sorry, you need **250 magic seeds** to use this command.");
+            else
+            {
+                UserDataCore.updateMagicSeeds(clientId, -250);
+                UserDataCore.updateRoyalSeeds(clientId, 1);
+
+                await ReplyAsync(embed: new EmbedBuilder()
+                .WithColor(Config.Doremi.EmbedColor)
+                .WithDescription($":white_check_mark: {MentionUtils.MentionUser(clientId)} has exchanged **250** magic seeds " +
+                $" with 1 royal seeds.")
+                .WithThumbnailUrl(userAvatar)
+                .Build());
+            }
+        }
+
         [Command("seeds"), Summary("See the total amount of seeds currency that you have.")]
         public async Task showTotalSeeds()
         {
@@ -893,8 +919,8 @@ namespace OjamajoBot.Module
             await ReplyAsync(embed: new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
                 .WithDescription($":seedling: {MentionUtils.MentionUser(clientId)} have:\n" +
-                $"-**{userData["magic_seeds"]}/3000** magic seeds.\n" +
-                $"-**{userData["royal_seeds"]}/10** royal seeds.")
+                $">**{userData["magic_seeds"]}/3000** magic seeds.\n" +
+                $">**{userData["royal_seeds"]}/10** royal seeds.")
                 .WithThumbnailUrl(userAvatar)
                 .Build());
 
@@ -5745,10 +5771,12 @@ namespace OjamajoBot.Module
 
                 EmbedBuilder ebTop = new EmbedBuilder()
                 .WithAuthor(embedName, Config.Doremi.EmbedAvatarUrl)
-                .WithDescription($"Welcome to the Exclusive Card Shop, here you can exchange your royal seeds with the royal box." +
-                $"**Please enter the card pack that you want to browse.**\n" +
+                .WithDescription($"Welcome to the Exclusive Card Shop, here you can exchange your royal seeds with the royal box " +
+                $"to take 1 random card from 10 available random selection from the selected box. " +
+                $"**Please enter the card pack that you want to browse. " +
+                $"Note: Once you select 1 of the boxes you will use 1 royal seeds!**\n" +
                 $"Type **cancel**/**exit** anytime to exit.\n")
-                .AddField($"Your available seeds:",
+                .AddField($"You have:",
                 $"{userRoyalSeeds} royal seeds")
                 .AddField("Select the royal box that you want to open:",
                 "**pink**: 1 royal seeds (doremi)\n" +
@@ -5909,8 +5937,8 @@ namespace OjamajoBot.Module
                                     var i = 0;
                                     foreach (DataRow row in result.Rows)
                                     {
-                                        string chosenId = row[DBM_Trading_Card_Data.Columns.pack].ToString();
-                                        string chosenName = row[DBM_Trading_Card_Data.Columns.pack].ToString();
+                                        string chosenId = row[DBM_Trading_Card_Data.Columns.id_card].ToString();
+                                        string chosenName = row[DBM_Trading_Card_Data.Columns.name].ToString();
                                         string chosenUrl = row[DBM_Trading_Card_Data.Columns.url].ToString();
                                         string owned = row["owned"].ToString();
                                         if (owned != "")
@@ -5953,7 +5981,7 @@ namespace OjamajoBot.Module
                                 }
                                 else
                                 {
-                                    await ReplyAndDeleteAsync($":x: Sorry, you don't have enough seeds to exchange that box.",
+                                    await ReplyAndDeleteAsync($":x: Sorry, you don't have enough royal seeds to exchange the royal box.",
                                         timeout: TimeSpan.FromSeconds(10));
                                     msg = await ReplyAsync(embed: ebTop.Build());
                                     response = await NextMessageAsync(timeout: timeoutDuration);
@@ -6013,7 +6041,7 @@ namespace OjamajoBot.Module
                                 string imgUrl = splittedImgUrl[1].Remove(splittedImgUrl[1].Length - 1);
 
                                 await ReplyAsync(embed: new EmbedBuilder()
-                                    .WithDescription($"You have received: **{arrAvailableSelected[selectedCardId]}**.\n" +
+                                    .WithDescription($"{MentionUtils.MentionUser(userId)} has received: **{arrAvailableSelected[selectedCardId]}**.\n" +
                                     $"Thank you for visiting the **exclusive card shop**.")
                                     .WithImageUrl(imgUrl)
                                     .WithColor(Config.Doremi.EmbedColor)
@@ -6032,7 +6060,7 @@ namespace OjamajoBot.Module
                             }
                             else
                             {
-                                await ReplyAndDeleteAsync($":x: Sorry, that is not the valid **card id** selection.", timeout: TimeSpan.FromSeconds(10));
+                                await ReplyAndDeleteAsync($":x: Sorry, that is not the valid **card id** selection/you already have that card.", timeout: TimeSpan.FromSeconds(10));
                                 msg = await ReplyAsync("Select 1 **Card Id** that you want to take. Type **exit/cancel** to exit the card selection.");
                                 msg2 = await PagedReplyAsync(pager);
                                 response = await NextMessageAsync(timeout: timeoutDuration);
@@ -6046,7 +6074,7 @@ namespace OjamajoBot.Module
             {
                 await ReplyAndDeleteAsync(null, embed: new EmbedBuilder()
                 .WithColor(Config.Doremi.EmbedColor)
-                .WithDescription($":x: I'm sorry, you are still running the interactive command. Please finish it first.")
+                .WithDescription($":x: You are still running the interactive command. Please finish it first.")
                 .WithThumbnailUrl(TradingCardCore.Doremi.emojiError).Build(), timeout: TimeSpan.FromSeconds(10));
             }
 

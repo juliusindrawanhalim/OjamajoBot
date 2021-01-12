@@ -22,7 +22,7 @@ namespace OjamajoBot
         public static string[] weather = { $"☀️", "sunny", "A perfect time to water the plant!", "4","5" };//current weather/initialize it
         public static string[,] arrRandomWeather = {
             {$"☀️", "sunny","A perfect time to water the plant!","4","5"},
-            {$"☁️", "cloudy","There might be a chance to rain soon...","2","4"},
+            {$"☁️", "cloudy","There will be a chance to rain...","2","4"},
             {$"🌧️", "raining","Not sure if it's a good time to water the plant.","1","3"},
             {$"⛈️", "thunder storm","I don't think it's the best time to water the plant now...","1","2"}
         };

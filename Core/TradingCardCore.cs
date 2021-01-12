@@ -1254,7 +1254,7 @@ namespace OjamajoBot
                         {
                             int randomedMagicSeeds = new Random().Next(2, 6);
                             embed.Description += $"Sorry, I can't give **{context.User.Username}** a bonus card: **{chosenId} - {chosenName}** because you have it already. " +
-                                $"As a bonus you've received {randomedMagicSeeds} magic seeds.";
+                                $"As a bonus reward you have receive {randomedMagicSeeds} magic seeds.";
                             UserDataCore.updateMagicSeeds(context.User.Id, randomedMagicSeeds);
                         } else
                         {
@@ -1273,7 +1273,7 @@ namespace OjamajoBot
                     else if (badCardType == "seeds")
                     {
                         int randomedMagicSeeds = new Random().Next(10, 25);
-                        embed.Description += $"**{context.User.Username}** have been rewarded with {randomedMagicSeeds} magic seeds!";
+                        embed.Description += $"**{context.User.Username}** has received {randomedMagicSeeds} magic seeds as a bonus reward!";
                         embed.WithImageUrl(GardenCore.imgMagicSeeds);
                         UserDataCore.updateMagicSeeds(context.User.Id, randomedMagicSeeds);
                     }
@@ -1347,7 +1347,7 @@ namespace OjamajoBot
                 returnEmbedBuilder = new EmbedBuilder()
                 .WithColor(color)
                 .WithDescription(":x: Sorry, either this card has been captured by someone or not spawned anymore. " +
-                "Please wait for the card to spawn again.")
+                "Please wait until the next card spawn.")
                 .WithThumbnailUrl(emojiError);
                 return Tuple.Create("", returnEmbedBuilder, "", returnCompleted);
             }
@@ -1570,17 +1570,17 @@ namespace OjamajoBot
                             columns[DBM_User_Trading_Card_Inventory.Columns.id_user] = clientId.ToString();
                             new DBC().delete(query, columns);
 
-                            replyText = $":skull: Oh no, **{spawnedBadCardType}** bad card effect has activated! " +
+                            replyText = $":skull: Oh no, **{spawnedBadCardType}** bad card effect has been activated! " +
                                 $"**{username}** just lost **{parentLost} normal** card: **{stolenCardId} - {stolenName}**!";
                         }
                         else
                         {
-                            replyText = $":skull: Oh no, **{spawnedBadCardType}** bad card effect has activated! But **{username}** don't have any card to lose...";
+                            replyText = $":skull: Oh no, **{spawnedBadCardType}** bad card effect has been activated! **{username}** don't have any card to lose...";
                         }
                         break;
                     case "failure":
-                        replyText = $":skull: Oh no, **{spawnedBadCardType}** bad card effect has activated! " +
-                            $"**{username}** just lost a chance to catch a card on this spawn turn!";
+                        replyText = $":skull: Oh no, **{spawnedBadCardType}** bad card effect has been activated! " +
+                            $"**{username}** has just lost a chance to catch a card on this spawn turn!";
 
                         //update
                         query = $"UPDATE {DBM_User_Trading_Card_Data.tableName} " +
@@ -1657,9 +1657,9 @@ namespace OjamajoBot
                                 replyText = $":x: Sorry, I can't capture **{spawnedCardId} - {name}** because you already have it. ";
                             else
                                 replyText = $":x: You guessed the mystery card correctly " +
-                                    $"but I can't capture **{spawnedCardId} - {name}** because you aleady have it. ";
+                                    $"but I can't capture **{spawnedCardId} - {name}** because you already have it. ";
 
-                            replyText += $"As a bonus you've been rewarded with **{randomMagicSeedsReward}** magic seeds.";
+                            replyText += $"As a bonus reward you have received **{randomMagicSeedsReward}** magic seeds.";
 
                             UserDataCore.updateMagicSeeds(clientId, randomMagicSeedsReward);
                             //UserTradingCardDataCore.updateFragmentPoints(clientId, 1);
@@ -1739,7 +1739,7 @@ namespace OjamajoBot
                                 {//reset boost
                                     string query = "";
                                     replyText = $":arrow_double_up: **{GlobalFunctions.UppercaseFirst(spawnedCardPack)} {GlobalFunctions.UppercaseFirst(spawnedCardCategory)}** " +
-                                        $"Card capture boost has been used and boosted into **{boostRate}**!\n";
+                                        $"Card capture boost has been used and the capture rate has increased into **{boostRate}**!\n";
                                     switch (spawnedCardCategory)
                                     {
                                         case "special":
@@ -1824,11 +1824,11 @@ namespace OjamajoBot
 
                                 if (spawnedIsMystery)
                                     replyText += $":white_check_mark: {arrRandomFirstSentence[new Random().Next(0, arrRandomFirstSentence.Length)]} " +
-                                    $"**{username}** have successfully revealed & captured **{spawnedCardCategory}** mystery card: **{name}**";
+                                    $"**{username}** has revealed & captured **{spawnedCardCategory}** mystery card: **{name}**";
                                 else
                                 {
                                     replyText += $":white_check_mark: {arrRandomFirstSentence[new Random().Next(0, arrRandomFirstSentence.Length)]} " +
-                                    $"**{username}** have successfully captured **{spawnedCardCategory}** card: **{name}**";
+                                    $"**{username}** has revealed & captured **{spawnedCardCategory}** card: **{name}**";
 
                                     if (spawnedIsZone)
                                     {
@@ -1950,7 +1950,7 @@ namespace OjamajoBot
                                 {   //reset boost
                                     string query = "";
                                     replyText = $":arrow_double_up: **{GlobalFunctions.UppercaseFirst(parent)} {GlobalFunctions.UppercaseFirst(spawnedCardCategory)}** " +
-                                        $"Card Capture Boost has been used and boosted into **{boostRate}**!\n";
+                                        $"Card capture boost has been used and the capture rate has increased into **{boostRate}**!\n";
                                     if (spawnedCardCategory.ToLower() == "special")
                                     {
                                         query = $"UPDATE {DBM_User_Trading_Card_Data.tableName} " +
@@ -1971,9 +1971,9 @@ namespace OjamajoBot
 
                                 if (spawnedIsMystery)
                                     replyText += $":x: Card revealed correctly! " +
-                                        $"But sorry, {username} **fail** to catch the mystery card. Better luck next time.";
+                                        $"But {username} **failed** to catch the mystery card. Better luck next time.";
                                 else
-                                    replyText += $":x: Sorry, {username} **fail** to catch the card. Better luck next time.";
+                                    replyText += $":x: Sorry, {username} **failed** to catch the card. Better luck next time.";
                             }
                         }
                         
@@ -2709,7 +2709,8 @@ namespace OjamajoBot
                 await client
                 .GetGuild(guildId)
                 .GetTextChannel(Convert.ToUInt64(guildTradingCardData[DBM_Trading_Card_Guild.Columns.id_channel_spawn].ToString()))
-                .SendMessageAsync($":question: {mentionedCardCatcherRoles} A ||**mystery**|| card has appeared! Can you guess whose card is this belongs to?\n" +
+                .SendMessageAsync($":question: {mentionedCardCatcherRoles} A ||**mystery**|| card has appeared! " +
+                $"Can you guess whose card is this belongs to?\n" +
                 $"Reveal & capture it with **<bot>!card capture** or **<bot>!card capture boost**",
                 embed: embed.Build());
 
@@ -3198,8 +3199,8 @@ namespace OjamajoBot
                 //":sparkles: **Peperuto** is one of my chanting spell",
 
                 ":birthday: My birthday was on July",
-                ":woman_fairy: Translate these numbers into words: 4-15-4-15",//dodo
-                ":woman_fairy: Translate these numbers into words and rearrange the result: 15-4-15-4",
+                ":woman_fairy: Translate these numbers into letters: 4-15-4-15",//dodo
+                ":woman_fairy: Translate these numbers into letters and rearrange the result: 15-4-15-4",
                 ":birthday: February, May, March and November are not my birthday",
                 ":birthday: My birthday date was on 30",
                 
@@ -3210,20 +3211,20 @@ namespace OjamajoBot
                 ":sparkles: **Petton Puu Pameruku Faa!** are not in my spell.",
                 ":sparkles: **Famifami Rarirori Paipai Petton!** are not in my spell.",
                 //new:
-                ":girl: Translate these numbers into words: 4-15-18-5-13-9",//doremi
-                ":girl: Translate these numbers into words and rearrange the result: 5-18-15-4-9-13",//doremi
-                ":girl: Translate these numbers into words and rearrange the result: 18-5-9-13-15-4",//doremi
-                ":girl: Translate these numbers into words and rearrange the result: 15-4-13-9-18-5",//doremi
-                ":girl: Translate these numbers into words and rearrange the result: 9-13-4-15-18-5",//doremi
-                ":girl: Translate these numbers into words and rearrange the result: 9-18-5-15-13-4",//doremi
+                ":girl: Translate these numbers into letters: 4-15-18-5-13-9",//doremi
+                ":girl: Translate these numbers into letters and rearrange the result: 5-18-15-4-9-13",//doremi
+                ":girl: Translate these numbers into letters and rearrange the result: 18-5-9-13-15-4",//doremi
+                ":girl: Translate these numbers into letters and rearrange the result: 15-4-13-9-18-5",//doremi
+                ":girl: Translate these numbers into letters and rearrange the result: 9-13-4-15-18-5",//doremi
+                ":girl: Translate these numbers into letters and rearrange the result: 9-18-5-15-13-4",//doremi
 
-                ":girl: Translate these numbers into words: 8-1-18-21-11-1-26-5",//harukaze
-                ":girl: Translate these numbers into words and rearrange the result: 1-1-26-5-11-8-18-21",//harukaze
-                ":girl: Translate these numbers into words and rearrange the result: 5-1-21-1-8-11-18-26",//harukaze
+                ":girl: Translate these numbers into letters: 8-1-18-21-11-1-26-5",//harukaze
+                ":girl: Translate these numbers into letters and rearrange the result: 1-1-26-5-11-8-18-21",//harukaze
+                ":girl: Translate these numbers into letters and rearrange the result: 5-1-21-1-8-11-18-26",//harukaze
 
-                ":fork_and_knife: Translate these numbers into words: 19-20-5-1-11",//steak
-                ":fork_and_knife: Translate these numbers into words and rearrange the result: 20-19-11-5-1",//steak
-                ":fork_and_knife: Translate these numbers into words and rearrange the result: 1-11-19-5-20"//steak
+                ":fork_and_knife: Translate these numbers into letters: 19-20-5-1-11",//steak
+                ":fork_and_knife: Translate these numbers into letters and rearrange the result: 20-19-11-5-1",//steak
+                ":fork_and_knife: Translate these numbers into letters and rearrange the result: 1-11-19-5-20"//steak
             };
         }
 
@@ -3267,25 +3268,25 @@ namespace OjamajoBot
 
                 ":drop_of_blood: My blood type is A",
                 ":birthday: My birthday was on February",
-                ":woman_fairy: Translate these numbers into words: 18-5-18-5",//rere
-                ":woman_fairy: Translate these numbers into words and rearrange the result: 5-18-18-5",//rere
-                ":woman_fairy: Translate these numbers into words and rearrange the result: 5-5-18-18",//rere
+                ":woman_fairy: Translate these numbers into letters: 18-5-18-5",//rere
+                ":woman_fairy: Translate these numbers into letters and rearrange the result: 5-18-18-5",//rere
+                ":woman_fairy: Translate these numbers into letters and rearrange the result: 5-5-18-18",//rere
                 ":birthday: May, July, March and November are not my birthday month",
                 ":birthday: My birthday is the same day of the month as Aiko but I was born a few months earlier",
                 ":sparkles: **Raruku Famifami Pirika Pon!** are not in my spell.",
                 ":sparkles: **Pararira Faa Rarirori Poporina!** are not in my spell.",
                 ":sparkles: **Poppun Pirika Faa Perutan!** are not in my spell.",
                 ":sparkles: **Rarirori Peperuto Perutan Purun!** are not in my spell.",
-                ":girl: Translate these numbers into words: 8-1-26-21-11-9",//hazuki
-                ":girl: Translate these numbers into words and rearrange the result: 26-9-8-21-1-11",//hazuki
-                ":girl: Translate these numbers into words and rearrange the result: 11-21-8-1-26-9",//hazuki
-                ":girl: Translate these numbers into words and rearrange the result: 9-21-8-1-26-11",//hazuki
+                ":girl: Translate these numbers into letters: 8-1-26-21-11-9",//hazuki
+                ":girl: Translate these numbers into letters and rearrange the result: 26-9-8-21-1-11",//hazuki
+                ":girl: Translate these numbers into letters and rearrange the result: 11-21-8-1-26-9",//hazuki
+                ":girl: Translate these numbers into letters and rearrange the result: 9-21-8-1-26-11",//hazuki
                 
-                ":girl: Translate these numbers into words: 6-21-10-9-23-1-18-1", //fujiwara
-                ":girl: Translate these numbers into words and rearrange the result: 1-23-6-18-21-1-9-10", //fujiwara
-                ":girl: Translate these numbers into words and rearrange the result: 1-10-9-21-19-1-6-23", //fujiwara
-                ":girl: Translate these numbers into words and rearrange the result: 10-9-21-1-6-18-23-1", //fujiwara
-                ":girl: Translate these numbers into words and rearrange the result: 23-1-18-1-10-21-6-9", //fujiwara
+                ":girl: Translate these numbers into letters: 6-21-10-9-23-1-18-1", //fujiwara
+                ":girl: Translate these numbers into letters and rearrange the result: 1-23-6-18-21-1-9-10", //fujiwara
+                ":girl: Translate these numbers into letters and rearrange the result: 1-10-9-21-19-1-6-23", //fujiwara
+                ":girl: Translate these numbers into letters and rearrange the result: 10-9-21-1-6-18-23-1", //fujiwara
+                ":girl: Translate these numbers into letters and rearrange the result: 23-1-18-1-10-21-6-9", //fujiwara
             };
 
         }
@@ -3326,14 +3327,14 @@ namespace OjamajoBot
                 //":sparkles: **Poppun** is one of my chanting spell",
 
                 ":birthday: My birthday was on November",
-                ":woman_fairy: Translate these numbers into words: 13-9-13-9",//mimi
-                ":woman_fairy: Translate these numbers into words: 13-13-9-9",//mimi
-                ":fork_and_knife: Translate these numbers into words: 20-1-11-15-25-1-11-9",//takoyaki
-                ":fork_and_knife: Translate these numbers into words and rearrange the result: 1-11-11-9-20-1-25-15",//takoyaki
-                ":fork_and_knife: Translate these numbers into words and rearrange the result: 15-11-9-20-11-1-25-1",//takoyaki
-                ":fork_and_knife: Translate these numbers into words and rearrange the result: 9-1-15-25-11-1-20-11",//takoyaki
+                ":woman_fairy: Translate these numbers into letters: 13-9-13-9",//mimi
+                ":woman_fairy: Translate these numbers into letters: 13-13-9-9",//mimi
+                ":fork_and_knife: Translate these numbers into letters: 20-1-11-15-25-1-11-9",//takoyaki
+                ":fork_and_knife: Translate these numbers into letters and rearrange the result: 1-11-11-9-20-1-25-15",//takoyaki
+                ":fork_and_knife: Translate these numbers into letters and rearrange the result: 15-11-9-20-11-1-25-1",//takoyaki
+                ":fork_and_knife: Translate these numbers into letters and rearrange the result: 9-1-15-25-11-1-20-11",//takoyaki
                 ":birthday: July, February, March and May are not my birthday",
-                ":birthday: My birthday is the same day of the month as Hazuki but I was born a few months older",
+                ":birthday: My birthday is the same day of the month as Hazuki but I was born a few months earlier",
                 ":drop_of_blood: My blood type is O",
                 ":fork_and_knife: One of my favorite food ends with **i**",
                 ":fork_and_knife: One of my favorite food start with **t**",
@@ -3343,9 +3344,9 @@ namespace OjamajoBot
                 ":sparkles: **Famifami Pararira Puwapuwa Poporina!** are not in my spell.",
                 ":sparkles: **Pururun Paipai Perutan Pirika!** are not in my spell.",
                 ":sparkles: **Puu Pon Faa Peperuto!** are not in my spell.",
-                ":girl: Translate these numbers into words: 1-9-11-15",//aiko
-                ":girl: Translate these numbers into words and rearrange the result: 15-11-9-1",//aiko
-                ":girl: Translate these numbers into words and rearrange the result: 11-15-1-9",//aiko
+                ":girl: Translate these numbers into letters: 1-9-11-15",//aiko
+                ":girl: Translate these numbers into letters and rearrange the result: 15-11-9-1",//aiko
+                ":girl: Translate these numbers into letters and rearrange the result: 11-15-1-9",//aiko
             };
 
         }
@@ -3389,8 +3390,8 @@ namespace OjamajoBot
                 //":fork_and_knife: One of my favorite food start with **cr**",
 
                 ":birthday: My birthday was on March",
-                ":woman_fairy: Translate these numbers into words: 18-15-18-15",//roro
-                ":woman_fairy: Translate these numbers into words: 18-18-15-15",//roro
+                ":woman_fairy: Translate these numbers into letters: 18-15-18-15",//roro
+                ":woman_fairy: Translate these numbers into letters: 18-18-15-15",//roro
                 ":birthday: July, February, November and May are not my birthday",
                 ":birthday: My birthday date was on 3",
                 ":sparkles: **Rarirori Pirika Ponpoi Pon!** are not in my spell.",
@@ -3399,14 +3400,14 @@ namespace OjamajoBot
                 ":sparkles: **Poporina Puwapuwa Rarirori Pararira!** are not in my spell.",
                 ":sparkles: **Peperuto Pon Poppun Puu!** are not in my spell.",
                 ":sparkles: **Paipai Pirika Pameruku Perutan!** are not in my spell.",
-                ":girl: Translate these numbers into words: 15-14-16-21", //onpu
-                ":girl: Translate these numbers into words and rearrange the result: 16-21-15-14", //onpu
-                ":girl: Translate these numbers into words and rearrange the result: 21-15-14-16", //onpu
+                ":girl: Translate these numbers into letters: 15-14-16-21", //onpu
+                ":girl: Translate these numbers into letters and rearrange the result: 16-21-15-14", //onpu
+                ":girl: Translate these numbers into letters and rearrange the result: 21-15-14-16", //onpu
                 
-                ":girl: Translate these numbers into words: 19-5-7-1-23-1", //segawa
-                ":girl: Translate these numbers into words and rearrange the result: 1-7-23-5-1-19", //segawa
-                ":girl: Translate these numbers into words and rearrange the result: 1-1-5-23-19-7", //segawa
-                ":girl: Translate these numbers into words and rearrange the result: 5-1-1-23-19-7", //segawa
+                ":girl: Translate these numbers into letters: 19-5-7-1-23-1", //segawa
+                ":girl: Translate these numbers into letters and rearrange the result: 1-7-23-5-1-19", //segawa
+                ":girl: Translate these numbers into letters and rearrange the result: 1-1-5-23-19-7", //segawa
+                ":girl: Translate these numbers into letters and rearrange the result: 5-1-1-23-19-7", //segawa
             };
 
         }
@@ -3460,9 +3461,9 @@ namespace OjamajoBot
                 ":sparkles: **Faa Poppun Puu Peperuto!** are not in my spell.",
                 ":sparkles: **Pururun Pameruku Pirika Paipai!** are not in my spell.",
 
-                ":girl: Translate these numbers into words: 13-15-13-15-11-15",//momoko
-                ":girl: Translate these numbers into words and rearrange the result: 15-15-13-13-11-15",//momoko
-                ":girl: Translate these numbers into words and rearrange the result: 11-13-15-13-15-15"//momoko
+                ":girl: Translate these numbers into letters: 13-15-13-15-11-15",//momoko
+                ":girl: Translate these numbers into letters and rearrange the result: 15-15-13-13-11-15",//momoko
+                ":girl: Translate these numbers into letters and rearrange the result: 11-13-15-13-15-15"//momoko
             };
 
         }

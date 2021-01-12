@@ -191,6 +191,13 @@ namespace OjamajoBot
                     totalTarget = TradingCardCore.Momoko.maxNormal + TradingCardCore.Momoko.maxPlatinum +
                         TradingCardCore.Momoko.maxMetal + TradingCardCore.Momoko.maxOjamajos;
                     break;
+                case "pop":
+                    totalTarget = TradingCardCore.Pop.maxNormal;
+                    break;
+                case "hana":
+                    totalTarget = TradingCardCore.Hana.maxNormal + TradingCardCore.Hana.maxPlatinum +
+                        TradingCardCore.Hana.maxMetal;
+                    break;
                 case "other":
                     totalTarget = TradingCardCore.maxSpecial;
                     break;
