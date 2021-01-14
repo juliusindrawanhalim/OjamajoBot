@@ -932,7 +932,7 @@ namespace OjamajoBot.Module
                 await Bot.Onpu.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
-                    .SendFileAsync(TradingCardCore.Aiko.imgCompleteAllCard, null, embed: TradingCardCore
+                    .SendFileAsync(TradingCardCore.Onpu.imgCompleteAllCard, null, embed: TradingCardCore
                     .userCompleteTheirList(Context, Config.Onpu.EmbedColor, Config.Onpu.EmbedAvatarUrl, "onpu",
                     TradingCardCore.Onpu.imgCompleteAllCard, TradingCardCore.Onpu.roleCompletionist)
                     .Build());
@@ -952,7 +952,7 @@ namespace OjamajoBot.Module
                 await Bot.Momoko.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
-                    .SendFileAsync(TradingCardCore.Aiko.imgCompleteAllCard, null, embed: TradingCardCore
+                    .SendFileAsync(TradingCardCore.Momoko.imgCompleteAllCard, null, embed: TradingCardCore
                     .userCompleteTheirList(Context, Config.Momoko.EmbedColor, Config.Momoko.EmbedAvatarUrl, "momoko",
                     TradingCardCore.Momoko.imgCompleteAllCard, TradingCardCore.Momoko.roleCompletionist)
                     .Build());
@@ -972,7 +972,7 @@ namespace OjamajoBot.Module
                 await Bot.Aiko.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
-                    .SendFileAsync(TradingCardCore.Aiko.imgCompleteAllCard, null, embed: TradingCardCore
+                    .SendFileAsync(TradingCardCore.imgCompleteAllCardSpecial, null, embed: TradingCardCore
                     .userCompleteTheirList(Context, Config.Aiko.EmbedColor, Config.Aiko.EmbedAvatarUrl, "other",
                     TradingCardCore.imgCompleteAllCardSpecial, TradingCardCore.roleCompletionistSpecial)
                     .Build());

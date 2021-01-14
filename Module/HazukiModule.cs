@@ -907,7 +907,7 @@ namespace OjamajoBot.Module
                 await Bot.Onpu.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
-                    .SendFileAsync(TradingCardCore.Aiko.imgCompleteAllCard, null, embed: TradingCardCore
+                    .SendFileAsync(TradingCardCore.Onpu.imgCompleteAllCard, null, embed: TradingCardCore
                     .userCompleteTheirList(Context, Config.Onpu.EmbedColor, Config.Onpu.EmbedAvatarUrl, "onpu",
                     TradingCardCore.Onpu.imgCompleteAllCard, TradingCardCore.Onpu.roleCompletionist)
                     .Build());
@@ -927,7 +927,7 @@ namespace OjamajoBot.Module
                 await Bot.Momoko.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
-                    .SendFileAsync(TradingCardCore.Aiko.imgCompleteAllCard, null, embed: TradingCardCore
+                    .SendFileAsync(TradingCardCore.Momoko.imgCompleteAllCard, null, embed: TradingCardCore
                     .userCompleteTheirList(Context, Config.Momoko.EmbedColor, Config.Momoko.EmbedAvatarUrl, "momoko",
                     TradingCardCore.Momoko.imgCompleteAllCard, TradingCardCore.Momoko.roleCompletionist)
                     .Build());
@@ -947,7 +947,7 @@ namespace OjamajoBot.Module
                 await Bot.Hazuki.client
                 .GetGuild(Context.Guild.Id)
                 .GetTextChannel(Context.Channel.Id)
-                .SendFileAsync(TradingCardCore.Hazuki.imgCompleteAllCard, null, embed: TradingCardCore
+                .SendFileAsync(TradingCardCore.imgCompleteAllCardSpecial, null, embed: TradingCardCore
                 .userCompleteTheirList(Context, Config.Hazuki.EmbedColor, Config.Hazuki.EmbedAvatarUrl, "other",
                 TradingCardCore.imgCompleteAllCardSpecial, TradingCardCore.roleCompletionistSpecial)
                 .Build());
@@ -1285,7 +1285,7 @@ namespace OjamajoBot.Module
 
                 if (embedReturn != null)
                 {
-                    await Bot.Doremi.client
+                    await Bot.Hazuki.client
                     .GetGuild(Context.Guild.Id)
                     .GetTextChannel(Context.Channel.Id)
                     .SendFileAsync(TradingCardCore.Hazuki.imgCompleteAllCard, null, embed: embedReturn
