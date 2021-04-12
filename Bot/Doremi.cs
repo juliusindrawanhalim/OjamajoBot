@@ -301,7 +301,7 @@ namespace OjamajoBot.Bot
                     if (Config.Onpu.Status.isBirthday() &&
                     Convert.ToInt32(guildData[DBM_Guild.Columns.birthday_announcement_ojamajo]) == 1)
                     {
-                        eb = eb.WithTitle("{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy Birthday, Onpu Chan!")
+                        eb = eb.WithTitle($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy Birthday, Onpu Chan!")
                         .WithDescription($"Happy birthday to our wonderful idol friend: Onpu chan. " +
                         $"She has turned into {Config.Onpu.birthdayCalculatedYear} on this year. Let's give some wonderful birthday wishes for her.")
                         .WithImageUrl("https://cdn.discordapp.com/attachments/706770454697738300/790803480482021377/Onpu__Nintendo_Switch_Birthday_Pic.png")
@@ -703,6 +703,7 @@ namespace OjamajoBot.Bot
                                     await guildUser.AddRoleAsync(roleMaster);
 
                                     //sending dm notification
+                                    /*
                                     var dmchannel = await guildUser.GetOrCreateDMChannelAsync();
                                     await dmchannel.SendMessageAsync(embed: new EmbedBuilder()
                                                 .WithColor(Config.Doremi.EmbedColor)
@@ -711,6 +712,7 @@ namespace OjamajoBot.Bot
                                                 .WithThumbnailUrl(TradingCardCore.Doremi.emojiOk)
                                                 .WithFooter($"From: {channel.Guild.Name}")
                                                 .Build());
+                                    */
                                 }
                             }
 
@@ -811,6 +813,7 @@ namespace OjamajoBot.Bot
                                 {
                                     await guildUser.RemoveRoleAsync(roleMaster);
 
+                                    /*
                                     var dmchannel = await guildUser.GetOrCreateDMChannelAsync();
                                     await dmchannel.SendMessageAsync(embed: new EmbedBuilder()
                                     .WithColor(Config.Doremi.EmbedColor)
@@ -819,6 +822,7 @@ namespace OjamajoBot.Bot
                                     .WithThumbnailUrl(TradingCardCore.Doremi.emojiOk)
                                     .WithFooter($"From: {channel.Guild.Name}")
                                     .Build());
+                                    */
                                 }
                             }
                             
@@ -865,10 +869,10 @@ namespace OjamajoBot.Bot
                 {
                     ulong guildId = textchannel.Guild.Id;
                     SocketUser user = usrmsg.Author;
-
-                    using (StreamWriter sw = (File.Exists($"logs/{textchannel.Guild.Id}/{DateTime.Now.ToString("yyyy_MM_dd")}.txt")) ? File.AppendText($"logs/{textchannel.Guild.Id}/{DateTime.Now.ToString("yyyy_MM_dd")}.txt") :
-                        File.CreateText($"logs/{textchannel.Guild.Id}/{DateTime.Now.ToString("yyyy_MM_dd")}.txt"))
-                        sw.WriteLine($"[{DateTime.Now.ToString("yyyy/MM/dd HH:mm")}] {usrmsg.Author.Mention}{usrmsg.Author.Username} : {message}");
+                    
+                    //using (StreamWriter sw = (File.Exists($"logs/{textchannel.Guild.Id}/{DateTime.Now.ToString("yyyy_MM_dd")}.txt")) ? File.AppendText($"logs/{textchannel.Guild.Id}/{DateTime.Now.ToString("yyyy_MM_dd")}.txt") :
+                    //    File.CreateText($"logs/{textchannel.Guild.Id}/{DateTime.Now.ToString("yyyy_MM_dd")}.txt"))
+                    //    sw.WriteLine($"[{DateTime.Now.ToString("yyyy/MM/dd HH:mm")}] {usrmsg.Author.Mention}{usrmsg.Author.Username} : {message}");
 
                     int expRandomChance = new Random().Next(0, 7);
                     if (expRandomChance <= 5)
@@ -973,6 +977,15 @@ namespace OjamajoBot.Bot
                         message.HasStringPrefix(Config.Core.customPrefix[guildId.ToString()], ref argPos))
                     {
                         var newMessage = message.Content.Replace(Config.Core.customPrefix[guildId.ToString()], "");
+                        var splittedMessage = newMessage.Split(" ");
+                        var strMentionable = "";
+                        foreach (string splitted in newMessage.Split(" ")){
+                            //get the remainder string
+                            if(splitted.StartsWith("<@!")){
+                                strMentionable+=$"{splitted} ";
+                            }
+                        }
+
                         foreach (string splitted in newMessage.Split(" "))
                         {
                             string query = $"SELECT * " +
@@ -987,8 +1000,49 @@ namespace OjamajoBot.Bot
                             var results = new DBC().selectAll(query, columns);
                             foreach (DataRow row in results.Rows)
                             {
-                                await context.Channel.SendMessageAsync(
-                                    row[DBM_Guild_Custom_Command.Columns.content].ToString());
+                                string sendMessage = row[DBM_Guild_Custom_Command.Columns.content].ToString();
+
+                                var imgUrl = "";
+
+                                //check for embed image:
+                                if(sendMessage.Contains("<img:")){
+                                    string[] splittedWord = sendMessage.Split("<img:");
+                                    imgUrl = splittedWord[1];
+
+                                    imgUrl = imgUrl.Replace("<img:","");
+                                    imgUrl = imgUrl.Replace("/img>","");
+                                }
+                                
+                                sendMessage = sendMessage.Replace("<self>",MentionUtils.MentionUser(context.User.Id));
+                                sendMessage = sendMessage.Replace("<self>","");//replace if not available
+
+                                sendMessage = sendMessage.Replace("<mention>",strMentionable);
+                                sendMessage = sendMessage.Replace("<mention>","");
+
+                                string tempNickname = "";
+                                if (context.Guild.GetUser(context.User.Id).Nickname!=null){
+                                    tempNickname = context.Guild.GetUser(context.User.Id).Nickname;
+                                } else {
+                                    tempNickname = context.User.Username;
+                                }
+                                
+                                sendMessage = sendMessage.Replace("<uself>",tempNickname);
+                                sendMessage = sendMessage.Replace("<uself>","");//replace if not available
+
+                                //sendMessage = sendMessage.Replace("\n","\\n");
+
+                                if(imgUrl!=""){
+                                    sendMessage = sendMessage.Replace($"<img:{imgUrl}/img>","");
+                                    await context.Channel.SendMessageAsync(sendMessage,embed:new EmbedBuilder()
+                                    .WithColor(Config.Doremi.EmbedColor)
+                                    .WithImageUrl(imgUrl)
+                                    .Build());
+                                } else
+                                {
+                                    await context.Channel.SendMessageAsync(sendMessage);
+                                }
+
+                                
                             }
                             return;
                         }

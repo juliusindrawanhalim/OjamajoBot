@@ -1451,7 +1451,7 @@ namespace OjamajoBot.Module
                         customCommand += $"`{row[DBM_Guild_Custom_Command.Columns.command]}`,";
                     
                     customCommand = customCommand.TrimEnd(',');
-                    await ReplyAsync($"Custom command that has been added: {customCommand}");
+                    await ReplyAsync($"Custom command that has been added:\n{customCommand}");
 
                 } else
                 {
@@ -1518,7 +1518,8 @@ namespace OjamajoBot.Module
                 }
             }
 
-            [Command("add"), Summary("Add the custom command.")]
+            [Command("add"), Summary("Add the custom command. Some parameter that you can use:\n" +
+            "<self>: will mention the original user\n<mention>: will give the mentionable parameter.\n<uself>: will give the original user.\n<img:image link/img>: will give the provided embed image url")]
             public async Task addCustomCommand(string command, [Remainder] string content)
             {
                 var idGuild = Context.Guild.Id;
@@ -2198,39 +2199,54 @@ namespace OjamajoBot.Module
 
             [Command("add"), Summary("Add the autorole with minimum level parameter. " +
                 "Make sure the roles that will be applied are in lower positions than the bots role.")]
-            public async Task setAutoroleLevel(int level_min, SocketRole role)
+            public async Task setAutoroleLevel(int level_min, SocketRole role, SocketRole roleRemoval = null)
             {
                 var guildId = Context.Guild.Id;
                 var eb = new EmbedBuilder().WithColor(Config.Doremi.EmbedColor);
                 var roleSearch = Context.Guild.Roles.FirstOrDefault(x => x.Id == Convert.ToUInt64(role.Id));
                 if (roleSearch == null)
-                    await ReplyAsync($"Sorry, I can't find that role.");
-                else
                 {
-                    string query = $"SELECT * " +
-                        $" FROM {DBM_Guild_Autorole_Level.tableName} " +
-                        $" WHERE {DBM_Guild_Autorole_Level.Columns.id_guild}=@{DBM_Guild_Autorole_Level.Columns.id_guild} AND " +
-                        $" {DBM_Guild_Autorole_Level.Columns.id_role}=@{DBM_Guild_Autorole_Level.Columns.id_role} AND " +
-                        $" {DBM_Guild_Autorole_Level.Columns.level_min}=@{DBM_Guild_Autorole_Level.Columns.level_min} ";
-                    //check if level & role exists/not
-                    Dictionary<string, object> columns = new Dictionary<string, object>();
-                    columns[DBM_Guild_Autorole_Level.Columns.id_guild] = guildId.ToString();
-                    columns[DBM_Guild_Autorole_Level.Columns.id_role] = role.Id.ToString();
-                    columns[DBM_Guild_Autorole_Level.Columns.level_min] = level_min;
-                    var result = new DBC().selectAll(query,columns);
-                    if (result.Rows.Count <= 0)
-                    {
-                        new DBC().insert(DBM_Guild_Autorole_Level.tableName, columns);
-
-                        await ReplyAsync(embed: eb
-                        .WithDescription($"Auto role level {level_min} has been set with " +
-                        $" {MentionUtils.MentionRole(Convert.ToUInt64(roleSearch.Id))}.")
-                        .Build());
-                    } else
-                    {
-                        await ReplyAsync("Sorry, this level & role already existed set.");
+                    await ReplyAsync($"Sorry, I can't find that role.");
+                    return;
+                }
+                   
+                SocketRole roleRemovalSearch = null;
+                if(roleRemoval!= null)
+                {
+                    roleRemovalSearch = Context.Guild.Roles.FirstOrDefault(x => x.Id == Convert.ToUInt64(roleRemoval.Id));
+                    if (roleRemovalSearch == null){
+                        await ReplyAsync($"Sorry, I can't find that role.");
+                        return;
                     }
                 }
+
+                string query = $"SELECT * " +
+                    $" FROM {DBM_Guild_Autorole_Level.tableName} " +
+                    $" WHERE {DBM_Guild_Autorole_Level.Columns.id_guild}=@{DBM_Guild_Autorole_Level.Columns.id_guild} AND " +
+                    $" {DBM_Guild_Autorole_Level.Columns.id_role}=@{DBM_Guild_Autorole_Level.Columns.id_role} AND " +
+                    $" {DBM_Guild_Autorole_Level.Columns.level_min}=@{DBM_Guild_Autorole_Level.Columns.level_min} ";
+                //check if level & role exists/not
+                Dictionary<string, object> columns = new Dictionary<string, object>();
+                columns[DBM_Guild_Autorole_Level.Columns.id_guild] = guildId.ToString();
+                columns[DBM_Guild_Autorole_Level.Columns.id_role] = role.Id.ToString();
+                columns[DBM_Guild_Autorole_Level.Columns.level_min] = level_min;
+                var result = new DBC().selectAll(query,columns);
+                if (result.Rows.Count <= 0)
+                {
+                    if(roleRemoval!= null && roleRemovalSearch!=null)
+                        columns[DBM_Guild_Autorole_Level.Columns.id_role_remove] = roleRemoval.Id.ToString();
+                    
+                    new DBC().insert(DBM_Guild_Autorole_Level.tableName, columns);
+
+                    await ReplyAsync(embed: eb
+                    .WithDescription($"Auto role level {level_min} has been set with " +
+                    $" {MentionUtils.MentionRole(Convert.ToUInt64(roleSearch.Id))}.")
+                    .Build());
+                } else
+                {
+                    await ReplyAsync("Sorry, this level & role already taken/set.");
+                }
+                
             }
 
             [Command("remove"), Summary("Remove the autorole with the minimum level parameter.")]
@@ -2583,320 +2599,6 @@ namespace OjamajoBot.Module
         [Name("mod channel"), Group("channel"), Summary("These commands require `Manage Channel` permissions.")]
         public class DoremiModeratorChannels : ModuleBase<SocketCommandContext>
         {
-            //archived for now
-            //[Command("birthday"), Summary("Set Doremi Bot to make birthday announcement on <channel_name>.")]
-            //public async Task assignBirthdayChannel(SocketGuildChannel channel_name)
-            //{
-            //    var guildId = channel_name.Guild.Id;
-            //    var socketClient = Context.Client;
-                
-            //    //start update
-            //    string queryUpdate = $"UPDATE {DBM_Guild.tableName} " +
-            //        $" SET {DBM_Guild.Columns.id_channel_birthday_announcement}=@{DBM_Guild.Columns.id_channel_birthday_announcement} " +
-            //        $" WHERE {DBM_Guild.Columns.id_guild}=@{DBM_Guild.Columns.id_guild} ";
-            //    Dictionary<string, object> columns = new Dictionary<string, object>();
-            //    columns[DBM_Guild.Columns.id_channel_birthday_announcement] = channel_name.Id.ToString();
-            //    columns[DBM_Guild.Columns.id_guild] = guildId.ToString();
-            //    new DBC().update(queryUpdate, columns);
-
-            //    if (Config.Doremi._timerBirthdayAnnouncement.ContainsKey(guildId.ToString()))
-            //        Config.Doremi._timerBirthdayAnnouncement[guildId.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
-            //    if (Config.Hazuki._timerBirthdayAnnouncement.ContainsKey(guildId.ToString()))
-            //        Config.Hazuki._timerBirthdayAnnouncement[guildId.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
-            //    if (Config.Aiko._timerBirthdayAnnouncement.ContainsKey(guildId.ToString()))
-            //        Config.Aiko._timerBirthdayAnnouncement[guildId.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
-            //    if (Config.Onpu._timerBirthdayAnnouncement.ContainsKey(guildId.ToString()))
-            //        Config.Onpu._timerBirthdayAnnouncement[guildId.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
-            //    if (Config.Momoko._timerBirthdayAnnouncement.ContainsKey(guildId.ToString()))
-            //        Config.Momoko._timerBirthdayAnnouncement[guildId.ToString()].Change(Timeout.Infinite, Timeout.Infinite);
-
-            //    var guildData = Config.Guild.getGuildData(guildId);
-
-            //    string guildBirthdayLastAnnouncement = "";
-            //    if (guildData[DBM_Guild.Columns.birthday_announcement_date_last].ToString() != "")
-            //        guildBirthdayLastAnnouncement = guildData[DBM_Guild.Columns.birthday_announcement_date_last].ToString();
-            //    else
-            //        guildBirthdayLastAnnouncement = "1";
-
-            //    //set doremi timer
-            //    Config.Doremi._timerBirthdayAnnouncement[guildId.ToString()] = new Timer(async _ =>
-            //    {
-            //        guildData = Config.Guild.getGuildData(guildId);
-            //        if (guildData[DBM_Guild.Columns.birthday_announcement_date_last].ToString() != "")
-            //            guildBirthdayLastAnnouncement = guildData[DBM_Guild.Columns.birthday_announcement_date_last].ToString();
-            //        else
-            //            guildBirthdayLastAnnouncement = "1";
-
-            //        EmbedBuilder eb = new EmbedBuilder()
-            //        .WithColor(Config.Doremi.EmbedColor);
-
-            //        //set birthday announcement timer
-            //        if (guildBirthdayLastAnnouncement != DateTime.Now.ToString("dd"))
-            //        {
-            //            Boolean birthdayExisted = false;
-
-            //            //announce hazuki birthday
-            //            if (Config.Hazuki.Status.isBirthday() &&
-            //            Convert.ToInt32(guildData[DBM_Guild.Columns.birthday_announcement_ojamajo]) == 1)
-            //            {
-            //                eb = eb.WithTitle($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy Birthday, Hazuki Chan!")
-            //                .WithDescription($"Happy birthday to you, Hazuki chan. " +
-            //                $"She has turned into {Config.Hazuki.birthdayCalculatedYear} this year. Let's give wonderful birthday wishes for her.")
-            //                .WithImageUrl("https://cdn.discordapp.com/attachments/706770454697738300/791510757778784306/hazuki_birthday.jpg");
-            //                await Bot.Doremi.client
-            //                .GetGuild(guildId)
-            //                .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement]))
-            //                .SendMessageAsync(embed: eb.Build());
-            //                birthdayExisted = true;
-            //            }
-
-            //            //announce aiko birthday
-            //            if (Config.Aiko.Status.isBirthday() &&
-            //            Convert.ToInt32(guildData[DBM_Guild.Columns.birthday_announcement_ojamajo]) == 1)
-            //            {
-            //                eb = eb.WithTitle($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy Birthday, Aiko Chan!")
-            //                .WithDescription($"Happy birthday to our dear osakan friend: Aiko chan. " +
-            //                $"She has turned into {Config.Aiko.birthdayCalculatedYear} this year. Let's give some takoyaki and wonderful birthday wishes for her.")
-            //                .WithImageUrl("https://cdn.discordapp.com/attachments/706770454697738300/791579373324992512/happy_birthday_aiko_chan.jpg")
-            //                .WithFooter("Art By: Letter Three");
-
-            //                await Bot.Doremi.client
-            //                .GetGuild(guildId)
-            //                .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement]))
-            //                .SendMessageAsync(embed: eb.Build());
-            //                birthdayExisted = true;
-            //            }
-
-            //            //announce onpu birthday
-            //            if (Config.Onpu.Status.isBirthday() &&
-            //            Convert.ToInt32(guildData[DBM_Guild.Columns.birthday_announcement_ojamajo]) == 1)
-            //            {
-            //                eb = eb.WithTitle($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy Birthday, Onpu Chan!")
-            //                .WithDescription($"Happy birthday to our wonderful idol friend: Onpu chan. " +
-            //                $"She has turned into {Config.Onpu.birthdayCalculatedYear} this year. Let's give some wonderful birthday wishes for her.")
-            //                .WithImageUrl("https://cdn.discordapp.com/attachments/706770454697738300/790803480482021377/Onpu__Nintendo_Switch_Birthday_Pic.png")
-            //                .WithFooter("Art By: Letter Three");
-
-            //                await Bot.Doremi.client
-            //                .GetGuild(guildId)
-            //                .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement]))
-            //                .SendMessageAsync(embed: eb.Build());
-            //                birthdayExisted = true;
-            //            }
-
-            //            //announce momoko birthday
-            //            if (Config.Momoko.Status.isBirthday() &&
-            //            Convert.ToInt32(guildData[DBM_Guild.Columns.birthday_announcement_ojamajo]) == 1)
-            //            {
-            //                eb = eb.WithTitle($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy Birthday, Momoko Chan!")
-            //                .WithDescription($"Happy birthday to our wonderful friend: Momoko chan. " +
-            //                $"She has turned into {Config.Momoko.birthdayCalculatedYear} this year. Let's give some wonderful birthday wishes for her.")
-            //                .WithImageUrl("https://cdn.discordapp.com/attachments/706770454697738300/790803547209203722/Momoko_Birthday_Pic.png")
-            //                .WithFooter("Art By: Letter Three");
-
-            //                await Bot.Doremi.client
-            //                .GetGuild(guildId)
-            //                .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement]))
-            //                .SendMessageAsync();
-            //                birthdayExisted = true;
-            //            }
-
-            //            //announce member birthday
-            //            DBC db = new DBC();
-            //            string query = @$"select * 
-            //            from {DBM_Guild_User_Birthday.tableName} 
-            //            where {DBM_Guild_User_Birthday.Columns.id_guild}=@{DBM_Guild_User_Birthday.Columns.id_guild} and 
-            //            month({DBM_Guild_User_Birthday.Columns.birthday_date}) = month(curdate()) and 
-            //            day({DBM_Guild_User_Birthday.Columns.birthday_date}) = day(curdate())";
-
-            //            Dictionary<string, object> colSelect = new Dictionary<string, object>();
-            //            colSelect[DBM_Guild_User_Birthday.Columns.id_guild] = guildId.ToString();
-
-            //            var result = db.selectAll(query, colSelect);
-
-            //            string birthdayPeople = "";
-
-            //            foreach (DataRow row in result.Rows)
-            //            {
-            //                //check if user exists/not on the server
-            //                try
-            //                {
-            //                    SocketUser masterUser =
-            //                    Context.Guild.Users.FirstOrDefault(x => x.Id ==
-            //                    Convert.ToUInt64(row[DBM_Guild_User_Birthday.Columns.id_user].ToString()));
-            //                    if (masterUser != null)
-            //                    {
-            //                        birthdayPeople += MentionUtils.MentionUser(
-            //                            Convert.ToUInt64(row[DBM_Guild_User_Birthday.Columns.id_user].ToString()));
-            //                        birthdayExisted = true;
-            //                    }
-            //                }
-            //                catch (Exception e) { }
-            //            }
-
-            //            if (birthdayExisted)
-            //            {
-            //                if (birthdayPeople != "")
-            //                {
-            //                    //check if custom birthday message exists/not
-            //                    query = $"SELECT * " +
-            //                    $" FROM {DBM_Guild_Custom_Birthday.tableName} " +
-            //                    $" WHERE {DBM_Guild_Custom_Birthday.Columns.id_guild}=@{DBM_Custom_Command.Columns.id_guild} " +
-            //                    $" ORDER BY RAND() " +
-            //                    $" LIMIT 1";
-            //                    colSelect = new Dictionary<string, object>();
-            //                    colSelect[DBM_Guild_Custom_Birthday.Columns.id_guild] = guildId.ToString();
-            //                    var resultCustomBirthday = new DBC().selectAll(query, colSelect);
-            //                    if (resultCustomBirthday.Rows.Count >= 1)
-            //                    {
-            //                        foreach (DataRow row in resultCustomBirthday.Rows)
-            //                        {
-            //                            var custBirthdayMessage = row[DBM_Guild_Custom_Birthday.Columns.message].ToString();
-            //                            var custBirthdayImage = row[DBM_Guild_Custom_Birthday.Columns.img_url].ToString();
-
-            //                            await Bot.Doremi.client
-            //                            .GetGuild(guildId)
-            //                            .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement].ToString()))
-            //                            .SendMessageAsync(
-            //                                $"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday to: {birthdayPeople}",
-            //                                embed: new EmbedBuilder()
-            //                                .WithColor(Config.Doremi.EmbedColor)
-            //                                .WithDescription(custBirthdayMessage)
-            //                                .WithImageUrl(custBirthdayImage)
-            //                                .WithFooter($"From: {Context.Guild.Name} & friends")
-            //                                .Build());
-            //                        }
-            //                    }
-            //                    else
-            //                    {
-            //                        string[] arrRandomedMessage = {
-            //                        $"Everyone, please give some wonderful birthday wishes. ",
-            //                        $"Wishing you all the best and hapiness always."
-            //                    };
-
-            //                        await Bot.Doremi.client
-            //                        .GetGuild(guildId)
-            //                        .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement].ToString()))
-            //                        .SendMessageAsync(
-            //                            $"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday to: {birthdayPeople}",
-            //                            embed: new EmbedBuilder()
-            //                            .WithColor(Config.Doremi.EmbedColor)
-            //                            .WithDescription(arrRandomedMessage[new Random().Next(0, arrRandomedMessage.Length)])
-            //                            .WithImageUrl("https://media.discordapp.net/attachments/706770454697738300/745492527070576670/1508005628768.png")
-            //                            .WithFooter($"Best wishes from: {Context.Guild.Name} & friends")
-            //                            .Build());
-            //                    }
-            //                }
-
-            //                query = @$"UPDATE {DBM_Guild.tableName} 
-            //                    SET {DBM_Guild.Columns.birthday_announcement_date_last}=@{DBM_Guild.Columns.birthday_announcement_date_last} 
-            //                    WHERE {DBM_Guild.Columns.id_guild}=@{DBM_Guild.Columns.id_guild}";
-            //                Dictionary<string, object> columnsFilter = new Dictionary<string, object>();
-            //                columnsFilter[DBM_Guild.Columns.birthday_announcement_date_last] = DateTime.Now.ToString("dd");
-            //                columnsFilter[DBM_Guild.Columns.id_guild] = guildId.ToString();
-            //                new DBC().update(query, columnsFilter);
-            //            }
-            //        }
-            //    },
-            //    null,
-            //    TimeSpan.FromSeconds(10), //time to wait before executing the timer for the first time
-            //    TimeSpan.FromMinutes(1) //time to wait before executing the timer again
-            //    );
-
-            //    //hazuki timer
-            //    Config.Hazuki._timerBirthdayAnnouncement[guildId.ToString()] = new Timer(async _ =>
-            //    {
-            //        //set birthday announcement timer
-            //        if (guildBirthdayLastAnnouncement != DateTime.Now.ToString("dd") &&
-            //        Config.Doremi.Status.isBirthday())
-            //        {
-            //            await Bot.Hazuki.client
-            //            .GetGuild(guildId)
-            //            .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement].ToString()))
-            //            .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday, {MentionUtils.MentionUser(Config.Doremi.Id)} chan. " +
-            //            $"She has turned into {Config.Doremi.birthdayCalculatedYear} this year. Let's give some big steak and wonderful birthday wishes for her.");
-            //        }
-            //    },
-            //    null,
-            //    TimeSpan.FromSeconds(10), //time to wait before executing the timer for the first time
-            //    TimeSpan.FromMinutes(1) //time to wait before executing the timer again
-            //    );
-
-            //    //aiko timer
-            //    Config.Aiko._timerBirthdayAnnouncement[guildId.ToString()] = new Timer(async _ =>
-            //    {
-            //        //announce doremi birthday
-            //        if (guildBirthdayLastAnnouncement != DateTime.Now.ToString("dd") &&
-            //            Config.Doremi.Status.isBirthday())
-            //        {
-            //            await Bot.Aiko.client
-            //            .GetGuild(guildId)
-            //            .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement].ToString()))
-            //            .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday, {MentionUtils.MentionUser(Config.Doremi.Id)} chan. " +
-            //            $"She has turned into {Config.Doremi.birthdayCalculatedYear} this year. Let's give some big steak and wonderful birthday wishes for her.",
-            //            embed: new EmbedBuilder()
-            //            .WithColor(Config.Aiko.EmbedColor)
-            //            .WithImageUrl("https://cdn.discordapp.com/attachments/706770454697738300/790803590482493450/Doremi_Birthday_Pic.png")
-            //            .Build());
-
-            //        }
-            //    },
-            //    null,
-            //    TimeSpan.FromSeconds(10), //time to wait before executing the timer for the first time
-            //    TimeSpan.FromMinutes(1) //time to wait before executing the timer again
-            //    );
-
-            //    //onpu timer 
-            //    Config.Onpu._timerBirthdayAnnouncement[guildId.ToString()] = new Timer(async _ =>
-            //    {
-            //        //announce doremi birthday
-            //        if (guildBirthdayLastAnnouncement != DateTime.Now.ToString("dd") &&
-            //            Config.Doremi.Status.isBirthday())
-            //        {
-            //            await Bot.Onpu.client
-            //            .GetGuild(guildId)
-            //            .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement].ToString()))
-            //            .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday, {MentionUtils.MentionUser(Config.Doremi.Id)} chan. " +
-            //            $"She has turned into {Config.Doremi.birthdayCalculatedYear} this year. Let's give some big steak and wonderful birthday wishes for her.");
-
-            //        }
-            //    },
-            //    null,
-            //    TimeSpan.FromSeconds(10), //time to wait before executing the timer for the first time
-            //    TimeSpan.FromMinutes(1) //time to wait before executing the timer again
-            //    );
-
-            //    //momoko timer
-            //    Config.Momoko._timerBirthdayAnnouncement[guildId.ToString()] = new Timer(async _ =>
-            //    {
-            //        //announce doremi birthday
-            //        if (guildBirthdayLastAnnouncement != DateTime.Now.ToString("dd") &&
-            //            Config.Doremi.Status.isBirthday())
-            //        {
-            //            await Bot.Momoko.client
-            //            .GetGuild(guildId)
-            //            .GetTextChannel(Convert.ToUInt64(guildData[DBM_Guild.Columns.id_channel_birthday_announcement].ToString()))
-            //            .SendMessageAsync($"{Config.Emoji.partyPopper}{Config.Emoji.birthdayCake} Happy birthday, {MentionUtils.MentionUser(Config.Doremi.Id)} chan. " +
-            //            $"She has turned into {Config.Doremi.birthdayCalculatedYear} on this year. Let's give some big steak and wonderful birthday wishes for her.");
-
-            //            //update last birthday announcement date
-            //            string query = @$"UPDATE {DBM_Guild.tableName} 
-            //            SET {DBM_Guild.Columns.birthday_announcement_date_last}=@{DBM_Guild.Columns.birthday_announcement_date_last} 
-            //            WHERE {DBM_Guild.Columns.id_guild}=@{DBM_Guild.Columns.id_guild}";
-            //            Dictionary<string, object> columnsFilter = new Dictionary<string, object>();
-            //            columnsFilter[DBM_Guild.Columns.birthday_announcement_date_last] = DateTime.Now.ToString("dd");
-            //            columnsFilter[DBM_Guild.Columns.id_guild] = guildId.ToString();
-            //            new DBC().update(query, columnsFilter);
-            //        }
-            //    },
-            //    null,
-            //    TimeSpan.FromSeconds(10), //time to wait before executing the timer for the first time
-            //    TimeSpan.FromMinutes(1) //time to wait before executing the timer again
-            //    );
-
-            //    await ReplyAsync($"{Config.Emoji.birthdayCake} **Birthday Announcement Channels** has been assigned at: {MentionUtils.MentionChannel(channel_name.Id)}");
-
-            //}
 
             [Command("update"), Summary("Update & set the channel announcement settings. " +
                 "Current available settings: `welcome`/`avatarlevel`/`birthday`/`userleaving`")]

@@ -124,10 +124,14 @@ namespace OjamajoBot.Core
                         column[DBM_Guild_Autorole_Level.Columns.id_guild] = guildId.ToString();
                         column[DBM_Guild_Autorole_Level.Columns.level_min] = level+1;
                         var autoroleData = new DBC().selectAll(query,column);
-                        ulong idAutorole = 0;
+                        ulong idAutorole = 0; ulong idAutoroleRemove = 0;
                         foreach(DataRow row in autoroleData.Rows)
                         {
                             idAutorole = Convert.ToUInt64(row[DBM_Guild_Autorole_Level.Columns.id_role].ToString());
+                            if (row[DBM_Guild_Autorole_Level.Columns.id_role_remove].ToString() != "")
+                            {
+                                idAutoroleRemove = Convert.ToUInt64(row[DBM_Guild_Autorole_Level.Columns.id_role_remove].ToString());
+                            }
                         }
 
                         EmbedBuilder eb = new EmbedBuilder()
@@ -143,6 +147,16 @@ namespace OjamajoBot.Core
                             {
                                 await guildUser.AddRoleAsync(roleMaster);
                                 eb.AddField("Role unlocked:",roleMaster.Name,true);
+                            }
+
+                            //auto remove role
+                            if (idAutoroleRemove != 0)
+                            {
+                                var roleMasterRemove = textChannel.Guild.Roles.FirstOrDefault(x => x.Id == idAutoroleRemove);
+                                if (roleMasterRemove != null)
+                                {
+                                    await guildUser.RemoveRoleAsync(roleMasterRemove);
+                                }
                             }
                         }
 
